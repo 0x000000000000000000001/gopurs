@@ -1,0 +1,184 @@
+{
+  "schema": 1,
+  "enabled": true,
+  "base": {
+    "repository": "0x000000000000000000001/gopurs",
+    "commit": "2202368d4b19849fdc365afacaffa4a617b0ea43",
+    "tag": "v0.1.0-rc.20",
+    "tagObject": "9a80c154eff82589275d6790e158e0636066197c",
+    "runId": "43412666316"
+  },
+  "targetTag": "v0.1.1",
+  "fixtureSources": [
+    {
+      "path": "tests/passing/PolyLabels.go",
+      "beforeSha256": "ca936c0fe0e4e3fac52847026fb9a0c0fa47c88947dfe066d8140a439694ca04",
+      "afterSha256": "0bb663dc8c5c7943ec4da1065ccbfe7a9fad8a9363cba807445caf82ef07bc38",
+      "fixture": "tests/passing/PolyLabels.purs"
+    },
+    {
+      "path": "tests/passing/RowUnion.go",
+      "beforeSha256": "d3e888e521d6728b9bb1b348f338efaa032a6a179136dc23eadfd89cd65f9523",
+      "afterSha256": "33cbff05c6841a17a05b30d6d4671ee8f4c80a844480399afde229f7acb7e084",
+      "fixture": "tests/passing/RowUnion.purs"
+    }
+  ],
+  "goldens": [
+    {
+      "path": "tests/passing-snapshots-dev/4105.go",
+      "beforeSha256": "236d062a8384c4d14bef499d5e4b6d6c438df01562f83afc60fd588426f73310",
+      "afterSha256": "530e8c76d9434d84f7feb1d27384a03252ad38a852acde6039388d84f052f21b",
+      "fixture": "tests/passing/4105.purs"
+    },
+    {
+      "path": "tests/passing-snapshots-dev/Coercible.go",
+      "beforeSha256": "f88765c61962a8137e9e5982c48cc864d0f6b31ef55fe566940c6cf3e6c24477",
+      "afterSha256": "e3a8176ed87330c551a7d26b62172829fb3c9828763371e97d27dff33212a457",
+      "fixture": "tests/passing/Coercible.purs"
+    },
+    {
+      "path": "tests/passing-snapshots-dev/CompactRecordConsumers_ffi.go",
+      "beforeSha256": "45720d17f6b171daa6e3224e657b88b861a273630dd55b8df5536267491ad532",
+      "afterSha256": "03653074b3f3dea5edc849ba8e776ec0adcaa489ed9223a1c3fc25dcb2f9132c",
+      "fixture": "tests/passing/CompactRecordConsumers.purs"
+    },
+    {
+      "path": "tests/passing-snapshots-dev/DeriveNewtype.go",
+      "beforeSha256": "8349d85c1e39ce2cddce70f775b05bfbed5a9db426df653c4354b526e124eb42",
+      "afterSha256": "7afd0e9bb5e89e441f48592bc32522beff02e89b87fe0a501f0424de10f69e67",
+      "fixture": "tests/passing/DeriveNewtype.purs"
+    },
+    {
+      "path": "tests/passing-snapshots-dev/DeriveWithNestedSynonyms.go",
+      "beforeSha256": "39cd26b3dff0d77ac9bb313576d9c3622de1c169bd006671ba7246c7ebbe2a39",
+      "afterSha256": "5e69ad5666dfd3afe24183cbcb306b0e0f5a791a576bffd8304cad33a13487ef",
+      "fixture": "tests/passing/DeriveWithNestedSynonyms.purs"
+    },
+    {
+      "path": "tests/passing-snapshots-dev/Deriving.go",
+      "beforeSha256": "0b64ba4aa465b0938a694ddbb715b5952ac88357fd762ab0e8fbeab288581073",
+      "afterSha256": "fe260d26652ed54d3b55175f63e1409eda39a7c798b639881ad122e6a4b50261",
+      "fixture": "tests/passing/Deriving.purs"
+    },
+    {
+      "path": "tests/passing-snapshots-dev/DerivingFoldable.go",
+      "beforeSha256": "ea25280fc30d313fdd708c15b2e99fbae33ac9130567c305dc10c7c128ce5554",
+      "afterSha256": "1181897beadbb389614b8369b8e197c491ad1cc7e0f9af46e59dd57d3d5a09df",
+      "fixture": "tests/passing/DerivingFoldable.purs"
+    },
+    {
+      "path": "tests/passing-snapshots-dev/DerivingFunctor.go",
+      "beforeSha256": "0b954f01486c42195c1a73de45f68a9e264505486950d48bda6df76986d49d9f",
+      "afterSha256": "ac9cf8f4201b2c219ab217640bb5c7199b9bd513919b4cf630c4bd38cb2360c8",
+      "fixture": "tests/passing/DerivingFunctor.purs"
+    },
+    {
+      "path": "tests/passing-snapshots-dev/DerivingTraversable.go",
+      "beforeSha256": "2934f29be777ee1a34fa072b8284c2df6bfbf3bbf0b20a1f89611442e8facd3d",
+      "afterSha256": "8b083809e9d6fdfab782dad3ccd087dda6b5d50bc0edffaaea61e00fa6890653",
+      "fixture": "tests/passing/DerivingTraversable.purs"
+    },
+    {
+      "path": "tests/passing-snapshots-dev/GenericsRep.go",
+      "beforeSha256": "6e15312c692796d34ba415253d2da782244f7be3431b0d08e125bdd31fbf8aeb",
+      "afterSha256": "5e73d07fbc6c7b73b8a4e06472ca9022523ae03c8332d23cd14ca6fd58a19fd4",
+      "fixture": "tests/passing/GenericsRep.purs"
+    },
+    {
+      "path": "tests/passing-snapshots-dev/NewtypeInstance.go",
+      "beforeSha256": "c913ce29a6a4edb76eedd83c9a86f54291d4c47e95fd62fcdc8dc82c3c7cfa1e",
+      "afterSha256": "82370bd45b28d43813cd6de45dd2b076b904a964eb159db009827600e62cac70",
+      "fixture": "tests/passing/NewtypeInstance.purs"
+    },
+    {
+      "path": "tests/passing-snapshots-dev/TypeSynonymInData.go",
+      "beforeSha256": "9da8bafc2b182ed50f794854b0fab4ded3b53087ad50488ae8e64c2420a55d71",
+      "afterSha256": "2ce5fa21cbb51ccd03b0c4762980cacd2c4888ac9b16dfcf07212a1713a95ce0",
+      "fixture": "tests/passing/TypeSynonymInData.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/1110.go",
+      "beforeSha256": "a991a32565e10937d513eb321a9bb6471f4205629c9a9b41638566200b9e5830",
+      "afterSha256": "e14d370428ed4445270a3385cb6fc00ce93f5f5cf9afe647d2ad78eb98c222a8",
+      "fixture": "tests/passing/1110.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/4105.go",
+      "beforeSha256": "236d062a8384c4d14bef499d5e4b6d6c438df01562f83afc60fd588426f73310",
+      "afterSha256": "530e8c76d9434d84f7feb1d27384a03252ad38a852acde6039388d84f052f21b",
+      "fixture": "tests/passing/4105.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/Coercible.go",
+      "beforeSha256": "ff1004e92063463a54092b926b948d4f36bc2538379c79aef60b43da07de5c49",
+      "afterSha256": "456e8cc2a467d238f0b22ef846368fa8407c2c1d8bc8c097fe30d8b7bc66696d",
+      "fixture": "tests/passing/Coercible.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/CompactRecordConsumers_ffi.go",
+      "beforeSha256": "45720d17f6b171daa6e3224e657b88b861a273630dd55b8df5536267491ad532",
+      "afterSha256": "03653074b3f3dea5edc849ba8e776ec0adcaa489ed9223a1c3fc25dcb2f9132c",
+      "fixture": "tests/passing/CompactRecordConsumers.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/DeriveNewtype.go",
+      "beforeSha256": "ca695990da914b0e10fe3970aec267947cb7b30f0e0a5c0159f658b30f711d3f",
+      "afterSha256": "d4d34265434ac87d94b4527074e14185a1101ec90ffac0ac6eb62769c355f123",
+      "fixture": "tests/passing/DeriveNewtype.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/DeriveWithNestedSynonyms.go",
+      "beforeSha256": "e9a800c6e4767ad22fbcf2415f81366a716a2a0774d6912998537551654f536e",
+      "afterSha256": "16093f700c8430cdda8f8492592d54f653fade08933f43a4340856739a441952",
+      "fixture": "tests/passing/DeriveWithNestedSynonyms.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/Deriving.go",
+      "beforeSha256": "68f48bd8951a4857fb41c67f2d469e52c8a93ed9ea4a391a4fd8256824cd3746",
+      "afterSha256": "49fab6676084f3cef3067f334124e04c4f5e8bbb76d6b29297fb10d15a167641",
+      "fixture": "tests/passing/Deriving.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/DerivingFoldable.go",
+      "beforeSha256": "57dbf9aa7fe8e2985b8cba57ce72453b76c714c7df204c0704a6465aceb5d85e",
+      "afterSha256": "392758a73ac5da89051d208a4bfbcc7add06cdc2993493147e8c3dd7c83b9703",
+      "fixture": "tests/passing/DerivingFoldable.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/DerivingFunctor.go",
+      "beforeSha256": "d7eda3851c588bcac8eee1fa812f54b188bdfbe14fdea167e5e2ffb042ce4e77",
+      "afterSha256": "35899e9678aeb57ee46d23ea34b9850ec75a47b9fa6659f42452c21cddd25b33",
+      "fixture": "tests/passing/DerivingFunctor.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/DerivingTraversable.go",
+      "beforeSha256": "616c597fdfddc1e3e613a9f8ff8e12277273946a49346ffc9e6ad7cb59497f97",
+      "afterSha256": "f5c838a4494ef7e8e5fffe54c5c7ff8e4610176636b86d43b0061202bd5889d3",
+      "fixture": "tests/passing/DerivingTraversable.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/GenericsRep.go",
+      "beforeSha256": "e51441cf61083a22ca20d168d2877dd12109ada6030e99c16d576a1adc9bc735",
+      "afterSha256": "2620b590dc920addbf6904ff394a4bf51c9133f140f8b6de37b8d98cd621325b",
+      "fixture": "tests/passing/GenericsRep.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/NewtypeInstance.go",
+      "beforeSha256": "348ae1d70354da2c3e458b1ee9547c60996787d175a86342d859c5be2f11f1a5",
+      "afterSha256": "1c1a21031bc899ea2f73200f730e63fbb072ada39a9c785b6de73ef6881321d1",
+      "fixture": "tests/passing/NewtypeInstance.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/TypeSynonymInData.go",
+      "beforeSha256": "9da8bafc2b182ed50f794854b0fab4ded3b53087ad50488ae8e64c2420a55d71",
+      "afterSha256": "2ce5fa21cbb51ccd03b0c4762980cacd2c4888ac9b16dfcf07212a1713a95ce0",
+      "fixture": "tests/passing/TypeSynonymInData.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/TypeSynonymInstance3.go",
+      "beforeSha256": "dd371984af16b88549cd9292cc1fc4c3ac9ac83b47c31c8759ad035aa19e6460",
+      "afterSha256": "c034f3044411619905bf7bfd155d46be02e5eaab60777f663e266fe3434dbee4",
+      "fixture": "tests/passing/TypeSynonymInstance3.purs"
+    }
+  ]
+}

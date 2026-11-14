@@ -114,17 +114,17 @@
     "purs-tast": {
       "flake": false,
       "locked": {
-        "lastModified": 1791442624,
-        "narHash": "sha256-v/OKFy1IRZ7PYiTX7QWQD0Ag53LlEKxK5Pjw0+Dsn6c=",
+        "lastModified": 1794508791,
+        "narHash": "sha256-Nn75eAIudsD++LLb1ylkGGSK/MW16iiBuLk/OmKXa88=",
         "owner": "0x000000000000000000001",
         "repo": "purescript",
-        "rev": "105f5752b39cc0f6c99a40064295338bf57ad223",
+        "rev": "ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080",
         "type": "github"
       },
       "original": {
         "owner": "0x000000000000000000001",
         "repo": "purescript",
-        "rev": "105f5752b39cc0f6c99a40064295338bf57ad223",
+        "rev": "ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080",
         "type": "github"
       }
     },

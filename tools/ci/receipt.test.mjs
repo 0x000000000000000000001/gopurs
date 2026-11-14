@@ -18,8 +18,7 @@ function fixture() {
     gates: [...NODE_GATES, 'Go build-cache', 'Go c1c', 'Go ffi-gen', 'Representative executable fixtures', 'npm package surface']
       .map((name, index) => ({ name, index: index + 1, passed: true, exitCode: 0 })) });
   const smoke = encode({ version: '0.1.0-test', tests: [{ host: 'javascript', passed: true }, { host: 'native', passed: true }] });
-  const counts = [12, 9, 2, 20, 14, 9, 96, 7, 5, 19, 3, 7, 4, 2, 1, 8, 8, 2, 3, 1, 1];
-  assert.equal(counts.length, QUICK_TESTS.length);
+  const counts = QUICK_TESTS.map((_, index) => 1 + index % 13);
   const total = counts.reduce((sum, count) => sum + count, 0);
   const receipt = { schema: 1, policy: 'linux-quick-v2', repository, ref: 'refs/pull/7/merge', commit, tree,
     runId: '123', runAttempt: '1', version: '0.1.0-test', parents: [base, head], qualitySha256: hash(quality), smokeSha256: hash(smoke),
@@ -178,7 +177,7 @@ test('receipt CLI records a real clean merge commit and validates all Node summa
   const receipt = JSON.parse(readFileSync(join(destination, 'receipt.json')));
   assert.equal(receipt.commit, commit); assert.equal(receipt.tree, tree); assert.deepEqual(receipt.parents, [base, head]);
   validateQualification(receipt, readFileSync(qualityFile), f.smoke);
-  writeFileSync(quality.gates[0].log, '# tests 13\n# pass 13\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n');
+  writeFileSync(quality.gates[0].log, `# tests ${counts[0] + 1}\n# pass ${counts[0] + 1}\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n`);
   const additional = join(directory, 'receipt-additional-test');
   execFileSync(process.execPath, [fileURLToPath(new URL('receipt.mjs', import.meta.url)), qualityFile, smokeFile, additional], { cwd: checkout, env });
   const more = JSON.parse(readFileSync(join(additional, 'receipt.json')));

@@ -60,7 +60,41 @@ var once_Main_M4 sync.Once
 func Get_Main_M4() gopurs_runtime.Value {
 	once_Main_M4.Do(func() {
 		cache_Main_M4 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer((&Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value]{1, value0}))}
+			return gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer((&Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value]{1, func() struct {
+				a           gopurs_runtime.Value
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			} {
+				orig := value0
+				_ = orig
+				clone := struct {
+					a           gopurs_runtime.Value
+					arrayIgnore []int64
+					fIgnore     gopurs_runtime.Value
+					fa          gopurs_runtime.Value
+					ignore      int64
+					zArrayA     []gopurs_runtime.Value
+					/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+				}{}
+				clone.a = gopurs_runtime.RecordGet(orig, "a")
+				clone.arrayIgnore = func() []int64 {
+					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}()
+				clone.fIgnore = gopurs_runtime.RecordGet(orig, "fIgnore")
+				clone.fa = gopurs_runtime.RecordGet(orig, "fa")
+				clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+				clone.zArrayA = (*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet(orig, "zArrayA")).UnsafePtr))
+				return clone
+			}()}))}
 		})
 	})
 	return cache_Main_M4
@@ -73,16 +107,66 @@ func Get_Main_M5() gopurs_runtime.Value {
 	once_Main_M5.Do(func() {
 		cache_Main_M5 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 108241190, UnsafePtr: unsafe.Pointer((&Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value]{1, func() struct {
-				nested gopurs_runtime.Value
+				nested struct {
+					a           gopurs_runtime.Value
+					arrayIgnore []int64
+					fIgnore     gopurs_runtime.Value
+					fa          gopurs_runtime.Value
+					ignore      int64
+					zArrayA     []gopurs_runtime.Value
+					/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+				}
 				/*gopurs:record-v1:1:006e00650073007400650064*/
 			} {
 				orig := value0
 				_ = orig
 				clone := struct {
-					nested gopurs_runtime.Value
+					nested struct {
+						a           gopurs_runtime.Value
+						arrayIgnore []int64
+						fIgnore     gopurs_runtime.Value
+						fa          gopurs_runtime.Value
+						ignore      int64
+						zArrayA     []gopurs_runtime.Value
+						/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+					}
 					/*gopurs:record-v1:1:006e00650073007400650064*/
 				}{}
-				clone.nested = gopurs_runtime.RecordGet(orig, "nested")
+				clone.nested = func() struct {
+					a           gopurs_runtime.Value
+					arrayIgnore []int64
+					fIgnore     gopurs_runtime.Value
+					fa          gopurs_runtime.Value
+					ignore      int64
+					zArrayA     []gopurs_runtime.Value
+					/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+				} {
+					orig := gopurs_runtime.RecordGet(orig, "nested")
+					_ = orig
+					clone := struct {
+						a           gopurs_runtime.Value
+						arrayIgnore []int64
+						fIgnore     gopurs_runtime.Value
+						fa          gopurs_runtime.Value
+						ignore      int64
+						zArrayA     []gopurs_runtime.Value
+						/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+					}{}
+					clone.a = gopurs_runtime.RecordGet(orig, "a")
+					clone.arrayIgnore = func() []int64 {
+						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+						unboxed := make([]int64, len(arr))
+						for i, v := range arr {
+							unboxed[i] = v.IntVal
+						}
+						return unboxed
+					}()
+					clone.fIgnore = gopurs_runtime.RecordGet(orig, "fIgnore")
+					clone.fa = gopurs_runtime.RecordGet(orig, "fa")
+					clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+					clone.zArrayA = (*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet(orig, "zArrayA")).UnsafePtr))
+					return clone
+				}()
 				return clone
 			}()}))}
 		})
@@ -110,17 +194,101 @@ func Get_Main_M6() gopurs_runtime.Value {
 												unboxed[i] = v.IntVal
 											}
 											return unboxed
-										}(), (*(*[]gopurs_runtime.Value)((value3).UnsafePtr)), value4, value5, value6, func() struct {
-											nested gopurs_runtime.Value
+										}(), (*(*[]gopurs_runtime.Value)((value3).UnsafePtr)), value4, value5, func() struct {
+											a           gopurs_runtime.Value
+											arrayIgnore []int64
+											fIgnore     gopurs_runtime.Value
+											fa          gopurs_runtime.Value
+											ignore      int64
+											zArrayA     []gopurs_runtime.Value
+											/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+										} {
+											orig := value6
+											_ = orig
+											clone := struct {
+												a           gopurs_runtime.Value
+												arrayIgnore []int64
+												fIgnore     gopurs_runtime.Value
+												fa          gopurs_runtime.Value
+												ignore      int64
+												zArrayA     []gopurs_runtime.Value
+												/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+											}{}
+											clone.a = gopurs_runtime.RecordGet(orig, "a")
+											clone.arrayIgnore = func() []int64 {
+												arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+												unboxed := make([]int64, len(arr))
+												for i, v := range arr {
+													unboxed[i] = v.IntVal
+												}
+												return unboxed
+											}()
+											clone.fIgnore = gopurs_runtime.RecordGet(orig, "fIgnore")
+											clone.fa = gopurs_runtime.RecordGet(orig, "fa")
+											clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+											clone.zArrayA = (*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet(orig, "zArrayA")).UnsafePtr))
+											return clone
+										}(), func() struct {
+											nested struct {
+												a           gopurs_runtime.Value
+												arrayIgnore []int64
+												fIgnore     gopurs_runtime.Value
+												fa          gopurs_runtime.Value
+												ignore      int64
+												zArrayA     []gopurs_runtime.Value
+												/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+											}
 											/*gopurs:record-v1:1:006e00650073007400650064*/
 										} {
 											orig := value7
 											_ = orig
 											clone := struct {
-												nested gopurs_runtime.Value
+												nested struct {
+													a           gopurs_runtime.Value
+													arrayIgnore []int64
+													fIgnore     gopurs_runtime.Value
+													fa          gopurs_runtime.Value
+													ignore      int64
+													zArrayA     []gopurs_runtime.Value
+													/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+												}
 												/*gopurs:record-v1:1:006e00650073007400650064*/
 											}{}
-											clone.nested = gopurs_runtime.RecordGet(orig, "nested")
+											clone.nested = func() struct {
+												a           gopurs_runtime.Value
+												arrayIgnore []int64
+												fIgnore     gopurs_runtime.Value
+												fa          gopurs_runtime.Value
+												ignore      int64
+												zArrayA     []gopurs_runtime.Value
+												/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+											} {
+												orig := gopurs_runtime.RecordGet(orig, "nested")
+												_ = orig
+												clone := struct {
+													a           gopurs_runtime.Value
+													arrayIgnore []int64
+													fIgnore     gopurs_runtime.Value
+													fa          gopurs_runtime.Value
+													ignore      int64
+													zArrayA     []gopurs_runtime.Value
+													/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+												}{}
+												clone.a = gopurs_runtime.RecordGet(orig, "a")
+												clone.arrayIgnore = func() []int64 {
+													arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+													unboxed := make([]int64, len(arr))
+													for i, v := range arr {
+														unboxed[i] = v.IntVal
+													}
+													return unboxed
+												}()
+												clone.fIgnore = gopurs_runtime.RecordGet(orig, "fIgnore")
+												clone.fa = gopurs_runtime.RecordGet(orig, "fa")
+												clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+												clone.zArrayA = (*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet(orig, "zArrayA")).UnsafePtr))
+												return clone
+											}()
 											return clone
 										}()}))}
 									})
@@ -718,8 +886,79 @@ func Get_Main_m6_prime_() gopurs_runtime.Value {
 				}()
 			}
 			return gopurs_runtime.Array(boxed)
-		}(), gopurs_runtime.Array([]gopurs_runtime.Value{}), func() gopurs_runtime.Value {
-			orig := func() struct {
+		}(), gopurs_runtime.Array([]gopurs_runtime.Value{}), func(record struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          [][]string
+			ignore      int64
+			zArrayA     [][]string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}) struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			return struct {
+				a           []string
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}{record.a, record.arrayIgnore, func() gopurs_runtime.Value {
+				arr := record.fIgnore
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Int(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), func() gopurs_runtime.Value {
+				arr := record.fa
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = func() gopurs_runtime.Value {
+						arr := v
+						boxed := make([]gopurs_runtime.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = gopurs_runtime.Str(v)
+						}
+						return gopurs_runtime.Array(boxed)
+					}()
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), record.ignore, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+				arr := record.zArrayA
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = func() gopurs_runtime.Value {
+						arr := v
+						boxed := make([]gopurs_runtime.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = gopurs_runtime.Str(v)
+						}
+						return gopurs_runtime.Array(boxed)
+					}()
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).UnsafePtr))}
+		}(func() struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          [][]string
+			ignore      int64
+			zArrayA     [][]string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			orig := Get_Main_recordValue_prime_()
+			_ = orig
+			clone := struct {
 				a           []string
 				arrayIgnore []int64
 				fIgnore     []int64
@@ -727,131 +966,147 @@ func Get_Main_m6_prime_() gopurs_runtime.Value {
 				ignore      int64
 				zArrayA     [][]string
 				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-			} {
-				orig := Get_Main_recordValue_prime_()
-				_ = orig
-				clone := struct {
-					a           []string
-					arrayIgnore []int64
-					fIgnore     []int64
-					fa          [][]string
-					ignore      int64
-					zArrayA     [][]string
-					/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-				}{}
-				clone.a = func() []string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "a").UnsafePtr)
-					unboxed := make([]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.StrVal()
-					}
-					return unboxed
-				}()
-				clone.arrayIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fa = func() [][]string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
-					unboxed := make([][]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = func() []string {
-							arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-							unboxed := make([]string, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v.StrVal()
-							}
-							return unboxed
-						}()
-					}
-					return unboxed
-				}()
-				clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-				clone.zArrayA = func() [][]string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
-					unboxed := make([][]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = func() []string {
-							arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-							unboxed := make([]string, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v.StrVal()
-							}
-							return unboxed
-						}()
-					}
-					return unboxed
-				}()
-				return clone
+			}{}
+			clone.a = func() []string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "a").UnsafePtr)
+				unboxed := make([]string, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.StrVal()
+				}
+				return unboxed
 			}()
-			_ = orig
-			return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{func() gopurs_runtime.Value {
-				arr := orig.a
-				boxed := make([]gopurs_runtime.Value, len(arr))
+			clone.arrayIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Str(v)
+					unboxed[i] = v.IntVal
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.arrayIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.fIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
+					unboxed[i] = v.IntVal
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.fa = func() [][]string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
+				unboxed := make([][]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
-				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fa
-				boxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					boxed[i] = func() gopurs_runtime.Value {
-						arr := v
-						boxed := make([]gopurs_runtime.Value, len(arr))
+					unboxed[i] = func() []string {
+						arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
+						unboxed := make([]string, len(arr))
 						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Str(v)
+							unboxed[i] = v.StrVal()
 						}
-						return gopurs_runtime.Array(boxed)
+						return unboxed
 					}()
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), gopurs_runtime.Int(orig.ignore), func() gopurs_runtime.Value {
-				arr := orig.zArrayA
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+			clone.zArrayA = func() [][]string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
+				unboxed := make([][]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = func() gopurs_runtime.Value {
-						arr := v
-						boxed := make([]gopurs_runtime.Value, len(arr))
+					unboxed[i] = func() []string {
+						arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
+						unboxed := make([]string, len(arr))
 						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Str(v)
+							unboxed[i] = v.StrVal()
 						}
-						return gopurs_runtime.Array(boxed)
+						return unboxed
 					}()
 				}
-				return gopurs_runtime.Array(boxed)
-			}()})
-		}(), struct {
-			nested gopurs_runtime.Value
+				return unboxed
+			}()
+			return clone
+		}()), struct {
+			nested struct {
+				a           []string
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}
 			/*gopurs:record-v1:1:006e00650073007400650064*/
-		}{func() gopurs_runtime.Value {
-			orig := func() struct {
+		}{func(record struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          [][]string
+			ignore      int64
+			zArrayA     [][]string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}) struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			return struct {
+				a           []string
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}{record.a, record.arrayIgnore, func() gopurs_runtime.Value {
+				arr := record.fIgnore
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Int(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), func() gopurs_runtime.Value {
+				arr := record.fa
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = func() gopurs_runtime.Value {
+						arr := v
+						boxed := make([]gopurs_runtime.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = gopurs_runtime.Str(v)
+						}
+						return gopurs_runtime.Array(boxed)
+					}()
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), record.ignore, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+				arr := record.zArrayA
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = func() gopurs_runtime.Value {
+						arr := v
+						boxed := make([]gopurs_runtime.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = gopurs_runtime.Str(v)
+						}
+						return gopurs_runtime.Array(boxed)
+					}()
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).UnsafePtr))}
+		}(func() struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          [][]string
+			ignore      int64
+			zArrayA     [][]string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			orig := Get_Main_recordValue_prime_()
+			_ = orig
+			clone := struct {
 				a           []string
 				arrayIgnore []int64
 				fIgnore     []int64
@@ -859,127 +1114,64 @@ func Get_Main_m6_prime_() gopurs_runtime.Value {
 				ignore      int64
 				zArrayA     [][]string
 				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-			} {
-				orig := Get_Main_recordValue_prime_()
-				_ = orig
-				clone := struct {
-					a           []string
-					arrayIgnore []int64
-					fIgnore     []int64
-					fa          [][]string
-					ignore      int64
-					zArrayA     [][]string
-					/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-				}{}
-				clone.a = func() []string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "a").UnsafePtr)
-					unboxed := make([]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.StrVal()
-					}
-					return unboxed
-				}()
-				clone.arrayIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fa = func() [][]string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
-					unboxed := make([][]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = func() []string {
-							arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-							unboxed := make([]string, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v.StrVal()
-							}
-							return unboxed
-						}()
-					}
-					return unboxed
-				}()
-				clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-				clone.zArrayA = func() [][]string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
-					unboxed := make([][]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = func() []string {
-							arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-							unboxed := make([]string, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v.StrVal()
-							}
-							return unboxed
-						}()
-					}
-					return unboxed
-				}()
-				return clone
+			}{}
+			clone.a = func() []string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "a").UnsafePtr)
+				unboxed := make([]string, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.StrVal()
+				}
+				return unboxed
 			}()
-			_ = orig
-			return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{func() gopurs_runtime.Value {
-				arr := orig.a
-				boxed := make([]gopurs_runtime.Value, len(arr))
+			clone.arrayIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Str(v)
+					unboxed[i] = v.IntVal
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.arrayIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.fIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
+					unboxed[i] = v.IntVal
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.fa = func() [][]string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
+				unboxed := make([][]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
-				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fa
-				boxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					boxed[i] = func() gopurs_runtime.Value {
-						arr := v
-						boxed := make([]gopurs_runtime.Value, len(arr))
+					unboxed[i] = func() []string {
+						arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
+						unboxed := make([]string, len(arr))
 						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Str(v)
+							unboxed[i] = v.StrVal()
 						}
-						return gopurs_runtime.Array(boxed)
+						return unboxed
 					}()
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), gopurs_runtime.Int(orig.ignore), func() gopurs_runtime.Value {
-				arr := orig.zArrayA
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+			clone.zArrayA = func() [][]string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
+				unboxed := make([][]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = func() gopurs_runtime.Value {
-						arr := v
-						boxed := make([]gopurs_runtime.Value, len(arr))
+					unboxed[i] = func() []string {
+						arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
+						unboxed := make([]string, len(arr))
 						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Str(v)
+							unboxed[i] = v.StrVal()
 						}
-						return gopurs_runtime.Array(boxed)
+						return unboxed
 					}()
 				}
-				return gopurs_runtime.Array(boxed)
-			}()})
-		}()}})))}
+				return unboxed
+			}()
+			return clone
+		}())}})))}
 	})
 	return cache_Main_m6_prime_
 }
@@ -1010,8 +1202,65 @@ func Get_Main_m6() gopurs_runtime.Value {
 				boxed[i] = gopurs_runtime.Str(v)
 			}
 			return gopurs_runtime.Array(boxed)
-		}(), gopurs_runtime.Array([]gopurs_runtime.Value{}), func() gopurs_runtime.Value {
-			orig := func() struct {
+		}(), gopurs_runtime.Array([]gopurs_runtime.Value{}), func(record struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          []string
+			ignore      int64
+			zArrayA     []string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}) struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			return struct {
+				a           string
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}{record.a, record.arrayIgnore, func() gopurs_runtime.Value {
+				arr := record.fIgnore
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Int(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), func() gopurs_runtime.Value {
+				arr := record.fa
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Str(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), record.ignore, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+				arr := record.zArrayA
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Str(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).UnsafePtr))}
+		}(func() struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          []string
+			ignore      int64
+			zArrayA     []string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			orig := Get_Main_recordValue()
+			_ = orig
+			clone := struct {
 				a           string
 				arrayIgnore []int64
 				fIgnore     []int64
@@ -1019,89 +1268,112 @@ func Get_Main_m6() gopurs_runtime.Value {
 				ignore      int64
 				zArrayA     []string
 				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-			} {
-				orig := Get_Main_recordValue()
-				_ = orig
-				clone := struct {
-					a           string
-					arrayIgnore []int64
-					fIgnore     []int64
-					fa          []string
-					ignore      int64
-					zArrayA     []string
-					/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-				}{}
-				clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
-				clone.arrayIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fa = func() []string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
-					unboxed := make([]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.StrVal()
-					}
-					return unboxed
-				}()
-				clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-				clone.zArrayA = func() []string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
-					unboxed := make([]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.StrVal()
-					}
-					return unboxed
-				}()
-				return clone
+			}{}
+			clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
+			clone.arrayIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.IntVal
+				}
+				return unboxed
 			}()
-			_ = orig
-			return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{gopurs_runtime.Str(orig.a), func() gopurs_runtime.Value {
-				arr := orig.arrayIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+			clone.fIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
+					unboxed[i] = v.IntVal
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.fa = func() []string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
+				unboxed := make([]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
+					unboxed[i] = v.StrVal()
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fa
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+			clone.zArrayA = func() []string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
+				unboxed := make([]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Str(v)
+					unboxed[i] = v.StrVal()
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), gopurs_runtime.Int(orig.ignore), func() gopurs_runtime.Value {
-				arr := orig.zArrayA
-				boxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Str(v)
-				}
-				return gopurs_runtime.Array(boxed)
-			}()})
-		}(), struct {
-			nested gopurs_runtime.Value
+				return unboxed
+			}()
+			return clone
+		}()), struct {
+			nested struct {
+				a           string
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}
 			/*gopurs:record-v1:1:006e00650073007400650064*/
-		}{func() gopurs_runtime.Value {
-			orig := func() struct {
+		}{func(record struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          []string
+			ignore      int64
+			zArrayA     []string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}) struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			return struct {
+				a           string
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}{record.a, record.arrayIgnore, func() gopurs_runtime.Value {
+				arr := record.fIgnore
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Int(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), func() gopurs_runtime.Value {
+				arr := record.fa
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Str(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), record.ignore, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+				arr := record.zArrayA
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Str(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).UnsafePtr))}
+		}(func() struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          []string
+			ignore      int64
+			zArrayA     []string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			orig := Get_Main_recordValue()
+			_ = orig
+			clone := struct {
 				a           string
 				arrayIgnore []int64
 				fIgnore     []int64
@@ -1109,85 +1381,43 @@ func Get_Main_m6() gopurs_runtime.Value {
 				ignore      int64
 				zArrayA     []string
 				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-			} {
-				orig := Get_Main_recordValue()
-				_ = orig
-				clone := struct {
-					a           string
-					arrayIgnore []int64
-					fIgnore     []int64
-					fa          []string
-					ignore      int64
-					zArrayA     []string
-					/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-				}{}
-				clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
-				clone.arrayIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fa = func() []string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
-					unboxed := make([]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.StrVal()
-					}
-					return unboxed
-				}()
-				clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-				clone.zArrayA = func() []string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
-					unboxed := make([]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.StrVal()
-					}
-					return unboxed
-				}()
-				return clone
+			}{}
+			clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
+			clone.arrayIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.IntVal
+				}
+				return unboxed
 			}()
-			_ = orig
-			return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{gopurs_runtime.Str(orig.a), func() gopurs_runtime.Value {
-				arr := orig.arrayIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+			clone.fIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
+					unboxed[i] = v.IntVal
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.fa = func() []string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
+				unboxed := make([]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
+					unboxed[i] = v.StrVal()
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fa
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+			clone.zArrayA = func() []string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
+				unboxed := make([]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Str(v)
+					unboxed[i] = v.StrVal()
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), gopurs_runtime.Int(orig.ignore), func() gopurs_runtime.Value {
-				arr := orig.zArrayA
-				boxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Str(v)
-				}
-				return gopurs_runtime.Array(boxed)
-			}()})
-		}()}})))}
+				return unboxed
+			}()
+			return clone
+		}())}})))}
 	})
 	return cache_Main_m6
 }
@@ -1198,10 +1428,89 @@ var once_Main_m5_prime_ sync.Once
 func Get_Main_m5_prime_() gopurs_runtime.Value {
 	once_Main_m5_prime_.Do(func() {
 		cache_Main_m5_prime_ = gopurs_runtime.Value{Type: 9, IntVal: 108241190, UnsafePtr: unsafe.Pointer(Rebox_Main_358349645_2067946548((&Constructor_Main_M5[gopurs_runtime.Value, []string]{1, struct {
-			nested gopurs_runtime.Value
+			nested struct {
+				a           []string
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}
 			/*gopurs:record-v1:1:006e00650073007400650064*/
-		}{func() gopurs_runtime.Value {
-			orig := func() struct {
+		}{func(record struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          [][]string
+			ignore      int64
+			zArrayA     [][]string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}) struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			return struct {
+				a           []string
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}{record.a, record.arrayIgnore, func() gopurs_runtime.Value {
+				arr := record.fIgnore
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Int(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), func() gopurs_runtime.Value {
+				arr := record.fa
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = func() gopurs_runtime.Value {
+						arr := v
+						boxed := make([]gopurs_runtime.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = gopurs_runtime.Str(v)
+						}
+						return gopurs_runtime.Array(boxed)
+					}()
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), record.ignore, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+				arr := record.zArrayA
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = func() gopurs_runtime.Value {
+						arr := v
+						boxed := make([]gopurs_runtime.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = gopurs_runtime.Str(v)
+						}
+						return gopurs_runtime.Array(boxed)
+					}()
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).UnsafePtr))}
+		}(func() struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          [][]string
+			ignore      int64
+			zArrayA     [][]string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			orig := Get_Main_recordValue_prime_()
+			_ = orig
+			clone := struct {
 				a           []string
 				arrayIgnore []int64
 				fIgnore     []int64
@@ -1209,127 +1518,64 @@ func Get_Main_m5_prime_() gopurs_runtime.Value {
 				ignore      int64
 				zArrayA     [][]string
 				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-			} {
-				orig := Get_Main_recordValue_prime_()
-				_ = orig
-				clone := struct {
-					a           []string
-					arrayIgnore []int64
-					fIgnore     []int64
-					fa          [][]string
-					ignore      int64
-					zArrayA     [][]string
-					/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-				}{}
-				clone.a = func() []string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "a").UnsafePtr)
-					unboxed := make([]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.StrVal()
-					}
-					return unboxed
-				}()
-				clone.arrayIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fa = func() [][]string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
-					unboxed := make([][]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = func() []string {
-							arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-							unboxed := make([]string, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v.StrVal()
-							}
-							return unboxed
-						}()
-					}
-					return unboxed
-				}()
-				clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-				clone.zArrayA = func() [][]string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
-					unboxed := make([][]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = func() []string {
-							arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-							unboxed := make([]string, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v.StrVal()
-							}
-							return unboxed
-						}()
-					}
-					return unboxed
-				}()
-				return clone
+			}{}
+			clone.a = func() []string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "a").UnsafePtr)
+				unboxed := make([]string, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.StrVal()
+				}
+				return unboxed
 			}()
-			_ = orig
-			return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{func() gopurs_runtime.Value {
-				arr := orig.a
-				boxed := make([]gopurs_runtime.Value, len(arr))
+			clone.arrayIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Str(v)
+					unboxed[i] = v.IntVal
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.arrayIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.fIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
+					unboxed[i] = v.IntVal
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.fa = func() [][]string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
+				unboxed := make([][]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
-				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fa
-				boxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					boxed[i] = func() gopurs_runtime.Value {
-						arr := v
-						boxed := make([]gopurs_runtime.Value, len(arr))
+					unboxed[i] = func() []string {
+						arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
+						unboxed := make([]string, len(arr))
 						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Str(v)
+							unboxed[i] = v.StrVal()
 						}
-						return gopurs_runtime.Array(boxed)
+						return unboxed
 					}()
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), gopurs_runtime.Int(orig.ignore), func() gopurs_runtime.Value {
-				arr := orig.zArrayA
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+			clone.zArrayA = func() [][]string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
+				unboxed := make([][]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = func() gopurs_runtime.Value {
-						arr := v
-						boxed := make([]gopurs_runtime.Value, len(arr))
+					unboxed[i] = func() []string {
+						arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
+						unboxed := make([]string, len(arr))
 						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Str(v)
+							unboxed[i] = v.StrVal()
 						}
-						return gopurs_runtime.Array(boxed)
+						return unboxed
 					}()
 				}
-				return gopurs_runtime.Array(boxed)
-			}()})
-		}()}})))}
+				return unboxed
+			}()
+			return clone
+		}())}})))}
 	})
 	return cache_Main_m5_prime_
 }
@@ -1340,10 +1586,75 @@ var once_Main_m5 sync.Once
 func Get_Main_m5() gopurs_runtime.Value {
 	once_Main_m5.Do(func() {
 		cache_Main_m5 = gopurs_runtime.Value{Type: 9, IntVal: 108241190, UnsafePtr: unsafe.Pointer(Rebox_Main_1302345387_2067946548((&Constructor_Main_M5[gopurs_runtime.Value, string]{1, struct {
-			nested gopurs_runtime.Value
+			nested struct {
+				a           string
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}
 			/*gopurs:record-v1:1:006e00650073007400650064*/
-		}{func() gopurs_runtime.Value {
-			orig := func() struct {
+		}{func(record struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          []string
+			ignore      int64
+			zArrayA     []string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}) struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			return struct {
+				a           string
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}{record.a, record.arrayIgnore, func() gopurs_runtime.Value {
+				arr := record.fIgnore
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Int(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), func() gopurs_runtime.Value {
+				arr := record.fa
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Str(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), record.ignore, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+				arr := record.zArrayA
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Str(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).UnsafePtr))}
+		}(func() struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          []string
+			ignore      int64
+			zArrayA     []string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			orig := Get_Main_recordValue()
+			_ = orig
+			clone := struct {
 				a           string
 				arrayIgnore []int64
 				fIgnore     []int64
@@ -1351,85 +1662,43 @@ func Get_Main_m5() gopurs_runtime.Value {
 				ignore      int64
 				zArrayA     []string
 				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-			} {
-				orig := Get_Main_recordValue()
-				_ = orig
-				clone := struct {
-					a           string
-					arrayIgnore []int64
-					fIgnore     []int64
-					fa          []string
-					ignore      int64
-					zArrayA     []string
-					/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-				}{}
-				clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
-				clone.arrayIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fa = func() []string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
-					unboxed := make([]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.StrVal()
-					}
-					return unboxed
-				}()
-				clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-				clone.zArrayA = func() []string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
-					unboxed := make([]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.StrVal()
-					}
-					return unboxed
-				}()
-				return clone
+			}{}
+			clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
+			clone.arrayIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.IntVal
+				}
+				return unboxed
 			}()
-			_ = orig
-			return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{gopurs_runtime.Str(orig.a), func() gopurs_runtime.Value {
-				arr := orig.arrayIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+			clone.fIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
+					unboxed[i] = v.IntVal
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.fa = func() []string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
+				unboxed := make([]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
+					unboxed[i] = v.StrVal()
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fa
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+			clone.zArrayA = func() []string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
+				unboxed := make([]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Str(v)
+					unboxed[i] = v.StrVal()
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), gopurs_runtime.Int(orig.ignore), func() gopurs_runtime.Value {
-				arr := orig.zArrayA
-				boxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Str(v)
-				}
-				return gopurs_runtime.Array(boxed)
-			}()})
-		}()}})))}
+				return unboxed
+			}()
+			return clone
+		}())}})))}
 	})
 	return cache_Main_m5
 }
@@ -1439,8 +1708,79 @@ var once_Main_m4_prime_ sync.Once
 
 func Get_Main_m4_prime_() gopurs_runtime.Value {
 	once_Main_m4_prime_.Do(func() {
-		cache_Main_m4_prime_ = gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_2381891596_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, []string]{1, func() gopurs_runtime.Value {
-			orig := func() struct {
+		cache_Main_m4_prime_ = gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_2381891596_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, []string]{1, func(record struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          [][]string
+			ignore      int64
+			zArrayA     [][]string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}) struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			return struct {
+				a           []string
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}{record.a, record.arrayIgnore, func() gopurs_runtime.Value {
+				arr := record.fIgnore
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Int(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), func() gopurs_runtime.Value {
+				arr := record.fa
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = func() gopurs_runtime.Value {
+						arr := v
+						boxed := make([]gopurs_runtime.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = gopurs_runtime.Str(v)
+						}
+						return gopurs_runtime.Array(boxed)
+					}()
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), record.ignore, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+				arr := record.zArrayA
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = func() gopurs_runtime.Value {
+						arr := v
+						boxed := make([]gopurs_runtime.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = gopurs_runtime.Str(v)
+						}
+						return gopurs_runtime.Array(boxed)
+					}()
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).UnsafePtr))}
+		}(func() struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          [][]string
+			ignore      int64
+			zArrayA     [][]string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			orig := Get_Main_recordValue_prime_()
+			_ = orig
+			clone := struct {
 				a           []string
 				arrayIgnore []int64
 				fIgnore     []int64
@@ -1448,127 +1788,64 @@ func Get_Main_m4_prime_() gopurs_runtime.Value {
 				ignore      int64
 				zArrayA     [][]string
 				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-			} {
-				orig := Get_Main_recordValue_prime_()
-				_ = orig
-				clone := struct {
-					a           []string
-					arrayIgnore []int64
-					fIgnore     []int64
-					fa          [][]string
-					ignore      int64
-					zArrayA     [][]string
-					/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-				}{}
-				clone.a = func() []string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "a").UnsafePtr)
-					unboxed := make([]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.StrVal()
-					}
-					return unboxed
-				}()
-				clone.arrayIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fa = func() [][]string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
-					unboxed := make([][]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = func() []string {
-							arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-							unboxed := make([]string, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v.StrVal()
-							}
-							return unboxed
-						}()
-					}
-					return unboxed
-				}()
-				clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-				clone.zArrayA = func() [][]string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
-					unboxed := make([][]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = func() []string {
-							arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-							unboxed := make([]string, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v.StrVal()
-							}
-							return unboxed
-						}()
-					}
-					return unboxed
-				}()
-				return clone
+			}{}
+			clone.a = func() []string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "a").UnsafePtr)
+				unboxed := make([]string, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.StrVal()
+				}
+				return unboxed
 			}()
-			_ = orig
-			return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{func() gopurs_runtime.Value {
-				arr := orig.a
-				boxed := make([]gopurs_runtime.Value, len(arr))
+			clone.arrayIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Str(v)
+					unboxed[i] = v.IntVal
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.arrayIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.fIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
+					unboxed[i] = v.IntVal
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.fa = func() [][]string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
+				unboxed := make([][]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
-				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fa
-				boxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					boxed[i] = func() gopurs_runtime.Value {
-						arr := v
-						boxed := make([]gopurs_runtime.Value, len(arr))
+					unboxed[i] = func() []string {
+						arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
+						unboxed := make([]string, len(arr))
 						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Str(v)
+							unboxed[i] = v.StrVal()
 						}
-						return gopurs_runtime.Array(boxed)
+						return unboxed
 					}()
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), gopurs_runtime.Int(orig.ignore), func() gopurs_runtime.Value {
-				arr := orig.zArrayA
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+			clone.zArrayA = func() [][]string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
+				unboxed := make([][]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = func() gopurs_runtime.Value {
-						arr := v
-						boxed := make([]gopurs_runtime.Value, len(arr))
+					unboxed[i] = func() []string {
+						arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
+						unboxed := make([]string, len(arr))
 						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Str(v)
+							unboxed[i] = v.StrVal()
 						}
-						return gopurs_runtime.Array(boxed)
+						return unboxed
 					}()
 				}
-				return gopurs_runtime.Array(boxed)
-			}()})
-		}()})))}
+				return unboxed
+			}()
+			return clone
+		}())})))}
 	})
 	return cache_Main_m4_prime_
 }
@@ -1578,8 +1855,65 @@ var once_Main_m4 sync.Once
 
 func Get_Main_m4() gopurs_runtime.Value {
 	once_Main_m4.Do(func() {
-		cache_Main_m4 = gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_1039524714_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, string]{1, func() gopurs_runtime.Value {
-			orig := func() struct {
+		cache_Main_m4 = gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_1039524714_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, string]{1, func(record struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          []string
+			ignore      int64
+			zArrayA     []string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}) struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			return struct {
+				a           string
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}{record.a, record.arrayIgnore, func() gopurs_runtime.Value {
+				arr := record.fIgnore
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Int(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), func() gopurs_runtime.Value {
+				arr := record.fa
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Str(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), record.ignore, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+				arr := record.zArrayA
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Str(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).UnsafePtr))}
+		}(func() struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     []int64
+			fa          []string
+			ignore      int64
+			zArrayA     []string
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			orig := Get_Main_recordValue()
+			_ = orig
+			clone := struct {
 				a           string
 				arrayIgnore []int64
 				fIgnore     []int64
@@ -1587,85 +1921,43 @@ func Get_Main_m4() gopurs_runtime.Value {
 				ignore      int64
 				zArrayA     []string
 				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-			} {
-				orig := Get_Main_recordValue()
-				_ = orig
-				clone := struct {
-					a           string
-					arrayIgnore []int64
-					fIgnore     []int64
-					fa          []string
-					ignore      int64
-					zArrayA     []string
-					/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-				}{}
-				clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
-				clone.arrayIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fIgnore = func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				clone.fa = func() []string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
-					unboxed := make([]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.StrVal()
-					}
-					return unboxed
-				}()
-				clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-				clone.zArrayA = func() []string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
-					unboxed := make([]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.StrVal()
-					}
-					return unboxed
-				}()
-				return clone
+			}{}
+			clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
+			clone.arrayIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.IntVal
+				}
+				return unboxed
 			}()
-			_ = orig
-			return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{gopurs_runtime.Str(orig.a), func() gopurs_runtime.Value {
-				arr := orig.arrayIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+			clone.fIgnore = func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
+				unboxed := make([]int64, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
+					unboxed[i] = v.IntVal
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fIgnore
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.fa = func() []string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
+				unboxed := make([]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
+					unboxed[i] = v.StrVal()
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), func() gopurs_runtime.Value {
-				arr := orig.fa
-				boxed := make([]gopurs_runtime.Value, len(arr))
+				return unboxed
+			}()
+			clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+			clone.zArrayA = func() []string {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
+				unboxed := make([]string, len(arr))
 				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Str(v)
+					unboxed[i] = v.StrVal()
 				}
-				return gopurs_runtime.Array(boxed)
-			}(), gopurs_runtime.Int(orig.ignore), func() gopurs_runtime.Value {
-				arr := orig.zArrayA
-				boxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Str(v)
-				}
-				return gopurs_runtime.Array(boxed)
-			}()})
-		}()})))}
+				return unboxed
+			}()
+			return clone
+		}())})))}
 	})
 	return cache_Main_m4
 }
@@ -1967,8 +2259,65 @@ func Get_Main_main() gopurs_runtime.Value {
 								return gopurs_runtime.Str("arrayIgnore")
 							})), Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))})), gopurs_runtime.Value{}, gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_8 gopurs_runtime.Value) gopurs_runtime.Value {
 								return gopurs_runtime.Str("a")
-							})), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}))))), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))})), "eq"), gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply3(Call_Data_Traversable_traverse(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](Get_Main___cached_dict_4())), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Control_Applicative_applicativeArray()))}, gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Control_Applicative_applicativeArray()).V1, gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_1039524714_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, string]{1, func() gopurs_runtime.Value {
-								orig := func() struct {
+							})), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}))))), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))})), "eq"), gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply3(Call_Data_Traversable_traverse(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](Get_Main___cached_dict_4())), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Control_Applicative_applicativeArray()))}, gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Control_Applicative_applicativeArray()).V1, gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_1039524714_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, string]{1, func(record struct {
+								a           string
+								arrayIgnore []int64
+								fIgnore     []int64
+								fa          []string
+								ignore      int64
+								zArrayA     []string
+								/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+							}) struct {
+								a           string
+								arrayIgnore []int64
+								fIgnore     gopurs_runtime.Value
+								fa          gopurs_runtime.Value
+								ignore      int64
+								zArrayA     []gopurs_runtime.Value
+								/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+							} {
+								return struct {
+									a           string
+									arrayIgnore []int64
+									fIgnore     gopurs_runtime.Value
+									fa          gopurs_runtime.Value
+									ignore      int64
+									zArrayA     []gopurs_runtime.Value
+									/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+								}{record.a, record.arrayIgnore, func() gopurs_runtime.Value {
+									arr := record.fIgnore
+									boxed := make([]gopurs_runtime.Value, len(arr))
+									for i, v := range arr {
+										boxed[i] = gopurs_runtime.Int(v)
+									}
+									return gopurs_runtime.Array(boxed)
+								}(), func() gopurs_runtime.Value {
+									arr := record.fa
+									boxed := make([]gopurs_runtime.Value, len(arr))
+									for i, v := range arr {
+										boxed[i] = gopurs_runtime.Str(v)
+									}
+									return gopurs_runtime.Array(boxed)
+								}(), record.ignore, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+									arr := record.zArrayA
+									boxed := make([]gopurs_runtime.Value, len(arr))
+									for i, v := range arr {
+										boxed[i] = gopurs_runtime.Str(v)
+									}
+									return gopurs_runtime.Array(boxed)
+								}()).UnsafePtr))}
+							}(func() struct {
+								a           string
+								arrayIgnore []int64
+								fIgnore     []int64
+								fa          []string
+								ignore      int64
+								zArrayA     []string
+								/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+							} {
+								orig := Get_Main_recordValue()
+								_ = orig
+								clone := struct {
 									a           string
 									arrayIgnore []int64
 									fIgnore     []int64
@@ -1976,86 +2325,101 @@ func Get_Main_main() gopurs_runtime.Value {
 									ignore      int64
 									zArrayA     []string
 									/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-								} {
-									orig := Get_Main_recordValue()
-									_ = orig
-									clone := struct {
-										a           string
-										arrayIgnore []int64
-										fIgnore     []int64
-										fa          []string
-										ignore      int64
-										zArrayA     []string
-										/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-									}{}
-									clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
-									clone.arrayIgnore = func() []int64 {
-										arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-										unboxed := make([]int64, len(arr))
-										for i, v := range arr {
-											unboxed[i] = v.IntVal
-										}
-										return unboxed
-									}()
-									clone.fIgnore = func() []int64 {
-										arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
-										unboxed := make([]int64, len(arr))
-										for i, v := range arr {
-											unboxed[i] = v.IntVal
-										}
-										return unboxed
-									}()
-									clone.fa = func() []string {
-										arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
-										unboxed := make([]string, len(arr))
-										for i, v := range arr {
-											unboxed[i] = v.StrVal()
-										}
-										return unboxed
-									}()
-									clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-									clone.zArrayA = func() []string {
-										arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
-										unboxed := make([]string, len(arr))
-										for i, v := range arr {
-											unboxed[i] = v.StrVal()
-										}
-										return unboxed
-									}()
-									return clone
+								}{}
+								clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
+								clone.arrayIgnore = func() []int64 {
+									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+									unboxed := make([]int64, len(arr))
+									for i, v := range arr {
+										unboxed[i] = v.IntVal
+									}
+									return unboxed
 								}()
+								clone.fIgnore = func() []int64 {
+									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
+									unboxed := make([]int64, len(arr))
+									for i, v := range arr {
+										unboxed[i] = v.IntVal
+									}
+									return unboxed
+								}()
+								clone.fa = func() []string {
+									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
+									unboxed := make([]string, len(arr))
+									for i, v := range arr {
+										unboxed[i] = v.StrVal()
+									}
+									return unboxed
+								}()
+								clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+								clone.zArrayA = func() []string {
+									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
+									unboxed := make([]string, len(arr))
+									for i, v := range arr {
+										unboxed[i] = v.StrVal()
+									}
+									return unboxed
+								}()
+								return clone
+							}())})))})).UnsafePtr))), gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Array([]gopurs_runtime.Value{gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_1039524714_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, string]{1, func(record struct {
+								a           string
+								arrayIgnore []int64
+								fIgnore     []int64
+								fa          []string
+								ignore      int64
+								zArrayA     []string
+								/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+							}) struct {
+								a           string
+								arrayIgnore []int64
+								fIgnore     gopurs_runtime.Value
+								fa          gopurs_runtime.Value
+								ignore      int64
+								zArrayA     []gopurs_runtime.Value
+								/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+							} {
+								return struct {
+									a           string
+									arrayIgnore []int64
+									fIgnore     gopurs_runtime.Value
+									fa          gopurs_runtime.Value
+									ignore      int64
+									zArrayA     []gopurs_runtime.Value
+									/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+								}{record.a, record.arrayIgnore, func() gopurs_runtime.Value {
+									arr := record.fIgnore
+									boxed := make([]gopurs_runtime.Value, len(arr))
+									for i, v := range arr {
+										boxed[i] = gopurs_runtime.Int(v)
+									}
+									return gopurs_runtime.Array(boxed)
+								}(), func() gopurs_runtime.Value {
+									arr := record.fa
+									boxed := make([]gopurs_runtime.Value, len(arr))
+									for i, v := range arr {
+										boxed[i] = gopurs_runtime.Str(v)
+									}
+									return gopurs_runtime.Array(boxed)
+								}(), record.ignore, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+									arr := record.zArrayA
+									boxed := make([]gopurs_runtime.Value, len(arr))
+									for i, v := range arr {
+										boxed[i] = gopurs_runtime.Str(v)
+									}
+									return gopurs_runtime.Array(boxed)
+								}()).UnsafePtr))}
+							}(func() struct {
+								a           string
+								arrayIgnore []int64
+								fIgnore     []int64
+								fa          []string
+								ignore      int64
+								zArrayA     []string
+								/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+							} {
+								orig := Get_Main_recordValue()
 								_ = orig
-								return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{gopurs_runtime.Str(orig.a), func() gopurs_runtime.Value {
-									arr := orig.arrayIgnore
-									boxed := make([]gopurs_runtime.Value, len(arr))
-									for i, v := range arr {
-										boxed[i] = gopurs_runtime.Int(v)
-									}
-									return gopurs_runtime.Array(boxed)
-								}(), func() gopurs_runtime.Value {
-									arr := orig.fIgnore
-									boxed := make([]gopurs_runtime.Value, len(arr))
-									for i, v := range arr {
-										boxed[i] = gopurs_runtime.Int(v)
-									}
-									return gopurs_runtime.Array(boxed)
-								}(), func() gopurs_runtime.Value {
-									arr := orig.fa
-									boxed := make([]gopurs_runtime.Value, len(arr))
-									for i, v := range arr {
-										boxed[i] = gopurs_runtime.Str(v)
-									}
-									return gopurs_runtime.Array(boxed)
-								}(), gopurs_runtime.Int(orig.ignore), func() gopurs_runtime.Value {
-									arr := orig.zArrayA
-									boxed := make([]gopurs_runtime.Value, len(arr))
-									for i, v := range arr {
-										boxed[i] = gopurs_runtime.Str(v)
-									}
-									return gopurs_runtime.Array(boxed)
-								}()})
-							}()})))})).UnsafePtr))), gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Array([]gopurs_runtime.Value{gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_1039524714_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, string]{1, func() gopurs_runtime.Value {
-								orig := func() struct {
+								clone := struct {
 									a           string
 									arrayIgnore []int64
 									fIgnore     []int64
@@ -2063,85 +2427,43 @@ func Get_Main_main() gopurs_runtime.Value {
 									ignore      int64
 									zArrayA     []string
 									/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-								} {
-									orig := Get_Main_recordValue()
-									_ = orig
-									clone := struct {
-										a           string
-										arrayIgnore []int64
-										fIgnore     []int64
-										fa          []string
-										ignore      int64
-										zArrayA     []string
-										/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-									}{}
-									clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
-									clone.arrayIgnore = func() []int64 {
-										arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-										unboxed := make([]int64, len(arr))
-										for i, v := range arr {
-											unboxed[i] = v.IntVal
-										}
-										return unboxed
-									}()
-									clone.fIgnore = func() []int64 {
-										arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
-										unboxed := make([]int64, len(arr))
-										for i, v := range arr {
-											unboxed[i] = v.IntVal
-										}
-										return unboxed
-									}()
-									clone.fa = func() []string {
-										arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
-										unboxed := make([]string, len(arr))
-										for i, v := range arr {
-											unboxed[i] = v.StrVal()
-										}
-										return unboxed
-									}()
-									clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-									clone.zArrayA = func() []string {
-										arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
-										unboxed := make([]string, len(arr))
-										for i, v := range arr {
-											unboxed[i] = v.StrVal()
-										}
-										return unboxed
-									}()
-									return clone
+								}{}
+								clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
+								clone.arrayIgnore = func() []int64 {
+									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+									unboxed := make([]int64, len(arr))
+									for i, v := range arr {
+										unboxed[i] = v.IntVal
+									}
+									return unboxed
 								}()
-								_ = orig
-								return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{gopurs_runtime.Str(orig.a), func() gopurs_runtime.Value {
-									arr := orig.arrayIgnore
-									boxed := make([]gopurs_runtime.Value, len(arr))
+								clone.fIgnore = func() []int64 {
+									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
+									unboxed := make([]int64, len(arr))
 									for i, v := range arr {
-										boxed[i] = gopurs_runtime.Int(v)
+										unboxed[i] = v.IntVal
 									}
-									return gopurs_runtime.Array(boxed)
-								}(), func() gopurs_runtime.Value {
-									arr := orig.fIgnore
-									boxed := make([]gopurs_runtime.Value, len(arr))
+									return unboxed
+								}()
+								clone.fa = func() []string {
+									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
+									unboxed := make([]string, len(arr))
 									for i, v := range arr {
-										boxed[i] = gopurs_runtime.Int(v)
+										unboxed[i] = v.StrVal()
 									}
-									return gopurs_runtime.Array(boxed)
-								}(), func() gopurs_runtime.Value {
-									arr := orig.fa
-									boxed := make([]gopurs_runtime.Value, len(arr))
+									return unboxed
+								}()
+								clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+								clone.zArrayA = func() []string {
+									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
+									unboxed := make([]string, len(arr))
 									for i, v := range arr {
-										boxed[i] = gopurs_runtime.Str(v)
+										unboxed[i] = v.StrVal()
 									}
-									return gopurs_runtime.Array(boxed)
-								}(), gopurs_runtime.Int(orig.ignore), func() gopurs_runtime.Value {
-									arr := orig.zArrayA
-									boxed := make([]gopurs_runtime.Value, len(arr))
-									for i, v := range arr {
-										boxed[i] = gopurs_runtime.Str(v)
-									}
-									return gopurs_runtime.Array(boxed)
-								}()})
-							}()})))}})).UnsafePtr)))).IntVal) != (0)))
+									return unboxed
+								}()
+								return clone
+							}())})))}})).UnsafePtr)))).IntVal) != (0)))
 							_ = __local_var_8_12
 							// TAST (Let): __local_var_9_13 shape=EffectBind(Let(Let(Other))) bindingType=Any
 							__local_var_9_13 := gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
@@ -2421,8 +2743,79 @@ func Get_Main_main() gopurs_runtime.Value {
 																return gopurs_runtime.Str("arrayIgnore")
 															})), Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))})), gopurs_runtime.Value{}, gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_24 gopurs_runtime.Value) gopurs_runtime.Value {
 																return gopurs_runtime.Str("a")
-															})), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}))))), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))})), "eq"), gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Call_Data_Traversable_sequence(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](Call_Main_traversableM(gopurs_runtime.Value{Type: 9, IntVal: 3941073978, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](Get_Data_Traversable_traversableArray()))}))), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Control_Applicative_applicativeArray()))}, gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_2381891596_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, []string]{1, func() gopurs_runtime.Value {
-																orig := func() struct {
+															})), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}))))), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))})), "eq"), gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Call_Data_Traversable_sequence(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](Call_Main_traversableM(gopurs_runtime.Value{Type: 9, IntVal: 3941073978, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](Get_Data_Traversable_traversableArray()))}))), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Control_Applicative_applicativeArray()))}, gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_2381891596_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, []string]{1, func(record struct {
+																a           []string
+																arrayIgnore []int64
+																fIgnore     []int64
+																fa          [][]string
+																ignore      int64
+																zArrayA     [][]string
+																/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+															}) struct {
+																a           []string
+																arrayIgnore []int64
+																fIgnore     gopurs_runtime.Value
+																fa          gopurs_runtime.Value
+																ignore      int64
+																zArrayA     []gopurs_runtime.Value
+																/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+															} {
+																return struct {
+																	a           []string
+																	arrayIgnore []int64
+																	fIgnore     gopurs_runtime.Value
+																	fa          gopurs_runtime.Value
+																	ignore      int64
+																	zArrayA     []gopurs_runtime.Value
+																	/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+																}{record.a, record.arrayIgnore, func() gopurs_runtime.Value {
+																	arr := record.fIgnore
+																	boxed := make([]gopurs_runtime.Value, len(arr))
+																	for i, v := range arr {
+																		boxed[i] = gopurs_runtime.Int(v)
+																	}
+																	return gopurs_runtime.Array(boxed)
+																}(), func() gopurs_runtime.Value {
+																	arr := record.fa
+																	boxed := make([]gopurs_runtime.Value, len(arr))
+																	for i, v := range arr {
+																		boxed[i] = func() gopurs_runtime.Value {
+																			arr := v
+																			boxed := make([]gopurs_runtime.Value, len(arr))
+																			for i, v := range arr {
+																				boxed[i] = gopurs_runtime.Str(v)
+																			}
+																			return gopurs_runtime.Array(boxed)
+																		}()
+																	}
+																	return gopurs_runtime.Array(boxed)
+																}(), record.ignore, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+																	arr := record.zArrayA
+																	boxed := make([]gopurs_runtime.Value, len(arr))
+																	for i, v := range arr {
+																		boxed[i] = func() gopurs_runtime.Value {
+																			arr := v
+																			boxed := make([]gopurs_runtime.Value, len(arr))
+																			for i, v := range arr {
+																				boxed[i] = gopurs_runtime.Str(v)
+																			}
+																			return gopurs_runtime.Array(boxed)
+																		}()
+																	}
+																	return gopurs_runtime.Array(boxed)
+																}()).UnsafePtr))}
+															}(func() struct {
+																a           []string
+																arrayIgnore []int64
+																fIgnore     []int64
+																fa          [][]string
+																ignore      int64
+																zArrayA     [][]string
+																/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+															} {
+																orig := Get_Main_recordValue_prime_()
+																_ = orig
+																clone := struct {
 																	a           []string
 																	arrayIgnore []int64
 																	fIgnore     []int64
@@ -2430,128 +2823,122 @@ func Get_Main_main() gopurs_runtime.Value {
 																	ignore      int64
 																	zArrayA     [][]string
 																	/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-																} {
-																	orig := Get_Main_recordValue_prime_()
-																	_ = orig
-																	clone := struct {
-																		a           []string
-																		arrayIgnore []int64
-																		fIgnore     []int64
-																		fa          [][]string
-																		ignore      int64
-																		zArrayA     [][]string
-																		/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-																	}{}
-																	clone.a = func() []string {
-																		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "a").UnsafePtr)
-																		unboxed := make([]string, len(arr))
-																		for i, v := range arr {
-																			unboxed[i] = v.StrVal()
-																		}
-																		return unboxed
-																	}()
-																	clone.arrayIgnore = func() []int64 {
-																		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-																		unboxed := make([]int64, len(arr))
-																		for i, v := range arr {
-																			unboxed[i] = v.IntVal
-																		}
-																		return unboxed
-																	}()
-																	clone.fIgnore = func() []int64 {
-																		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
-																		unboxed := make([]int64, len(arr))
-																		for i, v := range arr {
-																			unboxed[i] = v.IntVal
-																		}
-																		return unboxed
-																	}()
-																	clone.fa = func() [][]string {
-																		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
-																		unboxed := make([][]string, len(arr))
-																		for i, v := range arr {
-																			unboxed[i] = func() []string {
-																				arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-																				unboxed := make([]string, len(arr))
-																				for i, v := range arr {
-																					unboxed[i] = v.StrVal()
-																				}
-																				return unboxed
-																			}()
-																		}
-																		return unboxed
-																	}()
-																	clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-																	clone.zArrayA = func() [][]string {
-																		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
-																		unboxed := make([][]string, len(arr))
-																		for i, v := range arr {
-																			unboxed[i] = func() []string {
-																				arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-																				unboxed := make([]string, len(arr))
-																				for i, v := range arr {
-																					unboxed[i] = v.StrVal()
-																				}
-																				return unboxed
-																			}()
-																		}
-																		return unboxed
-																	}()
-																	return clone
+																}{}
+																clone.a = func() []string {
+																	arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "a").UnsafePtr)
+																	unboxed := make([]string, len(arr))
+																	for i, v := range arr {
+																		unboxed[i] = v.StrVal()
+																	}
+																	return unboxed
 																}()
-																_ = orig
-																return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{func() gopurs_runtime.Value {
-																	arr := orig.a
+																clone.arrayIgnore = func() []int64 {
+																	arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+																	unboxed := make([]int64, len(arr))
+																	for i, v := range arr {
+																		unboxed[i] = v.IntVal
+																	}
+																	return unboxed
+																}()
+																clone.fIgnore = func() []int64 {
+																	arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
+																	unboxed := make([]int64, len(arr))
+																	for i, v := range arr {
+																		unboxed[i] = v.IntVal
+																	}
+																	return unboxed
+																}()
+																clone.fa = func() [][]string {
+																	arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
+																	unboxed := make([][]string, len(arr))
+																	for i, v := range arr {
+																		unboxed[i] = func() []string {
+																			arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
+																			unboxed := make([]string, len(arr))
+																			for i, v := range arr {
+																				unboxed[i] = v.StrVal()
+																			}
+																			return unboxed
+																		}()
+																	}
+																	return unboxed
+																}()
+																clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+																clone.zArrayA = func() [][]string {
+																	arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
+																	unboxed := make([][]string, len(arr))
+																	for i, v := range arr {
+																		unboxed[i] = func() []string {
+																			arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
+																			unboxed := make([]string, len(arr))
+																			for i, v := range arr {
+																				unboxed[i] = v.StrVal()
+																			}
+																			return unboxed
+																		}()
+																	}
+																	return unboxed
+																}()
+																return clone
+															}())})))})).UnsafePtr))), gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Array([]gopurs_runtime.Value{gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_1039524714_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, string]{1, func(record struct {
+																a           string
+																arrayIgnore []int64
+																fIgnore     []int64
+																fa          []string
+																ignore      int64
+																zArrayA     []string
+																/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+															}) struct {
+																a           string
+																arrayIgnore []int64
+																fIgnore     gopurs_runtime.Value
+																fa          gopurs_runtime.Value
+																ignore      int64
+																zArrayA     []gopurs_runtime.Value
+																/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+															} {
+																return struct {
+																	a           string
+																	arrayIgnore []int64
+																	fIgnore     gopurs_runtime.Value
+																	fa          gopurs_runtime.Value
+																	ignore      int64
+																	zArrayA     []gopurs_runtime.Value
+																	/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+																}{record.a, record.arrayIgnore, func() gopurs_runtime.Value {
+																	arr := record.fIgnore
+																	boxed := make([]gopurs_runtime.Value, len(arr))
+																	for i, v := range arr {
+																		boxed[i] = gopurs_runtime.Int(v)
+																	}
+																	return gopurs_runtime.Array(boxed)
+																}(), func() gopurs_runtime.Value {
+																	arr := record.fa
 																	boxed := make([]gopurs_runtime.Value, len(arr))
 																	for i, v := range arr {
 																		boxed[i] = gopurs_runtime.Str(v)
 																	}
 																	return gopurs_runtime.Array(boxed)
-																}(), func() gopurs_runtime.Value {
-																	arr := orig.arrayIgnore
+																}(), record.ignore, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+																	arr := record.zArrayA
 																	boxed := make([]gopurs_runtime.Value, len(arr))
 																	for i, v := range arr {
-																		boxed[i] = gopurs_runtime.Int(v)
+																		boxed[i] = gopurs_runtime.Str(v)
 																	}
 																	return gopurs_runtime.Array(boxed)
-																}(), func() gopurs_runtime.Value {
-																	arr := orig.fIgnore
-																	boxed := make([]gopurs_runtime.Value, len(arr))
-																	for i, v := range arr {
-																		boxed[i] = gopurs_runtime.Int(v)
-																	}
-																	return gopurs_runtime.Array(boxed)
-																}(), func() gopurs_runtime.Value {
-																	arr := orig.fa
-																	boxed := make([]gopurs_runtime.Value, len(arr))
-																	for i, v := range arr {
-																		boxed[i] = func() gopurs_runtime.Value {
-																			arr := v
-																			boxed := make([]gopurs_runtime.Value, len(arr))
-																			for i, v := range arr {
-																				boxed[i] = gopurs_runtime.Str(v)
-																			}
-																			return gopurs_runtime.Array(boxed)
-																		}()
-																	}
-																	return gopurs_runtime.Array(boxed)
-																}(), gopurs_runtime.Int(orig.ignore), func() gopurs_runtime.Value {
-																	arr := orig.zArrayA
-																	boxed := make([]gopurs_runtime.Value, len(arr))
-																	for i, v := range arr {
-																		boxed[i] = func() gopurs_runtime.Value {
-																			arr := v
-																			boxed := make([]gopurs_runtime.Value, len(arr))
-																			for i, v := range arr {
-																				boxed[i] = gopurs_runtime.Str(v)
-																			}
-																			return gopurs_runtime.Array(boxed)
-																		}()
-																	}
-																	return gopurs_runtime.Array(boxed)
-																}()})
-															}()})))})).UnsafePtr))), gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Array([]gopurs_runtime.Value{gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_1039524714_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, string]{1, func() gopurs_runtime.Value {
-																orig := func() struct {
+																}()).UnsafePtr))}
+															}(func() struct {
+																a           string
+																arrayIgnore []int64
+																fIgnore     []int64
+																fa          []string
+																ignore      int64
+																zArrayA     []string
+																/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+															} {
+																orig := Get_Main_recordValue()
+																_ = orig
+																clone := struct {
 																	a           string
 																	arrayIgnore []int64
 																	fIgnore     []int64
@@ -2559,85 +2946,43 @@ func Get_Main_main() gopurs_runtime.Value {
 																	ignore      int64
 																	zArrayA     []string
 																	/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-																} {
-																	orig := Get_Main_recordValue()
-																	_ = orig
-																	clone := struct {
-																		a           string
-																		arrayIgnore []int64
-																		fIgnore     []int64
-																		fa          []string
-																		ignore      int64
-																		zArrayA     []string
-																		/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-																	}{}
-																	clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
-																	clone.arrayIgnore = func() []int64 {
-																		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-																		unboxed := make([]int64, len(arr))
-																		for i, v := range arr {
-																			unboxed[i] = v.IntVal
-																		}
-																		return unboxed
-																	}()
-																	clone.fIgnore = func() []int64 {
-																		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
-																		unboxed := make([]int64, len(arr))
-																		for i, v := range arr {
-																			unboxed[i] = v.IntVal
-																		}
-																		return unboxed
-																	}()
-																	clone.fa = func() []string {
-																		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
-																		unboxed := make([]string, len(arr))
-																		for i, v := range arr {
-																			unboxed[i] = v.StrVal()
-																		}
-																		return unboxed
-																	}()
-																	clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-																	clone.zArrayA = func() []string {
-																		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
-																		unboxed := make([]string, len(arr))
-																		for i, v := range arr {
-																			unboxed[i] = v.StrVal()
-																		}
-																		return unboxed
-																	}()
-																	return clone
+																}{}
+																clone.a = gopurs_runtime.RecordGet(orig, "a").StrVal()
+																clone.arrayIgnore = func() []int64 {
+																	arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
+																	unboxed := make([]int64, len(arr))
+																	for i, v := range arr {
+																		unboxed[i] = v.IntVal
+																	}
+																	return unboxed
 																}()
-																_ = orig
-																return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{gopurs_runtime.Str(orig.a), func() gopurs_runtime.Value {
-																	arr := orig.arrayIgnore
-																	boxed := make([]gopurs_runtime.Value, len(arr))
+																clone.fIgnore = func() []int64 {
+																	arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fIgnore").UnsafePtr)
+																	unboxed := make([]int64, len(arr))
 																	for i, v := range arr {
-																		boxed[i] = gopurs_runtime.Int(v)
+																		unboxed[i] = v.IntVal
 																	}
-																	return gopurs_runtime.Array(boxed)
-																}(), func() gopurs_runtime.Value {
-																	arr := orig.fIgnore
-																	boxed := make([]gopurs_runtime.Value, len(arr))
+																	return unboxed
+																}()
+																clone.fa = func() []string {
+																	arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "fa").UnsafePtr)
+																	unboxed := make([]string, len(arr))
 																	for i, v := range arr {
-																		boxed[i] = gopurs_runtime.Int(v)
+																		unboxed[i] = v.StrVal()
 																	}
-																	return gopurs_runtime.Array(boxed)
-																}(), func() gopurs_runtime.Value {
-																	arr := orig.fa
-																	boxed := make([]gopurs_runtime.Value, len(arr))
+																	return unboxed
+																}()
+																clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
+																clone.zArrayA = func() []string {
+																	arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "zArrayA").UnsafePtr)
+																	unboxed := make([]string, len(arr))
 																	for i, v := range arr {
-																		boxed[i] = gopurs_runtime.Str(v)
+																		unboxed[i] = v.StrVal()
 																	}
-																	return gopurs_runtime.Array(boxed)
-																}(), gopurs_runtime.Int(orig.ignore), func() gopurs_runtime.Value {
-																	arr := orig.zArrayA
-																	boxed := make([]gopurs_runtime.Value, len(arr))
-																	for i, v := range arr {
-																		boxed[i] = gopurs_runtime.Str(v)
-																	}
-																	return gopurs_runtime.Array(boxed)
-																}()})
-															}()})))}})).UnsafePtr)))).IntVal) != (0)))
+																	return unboxed
+																}()
+																return clone
+															}())})))}})).UnsafePtr)))).IntVal) != (0)))
 															_ = __local_var_24_36
 															// TAST (Let): __local_var_25_37 shape=EffectBind(Let(Let(Other))) bindingType=Any
 															__local_var_25_37 := gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
@@ -2904,13 +3249,29 @@ type Constructor_Main_M3[T_f any, T_a any] struct {
 
 type Constructor_Main_M4[T_f any, T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 struct {
+		a           T_a
+		arrayIgnore []int64
+		fIgnore     gopurs_runtime.Value
+		fa          gopurs_runtime.Value
+		ignore      int64
+		zArrayA     []gopurs_runtime.Value
+		/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+	}
 }
 
 type Constructor_Main_M5[T_f any, T_a any] struct {
 	Rc uint32
 	V0 struct {
-		nested gopurs_runtime.Value
+		nested struct {
+			a           T_a
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}
 		/*gopurs:record-v1:1:006e00650073007400650064*/
 	}
 }
@@ -2923,9 +3284,25 @@ type Constructor_Main_M6[T_f any, T_a any] struct {
 	V3 []gopurs_runtime.Value
 	V4 gopurs_runtime.Value
 	V5 gopurs_runtime.Value
-	V6 gopurs_runtime.Value
+	V6 struct {
+		a           T_a
+		arrayIgnore []int64
+		fIgnore     gopurs_runtime.Value
+		fa          gopurs_runtime.Value
+		ignore      int64
+		zArrayA     []gopurs_runtime.Value
+		/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+	}
 	V7 struct {
-		nested gopurs_runtime.Value
+		nested struct {
+			a           T_a
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}
 		/*gopurs:record-v1:1:006e00650073007400650064*/
 	}
 }
@@ -2991,20 +3368,34 @@ func Call_Main_functorM(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runtime.
 			if m_2.Type == 9 && m_2.IntVal == 3190619783 {
 				arrayIntrinsic_arg_2 := f_1
 				_ = arrayIntrinsic_arg_2
-				arrayIntrinsic_arg_3 := gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0, "zArrayA")).UnsafePtr)))
+				arrayIntrinsic_arg_3 := gopurs_runtime.Array((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0.zArrayA)
 				_ = arrayIntrinsic_arg_3
-				__t14 = gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer((&Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.RecordUpdate3((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0, "a", gopurs_runtime.Apply(f_1, gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0, "a")), "fa", gopurs_runtime.Apply2(Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](dictFunctor_0)), f_1, gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0, "fa")), "zArrayA", gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
-					arr_val_arrayMap5 := arrayIntrinsic_arg_3
-					_ = arr_val_arrayMap5
-					arr_go_arrayMap5 := (*[]gopurs_runtime.Value)(arr_val_arrayMap5.UnsafePtr)
-					_ = arr_go_arrayMap5
-					res_go_arrayMap5 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap5))
-					_ = res_go_arrayMap5
-					for i_arrayMap5, v_arrayMap5 := range *arr_go_arrayMap5 {
-						res_go_arrayMap5[i_arrayMap5] = gopurs_runtime.Apply(arrayIntrinsic_arg_2, v_arrayMap5)
-					}
-					return gopurs_runtime.Array(res_go_arrayMap5)
-				}()).UnsafePtr))))}))}
+				__t14 = gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer((&Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value]{1, func() struct {
+					a           gopurs_runtime.Value
+					arrayIgnore []int64
+					fIgnore     gopurs_runtime.Value
+					fa          gopurs_runtime.Value
+					ignore      int64
+					zArrayA     []gopurs_runtime.Value
+					/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+				} {
+					clone := (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0
+					clone.a = gopurs_runtime.Apply(f_1, (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0.a)
+					clone.fa = gopurs_runtime.Apply2(Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](dictFunctor_0)), f_1, (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0.fa)
+					clone.zArrayA = (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+						arr_val_arrayMap5 := arrayIntrinsic_arg_3
+						_ = arr_val_arrayMap5
+						arr_go_arrayMap5 := (*[]gopurs_runtime.Value)(arr_val_arrayMap5.UnsafePtr)
+						_ = arr_go_arrayMap5
+						res_go_arrayMap5 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap5))
+						_ = res_go_arrayMap5
+						for i_arrayMap5, v_arrayMap5 := range *arr_go_arrayMap5 {
+							res_go_arrayMap5[i_arrayMap5] = gopurs_runtime.Apply(arrayIntrinsic_arg_2, v_arrayMap5)
+						}
+						return gopurs_runtime.Array(res_go_arrayMap5)
+					}()).UnsafePtr))
+					return clone
+				}()}))}
 				goto end_branch_14
 			} else {
 
@@ -3014,39 +3405,9 @@ func Call_Main_functorM(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runtime.
 			if m_2.Type == 9 && m_2.IntVal == 108241190 {
 				arrayIntrinsic_arg_4 := f_1
 				_ = arrayIntrinsic_arg_4
-				arrayIntrinsic_arg_5 := gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0.nested, "zArrayA")).UnsafePtr)))
+				arrayIntrinsic_arg_5 := gopurs_runtime.Array((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0.nested.zArrayA)
 				_ = arrayIntrinsic_arg_5
-				__t14 = gopurs_runtime.Value{Type: 9, IntVal: 108241190, UnsafePtr: unsafe.Pointer((&Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value]{1, func(record struct {
-					nested struct {
-						a           gopurs_runtime.Value
-						arrayIgnore []int64
-						fIgnore     gopurs_runtime.Value
-						fa          gopurs_runtime.Value
-						ignore      int64
-						zArrayA     []gopurs_runtime.Value
-						/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-					}
-					/*gopurs:record-v1:1:006e00650073007400650064*/
-				}) struct {
-					nested gopurs_runtime.Value
-					/*gopurs:record-v1:1:006e00650073007400650064*/
-				} {
-					return struct {
-						nested gopurs_runtime.Value
-						/*gopurs:record-v1:1:006e00650073007400650064*/
-					}{func() gopurs_runtime.Value {
-						orig := record.nested
-						_ = orig
-						return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{orig.a, func() gopurs_runtime.Value {
-							arr := orig.arrayIgnore
-							boxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								boxed[i] = gopurs_runtime.Int(v)
-							}
-							return gopurs_runtime.Array(boxed)
-						}(), orig.fIgnore, orig.fa, gopurs_runtime.Int(orig.ignore), gopurs_runtime.Array(orig.zArrayA)})
-					}()}
-				}(func() struct {
+				__t14 = gopurs_runtime.Value{Type: 9, IntVal: 108241190, UnsafePtr: unsafe.Pointer((&Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value]{1, func() struct {
 					nested struct {
 						a           gopurs_runtime.Value
 						arrayIgnore []int64
@@ -3058,21 +3419,7 @@ func Call_Main_functorM(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runtime.
 					}
 					/*gopurs:record-v1:1:006e00650073007400650064*/
 				} {
-					originalRecord := (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0
-					_ = originalRecord
-					_ = originalRecord
-					var clone struct {
-						nested struct {
-							a           gopurs_runtime.Value
-							arrayIgnore []int64
-							fIgnore     gopurs_runtime.Value
-							fa          gopurs_runtime.Value
-							ignore      int64
-							zArrayA     []gopurs_runtime.Value
-							/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-						}
-						/*gopurs:record-v1:1:006e00650073007400650064*/
-					}
+					clone := (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0
 					clone.nested = func() struct {
 						a           gopurs_runtime.Value
 						arrayIgnore []int64
@@ -3082,7 +3429,10 @@ func Call_Main_functorM(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runtime.
 						zArrayA     []gopurs_runtime.Value
 						/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
 					} {
-						orig := gopurs_runtime.RecordUpdate3((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0.nested, "a", gopurs_runtime.Apply(f_1, gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0.nested, "a")), "fa", gopurs_runtime.Apply2(Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](dictFunctor_0)), f_1, gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0.nested, "fa")), "zArrayA", gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+						clone := (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0.nested
+						clone.a = gopurs_runtime.Apply(f_1, (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0.nested.a)
+						clone.fa = gopurs_runtime.Apply2(Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](dictFunctor_0)), f_1, (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0.nested.fa)
+						clone.zArrayA = (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
 							arr_val_arrayMap6 := arrayIntrinsic_arg_5
 							_ = arr_val_arrayMap6
 							arr_go_arrayMap6 := (*[]gopurs_runtime.Value)(arr_val_arrayMap6.UnsafePtr)
@@ -3093,34 +3443,11 @@ func Call_Main_functorM(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runtime.
 								res_go_arrayMap6[i_arrayMap6] = gopurs_runtime.Apply(arrayIntrinsic_arg_4, v_arrayMap6)
 							}
 							return gopurs_runtime.Array(res_go_arrayMap6)
-						}()).UnsafePtr))))
-						_ = orig
-						clone := struct {
-							a           gopurs_runtime.Value
-							arrayIgnore []int64
-							fIgnore     gopurs_runtime.Value
-							fa          gopurs_runtime.Value
-							ignore      int64
-							zArrayA     []gopurs_runtime.Value
-							/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-						}{}
-						clone.a = gopurs_runtime.RecordGet(orig, "a")
-						clone.arrayIgnore = func() []int64 {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-							unboxed := make([]int64, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v.IntVal
-							}
-							return unboxed
-						}()
-						clone.fIgnore = gopurs_runtime.RecordGet(orig, "fIgnore")
-						clone.fa = gopurs_runtime.RecordGet(orig, "fa")
-						clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-						clone.zArrayA = (*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet(orig, "zArrayA")).UnsafePtr))
+						}()).UnsafePtr))
 						return clone
 					}()
 					return clone
-				}())}))}
+				}()}))}
 				goto end_branch_14
 			} else {
 
@@ -3134,11 +3461,11 @@ func Call_Main_functorM(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runtime.
 				_ = arrayIntrinsic_arg_7
 				arrayIntrinsic_arg_8 := f_1
 				_ = arrayIntrinsic_arg_8
-				arrayIntrinsic_arg_9 := gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V6, "zArrayA")).UnsafePtr)))
+				arrayIntrinsic_arg_9 := gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V6.zArrayA)
 				_ = arrayIntrinsic_arg_9
 				arrayIntrinsic_arg_10 := f_1
 				_ = arrayIntrinsic_arg_10
-				arrayIntrinsic_arg_11 := gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V7.nested, "zArrayA")).UnsafePtr)))
+				arrayIntrinsic_arg_11 := gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V7.nested.zArrayA)
 				_ = arrayIntrinsic_arg_11
 				__t14 = gopurs_runtime.Value{Type: 9, IntVal: 2066233029, UnsafePtr: unsafe.Pointer((&Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value]{1, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V0, gopurs_runtime.Apply(f_1, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V1), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V2, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
 					arr_val_arrayMap4 := arrayIntrinsic_arg_7
@@ -3151,74 +3478,44 @@ func Call_Main_functorM(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runtime.
 						res_go_arrayMap4[i_arrayMap4] = gopurs_runtime.Apply(arrayIntrinsic_arg_6, v_arrayMap4)
 					}
 					return gopurs_runtime.Array(res_go_arrayMap4)
-				}()).UnsafePtr)), gopurs_runtime.Apply2(Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](dictFunctor_0)), f_1, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V4), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V5, gopurs_runtime.RecordUpdate3((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V6, "a", gopurs_runtime.Apply(f_1, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V6, "a")), "fa", gopurs_runtime.Apply2(Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](dictFunctor_0)), f_1, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V6, "fa")), "zArrayA", gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
-					arr_val_arrayMap5 := arrayIntrinsic_arg_9
-					_ = arr_val_arrayMap5
-					arr_go_arrayMap5 := (*[]gopurs_runtime.Value)(arr_val_arrayMap5.UnsafePtr)
-					_ = arr_go_arrayMap5
-					res_go_arrayMap5 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap5))
-					_ = res_go_arrayMap5
-					for i_arrayMap5, v_arrayMap5 := range *arr_go_arrayMap5 {
-						res_go_arrayMap5[i_arrayMap5] = gopurs_runtime.Apply(arrayIntrinsic_arg_8, v_arrayMap5)
-					}
-					return gopurs_runtime.Array(res_go_arrayMap5)
-				}()).UnsafePtr)))), func(record struct {
-					nested struct {
-						a           gopurs_runtime.Value
-						arrayIgnore []int64
-						fIgnore     gopurs_runtime.Value
-						fa          gopurs_runtime.Value
-						ignore      int64
-						zArrayA     []gopurs_runtime.Value
-						/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-					}
-					/*gopurs:record-v1:1:006e00650073007400650064*/
-				}) struct {
-					nested gopurs_runtime.Value
-					/*gopurs:record-v1:1:006e00650073007400650064*/
+				}()).UnsafePtr)), gopurs_runtime.Apply2(Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](dictFunctor_0)), f_1, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V4), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V5, func() struct {
+					a           gopurs_runtime.Value
+					arrayIgnore []int64
+					fIgnore     gopurs_runtime.Value
+					fa          gopurs_runtime.Value
+					ignore      int64
+					zArrayA     []gopurs_runtime.Value
+					/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
 				} {
-					return struct {
-						nested gopurs_runtime.Value
-						/*gopurs:record-v1:1:006e00650073007400650064*/
-					}{func() gopurs_runtime.Value {
-						orig := record.nested
-						_ = orig
-						return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{orig.a, func() gopurs_runtime.Value {
-							arr := orig.arrayIgnore
-							boxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								boxed[i] = gopurs_runtime.Int(v)
-							}
-							return gopurs_runtime.Array(boxed)
-						}(), orig.fIgnore, orig.fa, gopurs_runtime.Int(orig.ignore), gopurs_runtime.Array(orig.zArrayA)})
-					}()}
-				}(func() struct {
-					nested struct {
-						a           gopurs_runtime.Value
-						arrayIgnore []int64
-						fIgnore     gopurs_runtime.Value
-						fa          gopurs_runtime.Value
-						ignore      int64
-						zArrayA     []gopurs_runtime.Value
-						/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-					}
-					/*gopurs:record-v1:1:006e00650073007400650064*/
-				} {
-					originalRecord := (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V7
-					_ = originalRecord
-					_ = originalRecord
-					var clone struct {
-						nested struct {
-							a           gopurs_runtime.Value
-							arrayIgnore []int64
-							fIgnore     gopurs_runtime.Value
-							fa          gopurs_runtime.Value
-							ignore      int64
-							zArrayA     []gopurs_runtime.Value
-							/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+					clone := (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V6
+					clone.a = gopurs_runtime.Apply(f_1, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V6.a)
+					clone.fa = gopurs_runtime.Apply2(Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](dictFunctor_0)), f_1, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V6.fa)
+					clone.zArrayA = (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+						arr_val_arrayMap5 := arrayIntrinsic_arg_9
+						_ = arr_val_arrayMap5
+						arr_go_arrayMap5 := (*[]gopurs_runtime.Value)(arr_val_arrayMap5.UnsafePtr)
+						_ = arr_go_arrayMap5
+						res_go_arrayMap5 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap5))
+						_ = res_go_arrayMap5
+						for i_arrayMap5, v_arrayMap5 := range *arr_go_arrayMap5 {
+							res_go_arrayMap5[i_arrayMap5] = gopurs_runtime.Apply(arrayIntrinsic_arg_8, v_arrayMap5)
 						}
-						/*gopurs:record-v1:1:006e00650073007400650064*/
+						return gopurs_runtime.Array(res_go_arrayMap5)
+					}()).UnsafePtr))
+					return clone
+				}(), func() struct {
+					nested struct {
+						a           gopurs_runtime.Value
+						arrayIgnore []int64
+						fIgnore     gopurs_runtime.Value
+						fa          gopurs_runtime.Value
+						ignore      int64
+						zArrayA     []gopurs_runtime.Value
+						/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
 					}
+					/*gopurs:record-v1:1:006e00650073007400650064*/
+				} {
+					clone := (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V7
 					clone.nested = func() struct {
 						a           gopurs_runtime.Value
 						arrayIgnore []int64
@@ -3228,7 +3525,10 @@ func Call_Main_functorM(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runtime.
 						zArrayA     []gopurs_runtime.Value
 						/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
 					} {
-						orig := gopurs_runtime.RecordUpdate3((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V7.nested, "a", gopurs_runtime.Apply(f_1, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V7.nested, "a")), "fa", gopurs_runtime.Apply2(Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](dictFunctor_0)), f_1, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V7.nested, "fa")), "zArrayA", gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+						clone := (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V7.nested
+						clone.a = gopurs_runtime.Apply(f_1, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V7.nested.a)
+						clone.fa = gopurs_runtime.Apply2(Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](dictFunctor_0)), f_1, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_2.UnsafePtr).V7.nested.fa)
+						clone.zArrayA = (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
 							arr_val_arrayMap6 := arrayIntrinsic_arg_11
 							_ = arr_val_arrayMap6
 							arr_go_arrayMap6 := (*[]gopurs_runtime.Value)(arr_val_arrayMap6.UnsafePtr)
@@ -3239,34 +3539,11 @@ func Call_Main_functorM(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runtime.
 								res_go_arrayMap6[i_arrayMap6] = gopurs_runtime.Apply(arrayIntrinsic_arg_10, v_arrayMap6)
 							}
 							return gopurs_runtime.Array(res_go_arrayMap6)
-						}()).UnsafePtr))))
-						_ = orig
-						clone := struct {
-							a           gopurs_runtime.Value
-							arrayIgnore []int64
-							fIgnore     gopurs_runtime.Value
-							fa          gopurs_runtime.Value
-							ignore      int64
-							zArrayA     []gopurs_runtime.Value
-							/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-						}{}
-						clone.a = gopurs_runtime.RecordGet(orig, "a")
-						clone.arrayIgnore = func() []int64 {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-							unboxed := make([]int64, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v.IntVal
-							}
-							return unboxed
-						}()
-						clone.fIgnore = gopurs_runtime.RecordGet(orig, "fIgnore")
-						clone.fa = gopurs_runtime.RecordGet(orig, "fa")
-						clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-						clone.zArrayA = (*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet(orig, "zArrayA")).UnsafePtr))
+						}()).UnsafePtr))
 						return clone
 					}()
 					return clone
-				}())}))}
+				}()}))}
 				goto end_branch_14
 			} else {
 
@@ -3396,7 +3673,7 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 			}
 			{
 				if m_5.Type == 9 && m_5.IntVal == 3190619783 {
-					__t2 = gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply(f_4, gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V0, "a")), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply3(Call_Data_Foldable_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1))}, f_4, gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V0, "fa")), gopurs_runtime.Apply2(Call_Data_Foldable_foldMapDefaultR(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1)), f_4, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V0, "zArrayA")).UnsafePtr))))))
+					__t2 = gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply(f_4, (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V0.a), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply3(Call_Data_Foldable_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1))}, f_4, (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V0.fa), gopurs_runtime.Apply2(Call_Data_Foldable_foldMapDefaultR(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1)), f_4, gopurs_runtime.Array((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V0.zArrayA))))
 					goto end_branch_2
 				} else {
 
@@ -3404,7 +3681,7 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 			}
 			{
 				if m_5.Type == 9 && m_5.IntVal == 108241190 {
-					__t2 = gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply(f_4, gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V0.nested, "a")), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply3(Call_Data_Foldable_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1))}, f_4, gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V0.nested, "fa")), gopurs_runtime.Apply2(Call_Data_Foldable_foldMapDefaultR(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1)), f_4, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V0.nested, "zArrayA")).UnsafePtr))))))
+					__t2 = gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply(f_4, (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V0.nested.a), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply3(Call_Data_Foldable_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1))}, f_4, (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V0.nested.fa), gopurs_runtime.Apply2(Call_Data_Foldable_foldMapDefaultR(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1)), f_4, gopurs_runtime.Array((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V0.nested.zArrayA))))
 					goto end_branch_2
 				} else {
 
@@ -3412,7 +3689,7 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 			}
 			{
 				if m_5.Type == 9 && m_5.IntVal == 2066233029 {
-					__t2 = gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply(f_4, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V1), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply2(Call_Data_Foldable_foldMapDefaultR(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1)), f_4, gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V3)), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply3(Call_Data_Foldable_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1))}, f_4, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V4), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply(f_4, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V6, "a")), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply3(Call_Data_Foldable_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1))}, f_4, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V6, "fa")), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply2(Call_Data_Foldable_foldMapDefaultR(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1)), f_4, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V6, "zArrayA")).UnsafePtr)))), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply(f_4, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V7.nested, "a")), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply3(Call_Data_Foldable_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1))}, f_4, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V7.nested, "fa")), gopurs_runtime.Apply2(Call_Data_Foldable_foldMapDefaultR(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1)), f_4, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V7.nested, "zArrayA")).UnsafePtr))))))))))))
+					__t2 = gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply(f_4, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V1), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply2(Call_Data_Foldable_foldMapDefaultR(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1)), f_4, gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V3)), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply3(Call_Data_Foldable_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1))}, f_4, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V4), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply(f_4, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V6.a), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply3(Call_Data_Foldable_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1))}, f_4, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V6.fa), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply2(Call_Data_Foldable_foldMapDefaultR(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1)), f_4, gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V6.zArrayA)), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply(f_4, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V7.nested.a), gopurs_runtime.Apply2(Call_Data_Semigroup_go__append(Semigroup0_3_1), gopurs_runtime.Apply3(Call_Data_Foldable_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1))}, f_4, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V7.nested.fa), gopurs_runtime.Apply2(Call_Data_Foldable_foldMapDefaultR(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_1)), f_4, gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_5.UnsafePtr).V7.nested.zArrayA))))))))))
 					goto end_branch_2
 				} else {
 
@@ -3489,9 +3766,9 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 			if m_3.Type == 9 && m_3.IntVal == 3190619783 {
 				arrayIntrinsic_arg_6 := f_1
 				_ = arrayIntrinsic_arg_6
-				arrayIntrinsic_arg_7 := gopurs_runtime.Apply3(Call_Data_Foldable_foldl(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply2(f_1, z_2, gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0, "a")), gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0, "fa"))
+				arrayIntrinsic_arg_7 := gopurs_runtime.Apply3(Call_Data_Foldable_foldl(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply2(f_1, z_2, (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.a), (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.fa)
 				_ = arrayIntrinsic_arg_7
-				arrayIntrinsic_arg_8 := gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0, "zArrayA")).UnsafePtr)))
+				arrayIntrinsic_arg_8 := gopurs_runtime.Array((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.zArrayA)
 				_ = arrayIntrinsic_arg_8
 				__t24 = func() gopurs_runtime.Value {
 					arr_val_foldlArray3 := arrayIntrinsic_arg_8
@@ -3514,9 +3791,9 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 			if m_3.Type == 9 && m_3.IntVal == 108241190 {
 				arrayIntrinsic_arg_9 := f_1
 				_ = arrayIntrinsic_arg_9
-				arrayIntrinsic_arg_10 := gopurs_runtime.Apply3(Call_Data_Foldable_foldl(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply2(f_1, z_2, gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested, "a")), gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested, "fa"))
+				arrayIntrinsic_arg_10 := gopurs_runtime.Apply3(Call_Data_Foldable_foldl(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply2(f_1, z_2, (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested.a), (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested.fa)
 				_ = arrayIntrinsic_arg_10
-				arrayIntrinsic_arg_11 := gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested, "zArrayA")).UnsafePtr)))
+				arrayIntrinsic_arg_11 := gopurs_runtime.Array((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested.zArrayA)
 				_ = arrayIntrinsic_arg_11
 				__t24 = func() gopurs_runtime.Value {
 					arr_val_foldlArray3 := arrayIntrinsic_arg_11
@@ -3558,9 +3835,9 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 						res_go_foldlArray10 = gopurs_runtime.Apply2(arrayIntrinsic_arg_14, res_go_foldlArray10, v_foldlArray10)
 					}
 					return res_go_foldlArray10
-				}(), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V4), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V6, "a")), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V6, "fa"))
+				}(), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V4), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V6.a), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V6.fa)
 				_ = arrayIntrinsic_arg_17
-				arrayIntrinsic_arg_18 := gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V6, "zArrayA")).UnsafePtr)))
+				arrayIntrinsic_arg_18 := gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V6.zArrayA)
 				_ = arrayIntrinsic_arg_18
 				arrayIntrinsic_arg_19 := gopurs_runtime.Apply3(Call_Data_Foldable_foldl(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply2(f_1, func() gopurs_runtime.Value {
 					arr_val_foldlArray6 := arrayIntrinsic_arg_18
@@ -3573,9 +3850,9 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 						res_go_foldlArray6 = gopurs_runtime.Apply2(arrayIntrinsic_arg_13, res_go_foldlArray6, v_foldlArray6)
 					}
 					return res_go_foldlArray6
-				}(), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V7.nested, "a")), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V7.nested, "fa"))
+				}(), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V7.nested.a), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V7.nested.fa)
 				_ = arrayIntrinsic_arg_19
-				arrayIntrinsic_arg_20 := gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V7.nested, "zArrayA")).UnsafePtr)))
+				arrayIntrinsic_arg_20 := gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V7.nested.zArrayA)
 				_ = arrayIntrinsic_arg_20
 				__t24 = func() gopurs_runtime.Value {
 					arr_val_foldlArray3 := arrayIntrinsic_arg_20
@@ -3662,7 +3939,7 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 		}
 		{
 			if m_3.Type == 9 && m_3.IntVal == 3190619783 {
-				__t26 = gopurs_runtime.Apply2(f_1, gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0, "a"), gopurs_runtime.Apply3(Call_Data_Foldable_foldr(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_1, z_2, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0, "zArrayA")).UnsafePtr)))), gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0, "fa")))
+				__t26 = gopurs_runtime.Apply2(f_1, (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.a, gopurs_runtime.Apply3(Call_Data_Foldable_foldr(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_1, z_2, gopurs_runtime.Array((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.zArrayA)), (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.fa))
 				goto end_branch_26
 			} else {
 
@@ -3670,7 +3947,7 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 		}
 		{
 			if m_3.Type == 9 && m_3.IntVal == 108241190 {
-				__t26 = gopurs_runtime.Apply2(f_1, gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested, "a"), gopurs_runtime.Apply3(Call_Data_Foldable_foldr(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_1, z_2, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested, "zArrayA")).UnsafePtr)))), gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested, "fa")))
+				__t26 = gopurs_runtime.Apply2(f_1, (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested.a, gopurs_runtime.Apply3(Call_Data_Foldable_foldr(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_1, z_2, gopurs_runtime.Array((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested.zArrayA)), (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested.fa))
 				goto end_branch_26
 			} else {
 
@@ -3678,7 +3955,7 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 		}
 		{
 			if m_3.Type == 9 && m_3.IntVal == 2066233029 {
-				__t26 = gopurs_runtime.Apply2(f_1, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V1, gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_1, gopurs_runtime.Apply3(Call_Data_Foldable_foldr(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply2(f_1, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V6, "a"), gopurs_runtime.Apply3(Call_Data_Foldable_foldr(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_1, gopurs_runtime.Apply2(f_1, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V7.nested, "a"), gopurs_runtime.Apply3(Call_Data_Foldable_foldr(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_1, z_2, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V7.nested, "zArrayA")).UnsafePtr)))), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V7.nested, "fa"))), gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V6, "zArrayA")).UnsafePtr)))), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V6, "fa"))), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V4), gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V3)))
+				__t26 = gopurs_runtime.Apply2(f_1, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V1, gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_1, gopurs_runtime.Apply3(Call_Data_Foldable_foldr(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply2(f_1, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V6.a, gopurs_runtime.Apply3(Call_Data_Foldable_foldr(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_1, gopurs_runtime.Apply2(f_1, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V7.nested.a, gopurs_runtime.Apply3(Call_Data_Foldable_foldr(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](dictFoldable_0)), f_1, gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_1, z_2, gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V7.nested.zArrayA)), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V7.nested.fa)), gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V6.zArrayA)), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V6.fa)), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V4), gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V3)))
 				goto end_branch_26
 			} else {
 
@@ -3786,8 +4063,22 @@ traversableM:
 						Apply0_9_6 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictApplicative_3, "Apply0"), gopurs_runtime.Value{})
 						_ = Apply0_9_6
 						__t18 = gopurs_runtime.Apply2(Call_Control_Apply_apply(Apply0_4_2), gopurs_runtime.Apply2(Call_Control_Apply_apply(Apply0_4_2), gopurs_runtime.Apply2(Call_Data_Functor_go__map(Functor0_5_3), gopurs_runtime.Func3(func(v1_9 gopurs_runtime.Value, v2_10 gopurs_runtime.Value, v3_11 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer((&Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.RecordUpdate3(__local_var_8_5, "a", v1_9, "fa", v2_10, "zArrayA", gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((v3_11).UnsafePtr))))}))}
-						}), gopurs_runtime.Apply(f_6, gopurs_runtime.RecordGet(__local_var_8_5, "a"))), gopurs_runtime.Apply3(Call_Data_Traversable_traverse(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](dictTraversable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3))}, f_6, gopurs_runtime.RecordGet(__local_var_8_5, "fa"))), gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), Call_Control_Apply_apply(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Apply0_9_6)), Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Apply0_9_6, "Functor0"), gopurs_runtime.Value{}))), Call_Control_Applicative_pure(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3)), Get_Data_Semigroup_concatArray(), f_6, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet(__local_var_8_5, "zArrayA")).UnsafePtr)))))
+							return gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer((&Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value]{1, func() struct {
+								a           gopurs_runtime.Value
+								arrayIgnore []int64
+								fIgnore     gopurs_runtime.Value
+								fa          gopurs_runtime.Value
+								ignore      int64
+								zArrayA     []gopurs_runtime.Value
+								/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+							} {
+								clone := __local_var_8_5
+								clone.a = v1_9
+								clone.fa = v2_10
+								clone.zArrayA = (*(*[]gopurs_runtime.Value)((v3_11).UnsafePtr))
+								return clone
+							}()}))}
+						}), gopurs_runtime.Apply(f_6, __local_var_8_5.a)), gopurs_runtime.Apply3(Call_Data_Traversable_traverse(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](dictTraversable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3))}, f_6, __local_var_8_5.fa)), gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), Call_Control_Apply_apply(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Apply0_9_6)), Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Apply0_9_6, "Functor0"), gopurs_runtime.Value{}))), Call_Control_Applicative_pure(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3)), Get_Data_Semigroup_concatArray(), f_6, gopurs_runtime.Array(__local_var_8_5.zArrayA)))
 						goto end_branch_18
 					} else {
 
@@ -3802,37 +4093,7 @@ traversableM:
 						Apply0_9_8 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictApplicative_3, "Apply0"), gopurs_runtime.Value{})
 						_ = Apply0_9_8
 						__t18 = gopurs_runtime.Apply2(Call_Control_Apply_apply(Apply0_4_2), gopurs_runtime.Apply2(Call_Control_Apply_apply(Apply0_4_2), gopurs_runtime.Apply2(Call_Data_Functor_go__map(Functor0_5_3), gopurs_runtime.Func3(func(v1_9 gopurs_runtime.Value, v2_10 gopurs_runtime.Value, v3_11 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Value{Type: 9, IntVal: 108241190, UnsafePtr: unsafe.Pointer((&Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value]{1, func(record struct {
-								nested struct {
-									a           gopurs_runtime.Value
-									arrayIgnore []int64
-									fIgnore     gopurs_runtime.Value
-									fa          gopurs_runtime.Value
-									ignore      int64
-									zArrayA     []gopurs_runtime.Value
-									/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-								}
-								/*gopurs:record-v1:1:006e00650073007400650064*/
-							}) struct {
-								nested gopurs_runtime.Value
-								/*gopurs:record-v1:1:006e00650073007400650064*/
-							} {
-								return struct {
-									nested gopurs_runtime.Value
-									/*gopurs:record-v1:1:006e00650073007400650064*/
-								}{func() gopurs_runtime.Value {
-									orig := record.nested
-									_ = orig
-									return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{orig.a, func() gopurs_runtime.Value {
-										arr := orig.arrayIgnore
-										boxed := make([]gopurs_runtime.Value, len(arr))
-										for i, v := range arr {
-											boxed[i] = gopurs_runtime.Int(v)
-										}
-										return gopurs_runtime.Array(boxed)
-									}(), orig.fIgnore, orig.fa, gopurs_runtime.Int(orig.ignore), gopurs_runtime.Array(orig.zArrayA)})
-								}()}
-							}(func() struct {
+							return gopurs_runtime.Value{Type: 9, IntVal: 108241190, UnsafePtr: unsafe.Pointer((&Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value]{1, func() struct {
 								nested struct {
 									a           gopurs_runtime.Value
 									arrayIgnore []int64
@@ -3844,21 +4105,7 @@ traversableM:
 								}
 								/*gopurs:record-v1:1:006e00650073007400650064*/
 							} {
-								originalRecord := __local_var_8_7
-								_ = originalRecord
-								_ = originalRecord
-								var clone struct {
-									nested struct {
-										a           gopurs_runtime.Value
-										arrayIgnore []int64
-										fIgnore     gopurs_runtime.Value
-										fa          gopurs_runtime.Value
-										ignore      int64
-										zArrayA     []gopurs_runtime.Value
-										/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-									}
-									/*gopurs:record-v1:1:006e00650073007400650064*/
-								}
+								clone := __local_var_8_7
 								clone.nested = func() struct {
 									a           gopurs_runtime.Value
 									arrayIgnore []int64
@@ -3868,35 +4115,15 @@ traversableM:
 									zArrayA     []gopurs_runtime.Value
 									/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
 								} {
-									orig := gopurs_runtime.RecordUpdate3(__local_var_8_7.nested, "a", v1_9, "fa", v2_10, "zArrayA", gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((v3_11).UnsafePtr))))
-									_ = orig
-									clone := struct {
-										a           gopurs_runtime.Value
-										arrayIgnore []int64
-										fIgnore     gopurs_runtime.Value
-										fa          gopurs_runtime.Value
-										ignore      int64
-										zArrayA     []gopurs_runtime.Value
-										/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-									}{}
-									clone.a = gopurs_runtime.RecordGet(orig, "a")
-									clone.arrayIgnore = func() []int64 {
-										arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-										unboxed := make([]int64, len(arr))
-										for i, v := range arr {
-											unboxed[i] = v.IntVal
-										}
-										return unboxed
-									}()
-									clone.fIgnore = gopurs_runtime.RecordGet(orig, "fIgnore")
-									clone.fa = gopurs_runtime.RecordGet(orig, "fa")
-									clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-									clone.zArrayA = (*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet(orig, "zArrayA")).UnsafePtr))
+									clone := __local_var_8_7.nested
+									clone.a = v1_9
+									clone.fa = v2_10
+									clone.zArrayA = (*(*[]gopurs_runtime.Value)((v3_11).UnsafePtr))
 									return clone
 								}()
 								return clone
-							}())}))}
-						}), gopurs_runtime.Apply(f_6, gopurs_runtime.RecordGet(__local_var_8_7.nested, "a"))), gopurs_runtime.Apply3(Call_Data_Traversable_traverse(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](dictTraversable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3))}, f_6, gopurs_runtime.RecordGet(__local_var_8_7.nested, "fa"))), gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), Call_Control_Apply_apply(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Apply0_9_8)), Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Apply0_9_8, "Functor0"), gopurs_runtime.Value{}))), Call_Control_Applicative_pure(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3)), Get_Data_Semigroup_concatArray(), f_6, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet(__local_var_8_7.nested, "zArrayA")).UnsafePtr)))))
+							}()}))}
+						}), gopurs_runtime.Apply(f_6, __local_var_8_7.nested.a)), gopurs_runtime.Apply3(Call_Data_Traversable_traverse(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](dictTraversable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3))}, f_6, __local_var_8_7.nested.fa)), gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), Call_Control_Apply_apply(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Apply0_9_8)), Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Apply0_9_8, "Functor0"), gopurs_runtime.Value{}))), Call_Control_Applicative_pure(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3)), Get_Data_Semigroup_concatArray(), f_6, gopurs_runtime.Array(__local_var_8_7.nested.zArrayA)))
 						goto end_branch_18
 					} else {
 
@@ -3930,37 +4157,21 @@ traversableM:
 						_ = Apply0_13_16
 						__t18 = gopurs_runtime.Apply2(Call_Control_Apply_apply(Apply0_4_2), gopurs_runtime.Apply2(Call_Control_Apply_apply(Apply0_4_2), gopurs_runtime.Apply2(Call_Control_Apply_apply(Apply0_4_2), gopurs_runtime.Apply2(Call_Control_Apply_apply(Apply0_4_2), gopurs_runtime.Apply2(Call_Control_Apply_apply(Apply0_4_2), gopurs_runtime.Apply2(Call_Control_Apply_apply(Apply0_4_2), gopurs_runtime.Apply2(Call_Control_Apply_apply(Apply0_4_2), gopurs_runtime.Apply2(Call_Control_Apply_apply(Apply0_4_2), gopurs_runtime.Apply2(Call_Data_Functor_go__map(Functor0_5_3), gopurs_runtime.Func5(func(v8_13 gopurs_runtime.Value, v9_14 gopurs_runtime.Value, v10_15 gopurs_runtime.Value, v11_16 gopurs_runtime.Value, v12_17 gopurs_runtime.Value) gopurs_runtime.Value {
 							return gopurs_runtime.Func4(func(v13_18 gopurs_runtime.Value, v14_19 gopurs_runtime.Value, v15_20 gopurs_runtime.Value, v16_21 gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Value{Type: 9, IntVal: 2066233029, UnsafePtr: unsafe.Pointer((&Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value]{1, __local_var_8_9, v8_13, __local_var_9_10, (*(*[]gopurs_runtime.Value)((v9_14).UnsafePtr)), v10_15, __local_var_10_11, gopurs_runtime.RecordUpdate3(__local_var_11_12, "a", v11_16, "fa", v12_17, "zArrayA", gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((v13_18).UnsafePtr)))), func(record struct {
-									nested struct {
-										a           gopurs_runtime.Value
-										arrayIgnore []int64
-										fIgnore     gopurs_runtime.Value
-										fa          gopurs_runtime.Value
-										ignore      int64
-										zArrayA     []gopurs_runtime.Value
-										/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-									}
-									/*gopurs:record-v1:1:006e00650073007400650064*/
-								}) struct {
-									nested gopurs_runtime.Value
-									/*gopurs:record-v1:1:006e00650073007400650064*/
+								return gopurs_runtime.Value{Type: 9, IntVal: 2066233029, UnsafePtr: unsafe.Pointer((&Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value]{1, __local_var_8_9, v8_13, __local_var_9_10, (*(*[]gopurs_runtime.Value)((v9_14).UnsafePtr)), v10_15, __local_var_10_11, func() struct {
+									a           gopurs_runtime.Value
+									arrayIgnore []int64
+									fIgnore     gopurs_runtime.Value
+									fa          gopurs_runtime.Value
+									ignore      int64
+									zArrayA     []gopurs_runtime.Value
+									/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
 								} {
-									return struct {
-										nested gopurs_runtime.Value
-										/*gopurs:record-v1:1:006e00650073007400650064*/
-									}{func() gopurs_runtime.Value {
-										orig := record.nested
-										_ = orig
-										return gopurs_runtime.RecordDict([]string{"a", "arrayIgnore", "fIgnore", "fa", "ignore", "zArrayA"}, []gopurs_runtime.Value{orig.a, func() gopurs_runtime.Value {
-											arr := orig.arrayIgnore
-											boxed := make([]gopurs_runtime.Value, len(arr))
-											for i, v := range arr {
-												boxed[i] = gopurs_runtime.Int(v)
-											}
-											return gopurs_runtime.Array(boxed)
-										}(), orig.fIgnore, orig.fa, gopurs_runtime.Int(orig.ignore), gopurs_runtime.Array(orig.zArrayA)})
-									}()}
-								}(func() struct {
+									clone := __local_var_11_12
+									clone.a = v11_16
+									clone.fa = v12_17
+									clone.zArrayA = (*(*[]gopurs_runtime.Value)((v13_18).UnsafePtr))
+									return clone
+								}(), func() struct {
 									nested struct {
 										a           gopurs_runtime.Value
 										arrayIgnore []int64
@@ -3972,21 +4183,7 @@ traversableM:
 									}
 									/*gopurs:record-v1:1:006e00650073007400650064*/
 								} {
-									originalRecord := __local_var_12_13
-									_ = originalRecord
-									_ = originalRecord
-									var clone struct {
-										nested struct {
-											a           gopurs_runtime.Value
-											arrayIgnore []int64
-											fIgnore     gopurs_runtime.Value
-											fa          gopurs_runtime.Value
-											ignore      int64
-											zArrayA     []gopurs_runtime.Value
-											/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-										}
-										/*gopurs:record-v1:1:006e00650073007400650064*/
-									}
+									clone := __local_var_12_13
 									clone.nested = func() struct {
 										a           gopurs_runtime.Value
 										arrayIgnore []int64
@@ -3996,36 +4193,16 @@ traversableM:
 										zArrayA     []gopurs_runtime.Value
 										/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
 									} {
-										orig := gopurs_runtime.RecordUpdate3(__local_var_12_13.nested, "a", v14_19, "fa", v15_20, "zArrayA", gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((v16_21).UnsafePtr))))
-										_ = orig
-										clone := struct {
-											a           gopurs_runtime.Value
-											arrayIgnore []int64
-											fIgnore     gopurs_runtime.Value
-											fa          gopurs_runtime.Value
-											ignore      int64
-											zArrayA     []gopurs_runtime.Value
-											/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
-										}{}
-										clone.a = gopurs_runtime.RecordGet(orig, "a")
-										clone.arrayIgnore = func() []int64 {
-											arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "arrayIgnore").UnsafePtr)
-											unboxed := make([]int64, len(arr))
-											for i, v := range arr {
-												unboxed[i] = v.IntVal
-											}
-											return unboxed
-										}()
-										clone.fIgnore = gopurs_runtime.RecordGet(orig, "fIgnore")
-										clone.fa = gopurs_runtime.RecordGet(orig, "fa")
-										clone.ignore = gopurs_runtime.RecordGet(orig, "ignore").IntVal
-										clone.zArrayA = (*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet(orig, "zArrayA")).UnsafePtr))
+										clone := __local_var_12_13.nested
+										clone.a = v14_19
+										clone.fa = v15_20
+										clone.zArrayA = (*(*[]gopurs_runtime.Value)((v16_21).UnsafePtr))
 										return clone
 									}()
 									return clone
-								}())}))}
+								}()}))}
 							})
-						}), gopurs_runtime.Apply(f_6, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V1)), gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), Call_Control_Apply_apply(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Apply0_13_14)), Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Apply0_13_14, "Functor0"), gopurs_runtime.Value{}))), Call_Control_Applicative_pure(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3)), Get_Data_Semigroup_concatArray(), f_6, gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V3))), gopurs_runtime.Apply3(Call_Data_Traversable_traverse(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](dictTraversable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3))}, f_6, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V4)), gopurs_runtime.Apply(f_6, gopurs_runtime.RecordGet(__local_var_11_12, "a"))), gopurs_runtime.Apply3(Call_Data_Traversable_traverse(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](dictTraversable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3))}, f_6, gopurs_runtime.RecordGet(__local_var_11_12, "fa"))), gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), Call_Control_Apply_apply(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Apply0_13_15)), Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Apply0_13_15, "Functor0"), gopurs_runtime.Value{}))), Call_Control_Applicative_pure(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3)), Get_Data_Semigroup_concatArray(), f_6, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet(__local_var_11_12, "zArrayA")).UnsafePtr))))), gopurs_runtime.Apply(f_6, gopurs_runtime.RecordGet(__local_var_12_13.nested, "a"))), gopurs_runtime.Apply3(Call_Data_Traversable_traverse(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](dictTraversable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3))}, f_6, gopurs_runtime.RecordGet(__local_var_12_13.nested, "fa"))), gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), Call_Control_Apply_apply(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Apply0_13_16)), Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Apply0_13_16, "Functor0"), gopurs_runtime.Value{}))), Call_Control_Applicative_pure(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3)), Get_Data_Semigroup_concatArray(), f_6, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet(__local_var_12_13.nested, "zArrayA")).UnsafePtr)))))
+						}), gopurs_runtime.Apply(f_6, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V1)), gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), Call_Control_Apply_apply(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Apply0_13_14)), Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Apply0_13_14, "Functor0"), gopurs_runtime.Value{}))), Call_Control_Applicative_pure(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3)), Get_Data_Semigroup_concatArray(), f_6, gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V3))), gopurs_runtime.Apply3(Call_Data_Traversable_traverse(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](dictTraversable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3))}, f_6, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V4)), gopurs_runtime.Apply(f_6, __local_var_11_12.a)), gopurs_runtime.Apply3(Call_Data_Traversable_traverse(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](dictTraversable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3))}, f_6, __local_var_11_12.fa)), gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), Call_Control_Apply_apply(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Apply0_13_15)), Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Apply0_13_15, "Functor0"), gopurs_runtime.Value{}))), Call_Control_Applicative_pure(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3)), Get_Data_Semigroup_concatArray(), f_6, gopurs_runtime.Array(__local_var_11_12.zArrayA))), gopurs_runtime.Apply(f_6, __local_var_12_13.nested.a)), gopurs_runtime.Apply3(Call_Data_Traversable_traverse(gopurs_runtime.CoerceToStruct[Constructor_Data_Traversable_Traversable[gopurs_runtime.Value]](dictTraversable_0)), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3))}, f_6, __local_var_12_13.nested.fa)), gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), Call_Control_Apply_apply(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Apply0_13_16)), Call_Data_Functor_go__map(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Apply0_13_16, "Functor0"), gopurs_runtime.Value{}))), Call_Control_Applicative_pure(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](dictApplicative_3)), Get_Data_Semigroup_concatArray(), f_6, gopurs_runtime.Array(__local_var_12_13.nested.zArrayA)))
 						goto end_branch_18
 					} else {
 
@@ -4151,35 +4328,21 @@ func Call_Main_eqM(dictEq1_0_loop gopurs_runtime.Value, dictEq_1_loop gopurs_run
 		}
 		{
 			if x_5.Type == 9 && x_5.IntVal == 3190619783 {
-				__t1 = (y_6.Type == 9 && y_6.IntVal == 3190619783) && (((((((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq3_3, "eq"), gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0, "a"), gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0, "a")).IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), "eq"), func() gopurs_runtime.Value {
-					arr := func() []int64 {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0, "arrayIgnore").UnsafePtr)
-						unboxed := make([]int64, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v.IntVal
-						}
-						return unboxed
-					}()
+				__t1 = (y_6.Type == 9 && y_6.IntVal == 3190619783) && (((((((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq3_3, "eq"), (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.a, (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.a).IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), "eq"), func() gopurs_runtime.Value {
+					arr := (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.arrayIgnore
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
 				}(), func() gopurs_runtime.Value {
-					arr := func() []int64 {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0, "arrayIgnore").UnsafePtr)
-						unboxed := make([]int64, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v.IntVal
-						}
-						return unboxed
-					}()
+					arr := (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.arrayIgnore
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}()).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}, gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0, "fIgnore"), gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0, "fIgnore")).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](dictEq3_3))}, gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0, "fa"), gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0, "fa")).IntVal) != (0))) && ((gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0, "ignore").IntVal) == (gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0, "ignore").IntVal))) && ((gopurs_runtime.Apply2(eqArray5_4_0.V0, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0, "zArrayA")).UnsafePtr))), gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0, "zArrayA")).UnsafePtr)))).IntVal) != (0)))
+				}()).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}, (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.fIgnore, (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.fIgnore).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](dictEq3_3))}, (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.fa, (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.fa).IntVal) != (0))) && (((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.ignore) == ((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.ignore))) && ((gopurs_runtime.Apply2(eqArray5_4_0.V0, gopurs_runtime.Array((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.zArrayA), gopurs_runtime.Array((*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.zArrayA)).IntVal) != (0)))
 				goto end_branch_1
 			} else {
 
@@ -4187,35 +4350,21 @@ func Call_Main_eqM(dictEq1_0_loop gopurs_runtime.Value, dictEq_1_loop gopurs_run
 		}
 		{
 			if x_5.Type == 9 && x_5.IntVal == 108241190 {
-				__t1 = (y_6.Type == 9 && y_6.IntVal == 108241190) && (((((((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq3_3, "eq"), gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.nested, "a"), gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.nested, "a")).IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), "eq"), func() gopurs_runtime.Value {
-					arr := func() []int64 {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.nested, "arrayIgnore").UnsafePtr)
-						unboxed := make([]int64, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v.IntVal
-						}
-						return unboxed
-					}()
+				__t1 = (y_6.Type == 9 && y_6.IntVal == 108241190) && (((((((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq3_3, "eq"), (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.nested.a, (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.nested.a).IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), "eq"), func() gopurs_runtime.Value {
+					arr := (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.nested.arrayIgnore
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
 				}(), func() gopurs_runtime.Value {
-					arr := func() []int64 {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.nested, "arrayIgnore").UnsafePtr)
-						unboxed := make([]int64, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v.IntVal
-						}
-						return unboxed
-					}()
+					arr := (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.nested.arrayIgnore
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}()).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}, gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.nested, "fIgnore"), gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.nested, "fIgnore")).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](dictEq3_3))}, gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.nested, "fa"), gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.nested, "fa")).IntVal) != (0))) && ((gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.nested, "ignore").IntVal) == (gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.nested, "ignore").IntVal))) && ((gopurs_runtime.Apply2(eqArray5_4_0.V0, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.nested, "zArrayA")).UnsafePtr))), gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.nested, "zArrayA")).UnsafePtr)))).IntVal) != (0)))
+				}()).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}, (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.nested.fIgnore, (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.nested.fIgnore).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](dictEq3_3))}, (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.nested.fa, (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.nested.fa).IntVal) != (0))) && (((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.nested.ignore) == ((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.nested.ignore))) && ((gopurs_runtime.Apply2(eqArray5_4_0.V0, gopurs_runtime.Array((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V0.nested.zArrayA), gopurs_runtime.Array((*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V0.nested.zArrayA)).IntVal) != (0)))
 				goto end_branch_1
 			} else {
 
@@ -4237,63 +4386,35 @@ func Call_Main_eqM(dictEq1_0_loop gopurs_runtime.Value, dictEq_1_loop gopurs_run
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}()).IntVal) != (0))) && ((gopurs_runtime.Apply2(eqArray5_4_0.V0, gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V3), gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V3)).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](dictEq3_3))}, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V4, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V4).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V5, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V5).IntVal) != (0))) && (((((((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq3_3, "eq"), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V6, "a"), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V6, "a")).IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), "eq"), func() gopurs_runtime.Value {
-					arr := func() []int64 {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V6, "arrayIgnore").UnsafePtr)
-						unboxed := make([]int64, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v.IntVal
-						}
-						return unboxed
-					}()
+				}()).IntVal) != (0))) && ((gopurs_runtime.Apply2(eqArray5_4_0.V0, gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V3), gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V3)).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](dictEq3_3))}, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V4, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V4).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V5, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V5).IntVal) != (0))) && (((((((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq3_3, "eq"), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V6.a, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V6.a).IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), "eq"), func() gopurs_runtime.Value {
+					arr := (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V6.arrayIgnore
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
 				}(), func() gopurs_runtime.Value {
-					arr := func() []int64 {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V6, "arrayIgnore").UnsafePtr)
-						unboxed := make([]int64, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v.IntVal
-						}
-						return unboxed
-					}()
+					arr := (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V6.arrayIgnore
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}()).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V6, "fIgnore"), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V6, "fIgnore")).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](dictEq3_3))}, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V6, "fa"), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V6, "fa")).IntVal) != (0))) && ((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V6, "ignore").IntVal) == (gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V6, "ignore").IntVal))) && ((gopurs_runtime.Apply2(eqArray5_4_0.V0, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V6, "zArrayA")).UnsafePtr))), gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V6, "zArrayA")).UnsafePtr)))).IntVal) != (0)))) && (((((((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq3_3, "eq"), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V7.nested, "a"), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V7.nested, "a")).IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), "eq"), func() gopurs_runtime.Value {
-					arr := func() []int64 {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V7.nested, "arrayIgnore").UnsafePtr)
-						unboxed := make([]int64, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v.IntVal
-						}
-						return unboxed
-					}()
+				}()).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V6.fIgnore, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V6.fIgnore).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](dictEq3_3))}, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V6.fa, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V6.fa).IntVal) != (0))) && (((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V6.ignore) == ((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V6.ignore))) && ((gopurs_runtime.Apply2(eqArray5_4_0.V0, gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V6.zArrayA), gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V6.zArrayA)).IntVal) != (0)))) && (((((((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq3_3, "eq"), (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V7.nested.a, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V7.nested.a).IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), "eq"), func() gopurs_runtime.Value {
+					arr := (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V7.nested.arrayIgnore
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
 				}(), func() gopurs_runtime.Value {
-					arr := func() []int64 {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V7.nested, "arrayIgnore").UnsafePtr)
-						unboxed := make([]int64, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v.IntVal
-						}
-						return unboxed
-					}()
+					arr := (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V7.nested.arrayIgnore
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}()).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V7.nested, "fIgnore"), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V7.nested, "fIgnore")).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](dictEq3_3))}, gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V7.nested, "fa"), gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V7.nested, "fa")).IntVal) != (0))) && ((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V7.nested, "ignore").IntVal) == (gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V7.nested, "ignore").IntVal))) && ((gopurs_runtime.Apply2(eqArray5_4_0.V0, gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V7.nested, "zArrayA")).UnsafePtr))), gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V7.nested, "zArrayA")).UnsafePtr)))).IntVal) != (0))))
+				}()).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V7.nested.fIgnore, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V7.nested.fIgnore).IntVal) != (0))) && ((gopurs_runtime.Apply3(Call_Data_Eq_eq1(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq1[gopurs_runtime.Value]](dictEq1_0)), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](dictEq3_3))}, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V7.nested.fa, (*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V7.nested.fa).IntVal) != (0))) && (((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V7.nested.ignore) == ((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V7.nested.ignore))) && ((gopurs_runtime.Apply2(eqArray5_4_0.V0, gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(x_5.UnsafePtr).V7.nested.zArrayA), gopurs_runtime.Array((*Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value])(y_6.UnsafePtr).V7.nested.zArrayA)).IntVal) != (0))))
 				goto end_branch_1
 			} else {
 
@@ -4330,7 +4451,35 @@ func Rebox_Main_1039524714_2770120821(in *Constructor_Main_M4[gopurs_runtime.Val
 	if in == nil {
 		return nil
 	}
-	return (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
+	out := &Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value]{}
+	out.V0 = func(record struct {
+		a           string
+		arrayIgnore []int64
+		fIgnore     gopurs_runtime.Value
+		fa          gopurs_runtime.Value
+		ignore      int64
+		zArrayA     []gopurs_runtime.Value
+		/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+	}) struct {
+		a           gopurs_runtime.Value
+		arrayIgnore []int64
+		fIgnore     gopurs_runtime.Value
+		fa          gopurs_runtime.Value
+		ignore      int64
+		zArrayA     []gopurs_runtime.Value
+		/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+	} {
+		return struct {
+			a           gopurs_runtime.Value
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}{gopurs_runtime.Str(record.a), record.arrayIgnore, record.fIgnore, record.fa, record.ignore, record.zArrayA}
+	}(in.V0)
+	return out
 }
 
 func Rebox_Main_1053099733_3790796878(in *Constructor_Data_Eq_Eq[int64]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
@@ -4365,8 +4514,109 @@ func Rebox_Main_1264725646_4224211191(in *Constructor_Main_M6[gopurs_runtime.Val
 	out.V3 = in.V3
 	out.V4 = in.V4
 	out.V5 = in.V5
-	out.V6 = in.V6
-	out.V7 = in.V7
+	out.V6 = func(record struct {
+		a           []string
+		arrayIgnore []int64
+		fIgnore     gopurs_runtime.Value
+		fa          gopurs_runtime.Value
+		ignore      int64
+		zArrayA     []gopurs_runtime.Value
+		/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+	}) struct {
+		a           gopurs_runtime.Value
+		arrayIgnore []int64
+		fIgnore     gopurs_runtime.Value
+		fa          gopurs_runtime.Value
+		ignore      int64
+		zArrayA     []gopurs_runtime.Value
+		/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+	} {
+		return struct {
+			a           gopurs_runtime.Value
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}{func() gopurs_runtime.Value {
+			arr := record.a
+			boxed := make([]gopurs_runtime.Value, len(arr))
+			for i, v := range arr {
+				boxed[i] = gopurs_runtime.Str(v)
+			}
+			return gopurs_runtime.Array(boxed)
+		}(), record.arrayIgnore, record.fIgnore, record.fa, record.ignore, record.zArrayA}
+	}(in.V6)
+	out.V7 = func(record struct {
+		nested struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}
+		/*gopurs:record-v1:1:006e00650073007400650064*/
+	}) struct {
+		nested struct {
+			a           gopurs_runtime.Value
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}
+		/*gopurs:record-v1:1:006e00650073007400650064*/
+	} {
+		return struct {
+			nested struct {
+				a           gopurs_runtime.Value
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}
+			/*gopurs:record-v1:1:006e00650073007400650064*/
+		}{func(record struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}) struct {
+			a           gopurs_runtime.Value
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			return struct {
+				a           gopurs_runtime.Value
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}{func() gopurs_runtime.Value {
+				arr := record.a
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Str(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), record.arrayIgnore, record.fIgnore, record.fa, record.ignore, record.zArrayA}
+		}(record.nested)}
+	}(in.V7)
 	return out
 }
 
@@ -4374,7 +4624,70 @@ func Rebox_Main_1302345387_2067946548(in *Constructor_Main_M5[gopurs_runtime.Val
 	if in == nil {
 		return nil
 	}
-	return (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
+	out := &Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value]{}
+	out.V0 = func(record struct {
+		nested struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}
+		/*gopurs:record-v1:1:006e00650073007400650064*/
+	}) struct {
+		nested struct {
+			a           gopurs_runtime.Value
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}
+		/*gopurs:record-v1:1:006e00650073007400650064*/
+	} {
+		return struct {
+			nested struct {
+				a           gopurs_runtime.Value
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}
+			/*gopurs:record-v1:1:006e00650073007400650064*/
+		}{func(record struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}) struct {
+			a           gopurs_runtime.Value
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			return struct {
+				a           gopurs_runtime.Value
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}{gopurs_runtime.Str(record.a), record.arrayIgnore, record.fIgnore, record.fa, record.ignore, record.zArrayA}
+		}(record.nested)}
+	}(in.V0)
+	return out
 }
 
 func Rebox_Main_1554627816_4224211191(in *Constructor_Main_M6[gopurs_runtime.Value, string]) *Constructor_Main_M6[gopurs_runtime.Value, gopurs_runtime.Value] {
@@ -4388,8 +4701,95 @@ func Rebox_Main_1554627816_4224211191(in *Constructor_Main_M6[gopurs_runtime.Val
 	out.V3 = in.V3
 	out.V4 = in.V4
 	out.V5 = in.V5
-	out.V6 = in.V6
-	out.V7 = in.V7
+	out.V6 = func(record struct {
+		a           string
+		arrayIgnore []int64
+		fIgnore     gopurs_runtime.Value
+		fa          gopurs_runtime.Value
+		ignore      int64
+		zArrayA     []gopurs_runtime.Value
+		/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+	}) struct {
+		a           gopurs_runtime.Value
+		arrayIgnore []int64
+		fIgnore     gopurs_runtime.Value
+		fa          gopurs_runtime.Value
+		ignore      int64
+		zArrayA     []gopurs_runtime.Value
+		/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+	} {
+		return struct {
+			a           gopurs_runtime.Value
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}{gopurs_runtime.Str(record.a), record.arrayIgnore, record.fIgnore, record.fa, record.ignore, record.zArrayA}
+	}(in.V6)
+	out.V7 = func(record struct {
+		nested struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}
+		/*gopurs:record-v1:1:006e00650073007400650064*/
+	}) struct {
+		nested struct {
+			a           gopurs_runtime.Value
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}
+		/*gopurs:record-v1:1:006e00650073007400650064*/
+	} {
+		return struct {
+			nested struct {
+				a           gopurs_runtime.Value
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}
+			/*gopurs:record-v1:1:006e00650073007400650064*/
+		}{func(record struct {
+			a           string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}) struct {
+			a           gopurs_runtime.Value
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			return struct {
+				a           gopurs_runtime.Value
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}{gopurs_runtime.Str(record.a), record.arrayIgnore, record.fIgnore, record.fa, record.ignore, record.zArrayA}
+		}(record.nested)}
+	}(in.V7)
 	return out
 }
 
@@ -4414,7 +4814,42 @@ func Rebox_Main_2381891596_2770120821(in *Constructor_Main_M4[gopurs_runtime.Val
 	if in == nil {
 		return nil
 	}
-	return (*Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
+	out := &Constructor_Main_M4[gopurs_runtime.Value, gopurs_runtime.Value]{}
+	out.V0 = func(record struct {
+		a           []string
+		arrayIgnore []int64
+		fIgnore     gopurs_runtime.Value
+		fa          gopurs_runtime.Value
+		ignore      int64
+		zArrayA     []gopurs_runtime.Value
+		/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+	}) struct {
+		a           gopurs_runtime.Value
+		arrayIgnore []int64
+		fIgnore     gopurs_runtime.Value
+		fa          gopurs_runtime.Value
+		ignore      int64
+		zArrayA     []gopurs_runtime.Value
+		/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+	} {
+		return struct {
+			a           gopurs_runtime.Value
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}{func() gopurs_runtime.Value {
+			arr := record.a
+			boxed := make([]gopurs_runtime.Value, len(arr))
+			for i, v := range arr {
+				boxed[i] = gopurs_runtime.Str(v)
+			}
+			return gopurs_runtime.Array(boxed)
+		}(), record.arrayIgnore, record.fIgnore, record.fa, record.ignore, record.zArrayA}
+	}(in.V0)
+	return out
 }
 
 func Rebox_Main_2785108781_2554376626(in *Constructor_Main_M3[gopurs_runtime.Value, string]) *Constructor_Main_M3[gopurs_runtime.Value, gopurs_runtime.Value] {
@@ -4435,7 +4870,77 @@ func Rebox_Main_358349645_2067946548(in *Constructor_Main_M5[gopurs_runtime.Valu
 	if in == nil {
 		return nil
 	}
-	return (*Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
+	out := &Constructor_Main_M5[gopurs_runtime.Value, gopurs_runtime.Value]{}
+	out.V0 = func(record struct {
+		nested struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}
+		/*gopurs:record-v1:1:006e00650073007400650064*/
+	}) struct {
+		nested struct {
+			a           gopurs_runtime.Value
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}
+		/*gopurs:record-v1:1:006e00650073007400650064*/
+	} {
+		return struct {
+			nested struct {
+				a           gopurs_runtime.Value
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}
+			/*gopurs:record-v1:1:006e00650073007400650064*/
+		}{func(record struct {
+			a           []string
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		}) struct {
+			a           gopurs_runtime.Value
+			arrayIgnore []int64
+			fIgnore     gopurs_runtime.Value
+			fa          gopurs_runtime.Value
+			ignore      int64
+			zArrayA     []gopurs_runtime.Value
+			/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+		} {
+			return struct {
+				a           gopurs_runtime.Value
+				arrayIgnore []int64
+				fIgnore     gopurs_runtime.Value
+				fa          gopurs_runtime.Value
+				ignore      int64
+				zArrayA     []gopurs_runtime.Value
+				/*gopurs:record-v1:6:0061,0061007200720061007900490067006e006f00720065,006600490067006e006f00720065,00660061,00690067006e006f00720065,007a004100720072006100790041*/
+			}{func() gopurs_runtime.Value {
+				arr := record.a
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Str(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}(), record.arrayIgnore, record.fIgnore, record.fa, record.ignore, record.zArrayA}
+		}(record.nested)}
+	}(in.V0)
+	return out
 }
 
 func Rebox_Main_3721994703_961717174(in *Constructor_Main_M7[gopurs_runtime.Value, []string]) *Constructor_Main_M7[gopurs_runtime.Value, gopurs_runtime.Value] {

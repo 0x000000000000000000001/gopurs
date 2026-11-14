@@ -2,12 +2,14 @@
 package gopurs_runtime
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"reflect"
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"unicode/utf8"
 	"unsafe"
 )
@@ -24,6 +26,123 @@ func Release() {
 
 func EventLoopWait() {
 	EventLoop.Wait()
+}
+
+// FFIContext lets generated wrappers name the standard context type without
+// introducing an import that could collide with imports in handwritten Go.
+type FFIContext = context.Context
+
+// EffectFnAff is the compiler's adapter for ordinary Go operations. Constructing
+// the value does not start work. Each installation starts a fresh operation and
+// returns its canceler without waiting for a blocking call to finish.
+//
+// Cancellation stops delivery and cancels the operation's context. An operation
+// that ignores its context may continue running. It owns any resources it does
+// not deliver; the adapter never guesses a destructor for a late result. Use an
+// acquisition/release bracket when ownership must survive cancellation.
+//
+// Only error results enter the failure callback. A typed nil error retains Go's
+// non-nil interface semantics. Panics are deliberately not recovered here.
+func EffectFnAff(run func(context.Context) (Value, error)) Value {
+	return EffectFnAffAcquire(func(ctx context.Context) (Value, func(), error) {
+		value, err := run(ctx)
+		return value, nil, err
+	})
+}
+
+// EffectFnAffAcquire adds an explicit release function for acquired results.
+// A non-nil release is called once on error or when cancellation wins before
+// delivery. Successful delivery transfers ownership to the caller and does not
+// call release; an application's normal bracket/close remains responsible.
+// Release runs in the worker after the operation returns, even when the caller
+// has already stopped waiting. Its panics retain ordinary Go panic semantics.
+func EffectFnAffAcquire(run func(context.Context) (Value, func(), error)) Value {
+	return Func2(func(onError, onSuccess Value) Value {
+		operation := newFFIAffOperation(onError, onSuccess)
+		go operation.runAcquire(run)
+		return Func3(func(reason, _ Value, onCanceled Value) Value {
+			delivered := operation.stop(reason)
+			if delivered == nil {
+				Apply(onCanceled, Value{})
+			} else {
+				select {
+				case <-delivered:
+					Apply(onCanceled, Value{})
+				default:
+					// A callback may invoke its own canceler. Return from the
+					// call immediately, but acknowledge only after publication.
+					go func() { <-delivered; Apply(onCanceled, Value{}) }()
+				}
+			}
+			return Value{}
+		})
+	})
+}
+
+// pending -> completed or canceled is the single arbitration point. Callback
+// delivery belongs to the winning completion, including when cancellation is
+// requested while that callback is already executing.
+type ffiAffOperation struct {
+	state atomic.Uint32
+	ctx context.Context
+	cancel context.CancelCauseFunc
+	delivered chan struct{}
+	onError Value
+	onSuccess Value
+}
+
+func newFFIAffOperation(onError, onSuccess Value) *ffiAffOperation {
+	ctx, cancel := context.WithCancelCause(context.Background())
+	return &ffiAffOperation{ctx: ctx, cancel: cancel, delivered: make(chan struct{}), onError: onError, onSuccess: onSuccess}
+}
+
+func (operation *ffiAffOperation) run(run func(context.Context) (Value, error)) {
+	operation.runAcquire(func(ctx context.Context) (Value, func(), error) {
+		value, err := run(ctx)
+		return value, nil, err
+	})
+}
+
+func (operation *ffiAffOperation) runAcquire(run func(context.Context) (Value, func(), error)) {
+	defer func() {
+		operation.cancel(nil)
+		close(operation.delivered)
+	}()
+	if operation.state.Load() != 0 {
+		return
+	}
+	value, release, err := run(operation.ctx)
+	if err != nil && release != nil {
+		release()
+		release = nil
+	}
+	if !operation.state.CompareAndSwap(0, 1) {
+		if release != nil {
+			release()
+		}
+		return
+	}
+	if err != nil {
+		Apply(operation.onError, Box(err))
+	} else {
+		Apply(operation.onSuccess, value)
+	}
+}
+
+func (operation *ffiAffOperation) stop(reason Value) <-chan struct{} {
+	if operation.state.CompareAndSwap(0, 2) {
+		var cause error
+		if reason.Type != 0 {
+			cause = Unbox[error](reason)
+		}
+		operation.cancel(cause)
+	} else if operation.state.Load() == 1 {
+		// Completion already owns the result. Acknowledge cancellation only
+		// after its callback has published it, so Aff cannot abandon ownership
+		// between this adapter's arbitration and its own callback boundary.
+		return operation.delivered
+	}
+	return nil
 }
 
 var StructGetters = map[int64]func(unsafe.Pointer, string) Value{}
@@ -1080,8 +1199,11 @@ func ArrayLength(arr Value) int {
 }
 
 func Any(v any) Value {
-	if val, ok := v.(Value); ok {
+	switch val := v.(type) {
+	case Value:
 		return val
+	case foreignUndefined:
+		return Value{}
 	}
 	ptr := new(any)
 	*ptr = v
@@ -1601,4 +1723,219 @@ func copyReflectField(src reflect.Value, destType reflect.Type) reflect.Value {
 		return src.Convert(destType)
 	}
 	return reflect.Zero(destType)
+}
+
+// Undefined has no Go scalar equivalent. This opaque native marker keeps it
+// distinct from null and an absent property until an explicit serializer runs.
+type foreignUndefined struct{}
+
+// IsForeignUndefined lets specialized Foreign serializers recognize the native
+// marker without exposing the boxed PureScript representation to ordinary FFI.
+func IsForeignUndefined(value any) bool {
+	_, undefined := value.(foreignUndefined)
+	return undefined
+}
+
+// ForeignValue crosses a dynamic-data boundary, not a serialization boundary.
+// Native data keeps its types and identity. Legacy native containers that still
+// contain boxed Values are copied only along paths requiring conversion. The
+// graph walk preserves cycles and shared children without inspecting opaque
+// structs or changing application-level serialization policy.
+func ForeignValue(value Value) any {
+	graph := foreignDataGraph{}
+	graph.scan(value, nil)
+	for i := 0; i < len(graph.changed); i++ {
+		for _, parent := range graph.changed[i].parents {
+			graph.mark(parent)
+		}
+	}
+	return graph.convert(value)
+}
+
+type foreignDataKey struct {
+	kind    int
+	pointer unsafe.Pointer
+	length  int
+}
+
+type foreignDataNode struct {
+	source    any
+	parents   []*foreignDataNode
+	changed   bool
+	converted bool
+	result    any
+}
+
+type foreignDataGraph struct {
+	nodes   map[foreignDataKey]*foreignDataNode
+	changed []*foreignDataNode
+}
+
+func foreignDataContainerKey(input any) (foreignDataKey, bool) {
+	switch value := input.(type) {
+	case map[string]any:
+		return foreignDataKey{kind: 1, pointer: reflect.ValueOf(value).UnsafePointer()}, value != nil
+	case []any:
+		return foreignDataKey{kind: 2, pointer: unsafe.Pointer(unsafe.SliceData(value)), length: len(value)}, value != nil
+	case map[string]Value:
+		return foreignDataKey{kind: 3, pointer: reflect.ValueOf(value).UnsafePointer()}, true
+	case []Value:
+		return foreignDataKey{kind: 4, pointer: unsafe.Pointer(unsafe.SliceData(value)), length: len(value)}, true
+	case Value:
+		switch value.Type {
+		case TypeArray:
+			var values []Value
+			if value.UnsafePtr != nil {
+				values = *(*[]Value)(value.UnsafePtr)
+			}
+			return foreignDataContainerKey(values)
+		case TypeRecord, TypeRecord1, TypeRecord2, TypeRecord3, TypeRecord4, TypeRecord5, TypeRecordData:
+			return foreignDataKey{kind: value.Type + 100, pointer: value.UnsafePtr}, true
+		}
+	}
+	return foreignDataKey{}, false
+}
+
+func (graph *foreignDataGraph) mark(node *foreignDataNode) {
+	if node != nil && !node.changed {
+		node.changed = true
+		graph.changed = append(graph.changed, node)
+	}
+}
+
+func (graph *foreignDataGraph) scan(input any, parent *foreignDataNode) {
+	if value, boxed := input.(Value); boxed {
+		graph.mark(parent)
+		if value.Type == TypeAny {
+			if value.UnsafePtr != nil {
+				graph.scan(*(*any)(value.UnsafePtr), parent)
+			}
+			return
+		}
+	}
+	key, container := foreignDataContainerKey(input)
+	if !container {
+		return
+	}
+	if node := graph.nodes[key]; node != nil {
+		if parent != nil {
+			node.parents = append(node.parents, parent)
+		}
+		return
+	}
+	if graph.nodes == nil {
+		graph.nodes = make(map[foreignDataKey]*foreignDataNode)
+	}
+	node := &foreignDataNode{source: input}
+	graph.nodes[key] = node
+	if parent != nil {
+		node.parents = append(node.parents, parent)
+	}
+	if value, boxed := input.(Value); boxed {
+		graph.mark(node)
+		if value.Type == TypeArray {
+			var values []Value
+			if value.UnsafePtr != nil {
+				values = *(*[]Value)(value.UnsafePtr)
+			}
+			node.source = values
+		} else {
+			node.source = RecordToMap(value)
+		}
+	}
+	switch source := node.source.(type) {
+	case map[string]any:
+		for _, child := range source {
+			graph.scan(child, node)
+		}
+	case []any:
+		for _, child := range source {
+			graph.scan(child, node)
+		}
+	case map[string]Value:
+		graph.mark(node)
+		for _, child := range source {
+			graph.scan(child, node)
+		}
+	case []Value:
+		graph.mark(node)
+		for _, child := range source {
+			graph.scan(child, node)
+		}
+	}
+}
+
+func (graph *foreignDataGraph) convert(input any) any {
+	if value, boxed := input.(Value); boxed {
+		switch value.Type {
+		case 0:
+			return foreignUndefined{}
+		case TypeInt:
+			return value.IntVal
+		case TypeFloat:
+			return value.FloatVal()
+		case TypeString:
+			return StrValue(value)
+		case TypeBool:
+			return value.IntVal != 0
+		case TypeAny:
+			if value.UnsafePtr == nil {
+				return nil
+			}
+			return graph.convert(*(*any)(value.UnsafePtr))
+		case TypeRecord0:
+			return map[string]any{}
+		case TypeArray, TypeRecord, TypeRecord1, TypeRecord2, TypeRecord3, TypeRecord4, TypeRecord5, TypeRecordData:
+			// Containers use the graph below, including their cycles.
+		default:
+			panic("FFI Foreign: functions and algebraic constructors require an explicit PureScript conversion to native data")
+		}
+	}
+	key, container := foreignDataContainerKey(input)
+	if !container {
+		return input
+	}
+	node := graph.nodes[key]
+	if !node.changed {
+		return input
+	}
+	if node.converted {
+		return node.result
+	}
+	node.converted = true
+	// Publish the destination before filling it, so a back-edge refers to the
+	// converted container instead of retaining an edge into the old graph.
+	switch source := node.source.(type) {
+	case map[string]any:
+		out := make(map[string]any, len(source))
+		node.result = out
+		for key, child := range source {
+			out[key] = graph.convert(child)
+		}
+	case []any:
+		out := make([]any, len(source))
+		node.result = out
+		for i, child := range source {
+			out[i] = graph.convert(child)
+		}
+	case map[string]Value:
+		var out map[string]any
+		if source != nil {
+			out = make(map[string]any, len(source))
+		}
+		node.result = out
+		for key, child := range source {
+			out[key] = graph.convert(child)
+		}
+	case []Value:
+		var out []any
+		if source != nil {
+			out = make([]any, len(source))
+		}
+		node.result = out
+		for i, child := range source {
+			out[i] = graph.convert(child)
+		}
+	}
+	return node.result
 }

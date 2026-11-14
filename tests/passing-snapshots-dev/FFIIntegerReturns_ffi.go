@@ -73,11 +73,14 @@ gopurs_runtime.Func(func(arg0 gopurs_runtime.Value) gopurs_runtime.Value {
 })
 var _Gopurs_Main_ReturnInt64Array = // TAST: (Func [(Array Int)] (Array Int))
 gopurs_runtime.Func(func(arg0 gopurs_runtime.Value) gopurs_runtime.Value {
-	arg0_arr := *(*[]gopurs_runtime.Value)(arg0.UnsafePtr)
-	go_arg0 := make([]int64, len(arg0_arr))
-	for i, v := range arg0_arr {
-		go_arg0[i] = gopurs_runtime.Unbox[int64](v)
-	}
+	go_arg0 := func() []int64 {
+		_source := arg0
+		_out := make([]int64, gopurs_runtime.ArrayLength(_source))
+		for _i := range _out {
+			_out[_i] = gopurs_runtime.Unbox[int64](gopurs_runtime.ArrayAccess(_source, _i))
+		}
+		return _out
+	}()
 	go_res := Main_ReturnInt64Array(go_arg0)
 	return func() gopurs_runtime.Value {
 		res_arr := make([]gopurs_runtime.Value, len(go_res))
@@ -89,11 +92,14 @@ gopurs_runtime.Func(func(arg0 gopurs_runtime.Value) gopurs_runtime.Value {
 })
 var _Gopurs_Main_ReturnIntArray = // TAST: (Func [(Array Int)] (Array Int))
 gopurs_runtime.Func(func(arg0 gopurs_runtime.Value) gopurs_runtime.Value {
-	arg0_arr := *(*[]gopurs_runtime.Value)(arg0.UnsafePtr)
-	go_arg0 := make([]int, len(arg0_arr))
-	for i, v := range arg0_arr {
-		go_arg0[i] = gopurs_runtime.Unbox[int](v)
-	}
+	go_arg0 := func() []int {
+		_source := arg0
+		_out := make([]int, gopurs_runtime.ArrayLength(_source))
+		for _i := range _out {
+			_out[_i] = gopurs_runtime.Unbox[int](gopurs_runtime.ArrayAccess(_source, _i))
+		}
+		return _out
+	}()
 	go_res := Main_ReturnIntArray(go_arg0)
 	return func() gopurs_runtime.Value {
 		res_arr := make([]gopurs_runtime.Value, len(go_res))

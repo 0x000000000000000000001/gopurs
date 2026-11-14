@@ -24,7 +24,7 @@ var once_Main_Y sync.Once
 func Get_Main_Y() gopurs_runtime.Value {
 	once_Main_Y.Do(func() {
 		cache_Main_Y = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 1682951303, UnsafePtr: unsafe.Pointer((&Constructor_Main_Y{1, value0}))}
+			return gopurs_runtime.Value{Type: 9, IntVal: 1682951303, UnsafePtr: unsafe.Pointer((&Constructor_Main_Y{1, value0.StrVal()}))}
 		})
 	})
 	return cache_Main_Y
@@ -77,7 +77,7 @@ func Get_Main_eqX() gopurs_runtime.Value {
 				}
 			}
 			{
-				__t0 = (x_0.Type == 9 && x_0.IntVal == 1682951303) && ((y_1.Type == 9 && y_1.IntVal == 1682951303) && (((*Constructor_Main_Y)(x_0.UnsafePtr).V0.StrVal()) == ((*Constructor_Main_Y)(y_1.UnsafePtr).V0.StrVal())))
+				__t0 = (x_0.Type == 9 && x_0.IntVal == 1682951303) && ((y_1.Type == 9 && y_1.IntVal == 1682951303) && (((*Constructor_Main_Y)(x_0.UnsafePtr).V0) == ((*Constructor_Main_Y)(y_1.UnsafePtr).V0)))
 			}
 		end_branch_0:
 			return gopurs_runtime.Bool(__t0)
@@ -117,7 +117,7 @@ func Get_Main_eqZ() gopurs_runtime.Value {
 
 					var __t_tag_1 gopurs_runtime.Value = gopurs_runtime.RecordGet(y_1, "left")
 					_ = __t_tag_1
-					__t_and_2 = (__t_tag_1.Type == 9 && __t_tag_1.IntVal == 1682951303) && (((*Constructor_Main_Y)(gopurs_runtime.RecordGet(x_0, "left").UnsafePtr).V0.StrVal()) == ((*Constructor_Main_Y)(gopurs_runtime.RecordGet(y_1, "left").UnsafePtr).V0.StrVal()))
+					__t_and_2 = (__t_tag_1.Type == 9 && __t_tag_1.IntVal == 1682951303) && (((*Constructor_Main_Y)(gopurs_runtime.RecordGet(x_0, "left").UnsafePtr).V0) == ((*Constructor_Main_Y)(gopurs_runtime.RecordGet(y_1, "left").UnsafePtr).V0))
 				}
 				__t5 = __t_and_2
 			}
@@ -146,7 +146,7 @@ func Get_Main_eqZ() gopurs_runtime.Value {
 
 						var __t_tag_7 gopurs_runtime.Value = gopurs_runtime.RecordGet(y_1, "right")
 						_ = __t_tag_7
-						__t_and_8 = (__t_tag_7.Type == 9 && __t_tag_7.IntVal == 1682951303) && (((*Constructor_Main_Y)(gopurs_runtime.RecordGet(x_0, "right").UnsafePtr).V0.StrVal()) == ((*Constructor_Main_Y)(gopurs_runtime.RecordGet(y_1, "right").UnsafePtr).V0.StrVal()))
+						__t_and_8 = (__t_tag_7.Type == 9 && __t_tag_7.IntVal == 1682951303) && (((*Constructor_Main_Y)(gopurs_runtime.RecordGet(x_0, "right").UnsafePtr).V0) == ((*Constructor_Main_Y)(gopurs_runtime.RecordGet(y_1, "right").UnsafePtr).V0))
 					}
 					__t11 = __t_and_8
 				}
@@ -199,7 +199,7 @@ func Get_Main_ordX() gopurs_runtime.Value {
 			}
 			{
 				if (x_0.Type == 9 && x_0.IntVal == 1682951303) && (y_1.Type == 9 && y_1.IntVal == 1682951303) {
-					__t1 = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Str((*Constructor_Main_Y)(x_0.UnsafePtr).V0.StrVal()), gopurs_runtime.Str((*Constructor_Main_Y)(y_1.UnsafePtr).V0.StrVal()))
+					__t1 = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Str((*Constructor_Main_Y)(x_0.UnsafePtr).V0), gopurs_runtime.Str((*Constructor_Main_Y)(y_1.UnsafePtr).V0))
 					goto end_branch_1
 				} else {
 
@@ -281,7 +281,7 @@ type Constructor_Main_X struct {
 
 type Constructor_Main_Y struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 string
 }
 
 func Call_Main_Z(x_0_loop struct {

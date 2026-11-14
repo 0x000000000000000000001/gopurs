@@ -384,7 +384,7 @@ var once_Main_NTString1 sync.Once
 func Get_Main_NTString1() gopurs_runtime.Value {
 	once_Main_NTString1.Do(func() {
 		cache_Main_NTString1 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_NTString1(x_0_box)
+			return gopurs_runtime.Str(Call_Main_NTString1(x_0_box.StrVal()))
 		})
 	})
 	return cache_Main_NTString1
@@ -1410,8 +1410,8 @@ func Call_Main_NTString2(x_0_loop string) string {
 	return x_0
 }
 
-func Call_Main_NTString1(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_NTString1(x_0_loop string) string {
+	var x_0 string = x_0_loop
 	_ = x_0
 	return x_0
 }

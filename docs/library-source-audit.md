@@ -17,7 +17,7 @@ and 1 November and their new source pins are recorded separately below.
 
 | Surface | Identity and release requirement |
 | --- | --- |
-| Compiler npm package | `gopurs@0.1.0-rc.14` is the candidate in preparation, updating only the spec pin from RC13 as recorded below; qualification and publication are pending. RC7 remains the published candidate. The final target is `0.1.0`; each candidate's own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
+| Compiler npm package | `gopurs@0.1.1` is in preparation from the unchanged RC20 compiler and library pins; final qualification and publication are pending. RC20 remains unpublished after fixture-reference failures. The recorded 12 November channels were RC14 on `next` and RC7 on `latest`; recheck before publication. Each candidate's exact version, lockfile, file allowlist and installed-artifact tests apply. |
 | Library sources used by bootstrap/applications | Git URL and exact commit from the bootstrap manifest; validate this combination with the selected compiler and package set. The compiler npm archive does not contain these repositories. |
 | Independent future npm/Spago library publication | Review that package's name, destination, version, dependency bounds, files and notices before publishing it. This is a separate operation. |
 
@@ -25,7 +25,59 @@ These independent libraries do not need identical version numbers. Their
 current release identity is the compatible set of source commits. A version
 copied from an upstream package is not a version assigned to the Go port.
 
-## Current spec pin — 5 November 2026
+## Final source configuration — 13 November 2026
+
+The final release retains RC20's exact typed frontend, support and 51 library
+pins, including Foreign `8c326898e821a9151af35b2a647fc9b2354ba92e`.
+The compiler/runtime and delivered executable helpers are unchanged. Fixture
+expectations, release metadata and bounded qualification controls are tracked
+separately from those inputs. Reused results retain their original source and
+producer; the final artifact identity and public installation still require
+verification in the [quality record](quality-0.1.0.md).
+
+## RC20 source configuration — 13 November 2026
+
+RC20 selects `gopurs-foreign` commit
+`8c326898e821a9151af35b2a647fc9b2354ba92e`, which corrects safe reads of native
+Go primitives and slices, indexed access, and preservation of shared/cyclic
+child values. The frontend and other library/support pins remain those of
+RC19. The compiler also changes curried callback and function-result bridges.
+
+The final Foreign patch passed its native race tests, both Foreign and YogaJSON
+Release/Dev runners, and the Foreign JavaScript reference. The exact tagged
+candidate still requires full CI with all 51 libraries in both profiles,
+a fresh benchmark and artifact/application qualification. The
+[quality record](quality-0.1.0.md) distinguishes these targeted local results
+from the older incomplete preflight and the pending complete matrix.
+
+## RC19 source configuration — 13 November 2026
+
+RC19 retains the exact RC18 frontend, library and support pins listed below.
+The proposed change is confined to the isolated runner-cleanup test and release
+identity/documentation; it does not alter the compiler, runtime or Go ports.
+Its own qualification remains pending in the [quality record](quality-0.1.0.md).
+
+## RC18 source pins — 12 November 2026
+
+The candidate selects the following exact revisions in
+[`bootstrap-sources.json`](../bootstrap-sources.json):
+
+| Input | Revision | Purpose |
+| --- | --- | --- |
+| Typed frontend | `ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080` | Retain the nominal `EffectFnAff` contract in TAST |
+| `gopurs-aff` | `dbe9ff1c574a18352cf9ec861090083b14ca0246` | Match the native foreign-function boundary |
+| `gopurs-foreign` | `c79499d6c22fd0637104bec5449434cfb6e31fe4` | Handle native Go foreign values, including undefined semantics |
+| `gopurs-node-net` | `f640b30a98180fbaa37a1f33e298107ab8253db1` | Select the Go Buffer dependency in the test configuration |
+| `gopurs-node-streams` | `3a0da79477adb3e17757c1b246f21b7ddd2382b8` | Select the Go Buffer dependency in the test configuration |
+| `gopurs-spec` | `de7f8d143d4a8468d9ec358598c24bb610a21bdc` | Complete the node-child-process value helpers used by Spec's tests |
+
+The manifest also identifies the separate Argonaut codecs support checkout at
+`bdf31cc0f7d74d510dcf53f2a8fbca3b550d8ff2`. It is a support input, not a 52nd
+library in the historical audit. The older audit counts and test results below
+retain their dates and scope; they do not qualify this new combination.
+Qualification is tracked in the [release checklist](release-checklist.md).
+
+## RC14 spec pin — 5 November 2026
 
 RC14 selects `gopurs-spec` commit `7bbb30f00bfde95cdb39286662bb5a0f71e3f368`
 from reviewed, merged [spec PR #2](https://github.com/0x000000000000000000001/gopurs-spec/pull/2),

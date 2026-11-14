@@ -97,11 +97,12 @@ jobs:
           mkdir "$RUNNER_TEMP/registry"
           nix develop --no-update-lock-file --command npm pack "gopurs@$RELEASE_VERSION" --ignore-scripts --pack-destination "$RUNNER_TEMP/registry"
           cmp "$RUNNER_TEMP/candidate/gopurs-$RELEASE_VERSION.tgz" "$RUNNER_TEMP/registry/gopurs-$RELEASE_VERSION.tgz"
-          typed_package=$(nix build .#purs-tast --no-link --print-out-paths --no-update-lock-file)
+          typed_package=$(nix build .#purs-tast --out-link "$RUNNER_TEMP/published-purs-tast" --print-out-paths --no-update-lock-file)
+          official_package=$(nix build .#purs-official --out-link "$RUNNER_TEMP/published-purs-official" --print-out-paths --no-update-lock-file)
           nix develop --no-update-lock-file --command node tools/release/release-smoke.mjs \
             --package "$RUNNER_TEMP/registry/gopurs-$RELEASE_VERSION.tgz" \
             --native "$RUNNER_TEMP/candidate/gopurs-$RELEASE_VERSION-linux-amd64" \
-            --purs "$typed_package/bin/purs" --report "$RUNNER_TEMP/published-smoke.json"
+            --purs "$typed_package/bin/purs" --official-purs "$official_package/bin/purs" --report "$RUNNER_TEMP/published-smoke.json"
       - name: Publish the matching GitHub release
         run: gh release edit "$RELEASE_TAG" --draft=false
       - name: Archive the publication and rollback evidence

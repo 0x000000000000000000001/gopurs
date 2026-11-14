@@ -10,7 +10,7 @@ evidence that a tag, platform, benchmark or public installation has passed.
 Record actual results in the repository's
 [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
 and the release notes. The remaining gates are tracked in the
-[release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/todo.md).
+[release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md).
 
 ## Build and validate a candidate
 
@@ -208,7 +208,8 @@ matching tag, both package-lock version fields and changelog section before
 starting any tagged build.
 
 `.github/workflows/ci.yml` runs on branch changes, pull requests and version
-tags. Ordinary PRs and branch pushes run 24 quick gates on Linux amd64,
+tags. Ordinary PRs and branch pushes run the
+[declared quick gates](https://github.com/0x000000000000000000001/gopurs/blob/main/tools/ci/gates.mjs) on Linux amd64,
 including output-identity and documentation checker tests, embedded-runtime
 consistency, compiler snapshot tests, both compiler hosts, the native race
 probe and artifact smokes.
@@ -219,7 +220,7 @@ additions; code under `docs/`, file type changes and unknown paths require a
 build. Manual non-full runs also build Linux.
 
 A push to `main` may reuse one successful, associated, same-repository PR
-qualification. Its small `linux-quick-v2` receipt binds the 24 gates, each
+qualification. Its small `linux-quick-v2` receipt binds that exact gate inventory, each
 Node file's actual passing test counts with no skips, both artifact smokes, the run attempt and
 the actual tested merge commit. Receipts using the old `linux-quick-v1`
 policy or missing any required gate cannot be reused.
@@ -292,9 +293,57 @@ only missing assets are added. Different bytes, unexpected assets or an already
 published release stop recovery. Do not rerun successful signing jobs after
 starting a draft: new signatures would change its assets.
 
-This recovery uses the workflow stored at the original tag. A source or workflow
-fix requires a new candidate and fresh qualification. These improvements do not
+This retry uses the workflow stored at the original tag. A source or workflow
+fix normally requires a new candidate and fresh qualification. The single
+release transition below has a separate, bounded qualification contract.
+These improvements do not
 change RC10's workflow, qualify its missing shard or authorize another RC10 run.
+
+### Bounded RC20 to 0.1.1 qualification
+
+The 0.1.1 tag uses a one-hop recovery from signed `v0.1.0-rc.20`, commit
+`2202368d4b19849fdc365afacaffa4a617b0ea43`, Actions run `43412666316`.
+This mechanism cannot promote another base, another final version, or a chain
+of inherited qualifications. `tools/ci/rc20-recovery.json` must be explicitly
+sealed after the exact obsolete goldens and the two fixture FFI migrations
+have been reviewed. An incomplete or
+invalid recovery stops the plan; it does not fall back to a complete rebuild.
+
+The source check permits only the listed golden paths with their before/after
+hashes and owning fixtures, the existing `tests/passing/PolyLabels.go` and
+`tests/passing/RowUnion.go` companions with their exact before/after hashes,
+the three package version fields, and the explicit
+documentation and release-control paths in `release-recovery.mjs`. Compiler
+sources, runtime, runners, dependencies, pins and executable tools must remain
+identical. The plan runs the release-control tests on the new source. The
+original run must be terminal, and its three core producers must have passed.
+The two companion migrations use direct Go arguments for `UnsafeSet` and
+`MergeImpl`: their curried Go result cannot be validated against the declared
+open-record result. This is a fixture FFI migration, not a compiler change.
+Their PureScript sources remain identical, and no other fixture source is
+allowed to change. `fixtureSources` in the manifest identifies each companion
+and its owning fixture; a missing or unreviewed hash prevents sealing.
+
+Only invalidated, missing or unsuccessful fixture shards run again. A changed
+companion invalidates its fixture's Release and Dev shards even when neither
+golden changes. Each job
+imports the exact compiler and prepared Nix closure from its original RC20
+producer. The aggregate still requires 222 core gates plus all 162 fixture
+batches per platform: 384 gates, covering all 401 fixtures in both profiles.
+Original reports keep their source commit, run, attempt and artifact identity;
+new reports name their actual final source and run. The schema-3 finalization
+context records both origins. Original report bytes are also retained in the
+signed `recovery-inputs.tar.gz` asset.
+
+Three small repackage jobs produce the final metadata and execute the installed
+final package with both JS and native hosts on their actual target platforms.
+They reuse the compiler bytes without a bootstrap or core campaign. Final
+build metadata records the old `compilerOrigin` separately from the final
+packaging source. Finalization verifies the fresh package producers and exact
+compiler bytes before signing. The final tag receives its own GitHub OIDC and
+npm provenance; RC20 is never relabeled as a successful final-tag run. Public
+installation, application qualification and benchmark-byte binding remain
+separate publication requirements.
 
 RC7 exposed a limit in this retry path: draft visibility failed immediately
 after creation, and the retry metadata copied successful jobs into attempt 2

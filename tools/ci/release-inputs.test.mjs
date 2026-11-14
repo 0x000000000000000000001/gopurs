@@ -1,10 +1,95 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { extractArtifact, fileSha256, flattenPages, githubContext, selectLatestJobs, selectQualifiedInputs, selectFixtureInputs, selectPreviewInputs, validateReportProducers, validateEnvironmentIdentity, validateFinalizationContext, verifyArtifactFile } from './release-inputs.mjs';
+import { extractArtifact, fileSha256, flattenPages, githubContext, selectLatestJobs, selectQualifiedInputs, selectFixtureInputs, selectPreviewInputs, validateReportProducers, validateEnvironmentIdentity, validateFinalizationContext, verifyArtifactFile, selectRecoveryInputs, recoveryRequired } from './release-inputs.mjs';
+import { recoveryBase, recoveryHash, recoveryTag } from './release-recovery.mjs';
+import { qualityInventory } from '../release/release-quality-report.mjs';
+import { fileURLToPath } from 'node:url';
+
+function recoveryFixture() {
+  const convert = (data, context) => {
+    data.context = context;
+    Object.assign(data.run, { id: Number(context.runId), run_attempt: Number(context.runAttempt), head_sha: context.commit,
+      head_branch: context.tag, repository: { full_name: context.repository }, head_repository: { full_name: context.repository } });
+    data.tag.ref.ref = 'refs/tags/' + context.tag;
+    data.tag.ref.object.sha = context.tag === recoveryBase.tag ? recoveryBase.tagObject : 'c'.repeat(40);
+    Object.assign(data.tag.object, { sha: data.tag.ref.object.sha, tag: context.tag, object: { type: 'commit', sha: context.commit } });
+    for (const job of data.jobs) Object.assign(job, { run_id: Number(context.runId), head_sha: context.commit });
+    for (const artifact of data.artifacts) artifact.workflow_run = { id: Number(context.runId), head_sha: context.commit };
+    return data;
+  };
+  const base = convert(fixture(), { ...recoveryBase, runAttempt: '2', target: 'linux-amd64' });
+  base.run.status = 'completed';
+  for (const target of ['linux-amd64', 'linux-arm64', 'darwin-arm64']) {
+    const artifact = base.artifacts.find(row => row.name === `candidate-${target}-attempt-1`);
+    if (artifact) base.artifacts.push({ ...artifact, id: artifact.id + 50000, name: `quality-${target}-attempt-1` });
+  }
+  const current = convert(fixture(), { repository: recoveryBase.repository, commit: 'd'.repeat(40), tag: recoveryTag, runId: '999', runAttempt: '2', target: 'linux-amd64' });
+  current.jobs = current.jobs.filter(job => job.name.endsWith('shard 0)')).map(job => ({ ...job, id: job.id + 10000 }));
+  current.artifacts = current.artifacts.filter(artifact => artifact.name.startsWith('fixtures-linux-amd64-0-')).map(artifact => ({ ...artifact, id: artifact.id + 10000 }));
+  current.jobs.push({ ...current.jobs[0], id: 20000, name: 'repackage and smoke (linux-amd64)' });
+  current.artifacts.push({ ...current.artifacts[0], id: 20001, name: 'repackaged-linux-amd64-attempt-1' });
+  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: recoveryTag, fixtureSources: [], goldens: [{ path: 'tests/passing-snapshots/1110.go', fixture: 'tests/passing/1110.purs', beforeSha256: 'a'.repeat(64), afterSha256: 'b'.repeat(64) }] };
+  return { base, current, manifest, proof: { manifestSha256: recoveryHash(JSON.stringify(manifest)), changes: [] }, inventory: qualityInventory(fileURLToPath(new URL('../../', import.meta.url))) };
+}
+
+test('one-hop RC20 recovery keeps real producer origins and selects only changed or missing shards', () => {
+  const data = recoveryFixture();
+  assert.deepEqual(recoveryRequired(data.base, data.inventory, data.manifest).map(row => [row.target, row.shard]), [
+    ['linux-amd64', 0], ['linux-arm64', 0], ['darwin-arm64', 0],
+  ]);
+  const selected = selectRecoveryInputs(data);
+  assert.equal(selected.schema, 3);
+  assert.deepEqual(selected.artifacts.map(row => row.runId), [recoveryBase.runId, '999', recoveryBase.runId, recoveryBase.runId, recoveryBase.runId]);
+  assert.equal(selected.artifacts[1].producerJobId, 10002);
+  const core = { ...identity({ ...selected, source: { commit: recoveryBase.commit }, github: { ...selected.github, runId: recoveryBase.runId } }) };
+  selected.qualificationIdentity = core;
+  assert.equal(validateFinalizationContext(selected, core, environment(data.current.context)), selected);
+  const prepared = selectRecoveryInputs(data, { fixtures: true });
+  assert.deepEqual(prepared.artifacts.map(row => row.runId), [recoveryBase.runId, recoveryBase.runId]);
+  data.base.jobs.find(job => job.name === 'fixtures (linux-amd64, shard 3)').conclusion = 'failure';
+  assert.ok(recoveryRequired(data.base, data.inventory, data.manifest).some(row => row.target === 'linux-amd64' && row.shard === 3));
+  assert.throws(() => selectRecoveryInputs(data), /Missing producer/);
+});
+
+test('RC20 recovery rejects substituted runs, artifacts, extra jobs and visible newer failures', () => {
+  for (const mutate of [
+    data => { data.base.run.status = 'in_progress'; },
+    data => { data.base.context.commit = 'f'.repeat(40); },
+    data => { data.base.tag.object.verification.verified = false; },
+    data => { data.base.jobs[0].conclusion = 'failure'; },
+    data => { data.current.jobs[0].conclusion = 'failure'; },
+    data => { data.current.jobs.push({ ...data.current.jobs[0], id: 99999, run_attempt: 2, conclusion: 'failure' }); },
+    data => { data.current.jobs.push({ ...data.current.jobs[0], id: 88888, name: 'build and test (linux-amd64)' }); },
+    data => { data.current.jobs.push({ ...data.current.jobs[0], id: 88888, name: 'fixtures (linux-amd64, shard 3)' }); },
+    data => { data.current.artifacts[0].workflow_run.id = Number(recoveryBase.runId); },
+    data => { data.current.artifacts[0].digest = 'bad'; },
+    data => { data.current.context.tag = 'v0.1.0'; },
+    data => { data.current.jobs.at(-1).conclusion = 'failure'; },
+    data => { data.current.artifacts.at(-1).workflow_run.head_sha = recoveryBase.commit; },
+  ]) {
+    const data = recoveryFixture(); mutate(data);
+    assert.throws(() => selectRecoveryInputs(data), mutate.toString());
+  }
+});
+
+test('RC20 recovery never inherits successful shards invalidated by either fixture FFI migration', () => {
+  const data = recoveryFixture();
+  data.manifest.fixtureSources = ['PolyLabels', 'RowUnion'].map(name => ({
+    path: `tests/passing/${name}.go`, fixture: `tests/passing/${name}.purs`, beforeSha256: 'a'.repeat(64), afterSha256: 'b'.repeat(64),
+  }));
+  data.proof.manifestSha256 = recoveryHash(JSON.stringify(data.manifest));
+  assert.deepEqual(recoveryRequired(data.base, data.inventory, data.manifest).map(row => [row.target, row.shard]), [
+    ['linux-amd64', 0], ['linux-amd64', 1], ['linux-amd64', 2],
+    ['linux-arm64', 0], ['linux-arm64', 1], ['linux-arm64', 2],
+    ['darwin-arm64', 0], ['darwin-arm64', 1], ['darwin-arm64', 2],
+  ]);
+  // All base shards passed, but the current run has only rerun shard 0.
+  assert.throws(() => selectRecoveryInputs(data), /Missing producer job/);
+});
 
 function fixture() {
   const context = { repository: 'owner/gopurs', commit: 'a'.repeat(40), tag: 'v0.1.0-rc.7', runId: '42', runAttempt: '2', target: 'linux-amd64' };
@@ -263,6 +348,84 @@ function archive(root, entries, encrypted = false) {
   execFileSync('python3', ['-c', zipPython, path, JSON.stringify(entries), String(encrypted)]);
   return { path, artifact: { id: 123, size: statSync(path).size, digest: 'sha256:' + fileSha256(path) } };
 }
+
+test('recovery prepare-fixtures CLI completes its real ESM graph and writes verified inputs', t => {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'gopurs-recovery-cli-')));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const data = recoveryFixture(), context = data.current.context;
+  const before = 'old golden', after = 'reviewed golden';
+  Object.assign(data.manifest.goldens[0], { beforeSha256: recoveryHash(before), afterSha256: recoveryHash(after) });
+  data.proof.manifestSha256 = recoveryHash(JSON.stringify(data.manifest));
+  const selected = selectRecoveryInputs(data, { fixtures: true });
+  const core = { identity: identity({ ...selected, source: { commit: recoveryBase.commit }, github: { ...selected.github, runId: recoveryBase.runId } }) };
+  const downloads = {};
+  for (const [id, entries] of [[100, [{ name: 'gopurs-0.1.0-rc.20-linux-amd64-quality.json', data: JSON.stringify(core) }]],
+    [9999, [{ name: 'prepared-environment.txt', data: 'retained closure' }]]]) {
+    const zip = archive(root, entries), artifact = data.base.artifacts.find(row => row.id === id);
+    Object.assign(artifact, { size_in_bytes: zip.artifact.size, digest: zip.artifact.digest });
+    downloads[`repos/${context.repository}/actions/artifacts/${id}/zip`] = readFileSync(zip.path).toString('base64');
+  }
+  const api = {};
+  for (const value of [data.base, data.current]) {
+    const prefix = `repos/${context.repository}/`, run = `${prefix}actions/runs/${value.context.runId}`;
+    Object.assign(api, { [run]: value.run,
+      [`${run}/jobs?filter=all&per_page=100`]: [{ total_count: value.jobs.length, jobs: value.jobs }],
+      [`${run}/artifacts?per_page=100`]: [{ total_count: value.artifacts.length, artifacts: value.artifacts }],
+      [`${prefix}git/ref/tags/${value.context.tag}`]: value.tag.ref,
+      [`${prefix}git/tags/${value.tag.object.sha}`]: value.tag.object });
+  }
+  const git = {}, answer = (args, value) => { git[JSON.stringify(args)] = value; };
+  answer(['rev-parse', 'HEAD'], context.commit);
+  answer(['status', '--porcelain', '--untracked-files=all'], '');
+  answer(['cat-file', '-t', `refs/tags/${context.tag}`], 'tag');
+  answer(['rev-parse', `refs/tags/${context.tag}^{commit}`], context.commit);
+  answer(['rev-parse', `refs/tags/${context.tag}`], data.current.tag.object.sha);
+  answer(['rev-parse', `${recoveryBase.tag}^{commit}`], recoveryBase.commit);
+  answer(['rev-parse', recoveryBase.tag], recoveryBase.tagObject);
+  const changes = [{ path: data.manifest.goldens[0].path, before, after },
+    { path: 'package.json', before: JSON.stringify({ version: '0.1.0-rc.20' }), after: JSON.stringify({ version: recoveryTag.slice(1) }) },
+    { path: 'package-lock.json', before: JSON.stringify({ version: '0.1.0-rc.20', packages: { '': { version: '0.1.0-rc.20' } } }),
+      after: JSON.stringify({ version: recoveryTag.slice(1), packages: { '': { version: recoveryTag.slice(1) } } }) }];
+  answer(['diff', '--raw', '-z', '--no-renames', '--no-abbrev', recoveryBase.commit, 'HEAD'],
+    changes.map(({ path }) => `:100644 100644 ${'a'.repeat(40)} ${'b'.repeat(40)} M\0${path}\0`).join(''));
+  for (const value of changes) {
+    answer(['show', `${recoveryBase.commit}:${value.path}`], value.before);
+    answer(['show', `HEAD:${value.path}`], value.after);
+  }
+  const config = join(root, 'io.json'), preload = join(root, 'io.mjs'), trace = join(root, 'io.log');
+  writeFileSync(config, JSON.stringify({ git, api, downloads, manifest: data.manifest, trace }));
+  // Stub only external Git/GitHub I/O. The actual CLI, imports, source validation,
+  // inventory, producer selection, ZIP hashes/extraction and output writer run.
+  writeFileSync(preload, `import child from 'node:child_process'; import fs from 'node:fs'; import { syncBuiltinESMExports } from 'node:module';
+const data=JSON.parse(fs.readFileSync(process.env.GOPURS_CLI_IO,'utf8')), read=fs.readFileSync, exec=child.execFileSync;
+fs.readFileSync=function(path,options) { if (String(path).endsWith('/tools/ci/rc20-recovery.json')) {
+  const text=JSON.stringify(data.manifest); return options==='utf8' ? text : Buffer.from(text); } return read(path,options); };
+child.execFileSync=function(command,args,options={}) {
+  fs.appendFileSync(data.trace,JSON.stringify({command,args:command==='python3' ? ['ZIP extraction'] : args})+'\\n');
+  if(command==='python3') return exec(command,args,options);
+  let value;
+  if(command==='git') value=data.git[JSON.stringify(args)];
+  else if(command==='gh') { const endpoint=args.at(-1);
+    if(Object.hasOwn(data.downloads,endpoint)) { fs.writeFileSync(options.stdio[1],Buffer.from(data.downloads[endpoint],'base64')); return Buffer.alloc(0); }
+    if(Object.hasOwn(data.api,endpoint)) value=JSON.stringify(data.api[endpoint]); }
+  if(value===undefined) throw new Error('Unexpected external I/O: '+command+' '+JSON.stringify(args));
+  return options.encoding ? value : Buffer.from(value);
+}; syncBuiltinESMExports();`);
+  const output = join(root, 'inputs.json');
+  const result = spawnSync(process.execPath, ['--import', preload, fileURLToPath(new URL('./release-inputs.mjs', import.meta.url)),
+    'prepare-fixtures', '--release', join(root, 'candidate'), '--environment', join(root, 'environment'), '--out', output],
+  { encoding: 'utf8', timeout: 10000, env: { ...process.env, ...environment(context), RUNNER_TEMP: root, GOPURS_CLI_IO: config } });
+  assert.equal(result.status, 0, `${result.error ?? ''}\n${result.stderr}`);
+  assert.doesNotMatch(result.stderr, /unsettled top-level await/);
+  const actual = JSON.parse(readFileSync(output, 'utf8'));
+  assert.equal(actual.schema, 3);
+  assert.deepEqual(actual.source, selected.source);
+  assert.deepEqual(actual.qualificationIdentity, core.identity);
+  assert.deepEqual(actual.recovery.required, selected.recovery.required);
+  assert.deepEqual(actual.artifacts.map(row => row.id), [100, 9999]);
+  assert.equal(readFileSync(join(root, 'environment/prepared-environment.txt'), 'utf8'), 'retained closure');
+  assert.equal(readFileSync(trace, 'utf8').split('\n').filter(line => line.includes('ZIP extraction')).length, 2);
+});
 
 test('ZIP bytes are verified before extraction into a fresh destination', t => {
   const root = mkdtempSync(join(tmpdir(), 'gopurs-release-inputs-'));

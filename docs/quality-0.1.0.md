@@ -1,7 +1,469 @@
-# Quality-gate status — 0.1.0
+# Quality-gate status — 0.1.x
 
-This is a working record for the `0.1.0` release gates. It is not a release
-certificate. The gate list is in [`todo.md`](../todo.md).
+This record retains dated qualification and publication observations. Results
+apply to the source and artifact identities named in each entry. The current
+gate list is in the [release checklist](release-checklist.md).
+
+## 0.1.1 publication — 13 November 2026
+
+The [GitHub release for `v0.1.1`](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.1)
+was published on 13 November 2026 at 22:05:36 UTC as a final release.
+[CI run 43492895269](https://github.com/0x000000000000000000001/gopurs/actions/runs/43492895269)
+completed successfully for source `7ca02a9072ee76e8173eeb9f286d60157acb3bd3`.
+Both states were checked through the GitHub API on 14 November 2026.
+
+The preparation entries below retain the observations made before publication,
+including the RC20 recovery scope. Qualification applies to the named release
+sources and artifacts; subsequent branch changes require their own checks.
+
+## 0.1.0 workflow failure and 0.1.1 preparation — 13 November 2026
+
+The immutable signed tag `v0.1.0` identifies commit
+`447bababda052882aeb8bfe005ab5a157741ed05` and tag object
+`bfb9e722c645ab627b5339e1c09c01074b606ae4`, verified by GitHub.
+[CI run 43489468517](https://github.com/0x000000000000000000001/gopurs/actions/runs/43489468517)
+passed its 88 policy tests and skipped rebuilding the three compilers, as
+intended. All twelve fixture jobs and three packaging jobs stopped during
+artifact acquisition with Node's unsettled top-level-await error. No fixture,
+new package smoke, attestation or publication ran in that attempt.
+
+The recovery command dynamically imported the quality-report module, which
+imports the still-executing recovery command. Version `0.1.1` corrects this
+module-loading cycle. The failed `0.1.0` tag remains unchanged and unpublished.
+All 679 local fixture results, the 19 targeted JS comparisons, original RC20
+core jobs, benchmark and b8x execution retain their identities. The compiler,
+pins and fixture bytes are unchanged by this workflow correction.
+
+The new regression invokes the actual CLI: it reproduces exit 13 before the
+fix, then verifies and extracts two small local artifacts and writes the
+selected context after the fix. The complete policy suite passed **89/89**
+with zero failed, skipped, cancelled or todo cases. No compiler build or
+fixture campaign was repeated for this module-loading correction.
+
+The final `0.1.1` source, signed tag, successful complete qualification, artifact
+review and public checks are still required. The recovery remains one hop from
+RC20; it does not inherit success from the failed `0.1.0` workflow.
+
+## RC20 results and final recovery preparation — 13 November 2026
+
+Signed RC20 identifies source `2202368d4b19849fdc365afacaffa4a617b0ea43`
+and tag object `9a80c154eff82589275d6790e158e0636066197c`.
+[CI run 43412666316](https://github.com/0x000000000000000000001/gopurs/actions/runs/43412666316)
+completed with failure: the scope job and all three platform build/core jobs
+passed, but the twelve fixture shards stopped on snapshot differences.
+Final qualification, attestations and the release draft were consequently
+skipped. This is not a successful complete matrix or a published candidate.
+
+The observed differences concern `1110`, `4105`, `Coercible` and
+`CompactRecordConsumers`: generated dictionaries, newtypes and record FFI
+adapters use types retained by the TAST more precisely than the old references.
+Isolated validation with the exact frozen RC20 distribution passed all four
+fixtures in Release and Dev on both compiler hosts. Additional rank-2 class
+and record-equality probes matched the JavaScript reference. Only their
+generated-code snapshots were changed. The separate continuation has now
+completed all **679 previously missing fixture/profile pairs** on the frozen
+native compiler. Its exact union retains 40 initial successes, 389 subsequent
+successes, four repaired record-helper cases and 246 final successes, without
+replaying completed cases. The completion receipt has SHA-256
+`919add2c5a535cbeb8f4b178aa88ec8321a5208aa0e9059c952214aff7a0f68f`.
+Nineteen further obsolete snapshots concern resolved type synonyms, newtypes,
+records and derived dictionaries. Their targeted JS-host comparison also
+passed **19/19**, including Go builds/executions, with Main TAST and relevant
+class declarations retained. That receipt has SHA-256
+`1ae079509abd00a5293b89cd5436efc807b17aa0f77b394f4d6528a978b490bb`.
+Together with the earlier seven references, 26 snapshot files were refreshed.
+These local results do not fill missing CI gates.
+
+The continuation subsequently exposed a separate FFI validation limit in
+`PolyLabels`, reproduced in `RowUnion`: a curried Go function returning an
+open-row record map is checked against the final record too early. Only the
+two fixture implementations were flattened to ordinary Go argument lists;
+their PureScript declarations, map-copy behavior, compiler and snapshots are
+unchanged. All eight fixture/profile/host executions passed with outputs equal
+to the JavaScript frontend reference. The limitation and migration are
+documented; no compiler fix or full rebuild is claimed. The validation receipt
+has SHA-256 `470daaace40b381602edcca1a8b9bfc21d0c1d258e0daf5cc1d306fc751b3927`.
+Previously successful fixture executions remain retained in the completed
+local coverage union.
+
+The complete [RC20 benchmark](release-benchmark.md#completed-rc20-campaign--13-november-2026-utc)
+passed and was audited: 51 cases, 1,224 retained invocations and one separately
+excluded warmup after a disk-floor stop. The resumed runner preserved the
+19 completed cases and restarted the interrupted case from its first warmup.
+Its source, raw timings and exclusions retain their RC20 identities.
+
+The successfully produced Darwin CI artifact was installed into a fresh b8x
+workspace. Frontend compilation, native backend generation, Go package builds
+and the `Test.Main` link passed; its Linux arm64 executable passed **287/287
+application tests**. The original 3,242 frozen input files remained unchanged.
+This is an observed RC20 artifact execution despite the overall CI failure;
+it does not certify the pending final package or a public installation.
+The retained preflight receipt has SHA-256
+`761e2682fb4e6ea7364b72d486e0f76925ff16985e8468b0041fdbbfe467afc6`.
+
+Final `0.1.0` preparation uses a bounded recovery path rather than repeating
+the successful compiler builds. It must verify unchanged compiler inputs,
+binary bytes, pins and tools; rerun affected or missing fixtures; retain the
+original producer identity of every inherited result; and verify the newly
+packaged artifacts on their native platforms. Original reports are not
+rewritten as new executions. The final tag, complete coverage, binding of the
+observed b8x execution to the final compiler, and public-consumer checks remain
+pending at this preparation step.
+
+The sealed recovery source lists the 26 snapshot hashes and the two exact
+Go fixture input changes. Its policy suite passed 88/88 with no skipped,
+cancelled or todo cases. All compiler/runtime bytes, library pins, frontend
+inputs and dependency versions remain those of RC20; only the three release
+version fields change in the package metadata.
+
+Evidence is retained under `.gopurs-evidence/publication-rc20-20261113` at the
+local workspace root, including `ci-monitor`, the two isolated fixture-repair
+directories and `benchmark-audit`. The main working checkout was switched to
+`edge` during qualification; subsequent work uses a separate release worktree
+and the frozen compiler distribution, leaving that checkout untouched.
+
+## RC20 native Foreign correction — 13 November 2026
+
+The second local preflight used clean compiler commit
+`4a5983172305c659899caa45ad19311d2ae40ddd`. It completed 100 successful
+library gates before YogaJSON Release failed with a native-array read panic;
+YogaJSON Dev was not attempted. This is partial evidence, not 102 passes.
+The original workspace, log and failed result remain retained.
+
+Execution traces isolated three related Foreign-port defects: safe readers
+assumed boxed primitives/arrays, indexed reads did not recognize native slices,
+and reading a native object property copied slice children. The correction
+uses explicit representation conversions after the existing type checks and
+preserves child identity without traversing shared or cyclic values. It does
+not change the compiler/runtime or the public PureScript export list.
+
+The final patch is published as `gopurs-foreign` commit
+`8c326898e821a9151af35b2a647fc9b2354ba92e` and selected by the bootstrap
+manifest. On the unchanged compiler above, a fresh final source capture passed
+Foreign Release and Dev, YogaJSON **50/50 in each profile**, the Foreign
+JavaScript reference and the native Go race tests. These include named native
+types, index bounds, shared/cyclic children and legacy runtime values.
+The four-run controller exited 0; its receipt has SHA-256
+`5a30ac2a7c300b78eaa3ad6df2e907ee0c329bfeb79313459f3e10560d5a6e41`.
+Evidence is under `.gopurs-evidence/publication-rc20-20261113/foreign-safe-read-validation-attempt3`
+and `yoga-json-diagnosis` at the local workspace root.
+
+RC20 remains untagged and unpublished at this preparation step. A fresh
+bootstrap with the new pin and the exact-tag full CI matrix are next. Full CI
+will rerun all 51 libraries in Release and Dev on every supported platform;
+the 100 older local gates are not relabelled as results with the new pin.
+This targeted local verification replaces another complete local repetition
+before tagging, while retaining the complete CI requirement before publication.
+The fresh benchmark, installed-artifact application check and public consumer
+checks also remain required. Spec's three historical pending internal cases
+remain disclosed separately from its successful runner.
+
+## RC20 ignored-Unit correction before tagging — 13 November 2026
+
+The first untagged RC20 build at
+`3d534faf07083ed00a2348f1d9a2358af0bf9c09` exposed an additional bridge
+regression: `Unit -> Int` implemented by Go `func() any` produced an extra
+function. The correction keeps the original TAST annotation at the dummy-Unit
+boundary consumed by zero-argument Go wrappers. A focused regression covering
+five contracts passed; complete validation of the corrected build is pending.
+
+The initial library preflight was deliberately stopped after 45 passing gates;
+the 46th was interrupted with `SIGTERM` and the controller exited 1. This is
+partial evidence, not a completed 102-invocation campaign. Its exact binaries
+and receipt remain under
+`.gopurs-evidence/publication-rc20-20261113/first-build`. RC20 has no tag or
+publication, so its version is unchanged. A new committed source, native build,
+complete preflight and benchmark are required; the plans bound to the first
+build await refreshed identities and cannot qualify the corrected compiler.
+
+## RC19 local qualification failure and RC20 preparation — 13 November 2026
+
+RC19's signed tag `v0.1.0-rc.19` identifies commit
+`68fd4b3d41b88dae84852b1e54924508bc2109a0`, annotated object
+`bc16c2da6fbe99b51a0f0ce5e5d2c52113e895d7`; GitHub verified its signature.
+Its fresh local native bootstrap and installed-package check passed, but these
+checks did not cover the subsequent Arrays failure. RC19 remains unpublished.
+
+A separate local library preflight stopped at its third invocation,
+`gopurs-arrays` Release at pin `e68970644734ba8420fc811337dd45beb4b2acea`,
+with exit 1. Aff and Argonaut Core Release had passed; the remaining 93
+invocations of that selected preflight were not attempted. Re-executing the
+unchanged generated Arrays binary reproduced the panic at `traverse1`:
+a curried native callback was treated as an already boxed runtime value.
+Short isolated experiments also exposed a distinct return-arity error: the
+bridge did not consume a TAST function-result argument accepted by the Go
+implementation. It must consume the arguments Go actually accepts, while
+preserving a function result when Go returns one. Both cases require compiler
+bridge corrections, not a change to the Arrays port or its source pin.
+
+The original failure, binary rerun, typed contract and isolated probes are
+retained under `.gopurs-evidence/publication-rc19-20261113/local-library-preflight/arrays-failure`
+at the workspace root. Its terminal failure receipt has SHA-256
+`d25e09d557c3b2fab5053594b081524ddb62d0b33b44b3587409f076f7bd7408`.
+The original source and failed results remain available; isolated experiments
+do not count as the complete corrected candidate qualification.
+
+[CI run 43332185849](https://github.com/0x000000000000000000001/gopurs/actions/runs/43332185849)
+was cancelled after this local failure. The cancellation request succeeded at
+`2026-11-13T00:22:20.521104Z`; the monitor observed `completed/cancelled` at
+`2026-11-13T00:23:20.335969Z`. No CI step was recorded as failed. The scope
+job passed 78/78 with zero failed, skipped, cancelled or todo tests, and all
+three Nix/TAST checks passed. Both Linux jobs were still running core gates;
+macOS was still bootstrapping. These partial results are not complete CI
+qualification. The exact scope log and terminal job metadata are retained
+under the same RC19 evidence directory.
+
+RC19's local proof of equality with the executed RC18 compiler bytes also
+passed, after a real installed-package consumer; its receipt has SHA-256
+`350e2136fb1a6c9ffea2d0186bd035385453c6502a9c6fb8e691adb7a637eb4d`.
+It concerns those local RC19 artifacts and the original RC18 campaign, not
+public artifacts or program correctness. The RC20 compiler corrections
+invalidate reuse through that byte-equality argument. The completed RC18
+measurements remain historical and a **new strict benchmark is required**.
+
+RC20 prepares the two bridge corrections and focused regressions. The local
+JavaScript build completed without warnings and the targeted FFI suite passed
+38/38. These results do not qualify the pending fresh native compiler or the
+complete candidate. Its frontend and library pins remain unchanged, but it
+must run all 51 libraries in both
+Release and Dev (102 invocations, no exclusions), with Arrays first. Source
+commit, signed tag, complete preflight, new benchmark, full CI, installed
+application qualification and public consumer checks are pending. No result
+from the older candidate is relabelled as an RC20 pass. Spec's current 74
+passing and three pending internal cases remain explicitly disclosed.
+
+## RC18 qualification interruption and RC19 preparation — 13 November 2026
+
+RC18's signed tag identifies commit
+`c6c68d1486362ec2ba6ec23534a10be60f571f68`, annotated tag object
+`69482ff422b3961751716b5c2821b033b3878edb`; GitHub verifies its signature.
+[Run 43312898324](https://github.com/0x000000000000000000001/gopurs/actions/runs/43312898324)
+passed all three Nix/TAST checks. Both Linux quality reports record 106
+successful core gates followed by gate 107, `Node test-runner.test.mjs`, failing.
+The previous `FFIIntegerReturns` blocker in gate 31 passed on both Linux
+platforms. These partial results do not qualify the full candidate.
+
+The failing cleanup-isolation test copies library runners into temporary
+checkouts and substitutes selected native preflights. It omitted the newly
+invoked `tools/aff-native.test.mjs` and `test/json-records.mjs` paths. Aff and
+Foreign therefore exited before reaching the mock Spago command. Both reports
+show the same assertion at `tools/test-runner.test.mjs:858`: expected
+`/reached-spago/`, actual output only the respective preflight banner. Each
+Node suite reports 96 tests, 93 passed and 3 failures (two children and their
+parent), with no skipped/cancelled/todo tests. This is a test-fixture setup
+failure, not a Go application result or a generated-code golden mismatch.
+
+Linux arm64 failed at `2026-11-12T23:06:44Z`; Linux amd64 failed at
+`2026-11-12T23:10:53Z`. After retaining the diagnostic artifacts and exact
+source/environment identities, the remaining jobs were cancelled. The monitor
+observed `completed/cancelled` at `2026-11-12T23:12:33.813642Z`; macOS had not
+finished its native bootstrap. RC18 remains unpublished and its tag unchanged.
+The evidence is retained under
+`.gopurs-evidence/publication-rc18-20261112` at the workspace root, including
+both small quality ZIPs, the failed gate logs and quality reports. The scope
+job's separate 78/78 result is not complete matrix qualification.
+
+RC19 corrects that isolation fixture by adding the missing preflight stubs
+and allowing its isolated subprocess to start its own Node test runner:
+the child environment drops the inherited `NODE_TEST_CONTEXT` flag. It keeps
+the Spago-reached assertion and neighbor-cache sentinels. The original local
+reproduction had 49 passes and 3 failures out of 52 tests; the first correction
+fixed Foreign but left Aff unexecuted because of the inherited runner context,
+as confirmed by an isolated environment probe. Those results remain retained.
+
+The final fixture correction passed the targeted 52/52 and complete
+96/96 local tests, each with exit 0 and no failed, skipped, cancelled or todo
+tests. The local validation receipt has SHA-256
+`dcbe9344a0111ac1529ad0ccfd0c4f776a5e9790ac85707dcb23c647ef578eaa`
+and identifies the exact tested file hash. These are local fixture/file-suite
+results, not RC19's complete matrix. The real library scripts and native suites
+are unchanged, as are the compiler, runtime, frontend and library pins.
+A new signed tag, full CI and artifact/consumer qualification remain pending.
+
+The separate RC18 benchmark started at `2026-11-12T21:50:42.697Z` and
+finished its last case at `2026-11-12T23:35:20.397Z`, with a confirmed runner
+exit of 0. The terminal audit completed at `2026-11-12T23:36:14.991261Z`:
+51 cases, 1,224 invocations (918 measured samples and 306 warmups), 612 cold
+misses, 612 warm hits and 102 matching output oracles. Its report separates
+47 unchanged corpora from four with five disclosed Go FFI additions; all
+original PureScript and TAST bytes remain unchanged. The
+[benchmark record](release-benchmark.md#completed-rc18-campaign--12-november-2026-utc)
+contains the historical comparison, variability, exclusions and durable local
+archive identities. The terminal audit receipt has SHA-256
+`79338162c35291e98ecb378beff9416007c62dbaa43e3e3e74da895d16304424`.
+
+This remains a completed **RC18 campaign**, not a new RC19 measurement or
+public-artifact qualification. Explicit equality of RC18 and RC19 executed
+binaries/helpers and the other recorded inputs/tools is still unproved.
+Any later reuse requires that equality proof and must retain the original
+campaign identity; RC19's full qualification remains pending.
+
+Spec's current internal expectation remains 74 passing and 3 documented
+pending tests per profile. A successful library runner must not be described
+as zero pending internal tests. Future candidate/final CI, installed-artifact
+b8x qualification and public consumer checks remain separate release gates.
+
+## RC17 qualification interruption and RC18 preparation — 12 November 2026
+
+The signed RC17 tag identifies commit
+`3d5a196c4a9ab7644185c0484284783149236248`, with annotated tag object
+`19e8c70c27cafc6ec4e14ed0153bb5a4ee7f3835`; GitHub verifies its signature.
+The freshly built local hosts passed the 33-test CLI suite, the installed
+package test on both hosts and the strict 24-invocation benchmark pilot.
+Those results do not qualify the later CI artifacts or a public installation.
+
+In [run 43296018853](https://github.com/0x000000000000000000001/gopurs/actions/runs/43296018853),
+all three platforms passed their Nix checks. Both Linux jobs passed the first
+30 core gates, then rejected the `FFIIntegerReturns` package snapshot in gate
+31. Before this assertion, all nine consumer fixtures had compiled and executed
+in monolithic form and with JavaScript, sequential native and parallel native
+package generation, with matching TAST, output files and runtime results.
+The run was cancelled after retaining both failure logs; macOS had not finished
+its native bootstrap. The tag remains unchanged and unpublished.
+
+A 23-second local reproduction identifies exactly two outdated array-argument
+blocks in the snapshot. Their replacement by the generated array-accessor
+conversion adds exactly 100 bytes to the package snapshot, matching both Linux
+reports. Release and Dev executions retain the same results and host parity.
+RC18 refreshes the four affected package and monolithic FFI snapshots; the
+generated Main code, compiler implementation and runtime are unchanged.
+The four post-update checks pass across Release/Dev and monolithic/package
+layouts. The neighboring native-array fixture `FunWithFunDeps` also passes
+both profiles and all three package hosts without a snapshot change.
+The complete qualification must run against RC18's own identity.
+
+The separate RC17 benchmark stopped after 27 completed corpora when the frozen
+25 October `node-http` entry failed FFI validation. Its reachable `stdout`
+binding has a JavaScript implementation but no `test/Main.go` in that archive.
+The current library port added this file in public commit `9b11034` on
+1 November. Adding only that file in an isolated copy lets the same RC17
+compiler generate the same 312 frozen TAST modules successfully. This is an
+incomplete historical input, not a reason to weaken FFI validation.
+
+The failed campaign and original corpus remain unchanged. A derived corpus
+and functional preflight are being prepared separately; any comparison with
+the official baseline must identify every added FFI input. No completed
+51-corpus performance result is claimed. Logs, hashes, reproductions and the
+terminal failure receipt are retained under
+`.gopurs-evidence/publication-rc17-20261112` and
+`.gopurs-evidence/rc17-benchmark-20261112` at the workspace root.
+
+The preflight also exposed missing Go Buffer dependency selection in the
+historical `node-net` and `node-streams` corpora. The actual current library
+runners reproduced the same missing `Node.Buffer.Immutable.toStringImpl`
+diagnostic in 19 and 28 seconds. Selecting `gopurs-node-buffer` in their Go
+test configurations and regenerating their locks fixes both Release and Dev.
+The four runs execute successfully and their copied configuration, lock and
+TAST module path confirm the local Go port. The public commits are
+`f640b30a98180fbaa37a1f33e298107ab8253db1` for net and
+`3a0da79477adb3e17757c1b246f21b7ddd2382b8` for streams.
+No implementation code changed in these two ports. Evidence is retained in
+`publication-rc18-20261112/current-library-probes` in the workspace evidence
+directory; the compiler manifest now selects these commits.
+
+The actual Spec runner also reproduced the historical corpus's missing
+`Node.ChildProcess.undefined` and `Node.ChildProcess.Types.fromKillSignalImpl`
+bindings. Public Spec commit `de7f8d143d4a8468d9ec358598c24bb610a21bdc`
+supplies these two auxiliary value helpers for its tests. It preserves
+undefined versus null, JavaScript ToInt32 conversion, string dispatch and
+polymorphic callback results. It does not implement the complete ChildProcess
+API or change the compiler's validation.
+
+Spec's full Release and Dev runs pass: 74 passing and the three previously
+documented pending cases in each profile, all nine external integration
+consumers, the native lifecycle checks, four integration-environment
+assertions and 21 value-contract cases. The value tests compare with the stock
+JavaScript implementation. The external consumers use Spec without `--ffi`.
+The native compiler hash remains the tested RC17 hash throughout these runs.
+Evidence is in `publication-rc18-20261112/spec-helpers-validation`.
+
+The first local Spec reproduction was interrupted by an unrelated PATH
+collision: `dd` resolved to a b8x helper rather than the system utility.
+Repeating the real runner with an explicit toolchain PATH resolves that
+environment failure; its log is retained separately from the successful runs.
+
+## RC16 functional pilot and RC17 preparation — 12 November 2026
+
+RC16's clean source commit is `42c67ca5ba58cca904782834527dc758102aeedf`.
+Its rebuilt local native compiler, installed archive and pinned frontend passed
+the ordinary FFI package checks with both compiler hosts. The Linux amd64 Nix
+stage that blocked RC15 passed in
+[RC16 run 43290095150](https://github.com/0x000000000000000000001/gopurs/actions/runs/43290095150).
+
+The mandatory benchmark's functional pilot then rejected host output identity
+on `gopurs-assert`. Five of six generated files were identical. The sixth
+contained 87 `missing-ffi-v1` JSON comments with different key order; all other
+bytes and all decoded metadata were identical. Replaying JavaScript reproduced
+its oracle exactly, and canonicalizing those comments reproduced the native
+hash exactly. A one-module probe also exposed different escaping of HTML and
+Unicode line-separator characters in metadata paths.
+
+RC17 fixes these comments locally, preserving the schema, decoded data and
+executable Go. It adds a real compilation regression for key order, unusual
+paths and literal escape sequences across hosts. The byte-for-byte benchmark
+oracle remains unchanged. The failed pilot is a functional diagnostic, with
+no performance claims; evidence is under
+`.gopurs-evidence/rc16-benchmark-pilot-20261112/diagnosis` at the workspace root.
+RC17 requires its own strict pilot, full benchmark and tagged qualification.
+Neither RC15 nor RC16 has been published.
+
+## RC15 qualification interruption and RC16 preparation — 12 November 2026
+
+The signed RC15 tag identifies commit `ac7c45530364dcb08a63131ebe80e1f132c8825f`.
+[Run 43284779858](https://github.com/0x000000000000000000001/gopurs/actions/runs/43284779858)
+failed its Linux amd64 Nix check in Foundation 0.0.30's arithmetic property
+test, before the gopurs quality gates. The seed `5576833819021412192`
+reproduces the same exception on Darwin with the pinned GHC 9.8.4.
+
+Tracing identifies `Int8 (-128) / (-1)`: the result 128 is unrepresentable.
+Prelude and Foundation both raise an overflow. An exhaustive check of all
+65,280 Int8 pairs with nonzero divisors finds only this overflowing pair and
+no false division identity. A patch restricted to the property's domain
+passes the complete Foundation suite at the exact failing seed: 6,121 tests.
+The patch preserves Foundation's implementation and test configuration.
+Linux Nix checks keep the complete suite enabled; the pinned nixpkgs disables
+Foundation checks on Darwin, where the explicit seeded run supplies this proof.
+Proofs are retained under `publication-rc15-20261112/foundation-test-fix` in
+the local workspace evidence directory.
+
+The first local installed-package check stopped because its previously built
+Nix frontend executables no longer existed at invocation time. The deletion
+trigger was not established. RC16 roots both selected frontends explicitly
+throughout CI and publication checks. The repeated local package test passed
+with both compiler hosts: native/WASM parser parity, stock-JavaScript oracle,
+ordinary effects/Aff, cold/warm caches, signature edits, rejection and recovery.
+The separate FFI end-to-end run passed both hosts in Release and Dev. These
+preparation checks used Node 24.8.0 and Go 1.27.0 on macOS arm64; they do not
+qualify the future signed CI artifacts or a public installation.
+
+RC16 integrates these build corrections and retains the frontend/Aff/Foreign
+pins and ordinary Go FFI implementation. Its own signed-tag qualification,
+artifact review and public consumer checks remain required. RC15's tag and
+failed run are preserved; RC15 has not been published.
+
+## RC15 source preparation — 12 November 2026
+
+The new candidate targets `0.1.0-rc.15`. Its source preparation is not a
+qualification of signed or published artifacts. The typed frontend is pinned
+to `ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080`, Aff to
+`dbe9ff1c574a18352cf9ec861090083b14ca0246`, and Foreign to
+`c79499d6c22fd0637104bec5449434cfb6e31fe4`; those commits are available in
+their public repositories. All 51 local library checkouts match the candidate
+manifest and have clean working trees.
+
+The rebuilt JavaScript host passed all 36 focused FFI tests, including the five
+old-frontend diagnostic tests. The parser and runtime passed their Go race
+suites. All 78 CI planning, receipt and full-inventory aggregation tests passed,
+with no skips. Documentation checks covered 42 documents, 58 packaged paths
+and 106 compiler modules. Logs and the library identity audit are retained in
+`.gopurs-evidence/publication-rc15-20261112` at the local workspace root.
+
+The ordinary Go FFI, ownership and native Foreign work is detailed in the
+[FFI validation record](ffi-validation.md). Its successful 287-test b8x run
+used development compiler artifacts. A fresh application source snapshot has
+been prepared for installed-candidate validation; that validation, the complete
+cold/warm benchmark, the signed three-platform qualification and public
+consumer checks remain pending in the [release checklist](release-checklist.md).
 
 ## RC14 qualification and artifact review — 5 November 2026
 

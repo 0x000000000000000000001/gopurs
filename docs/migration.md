@@ -3,7 +3,7 @@
 <!-- gopurs:source-version:start -->
 For installation, start with the [latest published release](https://github.com/0x000000000000000000001/gopurs/releases/latest)
 and the guides at its tag. This guide targets the version in this checkout:
-`gopurs@0.1.0-rc.14`.
+`gopurs@0.1.1`.
 <!-- gopurs:source-version:end -->
 
 ## From a JavaScript project
@@ -59,10 +59,10 @@ toolchain requirements.
 
 <!-- gopurs:toolchain:start -->
 ```bash
-nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.14
+nix develop github:0x000000000000000000001/gopurs/v0.1.1
 command -v purs
 purs --version
-npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.14
+npm install --save-dev --ignore-scripts gopurs@0.1.1
 ```
 <!-- gopurs:toolchain:end -->
 
@@ -78,7 +78,7 @@ Add this `extraPackages` block to the application's existing `workspace` in
 `spago.yaml`.
 
 <!-- gopurs:libraries:start -->
-These revisions come from the [source manifest for `v0.1.0-rc.14`](https://github.com/0x000000000000000000001/gopurs/blob/v0.1.0-rc.14/bootstrap-sources.json).
+These revisions come from the [source manifest for `v0.1.1`](https://github.com/0x000000000000000000001/gopurs/blob/v0.1.1/bootstrap-sources.json).
 
 ```yaml
   extraPackages:
@@ -116,11 +116,34 @@ func Prefix(value string) string {
 }
 ```
 
-The [Go FFI guide](https://github.com/0x000000000000000000001/gopurs/blob/edge/docs/development.md#go-ffi) covers signatures and representations
+The [Go FFI guide](ffi-idiomatic.md) covers signatures and representations
 for other types. The `.js` implementation serves the JavaScript target, while
-gopurs reads the `.go` implementation. In RC14, a missing Go implementation can
-produce a successful build followed by `FFI not implemented` at runtime.
-Exercise the application's foreign calls when checking the migration.
+gopurs reads the `.go` implementation and checks foreign implementations in
+the selected entry-point scope before emitting Go. Exercise the application's
+foreign calls when checking behavior, errors and resource cleanup.
+
+### Curried record-helper signatures
+
+For a polymorphic record helper that copies or forwards map entries, declare
+the Go arguments together. The current validator can reject a curried Go
+function whose eventual result is an open-row record, reporting an unsupported
+record-to-struct conversion. For example, replace:
+
+```go
+func MergeImpl(left map[string]any) func(map[string]any) map[string]any
+```
+
+with:
+
+```go
+func MergeImpl(left map[string]any, right map[string]any) map[string]any
+```
+
+Keep the PureScript declaration and the map-copy behavior unchanged. Map
+entries in this polymorphic helper remain opaque values; this is not a general
+conversion of open records into Go structs. `PolyLabels` and `RowUnion` passed
+Release and Dev with both compiler hosts after this signature change, with
+outputs matching the JavaScript frontend reference.
 
 ### Rebuild and compare
 
@@ -136,8 +159,8 @@ The backup retains any application-managed Go dependency manifests. For a
 project that already has `go.mod` and `go.sum`, restore them to the new
 `output/` before invoking gopurs. The example uses only the Go standard library.
 
-Check the frontend output explicitly. RC14 can accept upstream CoreFn, so its
-successful exit alone does not prove that the typed frontend was used:
+gopurs rejects frontend output without the TAST metadata arrays. Check the
+frontend output explicitly when diagnosing a frontend or cache mismatch:
 
 ```bash
 node --input-type=module <<'NODE'
@@ -160,8 +183,8 @@ check errors, resource handling and asynchronous operations for its own FFI.
 
 ## Current baseline
 
-`0.1.0` is the first public release. There is no earlier public version to
-migrate from. The compatibility commitments and the `0.x` policy are in
+The `0.1.x` line defines the initial public compatibility contract.
+The compatibility commitments and the `0.x` policy are in
 [publication-scope.md](publication-scope.md).
 
 ## Version policy
@@ -207,7 +230,8 @@ Treat generated Go as a build artifact:
 The `gopurs-*` libraries are separate packages. A compiler release does not
 automatically make every stock PureScript library work. Use the library
 revision associated with the release notes or the repository branch documented
-for that release. A library without Go FFI can compile but fail at runtime.
+for that release. The backend reports missing Go FFI in the selected entry-point scope;
+library behavior still needs application tests.
 
 ## Toolchain pins
 
@@ -225,7 +249,7 @@ The [bootstrap chain](bootstrap.md) records the compiler-side pins.
 
 ## Removing experimental settings
 
-`0.1.0` accepts experimental daemon, resident, Rust and profiling settings.
+gopurs accepts experimental daemon, resident, Rust and profiling settings.
 They are not required for a normal build. When upgrading:
 
 - unset `GOPURS_DAEMON`, `GOPURS_RESIDENT` and related variables;

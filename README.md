@@ -9,8 +9,12 @@ through the foreign function interface (FFI).
 <!-- gopurs:source-version:start -->
 For installation, start with the [latest published release](https://github.com/0x000000000000000000001/gopurs/releases/latest)
 and the guides at its tag. This guide targets the version in this checkout:
-`gopurs@0.1.0-rc.14`.
+`gopurs@0.1.1`.
 <!-- gopurs:source-version:end -->
+
+The supported targets are Linux amd64, Linux arm64 and macOS arm64.
+Consult the [quality record](docs/quality-0.1.0.md) and
+[release checklist](docs/release-checklist.md) for qualification evidence.
 
 ## Getting started
 
@@ -35,7 +39,7 @@ This example assumes your entry module is `Main`.
 
 <!-- gopurs:install:start -->
 ```bash
-npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.14
+npm install --save-dev --ignore-scripts gopurs@0.1.1
 spago build                 # Compile PureScript with the typed fork
 npx gopurs --main Main      # Generate Go source and go.mod in output/
 (cd output && go build -o app ./main && ./app)
@@ -46,7 +50,7 @@ npx gopurs --main Main      # Generate Go source and go.mod in output/
 
 - **Go library support.** The quickstart uses `gopurs-console` to implement
   `Effect.Console.log` in Go. For your own foreign functions, see the
-  [Go FFI guide](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/development.md#go-ffi). Existing ports and their
+  [Go FFI guide](docs/ffi-idiomatic.md). Existing ports and their
   revisions are listed in the [source manifest](https://github.com/0x000000000000000000001/gopurs/blob/main/bootstrap-sources.json).
 - **Typed Go generation.** The backend uses PureScript type information when
   generating records, constructors, type-class dictionaries and specialized functions.

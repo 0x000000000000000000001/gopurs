@@ -2,6 +2,8 @@ module Gopurs.FfiBridge
   ( generateFfiBridge
   , missingImplementations
   , ffiFunctionInfos
+  , ffiProblems
+  , ffiProblemsWithTypes
   , ffiValueWorkers
   ) where
 
@@ -14,10 +16,13 @@ import Data.Maybe (Maybe(..))
 import Data.String as String
 import Data.Tuple (Tuple(..))
 import Gopurs.CodegenState (FunctionInfo)
+import Gopurs.FfiBridge.Effects as Effects
 import Gopurs.FfiBridge.Render as Render
 import Gopurs.FfiBridge.Signatures (NativeCandidate)
 import Gopurs.FfiBridge.Signatures as Signatures
 import Gopurs.FfiTypes (FfiDecl)
+import Gopurs.GoTypes (printExprType)
+import Gopurs.FfiBridge.TypeSupport (printTypeNode, resolveNewtype)
 import Gopurs.GoAst (capitalize, sanitizeName)
 import PureScript.Backend.Optimizer.CoreFn (DataDecl, ExprType(..), Ident(..))
 
@@ -32,7 +37,7 @@ generateFfiBridge modNameStr dataDecls decls foreigns = String.joinWith "\n" (ma
       case Signatures.matchDeclaration modNameStr decls name of
         Nothing | unitConstant modNameStr name tast -> "var " <> exportName <> " = gopurs_runtime.Value{}"
         Nothing -> Render.missingImplementation exportName name
-        Just declaration -> "var " <> exportName <> " = " <> Render.wrapper dataDecls declaration tast
+        Just declaration -> "var " <> exportName <> " = " <> Render.wrapper dataDecls declaration (map (resolveNewtype dataDecls) tast)
 
 -- The driver records these alongside the generated stubs. Reachability is
 -- checked after translation, when intrinsic calls have already disappeared.
@@ -75,3 +80,18 @@ nativeForeign modNameStr decls (Tuple (Ident name) mbTast) = do
   tast <- mbTast
   declaration <- Signatures.matchDeclaration modNameStr decls name
   Signatures.nativeCandidate declaration tast
+
+-- Reject incompatible contracts before publishing any Go output. The driver
+-- supplies the original module and handwritten source path around these facts.
+ffiProblems :: String -> Array FfiDecl -> Array (Tuple Ident (Maybe ExprType)) -> Array String
+ffiProblems modName decls = Array.mapMaybe \(Tuple (Ident name) tast) -> do
+  d <- Signatures.matchDeclaration modName decls name
+  t <- tast
+  reason <- Effects.problem d t
+  pure (name <> " at " <> show d.line <> ":" <> show d.column
+    <> ": Go (" <> String.joinWith ", " (map printTypeNode d.args)
+    <> ") -> (" <> String.joinWith ", " (map printTypeNode d.results)
+    <> "); PureScript " <> printExprType t <> ". " <> reason)
+
+ffiProblemsWithTypes :: String -> Array DataDecl -> Array FfiDecl -> Array (Tuple Ident (Maybe ExprType)) -> Array String
+ffiProblemsWithTypes modName dataDecls decls = ffiProblems modName decls <<< map (map (map (resolveNewtype dataDecls)))

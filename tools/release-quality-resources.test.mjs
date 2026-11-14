@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +10,7 @@ import test from "node:test";
 import { fixtureBatches, fixtureWorkers, QualityGoCache, readFixtureReport, runFixtureWaves } from "./release/release-quality-resources.mjs";
 import { coreGateNames, fixtureShardCount, mergeQualityReports, qualityInventory, qualityIdentity, qualityOptions, shardBatches } from "./release/release-quality-report.mjs";
 import { moduleGateName } from "./release/release-quality-modules.mjs";
+import { recoveryBase } from "./ci/release-recovery.mjs";
 
 function workspace(t) {
   const path = realpathSync(mkdtempSync(join(tmpdir(), "gopurs-quality-unit-")));
@@ -214,8 +215,72 @@ test("new Node suites enter the inventory and invalidate qualification without t
     ["Node added.test.mjs", "Node alpha.test.mjs", "Node beta.test.mjs"]);
 });
 
+function expectedFullGateNames(inventory) {
+  return [
+    ...inventory.nodeTests.map(name => `Node ${name}`),
+    "Go build-cache (race)", "Go c1c (race)", "Go ffi-gen (race)",
+    "Native emission cancellation and concurrency (race)",
+    ...["release", "dev"].flatMap(profile => inventory.modules.map(library => `Library module ${library.name} (${profile})`)),
+    ...inventory.batches.map(batch => batch.name),
+    "npm package surface",
+  ];
+}
+
+test("bounded RC20 aggregation retains producer commits and requires the complete gate inventory", () => {
+  const create = () => {
+    const value = partialQualityReports(), { core, fixtures, build } = value;
+    core.identity.source.commit = recoveryBase.commit;
+    core.identity.github = { repository: recoveryBase.repository, runId: recoveryBase.runId, runAttempt: "1" };
+    build.source.commit = recoveryBase.commit;
+    build.source.tag = recoveryBase.tag; build.version = recoveryBase.tag.slice(1); build.preview = false;
+    build.artifacts[0].name = `gopurs-${build.version}-${core.identity.target}`;
+    for (const report of fixtures) {
+      report.identity = structuredClone(core.identity);
+      if (report.shard.index !== 3) {
+        report.identity.source.commit = "d".repeat(40);
+        report.identity.github.runId = "999";
+      }
+    }
+    const context = { schema: 3, source: { commit: "d".repeat(40), tag: "v0.1.1" }, target: core.identity.target,
+      github: { repository: recoveryBase.repository, runId: "999", finalizationAttempt: "1" },
+      recovery: { base: recoveryBase,
+        manifest: { schema: 1, enabled: true, base: recoveryBase, targetTag: "v0.1.1", fixtureSources: [],
+          goldens: [{ path: "tests/passing-snapshots/1110.go", fixture: "tests/passing/1110.purs", beforeSha256: "a".repeat(64), afterSha256: "b".repeat(64) }] },
+        required: [0, 1, 2].map(shard => ({ target: core.identity.target, shard })) },
+      qualificationIdentity: structuredClone(core.identity),
+      jobs: [{ name: `build and test (${core.identity.target})`, attempt: "1", commit: recoveryBase.commit, runId: recoveryBase.runId },
+        ...fixtures.map(report => ({ name: `fixtures (${core.identity.target}, shard ${report.shard.index})`, attempt: "1",
+          commit: report.identity.source.commit, runId: report.identity.github.runId }))] };
+    return { ...value, context };
+  };
+  const good = create(), original = JSON.stringify([good.core, ...good.fixtures]);
+  const merged = mergeQualityReports(good.core, good.fixtures, good.inventory, good.build, good.context);
+  assert.deepEqual(merged.gates.map(gate => gate.name), expectedFullGateNames(good.inventory));
+  assert.deepEqual(good.core.gates.map(gate => gate.name), coreGateNames(good.inventory));
+  assert.equal(JSON.stringify([good.core, ...good.fixtures]), original, "producer reports are never rewritten");
+  assert.equal(merged.identity.source.commit, recoveryBase.commit);
+  assert.deepEqual(merged.phases.map(phase => phase.identity.github.runId), [recoveryBase.runId, "999", "999", "999", recoveryBase.runId]);
+  for (const mutate of [
+    value => { value.fixtures[0].identity.compiler.nativeSha256 = "a".repeat(64); },
+    value => { value.fixtures[0].identity.environment.closureSha256 = "a".repeat(64); },
+    value => { value.fixtures[0].identity = structuredClone(value.core.identity); value.context.jobs[1].commit = recoveryBase.commit; value.context.jobs[1].runId = recoveryBase.runId; },
+    value => { value.fixtures[0].gates.pop(); },
+    value => { value.fixtures.pop(); },
+    value => { value.fixtures[1] = structuredClone(value.fixtures[0]); },
+    value => { value.core.gates[0].passed = false; },
+    value => { value.context.qualificationIdentity.compiler.javascriptSha256 = "a".repeat(64); },
+    value => { delete value.context.qualificationIdentity; },
+    value => { value.context.recovery.required = value.context.recovery.required.filter(row => row.shard !== 0); },
+  ]) {
+    const value = create(); mutate(value);
+    assert.throws(() => mergeQualityReports(value.core, value.fixtures, value.inventory, value.build, value.context), mutate.toString());
+  }
+});
+
 test("four shards preserve every original batch and only their verified union is full", () => {
   const { inventory, core, fixtures, build } = partialQualityReports();
+  const nodeTests = readdirSync(new URL("./", import.meta.url)).filter(name => name.endsWith(".test.mjs")).sort();
+  assert.deepEqual(inventory.nodeTests, nodeTests, "the full gate must discover every Node test file");
   assert(inventory.nodeTests.includes("check-docs.test.mjs"));
   assert(inventory.nodeTests.includes("check-output-identity.test.mjs"));
   assert.equal(inventory.targets.length, 401);
@@ -235,8 +300,8 @@ test("four shards preserve every original batch and only their verified union is
   assert.equal(merged.full, true);
   assert.equal(merged.phase, "all");
   assert.equal(merged.status, "passed");
-  const expectedGates = [...core.gates, ...fixtures.flatMap(report => report.gates)];
-  assert.deepEqual(merged.gates.map(gate => gate.name).sort(), expectedGates.map(gate => gate.name).sort());
+  const expectedGates = expectedFullGateNames(inventory);
+  assert.deepEqual(merged.gates.map(gate => gate.name), expectedGates);
   assert.deepEqual(merged.fixtures.passed, { release: 401, dev: 401 });
   assert.deepEqual(merged.modules, { selectedPerProfile: 51, passed: { release: 51, dev: 51 } });
   assert.deepEqual(merged.gates.map(gate => gate.index), Array.from({ length: expectedGates.length }, (_, index) => index + 1));
@@ -304,7 +369,7 @@ test("aggregation rejects incomplete, duplicate, failed or mismatched qualificat
 });
 
 test("merge CLI checks stable fixture evidence and original bootstrap hashes before writing", t => {
-  const root = workspace(t), { core, fixtures, build } = partialQualityReports();
+  const root = workspace(t), { inventory, core, fixtures, build } = partialQualityReports();
   const commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fileURLToPath(new URL("../", import.meta.url)), encoding: "utf8" }).trim();
   for (const report of [core, ...fixtures]) report.identity.source.commit = commit;
   build.source.commit = commit;
@@ -336,8 +401,7 @@ test("merge CLI checks stable fixture evidence and original bootstrap hashes bef
     ...fixtureFiles.flatMap(file => ["--fixtures", file]), "--build", buildFile, "--out", output];
   let result = spawnSync(process.execPath, args, { env, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(JSON.parse(readFileSync(output, "utf8")).gates.map(gate => gate.name).sort(),
-    [...core.gates, ...fixtures.flatMap(report => report.gates)].map(gate => gate.name).sort());
+  assert.deepEqual(JSON.parse(readFileSync(output, "utf8")).gates.map(gate => gate.name), expectedFullGateNames(inventory));
   rmSync(output);
   const signingEnv = { ...env, CI: "true", GITHUB_ACTIONS: "true", RUNNER_ENVIRONMENT: "github-hosted",
     GITHUB_SERVER_URL: "https://github.com", GITHUB_EVENT_NAME: "push", GITHUB_REF_TYPE: "tag",

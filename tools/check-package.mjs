@@ -22,6 +22,7 @@ const required = [
   "docs/benchmark-protocol.md",
   "docs/bootstrap.md",
   "docs/cli.md",
+  "docs/ffi-idiomatic.md",
   "docs/limitations.md",
   "docs/migration.md",
   "docs/publication-scope.md",
@@ -30,6 +31,9 @@ const required = [
   "package.json",
   "tools/ffi_gen.wasm",
   "tools/ffi-runner.mjs",
+  "tools/ffi-gen/types.go",
+  "tools/ffi-gen/parser.go",
+  "tools/ffi-gen/native_api.go",
   "tools/wasm_exec.js",
 ];
 const forbidden = [

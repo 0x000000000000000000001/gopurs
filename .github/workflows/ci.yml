@@ -30,6 +30,8 @@ jobs:
     outputs:
       build: ${{ steps.scope.outputs.build }}
       matrix: ${{ steps.scope.outputs.matrix }}
+      recovery: ${{ steps.scope.outputs.recovery }}
+      fixture_matrix: ${{ steps.scope.outputs.fixture_matrix }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -189,10 +191,12 @@ jobs:
       - name: Check the Nix packages and TAST application
         run: nix flake check --no-update-lock-file --print-build-logs
 
-      - name: Select the pinned TAST compiler
+      - name: Select the pinned TAST and standard compilers
         run: |
-          typed_package=$(nix build .#purs-tast --no-link --print-out-paths --no-update-lock-file)
+          typed_package=$(nix build .#purs-tast --out-link "$RUNNER_TEMP/gopurs-purs-tast" --print-out-paths --no-update-lock-file)
           echo "GOPURS_PURS=$typed_package/bin/purs" >> "$GITHUB_ENV"
+          official_package=$(nix build .#purs-official --out-link "$RUNNER_TEMP/gopurs-purs-official" --print-out-paths --no-update-lock-file)
+          echo "GOPURS_OFFICIAL_PURS=$official_package/bin/purs" >> "$GITHUB_ENV"
 
       # Keep every dev-shell tool rooted for the whole job, including on macOS.
       - name: Install the backend from lockfiles in the Nix environment
@@ -249,7 +253,7 @@ jobs:
           nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release/release-smoke.mjs \
             --package "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz" \
             --native "$RUNNER_TEMP/release/$RELEASE_PREFIX" \
-            --purs "$GOPURS_PURS" --report "$RUNNER_TEMP/release/$RELEASE_PREFIX-smoke.json"
+            --purs "$GOPURS_PURS" --official-purs "$GOPURS_OFFICIAL_PURS" --report "$RUNNER_TEMP/release/$RELEASE_PREFIX-smoke.json"
           channel=latest
           if [[ "$RELEASE_VERSION" == *-rc.* ]]; then channel=next; fi
           nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command npm publish --dry-run --ignore-scripts --tag "$channel" "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz"
@@ -307,8 +311,8 @@ jobs:
 
   fixtures:
     name: fixtures (${{ matrix.target }}, shard ${{ matrix.shard }})
-    if: startsWith(github.ref, 'refs/tags/') || inputs.full == true
-    needs: build
+    if: ${{ always() && needs.plan.result == 'success' && (needs.plan.outputs.recovery == 'true' || needs.build.result == 'success') && (startsWith(github.ref, 'refs/tags/') || inputs.full == true) }}
+    needs: [plan, build]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 360
     permissions:
@@ -316,22 +320,14 @@ jobs:
       actions: read
     strategy:
       fail-fast: false
-      matrix:
-        target: [linux-amd64, linux-arm64, darwin-arm64]
-        shard: [0, 1, 2, 3]
-        include:
-          - target: linux-amd64
-            os: ubuntu-24.04
-          - target: linux-arm64
-            os: ubuntu-24.04-arm
-          - target: darwin-arm64
-            os: macos-15
+      matrix: ${{ fromJSON(needs.plan.outputs.fixture_matrix) }}
     defaults:
       run:
         shell: bash
     env:
       GOPURS_RELEASE_TARGET: ${{ matrix.target }}
       FIXTURE_SHARD: ${{ matrix.shard }}
+      GOPURS_RECOVERY: ${{ needs.plan.outputs.recovery }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
@@ -361,6 +357,7 @@ jobs:
         timeout-minutes: 3
         run: |
           version=$(node -p 'JSON.parse(require("fs").readFileSync("package.json")).version')
+          if [ "$GOPURS_RECOVERY" = true ]; then version=0.1.0-rc.20; fi
           prefix="gopurs-$version-$GOPURS_RELEASE_TARGET"
           (cd "$RUNNER_TEMP/candidate" && shasum -a 256 -c "$prefix-SHA256SUMS")
           mkdir "$RUNNER_TEMP/npm-candidate"
@@ -396,10 +393,87 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+  repackage:
+    name: repackage and smoke (${{ matrix.target }})
+    needs: plan
+    if: needs.plan.outputs.recovery == 'true'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      GOPURS_RELEASE_TARGET: ${{ matrix.target }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.8.0
+      - name: Acquire the original compiler and its exact tools
+        timeout-minutes: 15
+        run: |
+          node tools/ci/release-inputs.mjs prepare-fixtures \
+            --release "$RUNNER_TEMP/candidate" --environment "$RUNNER_TEMP/fixture-environment" \
+            --out "$RUNNER_TEMP/fixture-inputs.json"
+          prefix="gopurs-0.1.0-rc.20-$GOPURS_RELEASE_TARGET"
+          (cd "$RUNNER_TEMP/candidate" && shasum -a 256 -c "$prefix-SHA256SUMS")
+          mkdir "$RUNNER_TEMP/npm-candidate"
+          tar -xzf "$RUNNER_TEMP/candidate/gopurs-0.1.0-rc.20.tgz" -C "$RUNNER_TEMP/npm-candidate" package/bin/gopurs.js
+          cp "$RUNNER_TEMP/npm-candidate/package/bin/gopurs.js" bin/gopurs.js
+          cp "$RUNNER_TEMP/candidate/$prefix" bin/gopurs-native
+          chmod +x bin/gopurs-native
+      - uses: DeterminateSystems/determinate-nix-action@v3.5.2
+      - name: Import the prepared environment without rebuilding
+        timeout-minutes: 15
+        run: |
+          node tools/ci/fixture-environment.mjs import \
+            --directory "$RUNNER_TEMP/fixture-environment" --context "$RUNNER_TEMP/fixture-inputs.json" \
+            --profile "$RUNNER_TEMP/gopurs-repackage-profile"
+      - name: Package the final metadata around the unchanged compiler
+        run: |
+          node tools/ci/fixture-environment.mjs run -- node tools/release/release-prepare.mjs \
+            --native bin/gopurs-native --out "$RUNNER_TEMP/repackaged" \
+            --recovery-context "$RUNNER_TEMP/fixture-inputs.json" --original-directory "$RUNNER_TEMP/candidate"
+      - name: Execute the installed final package with both compiler hosts
+        run: |
+          node tools/ci/fixture-environment.mjs run -- node tools/release/release-smoke.mjs \
+            --package "$RUNNER_TEMP/repackaged/gopurs-0.1.1.tgz" \
+            --native "$RUNNER_TEMP/repackaged/gopurs-0.1.1-$GOPURS_RELEASE_TARGET" \
+            --hosts javascript,native --report "$RUNNER_TEMP/repackage-smoke.json"
+          test -z "$(git status --porcelain --untracked-files=all)"
+          prefix="gopurs-0.1.1-$GOPURS_RELEASE_TARGET"
+          cp "$RUNNER_TEMP/repackage-smoke.json" "$RUNNER_TEMP/repackaged/$prefix-smoke.json"
+          (cd "$RUNNER_TEMP/repackaged" && shasum -a 256 "$prefix-smoke.json" >> "$prefix-SHA256SUMS")
+      - name: Retain only successfully tested final packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: repackaged-${{ matrix.target }}-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/repackaged/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Retain the fresh installed-package smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: repackage-smoke-${{ matrix.target }}-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/repackage-smoke.json
+          if-no-files-found: warn
+          retention-days: 90
+
   finalize:
     name: qualify and attest (${{ matrix.target }})
-    if: startsWith(github.ref, 'refs/tags/') || inputs.full == true
-    needs: [build, fixtures]
+    if: ${{ always() && needs.plan.result == 'success' && needs.fixtures.result == 'success' && ((needs.plan.outputs.recovery == 'true' && needs.repackage.result == 'success') || needs.build.result == 'success') && (startsWith(github.ref, 'refs/tags/') || inputs.full == true) }}
+    needs: [plan, build, fixtures, repackage]
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -415,6 +489,7 @@ jobs:
         shell: bash
     env:
       GOPURS_RELEASE_TARGET: ${{ matrix.target }}
+      GOPURS_RECOVERY: ${{ needs.plan.outputs.recovery }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
@@ -452,15 +527,30 @@ jobs:
         run: |
           version=$(node -p 'JSON.parse(require("fs").readFileSync("package.json")).version')
           prefix="gopurs-$version-$GOPURS_RELEASE_TARGET"
-          (cd "$RUNNER_TEMP/release" && shasum -a 256 -c "$prefix-SHA256SUMS")
+          original_prefix="$prefix"
+          if [ "$GOPURS_RECOVERY" = true ]; then original_prefix="gopurs-0.1.0-rc.20-$GOPURS_RELEASE_TARGET"; fi
+          (cd "$RUNNER_TEMP/release" && shasum -a 256 -c "$original_prefix-SHA256SUMS")
           reports=()
           for shard in 0 1 2 3; do
             reports+=(--fixtures "$RUNNER_TEMP/fixtures/fixtures-$GOPURS_RELEASE_TARGET-$shard/quality.json")
           done
           context=(--finalization-context "$RUNNER_TEMP/finalization-context.json")
           node tools/release/release-quality-report.mjs "${context[@]}" \
-            --core "$RUNNER_TEMP/release/$prefix-quality.json" "${reports[@]}" \
-            --build "$RUNNER_TEMP/release/$prefix-build.json" --out "$RUNNER_TEMP/complete-quality.json"
+            --core "$RUNNER_TEMP/release/$original_prefix-quality.json" "${reports[@]}" \
+            --build "$RUNNER_TEMP/release/$original_prefix-build.json" --out "$RUNNER_TEMP/complete-quality.json"
+          if [ "$GOPURS_RECOVERY" = true ]; then
+            mv "$RUNNER_TEMP/release" "$RUNNER_TEMP/base-candidate"
+            mv "$RUNNER_TEMP/release-packaged" "$RUNNER_TEMP/release"
+            (cd "$RUNNER_TEMP/release" && shasum -a 256 -c "$prefix-SHA256SUMS")
+            node tools/ci/release-inputs.mjs verify-repackaged \
+              --context "$RUNNER_TEMP/finalization-context.json" --release "$RUNNER_TEMP/release"
+            # Retain the original report bytes, including inherited producer
+            # identities, next to the new aggregate; never edit the inputs.
+            tar -czf "$RUNNER_TEMP/release/$prefix-recovery-inputs.tar.gz" \
+              -C "$RUNNER_TEMP/base-candidate" "$original_prefix-quality.json" "$original_prefix-build.json" "$original_prefix-bootstrap-checksums.txt" "$original_prefix-smoke.json" \
+              -C "$RUNNER_TEMP/fixtures" .
+            (cd "$RUNNER_TEMP/release" && shasum -a 256 "$prefix-recovery-inputs.tar.gz" >> "$prefix-SHA256SUMS")
+          fi
           cp "$RUNNER_TEMP/complete-quality.json" "$RUNNER_TEMP/release/$prefix-quality.json"
           # The original candidate checksums were verified above. Only the
           # partial quality report is replaced before the final files are signed.

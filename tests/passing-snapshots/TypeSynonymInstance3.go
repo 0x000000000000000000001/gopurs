@@ -78,6 +78,30 @@ func Get_Main_Lte256_dollar_Dict() gopurs_runtime.Value {
 	return cache_Main_Lte256_dollar_Dict
 }
 
+var cache_Main_Lte256_dollar_Dict__2336410167 gopurs_runtime.Value
+var once_Main_Lte256_dollar_Dict__2336410167 sync.Once
+
+func Get_Main_Lte256_dollar_Dict__2336410167() gopurs_runtime.Value {
+	once_Main_Lte256_dollar_Dict__2336410167.Do(func() {
+		cache_Main_Lte256_dollar_Dict__2336410167 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: 907985874, UnsafePtr: unsafe.Pointer(Call_Main_Lte256_dollar_Dict__2336410167(func() struct {
+				LtEq0 gopurs_runtime.Value
+				/*gopurs:record-v1:1:004c0074004500710030*/
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					LtEq0 gopurs_runtime.Value
+					/*gopurs:record-v1:1:004c0074004500710030*/
+				}{}
+				clone.LtEq0 = gopurs_runtime.RecordGet(orig, "LtEq0")
+				return clone
+			}()))}
+		})
+	})
+	return cache_Main_Lte256_dollar_Dict__2336410167
+}
+
 var cache_Main_main gopurs_runtime.Value
 var once_Main_main sync.Once
 
@@ -205,4 +229,26 @@ func Call_Main_Lte256_dollar_Dict(x_0_loop struct {
 		_ = orig
 		return gopurs_runtime.RecordDict1("LtEq0", orig.LtEq0)
 	}())
+}
+
+func Call_Main_Lte256_dollar_Dict__2336410167(x_0_loop struct {
+	LtEq0 gopurs_runtime.Value
+	/*gopurs:record-v1:1:004c0074004500710030*/
+}) *Constructor_Main_Lte256[gopurs_runtime.Value] {
+Lte256_dollar_Dict__2336410167:
+	for {
+		if false {
+			continue Lte256_dollar_Dict__2336410167
+		}
+		var x_0 struct {
+			LtEq0 gopurs_runtime.Value
+			/*gopurs:record-v1:1:004c0074004500710030*/
+		} = x_0_loop
+		_ = x_0
+		return gopurs_runtime.CoerceToStruct[Constructor_Main_Lte256[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+			orig := x_0
+			_ = orig
+			return gopurs_runtime.RecordDict1("LtEq0", orig.LtEq0)
+		}())
+	}
 }

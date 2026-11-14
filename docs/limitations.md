@@ -9,21 +9,28 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
   by the compiler fork.
 - A stock `purs` with the same version number is not sufficient. It does not
   write `typeTable`, `dataDecls` and `classDecls`.
-- gopurs has no `--help` or `--version` handler in `0.1.0`; see the
+- gopurs has no `--help` or `--version` handler in `0.1.1`; see the
   [CLI reference](cli.md).
 - The backend writes Go, not JavaScript. Existing JavaScript FFI modules are
   not reused.
 
 ## FFI and library coverage
 
-- Every reachable foreign declaration needs a Go implementation. Missing FFI
-  fails at runtime with `FFI not implemented: <name>`.
-- The stock PureScript libraries contain JavaScript FFI. Using them without a
-  Go port may compile but fail when the foreign function is called.
+- Every foreign declaration reachable through the selected PureScript entries
+  needs a Go implementation. The backend rejects missing implementations in
+  that statically reachable scope. A runtime guard remains for dynamic Go
+  dispatch or code outside that validation scope.
+- The stock PureScript libraries contain JavaScript FFI. Select their Go ports
+  for the foreign functions your application uses.
 - The `gopurs-*` library ports are separate distributions. Their versions and
   licenses are not implied by the compiler version.
 - The FFI parser supports the documented Go signatures, not arbitrary
   JavaScript FFI shapes.
+- A curried Go implementation returning an open-row record through
+  `map[string]any` can be rejected by the structured-result validator. Declare
+  its arguments together in one Go function; see the
+  [migration note](migration.md#curried-record-helper-signatures). This limit
+  does not make open rows convertible to arbitrary Go structs.
 - `--ffi` paths containing spaces are not supported by the shared argument
   parser.
 
@@ -40,7 +47,7 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
 
 ## Platform and toolchain limits
 
-- `0.1.0` targets `linux/arm64`, `linux/amd64` and `darwin/arm64`.
+- `0.1.1` targets `linux/arm64`, `linux/amd64` and `darwin/arm64`.
 - Intel Macs (`darwin/amd64`), Windows and 32-bit targets are outside the
   supported host matrix. The Nix flake and release qualification cover only
   the three platforms above.
@@ -57,7 +64,7 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
 
 ## Native, Rust and experimental modes
 
-The following are not production contracts in `0.1.0`:
+The following are not production contracts in `0.1.1`:
 
 - `bin/gopurs-rust`, Purust, and Rust PGO.
 - daemon/resident modes;

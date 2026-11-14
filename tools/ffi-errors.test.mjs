@@ -181,3 +181,13 @@ test('raw transport propagates a child diagnostic without writing it to stderr i
     assert.equal(result.stderr, '');
     assert.match(result.stdout, /parser failed once/);
 });
+
+test('signature schema mismatches cannot be silently accepted from a stale helper', () => {
+    const declaration = { name: 'Read', isVar: false, typeParams: [], args: [], ret: null, results: [], line: 1, column: 6 };
+    for (const schemaVersion of [1, 3]) {
+        const decoded = decodeFfiDecls(JSON.stringify([{ ...declaration, schemaVersion }]));
+        assert.ok(decoded instanceof Left);
+        assert.match(decoded.value0, /Unsupported Go FFI signature schema/);
+    }
+    assert.ok(decodeFfiDecls(JSON.stringify([{ ...declaration, schemaVersion: 2 }])) instanceof Right);
+});
