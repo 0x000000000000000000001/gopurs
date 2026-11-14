@@ -1,7 +1,13 @@
 # Quickstart
 
 Build and run a PureScript program that prints `Hello from gopurs`. It uses
-`gopurs@0.1.0-rc.14` and the Go port of `console` for `Effect.Console.log`.
+the Go port of `console` for `Effect.Console.log`.
+
+<!-- gopurs:source-version:start -->
+For installation, start with the [latest published release](https://github.com/0x000000000000000000001/gopurs/releases/latest)
+and the guides at its tag. This guide targets the version in this checkout:
+`gopurs@0.1.0-rc.14`.
+<!-- gopurs:source-version:end -->
 
 ## Prerequisites
 
@@ -9,9 +15,11 @@ Start in an empty directory that will hold the example and its library port.
 If you use Nix with flakes enabled, open the development shell for this release
 and run the rest of the guide inside it.
 
+<!-- gopurs:toolchain:start -->
 ```bash
 nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.14
 ```
+<!-- gopurs:toolchain:end -->
 
 The first shell setup can download and compile the Haskell frontend and its
 dependencies. Let that setup finish before entering the application commands.
@@ -19,7 +27,9 @@ dependencies. Let that setup finish before entering the application commands.
 The shell supplies the tools below. For a manual setup, put them on `PATH`
 before continuing.
 
+<!-- gopurs:frontend:start -->
 - The [pinned typed `purs` compiler](https://github.com/0x000000000000000000001/purescript/tree/105f5752b39cc0f6c99a40064295338bf57ad223). Spago uses it to emit the type information gopurs needs.
+<!-- gopurs:frontend:end -->
 - Spago `1.0.3` for the application build.
 - Node.js `24.8.0` and npm for the gopurs JavaScript compiler host.
 - Go `1.27.0` and Git.
@@ -47,22 +57,28 @@ mkdir src
 npm init -y
 ```
 
-Install the published prerelease:
+Install the version described by this guide. The tag and package must have
+been published; for an unreleased checkout, use the
+[source installation](bootstrap.md#clean-source-installation).
 
+<!-- gopurs:install:start -->
 ```bash
 npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.14
 ```
+<!-- gopurs:install:end -->
 
 ## Install the console port
 
+<!-- gopurs:console:start -->
 ```bash
 cd ..
 git clone https://github.com/0x000000000000000000001/gopurs-console.git
 git -C gopurs-console checkout --detach d4931b94e7731581e761131c56844cf65c4d0b6d
 cd hello
 ```
+<!-- gopurs:console:end -->
 
-This is the console revision pinned by the candidate's bootstrap manifest.
+This is the console revision pinned by this checkout's bootstrap manifest.
 
 ## Create the project
 

@@ -149,6 +149,10 @@ Use the pinned typed TAST fork. RC14 may accept stock `purs` output, but its
 type information does not satisfy the supported compiler contract. Validate
 the frontend output as shown in the migration walkthrough.
 
+The historical `purescript-npm` wrapper is obsolete for gopurs. Use the
+[current frontend installation](bootstrap.md#legacy-compiler-installer)
+instead of its macOS-only release binary.
+
 ### Can I use stock PureScript libraries?
 
 They may compile, but their JavaScript FFI is not a Go implementation. Use the
@@ -163,6 +167,12 @@ No. It writes Go sources and `go.mod`; `go build` is a separate step.
 The test runners compile the selected entry point immediately before execution
 so they never run a stale binary. That is separate from the backend compile-time
 measurement.
+
+For compiler fixtures, `./bin/test` builds Go with `-mod=readonly`, module
+downloads disabled, and the installed Go toolchain. It uses the generated
+`go.mod` directly, without `go mod init` or `go mod tidy`. This offline policy
+applies to the final Go build; Spago dependency fetching and library-specific
+test scripts retain their own setup requirements.
 
 ### Does it support Windows or 32-bit targets?
 

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { formatSnapshots, packageSourceSections, snapshotFiles } from "./test-snapshots.mjs";
@@ -20,7 +20,8 @@ const fixture = basename(cwd) === "output" ? dirname(cwd) : cwd;
 const source = join(fixture, "src/Main.purs");
 const content = existsSync(source) ? readFileSync(source, "utf8") : "";
 const phase = tool === "go" ? (process.argv[2] === "mod" ? "tidy" : "build") : /^gopurs(?:-native|-rust|\\.js)?$/.test(tool) ? "gopurs" : tool;
-appendFileSync(process.env.RUNNER_CALLS, JSON.stringify({ phase, tool, args: process.argv.slice(2), cwd, tmp: process.env.TMPDIR, packages: process.env.GOPURS_GO_PACKAGES, goflags: process.env.GOFLAGS }) + "\\n");
+appendFileSync(process.env.RUNNER_CALLS, JSON.stringify({ phase, tool, args: process.argv.slice(2), cwd, tmp: process.env.TMPDIR, packages: process.env.GOPURS_GO_PACKAGES, goflags: process.env.GOFLAGS,
+  goproxy: process.env.GOPROXY, gonoproxy: process.env.GONOPROXY, gosumdb: process.env.GOSUMDB, gotoolchain: process.env.GOTOOLCHAIN, gowork: process.env.GOWORK }) + "\\n");
 if (content.includes("fail=" + phase) || process.env.RUNNER_FAIL === phase) process.exit(23);
 if (process.env.RUNNER_PAUSE && phase === "spago") {
   const child = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });
@@ -180,13 +181,20 @@ test("Dev flags reach native and JS compiler hosts through the public launcher",
   ]);
 });
 
-test("Release fixtures preserve Go flags and normal application compilation", async t => {
+test("Release fixtures build offline without changing other phases' Go settings", async t => {
   const f = fixture(t);
-  const result = await f.run(["Alpha"], { GOFLAGS: "-trimpath" });
+  const settings = { GOFLAGS: "-trimpath", GOPROXY: "https://example.invalid", GONOPROXY: "*", GOSUMDB: "sum.golang.org", GOTOOLCHAIN: "auto", GOWORK: "/unrelated/go.work" };
+  const result = await f.run(["Alpha", "-c"], { ...settings, RUNNER_FAIL: "tidy" });
   assert.equal(result.code, 0, result.output);
   const calls = readFileSync(f.calls, "utf8").trim().split("\n").map(JSON.parse);
   assert(calls.every(call => call.goflags === "-trimpath"));
-  assert.deepEqual(calls.find(call => call.phase === "build").args, ["build", "-o", "gopurs_main", "./main/main.go"]);
+  const build = calls.find(call => call.phase === "build");
+  assert.deepEqual(build.args, ["build", "-mod=readonly", "-o", "gopurs_main", "./main/main.go"]);
+  assert.deepEqual(calls.filter(call => call.tool === "go"), [build], "no module initialization or tidy step");
+  for (const [key, expected] of Object.entries({ GOPROXY: "off", GONOPROXY: "none", GOSUMDB: "off", GOTOOLCHAIN: "local", GOWORK: "off" })) {
+    assert.equal(build[key.toLowerCase()], expected, key);
+    assert(calls.filter(call => call !== build).every(call => call[key.toLowerCase()] === settings[key]), `${key} stays scoped to the fixture Go build`);
+  }
   assert.doesNotMatch(result.output, /Go build mode: DEV/);
 });
 
@@ -487,7 +495,7 @@ test("every failed phase stops the run and keeps diagnostics without updating sn
   const f = fixture(t);
   const expected = join(f.root, "tests/passing-snapshots/Alpha.go");
   writeFileSync(expected, "original snapshot\n");
-  for (const phase of ["spago", "gopurs", "gofmt", "tidy", "build", "execute", "text"]) {
+  for (const phase of ["spago", "gopurs", "gofmt", "build", "execute", "text"]) {
     f.source("Alpha", `module Main where\n-- fail=${phase}\n`);
     const result = await f.run(["Alpha", "Beta", "--update-snapshots"]);
     assert.equal(result.code, 1, result.output);
@@ -826,19 +834,19 @@ test("installed library runners limit direct cleanup to their own checkout", asy
     try {
       mkdirSync(join(base, name, "bin"), { recursive: true });
       cpSync(join(directory, "bin/test"), join(base, name, "bin/test"));
-      const nativePreflights = ["chmod-native.mjs", "listener-added-native.mjs", "https-response-native.mjs", "pipe-native.mjs"]
-        .filter(file => existsSync(join(directory, "test", file)));
+      const nativePreflights = ["test/chmod-native.mjs", "test/listener-added-native.mjs", "test/https-response-native.mjs",
+        "test/pipe-native.mjs", "test/json-records.mjs", "tools/aff-native.test.mjs"]
+        .filter(file => existsSync(join(directory, file)));
       const shellPreflights = ["test-child-process-native"]
         .filter(file => existsSync(join(directory, "bin", file)));
       for (const file of shellPreflights) {
         writeFileSync(join(base, name, "bin", file), `#!/usr/bin/env bash\necho reached-${file}\n`, { mode: 0o755 });
       }
-      if (nativePreflights.length) {
-        // This fixture checks shell cleanup before spago, not the native suite.
-        mkdirSync(join(base, name, "test"));
-        for (const file of nativePreflights) {
-          writeFileSync(join(base, name, "test", file), `console.log(${JSON.stringify("reached-" + file)});\n`);
-        }
+      // This fixture checks shell cleanup before spago, not the native suite.
+      for (const file of nativePreflights) {
+        const target = join(base, name, file);
+        mkdirSync(dirname(target), { recursive: true });
+        writeFileSync(target, `import { writeFileSync } from "node:fs";\nwriteFileSync(${JSON.stringify(target + ".reached")}, "reached");\n`);
       }
       writeFileSync(join(base, name, "spago.go.yaml"), "package: {}\n");
       mkdirSync(join(base, "mockbin"));
@@ -848,13 +856,17 @@ test("installed library runners limit direct cleanup to their own checkout", asy
         mkdirSync(directory, { recursive: true });
         writeFileSync(join(directory, "sentinel"), "neighbor data");
       }
+      const env = { ...process.env, GOPURS_RUST: "0", GOPURS_JS: "0", PATH: join(base, "mockbin") + ":" + process.env.PATH };
+      // A library's `node --test` is an independent runner, not this worker.
+      delete env.NODE_TEST_CONTEXT;
       const result = spawnSync("bash", [join(base, name, "bin/test")], {
-        env: { ...process.env, GOPURS_RUST: "0", GOPURS_JS: "0", PATH: join(base, "mockbin") + ":" + process.env.PATH },
+        env,
         encoding: "utf8", timeout: 10_000,
       });
       assert.ifError(result.error);
       assert.equal(result.status, 1, result.stdout + result.stderr);
-      for (const file of [...nativePreflights, ...shellPreflights]) assert(result.stdout.includes("reached-" + file), result.stdout);
+      for (const file of nativePreflights) assert(existsSync(join(base, name, file + ".reached")), `preflight did not run: ${file}`);
+      for (const file of shellPreflights) assert(result.stdout.includes("reached-" + file), result.stdout);
       assert.match(result.stdout, /reached-spago/);
       for (const cache of ["output", ".spago", ".cache"]) {
         assert.equal(readFileSync(join(base, "gopurs-neighbor", cache, "sentinel"), "utf8"), "neighbor data");

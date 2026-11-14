@@ -14,15 +14,31 @@ and the release notes. The remaining gates are tracked in the
 
 ## Build and validate a candidate
 
-Set `package.json` and `package-lock.json` to the same release version. Use
-`0.1.0-rc.1`, then `0.1.0-rc.2`, etc. for candidates; the final version is
-`0.1.0`. Add the corresponding `## [VERSION]` section to `CHANGELOG.md`, with
+Set `package.json` and `package-lock.json` to the same release version:
+
+```bash
+npm version VERSION --no-git-tag-version
+```
+
+The `version` hook also regenerates and stages the marked documentation blocks.
+Review and commit the complete change before creating the signed tag below.
+Use `-rc.N` for candidates and a plain semantic version for a final release.
+Add the corresponding `## [VERSION]` section to `CHANGELOG.md`, with
 the exact TAST revision from `bootstrap-sources.json`, compatibility limits,
 platform results and benchmark evidence.
 
-Before creating the tag, update the active version references in `README.md`,
-`docs/quickstart.md`, `docs/publication-scope.md` and
-`docs/library-source-audit.md`, while preserving historical versions and results.
+When updating dependency pins, run `npm run docs:sync` after editing
+`bootstrap-sources.json`. The generated blocks in `README.md`,
+`docs/quickstart.md`, `docs/migration.md` and `docs/publication-scope.md`
+follow the checkout's version and pins. `npm run check:docs` verifies those
+blocks, links and module coverage. CI runs the checks even for documentation-only
+changes, and release packaging checks synchronization before producing artifacts.
+
+Publication status and qualification evidence require their own review; a
+version bump does not prove publication. The README links to the latest GitHub
+release, whose generated notes link to the guides at its immutable tag.
+Keep historical versions and results unchanged, and update behavior descriptions
+and `docs/library-source-audit.md` when the corresponding code or pins change.
 
 Start from a fresh checkout and use the committed Nix and dependency locks:
 

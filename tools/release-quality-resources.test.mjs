@@ -153,8 +153,8 @@ test("partial phases require full intent and an explicit valid fixture shard", (
   ]) assert.throws(() => qualityOptions(args));
 });
 
-function partialQualityReports() {
-  const inventory = qualityInventory(fileURLToPath(new URL("../", import.meta.url)));
+function partialQualityReports(root = fileURLToPath(new URL("../", import.meta.url))) {
+  const inventory = qualityInventory(root);
   const identity = { source: { commit: "a".repeat(40), dirty: false },
     compiler: { javascriptSha256: "b".repeat(64), nativeSha256: "c".repeat(64) }, target: "linux-amd64",
     environment: { profile: "/nix/store/" + "a".repeat(32) + "-gopurs-env", profileSha256: "b".repeat(64), closureSha256: "c".repeat(64), shell: "/nix/store/" + "d".repeat(32) + "-bash/bin/bash" },
@@ -186,9 +186,36 @@ function partialQualityReports() {
   return structuredClone({ inventory, core, fixtures, build });
 }
 
+test("new Node suites enter the inventory and invalidate qualification without their evidence", t => {
+  const root = workspace(t);
+  mkdirSync(join(root, "tools"));
+  mkdirSync(join(root, "tests/passing"), { recursive: true });
+  for (const name of ["beta.test.mjs", "helper.mjs", "alpha.test.mjs"]) writeFileSync(join(root, "tools", name), "");
+  writeFileSync(join(root, "tests/passing/Main.purs"), "module Main where\n");
+  writeFileSync(join(root, "bootstrap-sources.json"), JSON.stringify({
+    schema: 1, libraries: { alpha: { rev: "a".repeat(40) } },
+  }));
+  const { inventory, core, fixtures, build } = partialQualityReports(root);
+  assert.deepEqual(inventory.nodeTests, ["alpha.test.mjs", "beta.test.mjs"]);
+  assert.deepEqual(core.gates.map(gate => gate.name), [
+    "Node alpha.test.mjs", "Node beta.test.mjs",
+    "Go build-cache (race)", "Go c1c (race)", "Go ffi-gen (race)",
+    "Native emission cancellation and concurrency (race)",
+    "Library module gopurs-alpha (release)", "Library module gopurs-alpha (dev)",
+    "npm package surface",
+  ]);
+  writeFileSync(join(root, "tools/added.test.mjs"), "");
+  const expanded = qualityInventory(root);
+  assert.deepEqual(expanded.nodeTests, ["added.test.mjs", "alpha.test.mjs", "beta.test.mjs"]);
+  assert.throws(() => mergeQualityReports(core, fixtures, expanded, build), /Incomplete core gate inventory/);
+  const qualified = partialQualityReports(root);
+  const merged = mergeQualityReports(qualified.core, qualified.fixtures, qualified.inventory, qualified.build);
+  assert.deepEqual(merged.gates.filter(gate => gate.name.startsWith("Node ")).map(gate => gate.name),
+    ["Node added.test.mjs", "Node alpha.test.mjs", "Node beta.test.mjs"]);
+});
+
 test("four shards preserve every original batch and only their verified union is full", () => {
   const { inventory, core, fixtures, build } = partialQualityReports();
-  assert.equal(inventory.nodeTests.length, 104);
   assert(inventory.nodeTests.includes("check-docs.test.mjs"));
   assert(inventory.nodeTests.includes("check-output-identity.test.mjs"));
   assert.equal(inventory.targets.length, 401);
@@ -208,10 +235,11 @@ test("four shards preserve every original batch and only their verified union is
   assert.equal(merged.full, true);
   assert.equal(merged.phase, "all");
   assert.equal(merged.status, "passed");
-  assert.equal(merged.gates.length, 373);
+  const expectedGates = [...core.gates, ...fixtures.flatMap(report => report.gates)];
+  assert.deepEqual(merged.gates.map(gate => gate.name).sort(), expectedGates.map(gate => gate.name).sort());
   assert.deepEqual(merged.fixtures.passed, { release: 401, dev: 401 });
   assert.deepEqual(merged.modules, { selectedPerProfile: 51, passed: { release: 51, dev: 51 } });
-  assert.deepEqual(merged.gates.map(gate => gate.index), Array.from({ length: 373 }, (_, index) => index + 1));
+  assert.deepEqual(merged.gates.map(gate => gate.index), Array.from({ length: expectedGates.length }, (_, index) => index + 1));
   for (const profile of ["release", "dev"]) assert.deepEqual(
     merged.gates.filter(gate => gate.fixtures?.profile === profile).flatMap(gate => gate.fixtures.targets), inventory.targets);
   assert.equal(merged.gates.at(-1).name, "npm package surface");
@@ -308,7 +336,8 @@ test("merge CLI checks stable fixture evidence and original bootstrap hashes bef
     ...fixtureFiles.flatMap(file => ["--fixtures", file]), "--build", buildFile, "--out", output];
   let result = spawnSync(process.execPath, args, { env, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(JSON.parse(readFileSync(output, "utf8")).gates.length, 373);
+  assert.deepEqual(JSON.parse(readFileSync(output, "utf8")).gates.map(gate => gate.name).sort(),
+    [...core.gates, ...fixtures.flatMap(report => report.gates)].map(gate => gate.name).sort());
   rmSync(output);
   const signingEnv = { ...env, CI: "true", GITHUB_ACTIONS: "true", RUNNER_ENVIRONMENT: "github-hosted",
     GITHUB_SERVER_URL: "https://github.com", GITHUB_EVENT_NAME: "push", GITHUB_REF_TYPE: "tag",

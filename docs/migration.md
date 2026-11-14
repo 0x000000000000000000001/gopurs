@@ -1,5 +1,11 @@
 # Migration and compatibility
 
+<!-- gopurs:source-version:start -->
+For installation, start with the [latest published release](https://github.com/0x000000000000000000001/gopurs/releases/latest)
+and the guides at its tag. This guide targets the version in this checkout:
+`gopurs@0.1.0-rc.14`.
+<!-- gopurs:source-version:end -->
+
 ## From a JavaScript project
 
 Start with a working Spago application and record its JavaScript output before
@@ -45,16 +51,20 @@ different program.
 
 ### Select the frontend and backend
 
-Open the pinned shell in the application directory, then install the public
-backend. See the [quickstart prerequisites](quickstart.md#prerequisites) for
-manual toolchain requirements.
+Open the pinned shell in the application directory, then install the matching
+backend. These commands require that the documented version has been published;
+for an unreleased checkout, use the [source installation](bootstrap.md#clean-source-installation).
+See the [quickstart prerequisites](quickstart.md#prerequisites) for manual
+toolchain requirements.
 
+<!-- gopurs:toolchain:start -->
 ```bash
 nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.14
 command -v purs
 purs --version
 npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.14
 ```
+<!-- gopurs:toolchain:end -->
 
 Use `spago build` directly in this shell for the steps below. An existing
 `npm run build` script prepends `node_modules/.bin` to `PATH`, which can select
@@ -65,8 +75,10 @@ script. The Nix shell supplies its executable path in `GOPURS_PURS`.
 ### Configure the Go library ports
 
 Add this `extraPackages` block to the application's existing `workspace` in
-`spago.yaml`. These revisions come from RC14's
-[source manifest](https://github.com/0x000000000000000000001/gopurs/blob/v0.1.0-rc.14/bootstrap-sources.json).
+`spago.yaml`.
+
+<!-- gopurs:libraries:start -->
+These revisions come from the [source manifest for `v0.1.0-rc.14`](https://github.com/0x000000000000000000001/gopurs/blob/v0.1.0-rc.14/bootstrap-sources.json).
 
 ```yaml
   extraPackages:
@@ -83,6 +95,7 @@ Add this `extraPackages` block to the application's existing `workspace` in
       git: https://github.com/0x000000000000000000001/gopurs-strings.git
       ref: a4189eb3ee1dc5e18d6962359fb43430ea81efa4
 ```
+<!-- gopurs:libraries:end -->
 
 Configure overrides at the application workspace level. Include transitive
 dependencies whose FFI the application reaches. In this example, sorting

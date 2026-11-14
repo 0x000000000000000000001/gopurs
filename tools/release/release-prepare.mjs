@@ -32,6 +32,7 @@ const version = metadata.version;
 if (!/^\d+\.\d+\.\d+(?:-rc\.\d+)?$/.test(version)) throw new Error(`Unsupported release version: ${version}`);
 if (json("package-lock.json").packages[""].version !== version)
   throw new Error("package.json and package-lock.json release versions differ");
+command(process.execPath, [join(root, "tools/sync-docs.mjs"), "--check"]);
 const target = `${platform()}-${{ x64: "amd64", arm64: "arm64" }[arch()] ?? arch()}`;
 if (!["linux-amd64", "linux-arm64", "darwin-arm64"].includes(target))
   throw new Error(`Unsupported release target: ${target}`);
@@ -195,9 +196,13 @@ const notesName = `${prefix}-release-notes.md`;
 const section =
   changelog.split(/^## /m).find((section) => section.startsWith(`[${version}]`)) ??
   (options.preview ? changelog.split(/^## /m).find((section) => section.startsWith("[Unreleased]")) : null);
+const docsUrl = `https://github.com/0x000000000000000000001/gopurs/blob/${tag}/docs`;
+const guides = options.preview
+  ? ""
+  : `\n## Getting started\n\n[Quickstart](${docsUrl}/quickstart.md) · [Nix installation](${docsUrl}/nix.md)\n\nThese guides use this release's compiler and library revisions.\n`;
 writeFileSync(
   join(options.out, notesName),
-  `# gopurs ${version}${options.preview ? " — local preview" : ""}\n\n${section ?? "No release notes prepared."}\n`,
+  `# gopurs ${version}${options.preview ? " — local preview" : ""}\n\n${section ?? "No release notes prepared."}\n${guides}`,
 );
 const artifacts = [
   archive.filename,

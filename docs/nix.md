@@ -5,6 +5,9 @@ and checks for `x86_64-linux`, `aarch64-linux` and `aarch64-darwin`. Its inputs 
 `flake.lock`; it does not read a sibling compiler checkout or an existing
 gopurs binary.
 
+Intel Macs (`x86_64-darwin`) are not included in this flake or the release
+qualification. The supported macOS host is Apple Silicon (`aarch64-darwin`).
+
 ## Install or run the backend
 
 From a checkout at the release revision:

@@ -6,15 +6,21 @@ what users may rely on. It is not evidence that the release gates in
 
 ## Release identity
 
-| Item | Decision |
+<!-- gopurs:identity:start -->
+| Item | Source of truth |
 | --- | --- |
 | Package | `gopurs` |
-| Published candidate | `0.1.0-rc.14` (GitHub prerelease and npm `next`) |
-| npm `latest` | `0.1.0-rc.7` (registry-assigned alias; still a prerelease) |
-| First final version (planned) | `0.1.0`; not published |
-| Version source | [`package.json`](../package.json) |
+| Documentation target | `0.1.0-rc.14`, the version in this checkout |
+| Published release | [Latest GitHub release](https://github.com/0x000000000000000000001/gopurs/releases/latest) |
+| npm channels | [Current registry state](https://www.npmjs.com/package/gopurs?activeTab=versions) |
+| Source version | [`package.json`](../package.json) |
 | Versioning | [Semantic Versioning 2.0.0](https://semver.org/) |
-| Git tag | `vVERSION` (annotated and signed; verified by GitHub before release packaging) |
+| Version tag | `v0.1.0-rc.14`; release tags are annotated and signed |
+<!-- gopurs:identity:end -->
+
+The documentation target identifies these sources. It does not establish that
+the version has been published or qualified. Use the release page and the
+guides at its tag when installing a published version.
 
 During `0.y.z`, a minor release may change or remove documented behavior. Patch
 releases do not intentionally break the compatibility commitments below.
@@ -24,16 +30,10 @@ releases.
 
 Pre-releases use `-rc.N`. A release candidate is published through the same
 artifact and installation path as the final release.
-RC14 is available as a [GitHub prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14)
-and on npm `next`. Its qualification and consumer checks are recorded in the
+The registry's `latest` and `next` channels can change independently of this
+checkout. Their names alone do not establish qualification. Publication,
+rollback and consumer checks are retained in the dated
 [quality record](quality-0.1.0.md).
-RC13 failed qualification and remains unpublished with its tag unchanged;
-the recorded RC7 and local campaign results retain their original scope.
-
-For the first npm publication, the registry also assigned `latest` to RC7 and
-refused its removal. This was explicitly accepted and documented in the
-[quality record](quality-0.1.0.md). Unqualified `npm install gopurs` therefore
-selects RC7; the alias does not establish a stable-release compatibility claim.
 
 ## Compatibility commitments for `0.1.x`
 

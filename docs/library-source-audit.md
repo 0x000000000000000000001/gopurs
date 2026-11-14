@@ -1,5 +1,10 @@
 # Audit of the library source pins
 
+This is a historical audit, including the release context recorded below.
+Use the checkout's [source manifest](../bootstrap-sources.json) for current pins
+and the [latest release](https://github.com/0x000000000000000000001/gopurs/releases/latest)
+for published installation instructions.
+
 Audit date: 26 October 2026. This records the 51 repositories selected by
 [`bootstrap-sources.json`](../bootstrap-sources.json), whose SHA-256 was
 `e3db111252325962279ec3de313d843110c2525caa408526a9e29ceed30855ff`.

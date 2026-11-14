@@ -43,6 +43,11 @@ jobs:
             test "$(git cat-file -t "$GITHUB_REF")" = tag
             test "$(git rev-parse "$GITHUB_REF^{commit}")" = "$GITHUB_SHA"
           fi
+      - name: Verify documentation against the source release inputs
+        run: |
+          node --test tools/sync-docs.test.mjs tools/check-docs.test.mjs
+          node tools/sync-docs.mjs --check
+          node tools/check-docs.mjs
       - name: Test the CI classification, inventory and qualification guards
         run: node --test tools/ci/*.test.mjs tools/release-quality-resources.test.mjs
       - name: Select builds or reuse identical main qualification

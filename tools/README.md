@@ -95,6 +95,13 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 
 `check-docs.mjs` verifies relative links, packaged files and module-map coverage.
 
+`sync-docs.mjs` generates the marked version and dependency blocks in the user
+guides from `package.json` and `bootstrap-sources.json`. `npm run docs:sync`
+updates them; `npm run docs:check` checks them without writing. The `npm version`
+hook updates and stages these documents before npm creates its version commit.
+CI checks the real documentation before choosing its build scope, and release
+packaging rejects stale blocks. Historical results remain outside generation.
+
 `check-output-identity.mjs` compares two output trees, or a tree against a
 manifest, without parsing the generated Go:
 

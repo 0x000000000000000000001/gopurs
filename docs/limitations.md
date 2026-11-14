@@ -41,7 +41,9 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
 ## Platform and toolchain limits
 
 - `0.1.0` targets `linux/arm64`, `linux/amd64` and `darwin/arm64`.
-- Windows and 32-bit targets are out of scope.
+- Intel Macs (`darwin/amd64`), Windows and 32-bit targets are outside the
+  supported host matrix. The Nix flake and release qualification cover only
+  the three platforms above.
 - Node.js `24.8.0` is the supported reference for the build and JavaScript
   host. Other Node versions are not validated.
 - Go `1.27.0` is the reference toolchain. Generated `go.mod` files declare Go
