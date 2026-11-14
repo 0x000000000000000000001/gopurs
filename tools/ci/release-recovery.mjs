@@ -70,7 +70,14 @@ export const isRecovery = (env = process.env) => env.GITHUB_REF === `refs/tags/$
 const hash = (value) => assert.match(value, /^[a-f0-9]{64}$/);
 
 export function validateRecoveryManifest(manifest) {
-  assert.deepEqual(Object.keys(manifest).sort(), ["base", "enabled", "fixtureSources", "goldens", "schema", "targetTag"]);
+  assert.deepEqual(Object.keys(manifest).sort(), [
+    "base",
+    "enabled",
+    "fixtureSources",
+    "goldens",
+    "schema",
+    "targetTag",
+  ]);
   assert.equal(manifest.schema, 1);
   assert.equal(manifest.enabled, true, "RC20 recovery has not been sealed");
   assert.deepEqual(manifest.base, recoveryBase);
@@ -203,8 +210,7 @@ export function recoveryShards(inventory, manifest) {
     const index = matches[0].batchIndex;
     affected.add((index + Math.floor(index / 4)) % 4);
   };
-  for (const golden of manifest.goldens)
-    includeFixture(golden, golden.path.includes("-dev/") ? "dev" : "release");
+  for (const golden of manifest.goldens) includeFixture(golden, golden.path.includes("-dev/") ? "dev" : "release");
   for (const source of manifest.fixtureSources)
     for (const profile of ["release", "dev"]) includeFixture(source, profile);
   return [...affected].sort();

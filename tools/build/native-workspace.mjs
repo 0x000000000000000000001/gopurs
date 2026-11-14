@@ -1,5 +1,15 @@
 import { execFileSync } from "node:child_process";
-import { accessSync, constants, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from "node:fs";
+import {
+  accessSync,
+  constants,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { readJson } from "../lib/fs.mjs";
 
@@ -72,7 +82,8 @@ export function prepareNativeGoLibraries(root, workspace, { libraryRoot = proces
     let archive;
     try {
       archive = execFileSync("git", ["-C", checkout, "archive", "--format=tar", source.rev], {
-        maxBuffer: 64 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"],
+        maxBuffer: 64 * 1024 * 1024,
+        stdio: ["ignore", "pipe", "pipe"],
       });
     } catch (error) {
       throw new Error(
@@ -89,12 +100,16 @@ export function prepareNativeGoLibraries(root, workspace, { libraryRoot = proces
   return destination;
 }
 
-export function nativeWorkspaceConfig(root, { runtime = "go", purust = resolve(root, "../../purust/purust"), libraryRoot } = {}) {
+export function nativeWorkspaceConfig(
+  root,
+  { runtime = "go", purust = resolve(root, "../../purust/purust"), libraryRoot } = {},
+) {
   if (!["go", "rust"].includes(runtime)) throw new Error(`Unknown compiler runtime: ${runtime}`);
   const optimizer = resolveOptimizer(root);
   const packages = new Map([["backend-optimizer", optimizer]]);
   const family = runtime === "rust" ? "purust-" : "gopurs-";
-  const libraries = runtime === "rust" ? dirname(purust) : resolve(libraryRoot || process.env.GOPURS_LIBRARY_ROOT || dirname(root));
+  const libraries =
+    runtime === "rust" ? dirname(purust) : resolve(libraryRoot || process.env.GOPURS_LIBRARY_ROOT || dirname(root));
   for (const name of readdirSync(libraries).sort()) {
     if (!name.startsWith(family)) continue;
     const directory = join(libraries, name);

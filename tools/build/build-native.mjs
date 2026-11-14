@@ -14,7 +14,12 @@ import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CommandRunner, Interrupted } from "../lib/process.mjs";
-import { findTypedCompiler, nativeWorkspaceConfig, prepareNativeGoLibraries, verifyTypedOutput } from "./native-workspace.mjs";
+import {
+  findTypedCompiler,
+  nativeWorkspaceConfig,
+  prepareNativeGoLibraries,
+  verifyTypedOutput,
+} from "./native-workspace.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const args = process.argv.slice(2);
