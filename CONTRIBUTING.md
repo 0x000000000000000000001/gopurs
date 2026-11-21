@@ -59,10 +59,10 @@ corresponding snapshots and explain the intended difference.
   responsibilities, target phases and allowed dependencies. Add or update the
   matching row in the same commit as a module change.
 - The target phases are **Driver**, **Prepare**, **Rewrite**, **Emit**,
-  **Cache**, **Host** and **Runtime**. The current flat names are temporary:
-  `Driver.Prepare` prepares, the rewrite passes transform, `CodeGen` emits and
-  `Driver.Output` writes. Do not introduce a new ambiguous name while the
-  cleanup lots are in progress.
+  **Cache**, **Host** and **Runtime**. Existing modules still include older
+  names: `Driver.Prepare` prepares, the rewrite passes transform, `CodeGen`
+  emits and `Driver.Output` writes. Name new code after the phase responsible
+  for its work; the module map records how existing modules fit those phases.
 - A move is a separate pull request from a rename or a behaviour change. Move
   the `.purs` file and its `.go`/`.js`/`.rs` companions together, update every
   import and path, and never update a snapshot to justify a move.

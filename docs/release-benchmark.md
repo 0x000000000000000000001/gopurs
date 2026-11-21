@@ -14,6 +14,11 @@ Release**, and **265,633 ms native Dev**, summing the per-corpus cold medians.
 Rust values in that historical report are estimates and are not used here.
 There is no historical warm-cache baseline in that table.
 
+For a new measurement, start at [Before a measurement](#before-a-measurement),
+run the [functional pilot](#functional-pilot), then the [full campaign](#full-campaign).
+The RC20 results below are a dated record, not qualification of the current
+checkout.
+
 ## Completed RC20 campaign — 13 November 2026 (UTC)
 
 All **51 corpora completed** with the locally built RC20 compiler from clean
@@ -99,6 +104,12 @@ procedure below for a new candidate; do not treat those results as its qualifica
 
 ## Before a measurement
 
+You need the built JavaScript and native candidate hosts, an altbak.pub checkout,
+the frozen corpus archive described below, and a new output directory with
+enough free space. Replace the example paths with those locations. The public
+JSON/CSV files let readers inspect results; they do not include the private
+b8x source inputs needed to rerun the full campaign.
+
 Finish other builds, tests, Nix work and benchmarks on the machine first.
 Keep power/thermal conditions stable. The runner records machine information,
 timestamps and load averages; those observations do not prove that the machine
@@ -181,7 +192,8 @@ invocations. A complete campaign has 1,224 invocations, including 918 measured
 samples. Every cold and warm cell uses the median of exactly three successful
 samples. Warmups and failed attempts never enter medians.
 
-The first JavaScript cold warmup establishes the current Release output oracle.
+The first JavaScript cold warmup establishes the current Release output oracle:
+the reference set of generated files for comparison within this campaign.
 Every other JS/native Release output, cold or warm, must match its per-file
 SHA-256 hashes and sizes. Dev establishes its own oracle and must remain stable
 across repetitions. Historical generated code is not imposed as an oracle:

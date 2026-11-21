@@ -1,8 +1,14 @@
 # Profile-guided optimization for the Rust host
 
-`npm run build:rust` produces a profile-guided `bin/gopurs-rust` by default.
-The profile is generated during every build from the compiler's own modules:
-no archived profile, absolute path, or benchmark workload is needed.
+Profile-guided optimization (PGO) uses a training run to tell the Rust toolchain
+which parts of the compiler are exercised most. `npm run build:rust` enables
+it by default when producing `bin/gopurs-rust`. This guide is for maintaining
+or diagnosing that build process.
+
+Each build generates a new profile from the compiler's own modules. It does
+not need an archived profile, an absolute path or a benchmark workload. Output
+comparisons check that the training runs generate the same Go as the
+unprofiled compiler.
 
 Set `GOPURS_RUST_PGO=0` to install the unprofiled O3 ThinLTO bootstrap
 instead. `GOPURS_KEEP_WORKSPACE=1` (or `--keep-workspace`) retains the build
@@ -45,21 +51,22 @@ directory, including logs, raw profiles, and `pgo-profile.json`.
 
 ## Metadata
 
-The build writes `<workspace>/pgo-profile.json` with the qualification data
-needed to identify and reproduce the build:
+The build writes `<workspace>/pgo-profile.json`. Use this record to identify
+the exact source, training inputs, profile and binaries involved in a build:
 
-- `status`, `started_at`, `finished_at`, `stage`, `failure` on errors
-- `source.manifest` / `source.sha256`: generated Rust sources and their digest
-- `training.modules`: module names, original relative source paths, frozen
-  sources, and CoreFn hashes; `training.excluded_modules` /
-  `excluded_present`; `training.required_modules`; `training.manifest` /
-  `training.sha256`: every frozen file; `training.policy`: library-overlap and
-  held-out policy
-- `training.oracle`: the generated Go manifest the passes must match
-- `profile.tool`, `profile.raw`, `profile.merged.sha256`
-- `passes`: per-round worker settings and generated digests
-- `binary.sha256`, `binary.bootstrap_sha256`, `binary.instrumented_sha256`
-- `builds`: bootstrap and instrumented binaries with their digests
+| Fields | What they record |
+| --- | --- |
+| `status`, `started_at`, `finished_at`, `stage`, `failure` | Progress and, on failure, the stage and error. |
+| `source.manifest`, `source.sha256` | Generated Rust sources and their digest. |
+| `training.modules` | Module names, original relative paths, frozen sources and CoreFn hashes. |
+| `training.excluded_modules`, `training.excluded_present`, `training.required_modules` | Which modules are excluded or required, and which excluded modules were present. |
+| `training.manifest`, `training.sha256` | Every frozen training file and the combined digest. |
+| `training.policy` | Rules for library overlap and workloads held out of training. |
+| `training.oracle` | The generated Go manifest that each training pass must match. |
+| `profile.tool`, `profile.raw`, `profile.merged.sha256` | Profile tooling, raw profiles and merged-profile digest. |
+| `passes` | Worker settings and generated digests for each pass. |
+| `binary.sha256`, `binary.bootstrap_sha256`, `binary.instrumented_sha256` | Digests identifying the resulting binaries. |
+| `builds` | Bootstrap and instrumented binaries with their digests. |
 
 The final lines printed by the build (`[pgo] source sha256: …`,
 `[pgo] training sha256: …`, `[pgo] profile sha256: …`,

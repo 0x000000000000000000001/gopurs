@@ -1,11 +1,17 @@
 # Native session preload regression
 
+This fixture is for maintainers changing cache preloading. It checks the native
+controller, its Go storage helper and the order in which parallel work and
+session cleanup complete.
+
 This fixture compiles the current PureScript session controller and FFI, with
 the current Go storage helper, through the typed frontend and an explicit
 native generator. Private disposable fixtures cover hit, miss, optional decode
 failure, forced/allocation builds and a missing recipe. The production controller
 also exercises begin failure, cancellation and an immediately completed preload;
 all started jobs must finish before use or session closure.
+
+## Run the fixture
 
 From the project root:
 
@@ -19,8 +25,13 @@ python3 tools/fixtures/projection-capsule/run-native.py \
   --pass-marker PRELOAD-SESSION-NATIVE-PASS
 ```
 
-Executed successfully on 2026-10-24 using candidate J as generator and current
-sources. Commands, source hashes and outputs are retained in
+## Historical runs
+
+The paths below refer to locally retained evidence from the dated runs, not to
+files distributed with this fixture.
+
+Executed successfully on 2026-10-24 using candidate J as generator and the
+sources captured for that run. Commands, source hashes and outputs are retained in
 `../../.gopurs-evidence/c2-10-sub2-20261023/preload-native-regression`
 (relative to the project root). This validates the native callback/controller;
 the persistent preparation tests separately verify exact proof hash admission

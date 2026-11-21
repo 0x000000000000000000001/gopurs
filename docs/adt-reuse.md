@@ -1,18 +1,24 @@
 # Tree-cell reuse
 
-[`Gopurs.Ownership`](../src/Gopurs/Ownership.purs) analyzes the transformed
-`BackendModule` after PBO and specialized CodeGen passes, before tail-call
-analysis and ordinary function generation. It creates workers that consume
-exclusively owned trees. Ordinary functions retain persistent semantics.
+Tree operations can reuse a node's allocation when its old contents will no
+longer be observed. gopurs permits this only after proving that the relevant
+trees are exclusively owned and do not share nodes. It then creates consuming
+workers: generated functions allowed to reuse those nodes. Ordinary functions
+retain persistent semantics, so previously retained versions stay unchanged.
+
+[`Gopurs.Ownership`](../src/Gopurs/Ownership.purs) establishes this proof on the
+transformed `BackendModule`, after PBO and specialized CodeGen passes and before
+tail-call analysis and ordinary function generation.
 
 ## Proof and eligibility
 
-A consuming worker receives a forest whose nonempty nodes are exclusive and
-disjoint, and returns a forest with the same property. A fresh root containing
-a shared child does not qualify. Empty `nil` values may be shared.
+A consuming worker receives a set of trees, called a forest, whose nonempty
+nodes are exclusive and disjoint. It returns a forest with the same property.
+A fresh root containing a shared child does not qualify. Empty `nil` values may
+be shared.
 
-Eligible ADTs are monomorphic, declared in the module and represented by a
-pointer, with one constructor carrying fields and at most one empty
+Eligible algebraic data types (ADTs) are monomorphic, declared in the module and
+represented by a pointer, with one constructor carrying fields and at most one empty
 constructor. Fields contain scalars, enums or the same tree type. Functions
 are first-order, accept scalar or tree parameters, and return a tree. Opaque
 fields, functions, arrays and representation conversions are excluded.
@@ -35,9 +41,9 @@ prefixes no longer retained as result subtrees. Each branch has its own proof;
 a guard grants no mutation rights on its failure path. An old root or subtree
 still observable by the continuation prevents consumption.
 
-Workers may receive an extra donor cell, allowing an insertion to pass its
-former parent to a balancing function. Cells leave the available pool when
-consumed. A consuming `let` removes old aliases before introducing the result.
+A donor cell is a node whose allocation is available for reuse. Workers may
+receive an extra donor, allowing an insertion to pass its former parent to a
+balancing function. Cells leave the available pool when consumed. A consuming `let` removes old aliases before introducing the result.
 Terminal recursive calls become loops.
 
 Strict prefixes dereferenced during capture form a known-nonnull pool, used

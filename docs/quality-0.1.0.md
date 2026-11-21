@@ -1,8 +1,9 @@
 # Quality-gate status — 0.1.x
 
-This record retains dated qualification and publication observations. Results
-apply to the source and artifact identities named in each entry. The current
-gate list is in the [release procedure](release.md); the
+This record retains dated qualification and publication observations for the
+sources and artifacts named in each entry. Historical npm channels and failures
+describe the state observed at that date. For the checks required of a new
+candidate, see the [release procedure](release.md); the
 [release checklist](release-checklist.md) preserves the preparation snapshot.
 
 ## 0.1.1 publication — 13 November 2026
@@ -43,7 +44,7 @@ override the successful 0.1.1 CI and publication recorded above.
 
 ## RC14 qualification and artifact review — 5 November 2026
 
-The exact signed tag `v0.1.0-rc.14` is qualified at commit
+The exact signed tag `v0.1.0-rc.14` was qualified at commit
 `efcbf91bdd120ec1a33e915abd769c1d853b366e`, tree
 `96a7d7e8e216e96fc099a1dd379d70772350f46a`, annotated tag object
 `b7c80719ffed431f457cdbf4ba742070fae1d906`.
@@ -97,8 +98,8 @@ documentation is a separate commit and is linked from the public erratum.
 
 ### Public publication and consumer checks
 
-The exact archive is published as `gopurs@0.1.0-rc.14`. Its downloaded bytes,
-npm integrity and registry provenance match the reviewed candidate.
+The exact archive was published as `gopurs@0.1.0-rc.14`. Its downloaded bytes,
+npm integrity and registry provenance matched the reviewed candidate.
 [Publication run 42085073187](https://github.com/0x000000000000000000001/gopurs/actions/runs/42085073187)
 succeeded, including JavaScript and native public-archive smoke tests. The
 [GitHub prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14)

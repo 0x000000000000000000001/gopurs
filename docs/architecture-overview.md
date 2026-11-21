@@ -1,20 +1,29 @@
 # Architecture overview
 
-This is the public overview of the gopurs data flow. The detailed,
-implementation-oriented map remains in [architecture.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md).
-Each source module and its responsibility are listed in
-[module-map.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/module-map.md); the vocabulary is normative in
-[naming.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/naming.md).
+gopurs turns typed PureScript compiler output into Go source. It uses the
+preserved types to choose native representations, optimize calls and generate
+adapters for foreign functions. The Go toolchain then builds the application.
+
+Start here to understand that flow and the roles of the compiler, its hosts and
+the generated runtime. For implementation work, use the detailed
+[architecture guide](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md),
+the [module map](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/module-map.md)
+for source locations, and the
+[naming guide](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/naming.md)
+for the terms used in the code.
 
 ## Terminology
 
-The pipeline uses one word per concept: **prepare** loads the TAST and derives
-metadata, **specialize** performs monomorphization, **rewrite** runs the
-Go-specific transformations, **emit** produces Go declarations in memory,
-**output** writes files and **publish** commits the cache. A **worker** is a
-generated Go function; a **job** is a parallel unit of work. A **host** runs
-the compiler (JS, Go or Rust); the **runtime** is the embedded Go runtime of
-the generated application.
+The phase names describe what happens to the program: **prepare** loads typed
+input and derives metadata; **specialize** adapts generic code to particular
+uses, a process called monomorphization; **rewrite** applies Go-specific
+transformations; **emit** creates Go declarations in memory; **output** writes
+files; and **publish** commits the cache.
+
+Two other distinctions matter when reading the implementation. A **worker** is
+a generated Go function, while a **job** is a unit of parallel compiler work.
+A **host** runs the compiler (JS, Go or Rust); the **runtime** supports the
+generated Go application.
 
 The source modules implementing these phases include `Driver.Prepare`,
 `Monomorphization` and `CodeGen`. The
@@ -30,18 +39,21 @@ The compiler is written in PureScript and shipped in three hosts:
   compiler.
 - `bin/gopurs-rust`: Rust-hosted executable, built through Purust; experimental.
 
-All hosts run the same driver and backend. The host changes the runtime that
-executes the compiler, not the generated Go contract.
+All hosts run the same driver and backend. Choosing a host changes how the
+compiler itself executes; the generated Go contract stays the same.
 
 ## Input: typed TAST
 
-gopurs consumes the enriched CoreFn written by the typed PureScript compiler
-fork. The file is still named `output/<Module>/corefn.json`; the `tcorefn` name
-describes the format, not a different filename.
+gopurs consumes a TAST (typed abstract syntax tree) written by the typed
+PureScript compiler fork. This enriched CoreFn format is called `tcorefn`,
+but the file is still named `output/<Module>/corefn.json`.
 
 The backend requires the typed fields, including `typeTable`, `dataDecls` and
-`classDecls`. A stock `purs` produces ordinary CoreFn and is rejected before Go
-generation. The compile-time frontend is therefore a separate step:
+`classDecls`. They describe types and the layouts of data constructors and
+type-class dictionaries. Node annotations and `TypeApp` also retain the types
+chosen at calls; the backend does not have to reconstruct erased types. A stock
+`purs` produces ordinary CoreFn and is rejected before Go generation. The typed
+frontend runs before gopurs:
 
 ```text
 purs + Spago -> output/<Module>/corefn.json -> gopurs -> output/*.go
@@ -56,8 +68,8 @@ purs + Spago -> output/<Module>/corefn.json -> gopurs -> output/*.go
    candidates, record fields and other metadata needed for native layouts.
 3. **Specialize.** It specializes supported higher-rank/type-class uses and
    propagates the transitive specialization requirements.
-4. **Build and rewrite.** The shared backend optimizer builds backend modules;
-   the Go rewrite passes then handle calls, tail recursion, records, arrays,
+4. **Build and rewrite.** PureScript Backend Optimizer (PBO) builds backend
+   modules; the Go rewrite passes then handle calls, tail recursion, records, arrays,
    effects, JSON plans and workers.
 5. **Emit.** Emission chooses native Go representations where the types allow
    it, falls back to a tagged `Value` representation otherwise, and prints
@@ -97,12 +109,16 @@ constructors, arrays and the event loop. Where the type information permits it,
 values use native Go representations; the tagged `Value` path remains the
 general fallback.
 
-The FFI bridge reads Go foreign declarations and generates wrappers that adapt
-Go signatures to PureScript calls. The JavaScript host runs the parser as
-WebAssembly; native hosts call the same parser directly. A reachable foreign
-declaration without a Go implementation fails at runtime rather than silently
-falling back to JavaScript. This is why the Go library ports are separate
-packages.
+The foreign function interface (FFI) bridge reads Go declarations and generates
+wrappers that adapt Go signatures to PureScript calls. The JavaScript host runs the parser as
+WebAssembly; native hosts call the same parser directly.
+
+With `--main`, gopurs checks for missing Go implementations reachable from the
+selected entry point and rejects the build before publishing output. Batch
+generation without `--main` and dynamic calls inside native Go FFI can still
+reach stubs that fail at runtime. There is no fallback to JavaScript: foreign
+functions need Go implementations, supplied by the separate Go library ports
+or the application.
 
 ## Caches
 

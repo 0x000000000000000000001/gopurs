@@ -1,10 +1,10 @@
 # Module map
 
-This map describes the current source tree: one row per PureScript module,
-its conceptual phase, responsibility and direct `Gopurs.*` imports. Phases
-classify responsibilities; they do not prescribe a future directory layout.
-See [architecture.md](architecture.md) for execution order and
-[naming.md](naming.md) for terminology.
+Use this map to find the module responsible for a compiler behavior and see
+which `Gopurs.*` modules it imports directly. Each row describes one PureScript
+module. The phase groups organize responsibilities; they are not execution
+order or a proposed directory layout. The [architecture guide](architecture.md)
+explains execution order; the [naming guide](naming.md) defines the terminology.
 
 The map covers **106 modules**. `node tools/check-docs.mjs` verifies source
 paths, duplicate rows and complete coverage against `src/`. Import lists below

@@ -1,7 +1,22 @@
 # Validation du plan FFI idiomatique
 
-Travail du 12 novembre 2026. Les tests ci-dessous distinguent le compilateur
-(hôte JavaScript/WASM ou natif), le Go produit et les services testés.
+Ce document conserve les preuves du travail du **12 novembre 2026**. Les
+versions, nombres de tests et chemins d'artefacts décrivent les exécutions de
+ce travail ; ils ne constituent pas une qualification de la version actuelle.
+L'[inventaire initial](ffi-baseline.md) explique les problèmes que la migration
+devait résoudre.
+
+Pour utiliser les contrats actuels, suivre le [guide Go FFI](ffi-idiomatic.md)
+et sa [section de vérification](ffi-idiomatic.md#diagnostics-and-verification).
+Pour examiner cette preuve historique, commencer par les
+[contrats observés](#contrats-observés) et le
+[bilan et ses limites](#bilan-dx-et-limites-qualifiées), puis consulter les
+commandes et les résultats détaillés.
+
+Les tests distinguent le compilateur (hôte JavaScript/WASM ou natif), le Go
+produit et les services testés. Les compléments en fin de document conservent
+les validations ajoutées après le premier bilan, notamment le parcours b8x et
+la correction du transport `Foreign`.
 
 ## Versions exactes
 

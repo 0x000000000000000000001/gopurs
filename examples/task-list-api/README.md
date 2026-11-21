@@ -1,10 +1,16 @@
 # Task list API: PureScript → Go → SQLite
 
-A task-list JSON API with creation, listing, completion and deletion of tasks.
+A JSON API for creating, listing, completing and deleting tasks. Use this
+example to follow a request from PureScript routing through Go to SQLite.
 Routing, validation and database queries are written in PureScript.
 `Database.SQLite3` provides the native database port; Argonaut handles
 JSON. `Example.HTTP` is a small, ordinary Go `net/http` transport that passes typed
-request/response records and callbacks through gopurs's FFI.
+request/response records and callbacks through
+[gopurs's FFI](../../docs/ffi-idiomatic.md).
+
+[Build and run](#build-and-run) the server, then [try the API](#try-the-api)
+from another terminal. [Read the code](#read-the-code) to see where each part
+lives, or [run the tests](#verify) against the compiled application.
 
 ## Build and run
 
@@ -20,7 +26,8 @@ workspace/
   gopurs-sqlite3/
 ```
 
-Build the gopurs JavaScript compiler as described in its bootstrap guide first.
+Build the gopurs JavaScript compiler with the
+[bootstrap guide](../../docs/bootstrap.md) first.
 The example needs Node, Go, Spago and the matching typed PureScript frontend.
 `GOPURS_PURS` can select the frontend explicitly; the build script otherwise uses
 gopurs's normal local discovery. `GOPURS_COMPILER_ROOT` and `GOPURS_LIBRARY_ROOT`
@@ -33,7 +40,7 @@ node tools/build.mjs
 TASK_LIST_DATABASE=./tasks.db TASK_LIST_ADDRESS=127.0.0.1:8080 ./.build/task-list-api
 ```
 
-The build script freezes the library sources into a private temporary workspace,
+The build script copies the library sources into a private temporary workspace,
 builds the PureScript frontend, prepares the pinned Go dependencies, generates Go
 and builds the executable. Logs and a build description are kept in `.build/`.
 It does not clean a library checkout's output. Set `GOPURS_OFFLINE=1` for an already
@@ -76,6 +83,18 @@ Requests larger than 64 KiB return 413 before application dispatch. Application
 errors are logged and return a generic 500 response. Restarting with the same
 database path preserves data.
 
+## Read the code
+
+Start with `Main.purs`: it opens the database, starts the server and dispatches
+each request. The HTTP files supply the transport used by that PureScript code.
+
+| File or library | Responsibility |
+| --- | --- |
+| [Main.purs](src/Main.purs) | Routes, input validation, JSON responses, parameterized SQL and database lifetime. |
+| [HTTP.purs](src/Example/HTTP.purs) | Request and response types, typed callbacks and the server's acquisition/release bracket. |
+| [HTTP.go](src/Example/HTTP.go) | Sockets, request body limits, signals and waiting for handlers during shutdown. |
+| [gopurs-sqlite3](https://github.com/0x000000000000000000001/gopurs-sqlite3) | SQLite operations, transactions and database resource management; a sibling checkout in the build layout above. |
+
 ## Verify
 
 ```sh
@@ -86,8 +105,9 @@ go test -race -count=1 ./src/Example
 ```
 
 The HTTP test runs the actual compiled executable against a temporary database
-and an ephemeral loopback port. It checks CRUD, JSON validation, parameterized
-SQL, concurrent insertion IDs, persistence across restart, SIGTERM shutdown and
+and an available local port. It checks task creation, reading, updating and
+deletion, JSON validation, parameterized SQL, concurrent insertion IDs,
+persistence across restart, SIGTERM shutdown and
 nonzero exit status when the database or listening address cannot be opened.
 The Go transport tests also check the body limit, duplicate callbacks and draining
 an in-flight application operation after the client disconnects.
@@ -99,14 +119,20 @@ released and `killFiber` returns. Its generated executable runs under `-race`.
 Use `node tools/build.mjs --dev --race` for the development profile. Set
 `GOPURS_JS=0` to exercise a freshly rebuilt native compiler host.
 
-The transport owns sockets and signals; a PureScript bracket owns its native
-server handle, and the outer `withDatabase` bracket owns SQLite. Canceling the
-server's Aff stops waiting, then its masked release explicitly stops and joins
-the server before the database can close. Every dispatched request must invoke
-its reply callback, including on errors. The example's `runAff_` handler does so
-on both outcomes. Long-running application work can delay shutdown beyond the
-HTTP grace period; the database is kept open until that work releases its callback.
+## Resource lifetime
 
-No additional HTTPurple port is needed for this example. The existing Node HTTP
-port has incomplete server-lifecycle operations; this narrow local transport
-keeps the example's lifecycle explicit without expanding that port's scope.
+The transport owns sockets and signals; a PureScript bracket owns its native
+server handle, and the outer `withDatabase` bracket owns SQLite. A bracket pairs
+resource acquisition with release, including when the action fails or is
+canceled.
+
+Canceling the server's Aff stops waiting, then its release explicitly stops
+the server and waits for it to finish before the database can close. That
+release is masked: cancellation cannot interrupt it. Every dispatched request
+must invoke its reply callback, including on errors. The example's `runAff_`
+handler does so on both outcomes. Long-running application work can delay
+shutdown beyond the HTTP grace period; the database is kept open until that
+work releases its callback.
+
+This example uses a local transport because the existing Node HTTP port has
+incomplete server lifecycle operations. No additional HTTPurple port is needed.

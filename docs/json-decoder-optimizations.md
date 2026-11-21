@@ -1,9 +1,12 @@
 # JSON decoder code generation
 
-These general compiler rules reduce intermediate representations in composed
-PureScript decoders. They run after PBO and do not encode a JSON schema,
-benchmark name or special TAST decoder. Parsing and decoder validation retain
-their existing semantics.
+This guide covers three ways gopurs reduces work between steps of a composed
+PureScript decoder: fusing array traversal, eliminating eligible immediate
+function calls, and retaining native `Maybe`, `Either` and `Tuple` results.
+
+The rules run after PBO. They recognize ordinary program structures rather than
+a particular JSON schema, benchmark name or TAST decoder. Parsing and decoder
+validation retain their existing semantics.
 
 ## Array/Either traversal
 
@@ -17,8 +20,8 @@ Arguments are captured once, in order and at their original partial-application
 stage. Every callback runs in index order, including after the first failure:
 the original strict mapping evaluated them all. Only the first `Left` is
 returned. Inputs stay unchanged and repeated invocations own separate buffers.
-Unknown dictionaries, other Applicatives and unsupported arities retain the
-generic path. Constructor tags and fields come from shared ADT metadata.
+Unknown dictionaries, other Applicative instances and unsupported arities
+retain the generic path. Constructor tags and fields come from shared ADT metadata.
 
 Nonindexed forms and direct native callbacks are described in
 [fused Either traversals](json-traversals.md). The output buffer remains

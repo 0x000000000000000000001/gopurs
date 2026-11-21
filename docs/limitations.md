@@ -1,7 +1,12 @@
 # Known limitations
 
-gopurs is a `0.x` backend. This page states what is intentionally not promised.
-The compatibility policy is in [publication-scope.md](publication-scope.md).
+Check these limits before choosing gopurs for an application. The main migration
+requirements are the typed PureScript frontend and Go implementations of the
+foreign functions your application uses. The sections below cover library
+coverage, generated code, platforms and performance.
+
+gopurs is a `0.x` backend. Its compatibility policy is in
+[publication-scope.md](publication-scope.md).
 
 ## Not a drop-in PureScript compiler
 
@@ -42,8 +47,8 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
   are not promised.
 - Generated identifiers, file layout beyond the documented entry points, Go
   package partitioning and import layout can change in a minor release.
-- The `gopurs_runtime` API and the FFI ABI are internal interfaces used by
-  generated code. They are not a public library API.
+- The `gopurs_runtime` API and the FFI calling conventions (ABI) are internal
+  interfaces used by generated code. They are not a public library API.
 - `--dev` deliberately changes optimization and is not the production profile.
 
 ## Platform and toolchain limits

@@ -4,24 +4,36 @@ This document records how the `gopurs` compiler is built from a clean source
 checkout, which inputs are trusted, and which artifacts a release must publish.
 It covers the compiler distribution; it does not cover application builds.
 
+| You want to… | Follow |
+| --- | --- |
+| Build gopurs from source | [Clean source installation](#clean-source-installation) |
+| Add the native Go executable | [Native bootstrap](#native-bootstrap) |
+| Work on the experimental Rust executable | [Rust bootstrap](#rust-bootstrap) |
+| Build a PureScript application | [Application quickstart](quickstart.md) |
+
+A compiler **host** is the executable that runs gopurs: JavaScript, Go or Rust.
+All three generate Go applications. **Bootstrapping** builds a compiler host
+using an already available compiler and toolchain.
+
 These pins describe the current checkout. Consult the live
 [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
 for qualification and publication status. The
-[historical release checklist](release-checklist.md) retains the preparation state.
+[historical release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md) retains the preparation state.
 
 ## Pinned inputs
 
 | Input | Authoritative file in this checkout |
 | --- | --- |
-| Node.js | [`.nvmrc`](../.nvmrc) |
-| npm build tools: upstream PureScript, Spago, esbuild | [`package.json`](../package.json) and [`package-lock.json`](../package-lock.json) |
-| PureScript package set, optimizer, `st` and `unsafe-coerce` | [`spago.yaml`](../spago.yaml) and [`spago.lock`](../spago.lock) |
-| Go toolchain | [`nix/toolchains.nix`](../nix/toolchains.nix) |
-| Typed PureScript compiler, Go library and support revisions | [`bootstrap-sources.json`](../bootstrap-sources.json) |
-| Nix dependency closure | [`flake.lock`](../flake.lock) |
+| Node.js | [`.nvmrc`](https://github.com/0x000000000000000000001/gopurs/blob/main/.nvmrc) |
+| npm build tools: upstream PureScript, Spago, esbuild | [`package.json`](../package.json) and [`package-lock.json`](https://github.com/0x000000000000000000001/gopurs/blob/main/package-lock.json) |
+| PureScript package set, optimizer, `st` and `unsafe-coerce` | [`spago.yaml`](https://github.com/0x000000000000000000001/gopurs/blob/main/spago.yaml) and [`spago.lock`](https://github.com/0x000000000000000000001/gopurs/blob/main/spago.lock) |
+| Go toolchain | [`nix/toolchains.nix`](https://github.com/0x000000000000000000001/gopurs/blob/main/nix/toolchains.nix) |
+| Typed PureScript compiler, Go library and support revisions | [`bootstrap-sources.json`](https://github.com/0x000000000000000000001/gopurs/blob/main/bootstrap-sources.json) |
+| Nix dependency closure | [`flake.lock`](https://github.com/0x000000000000000000001/gopurs/blob/main/flake.lock) |
 
-The npm and Spago lockfiles and `bootstrap-sources.json` are authoritative for a source installation. A
-lockfile change requires regenerating the third-party inventory; see
+The npm and Spago lockfiles and `bootstrap-sources.json` are authoritative for
+a source installation. A lockfile change requires regenerating the third-party
+inventory; see
 [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md).
 
 ## Artifacts
@@ -172,7 +184,7 @@ the string, FFI, record-worker, owned-tree and JSON regression fixtures on each
 host. `GOPURS_TEST_KEEP_WORKSPACE=1` retains successful fixture workspaces.
 
 The Rust build uses PGO by default. Set `GOPURS_RUST_PGO=0` for a plain O3
-ThinLTO build. See the [PGO guide](pgo.md) for training and retained profiles.
+ThinLTO build. See the [PGO guide](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/pgo.md) for training and retained profiles.
 
 ## Checksums
 
@@ -221,5 +233,5 @@ These cover pinned installation, refusal to overwrite changed inputs, optimizer
 and codec selection, build failures and cancellation. They do not replace a
 complete compiler build. For a release, repeat the clean build from its tag and
 compare artifact checksums as described in [release.md](release.md). The
-[quality record](quality-0.1.0.md) states the scope of the published candidate's
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md) states the scope of the published candidate's
 checks.

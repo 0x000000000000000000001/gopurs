@@ -1,5 +1,10 @@
 # Migration and compatibility
 
+For an existing PureScript application, start with
+[From a JavaScript project](#from-a-javascript-project). If the application
+already uses gopurs and you are changing compiler revisions, use
+[Migrating from a local edge build](#migrating-from-a-local-edge-build).
+
 <!-- gopurs:source-version:start -->
 For installation, start with the [latest published release](https://github.com/0x000000000000000000001/gopurs/releases/latest)
 and the guides at its tag. This guide targets the version in this checkout:
@@ -7,6 +12,10 @@ and the guides at its tag. This guide targets the version in this checkout:
 <!-- gopurs:source-version:end -->
 
 ## From a JavaScript project
+
+The migration has four steps: save the JavaScript result, select the typed
+compiler and Go library ports, implement the application's Go FFI, then compare
+the compiled Go program with the saved result.
 
 Start with a working Spago application and record its JavaScript output before
 changing its frontend or library configuration. The following example uses
@@ -119,31 +128,9 @@ func Prefix(value string) string {
 The [Go FFI guide](ffi-idiomatic.md) covers signatures and representations
 for other types. The `.js` implementation serves the JavaScript target, while
 gopurs reads the `.go` implementation and checks foreign implementations in
-the selected entry-point scope before emitting Go. Exercise the application's
-foreign calls when checking behavior, errors and resource cleanup.
-
-### Curried record-helper signatures
-
-For a polymorphic record helper that copies or forwards map entries, declare
-the Go arguments together. The current validator can reject a curried Go
-function whose eventual result is an open-row record, reporting an unsupported
-record-to-struct conversion. For example, replace:
-
-```go
-func MergeImpl(left map[string]any) func(map[string]any) map[string]any
-```
-
-with:
-
-```go
-func MergeImpl(left map[string]any, right map[string]any) map[string]any
-```
-
-Keep the PureScript declaration and the map-copy behavior unchanged. Map
-entries in this polymorphic helper remain opaque values; this is not a general
-conversion of open records into Go structs. `PolyLabels` and `RowUnion` passed
-Release and Dev with both compiler hosts after this signature change, with
-outputs matching the JavaScript frontend reference.
+the selected entry-point scope before publishing generated output. Exercise
+the application's foreign calls when checking behavior, errors and resource
+cleanup.
 
 ### Rebuild and compare
 
@@ -180,6 +167,29 @@ diff -u expected.txt actual.txt
 
 A matching transcript validates this example. Run your project's tests and
 check errors, resource handling and asynchronous operations for its own FFI.
+
+### Curried record-helper signatures
+
+For a polymorphic record helper that copies or forwards map entries, declare
+the Go arguments together. The current validator can reject a curried Go
+function whose eventual result is an open-row record, reporting an unsupported
+record-to-struct conversion. For example, replace:
+
+```go
+func MergeImpl(left map[string]any) func(map[string]any) map[string]any
+```
+
+with:
+
+```go
+func MergeImpl(left map[string]any, right map[string]any) map[string]any
+```
+
+Keep the PureScript declaration and the map-copy behavior unchanged. Map
+entries in this polymorphic helper remain opaque values; this is not a general
+conversion of open records into Go structs. `PolyLabels` and `RowUnion` passed
+Release and Dev with both compiler hosts after this signature change, with
+outputs matching the JavaScript frontend reference.
 
 ## Current baseline
 

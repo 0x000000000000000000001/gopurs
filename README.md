@@ -13,7 +13,7 @@ and the guides at its tag. This guide targets the version in this checkout:
 <!-- gopurs:source-version:end -->
 
 The supported targets are Linux amd64, Linux arm64 and macOS arm64.
-Consult the [quality record](docs/quality-0.1.0.md) for qualification evidence.
+Consult the [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md) for qualification evidence.
 
 ## Getting started
 
@@ -61,6 +61,7 @@ npx gopurs --main Main      # Generate Go source and go.mod in output/
 | I want to… | Read |
 | --- | --- |
 | Build my first application | [Hello World quickstart](docs/quickstart.md) |
+| Write a Go implementation for a foreign import | [Go FFI guide](docs/ffi-idiomatic.md) |
 | Explore HTTP, JSON and SQLite together | [Task list API example](https://github.com/0x000000000000000000001/gopurs/blob/main/examples/task-list-api/README.md) |
 | Set up the pinned toolchain | [Nix guide](docs/nix.md#typed-frontend-and-development-shell) |
 | Use compiler flags or select a compiler host | [CLI reference](docs/cli.md) |
@@ -68,8 +69,9 @@ npx gopurs --main Main      # Generate Go source and go.mod in output/
 | Diagnose a build or runtime error | [Troubleshooting](docs/troubleshooting.md) |
 | Understand how the compiler works | [Architecture overview](docs/architecture-overview.md) |
 
-The [documentation index](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/README.md) also covers the runtime,
-build cache and release process.
+The [documentation index](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/README.md)
+groups the remaining guides by application development, compiler internals and
+release maintenance.
 
 ## Development and testing
 

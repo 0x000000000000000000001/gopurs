@@ -1,8 +1,10 @@
 # Native signed-32-bit loops
 
-[`Gopurs.Int32Loops`](../src/Gopurs/Int32Loops.purs) keeps eligible loop slots
-and iteration operations in Go `int32`, avoiding repeated sign extension inside
-the loop. Public function, wrapper and FFI signatures remain `int64`.
+[`Gopurs.Int32Loops`](../src/Gopurs/Int32Loops.purs) keeps eligible loop variables
+and their iteration operations in Go `int32`, avoiding repeated sign extension
+inside the loop. These variables, called slots in the implementation, carry
+values from one iteration to the next. Public function, wrapper and FFI
+signatures remain `int64`.
 
 ## Transformation
 
@@ -26,8 +28,9 @@ Signed overflow follows PureScript Int semantics. Immediate returns of wide
 input values retain the original path, including when the loop runs zero times.
 The accumulator is widened on exit rather than after every operation.
 
-The proof uses the structured Go AST before printing. Each slot is selected
-independently only if all recognized writes normalize its value. Comparisons
+The proof uses the structured Go abstract syntax tree (AST) before printing.
+Each slot is selected independently only if all recognized writes normalize
+its value. Comparisons
 are narrowed only when both operands are proven signed. Captures, shadowing,
 nested loops, opaque references and unknown forms reject the affected admission.
 See [bindings and tail calls](architecture.md#bindings-captures-and-tail-calls).

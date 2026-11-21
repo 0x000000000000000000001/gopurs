@@ -5,6 +5,20 @@ The release consists of one npm archive and native executables for
 JavaScript compiler, launcher and runtime helpers; the matching native
 executable can be installed alongside it. Rust is outside this release gate.
 
+For the normal sequence of commands, use the [release quickstart](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-quickstart.md).
+This page supplies the detailed requirements and recovery procedures.
+**Qualification** means the checks and retained evidence for the exact source,
+compiler bytes and packages being released.
+
+| Your next step | Read |
+| --- | --- |
+| Validate a candidate | [Build and validate](#build-and-validate-a-candidate) |
+| Inspect package contents locally | [Prepare reviewable artifacts](#prepare-reviewable-local-artifacts) |
+| Create the tested CI draft | [Signed tag and CI artifacts](#signed-tag-and-ci-artifacts) |
+| Recover an infrastructure failure | [Retry failed jobs and retain successful checks](#reusing-successful-jobs-after-a-targeted-retry) |
+| Publish the reviewed draft | [Publication](#publish-the-reviewed-candidate) |
+| Restore a previous release | [Rollback and recovery](#rollback-and-recovery) |
+
 The workflows and scripts below implement the procedure. Their presence is not
 evidence that a tag, platform, benchmark or public installation has passed.
 Record actual results in the repository's
@@ -61,15 +75,16 @@ put the typed frontend's directory first on `PATH`: Spago's fixture builds
 invoke `purs` through `PATH`. Setting `GOPURS_PURS` alone selects the frontend
 for native-build helpers but does not change Spago's executable selection.
 
-The full gate runs every Node test file, Go tests with the race detector,
-native emission cancellation/concurrency tests, all pinned library test suites
-through `bin/modtest`, and all selected fixtures. Libraries and fixtures run
-under both Release and Dev. Both full and quick gates require the freshly
-bootstrapped native output so native probes cannot silently skip. Host-parity
-tests explicitly select JavaScript, native sequential and native parallel modes.
-Experimental Rust tests remain disabled. Without `--full`, the command runs the
-tooling/CLI/cache checks, native scanner and preparation probes, Go tests, and a
-smaller executable fixture sample suitable for ordinary CI changes.
+Choose the gate for the scope being qualified:
+
+| Mode | Checks |
+| --- | --- |
+| `--full`, required for a release | Every Node test file directly under `tools/`; Go tests with the race detector; native emission cancellation/concurrency tests; all pinned libraries through `bin/modtest`; all selected fixtures. Libraries and fixtures run under both Release and Dev. |
+| Default, for ordinary CI changes | Tooling/CLI/cache checks, native scanner and preparation probes, Go tests, and a smaller executable fixture sample. |
+
+Both modes require freshly bootstrapped native output so native probes cannot
+silently skip. Host-parity tests explicitly select JavaScript, native sequential
+and native parallel modes. Experimental Rust tests remain disabled.
 
 The full core phase runs each of the 51 libraries pinned in
 `bootstrap-sources.json` separately in each profile: 102 module gates. It
@@ -90,14 +105,17 @@ Their assertions, execution deadlines, scanner stack limit and preparation/
 emission race checks remain active. The release compiler bootstrap and the
 Release/Dev application fixture profiles keep their own compilation settings.
 
-The command creates its own Go build cache and never prunes the caller's
-`GOCACHE`. It runs Node test files in separate sequential processes, then
-trims the private cache to 2 GiB after each completed file or Go test command.
-The full fixture selection runs once per profile in batches of at most five.
-Concurrent batches are limited to one fewer than the available CPUs, with a
-minimum of one and maximum of six (two batches on three CPUs, three on four).
-Each batch uses `GOMAXPROCS=2`, `GOGC=100`, `GOMEMLIMIT=4GiB`, and backend
-prepare/PBO/emission worker counts of 1/1/2. Snapshot updates are forced off.
+**Resource limits.** The command owns its Go build cache and never prunes the
+caller's `GOCACHE`.
+
+| Resource | Policy |
+| --- | --- |
+| Node tests | Separate, sequential processes; trim the private cache to 2 GiB after each file or Go test command. |
+| Full fixture selection | Once per profile, in batches of at most five fixtures. |
+| Concurrent batches | One fewer than available CPUs, minimum one and maximum six: two batches on three CPUs, three on four. |
+| Each batch | `GOMAXPROCS=2`, `GOGC=100`, `GOMEMLIMIT=4GiB`; prepare/PBO/emission worker counts of 1/1/2; snapshot updates forced off. |
+| Between waves | Wait for every process before trimming. The cache may exceed 2 GiB during a command or wave. |
+| Before each wave | Require 3 GiB free plus 0.75 GiB per batch. |
 
 Before concurrent fixture batches start, the controller runs `spago fetch`
 once in a disposable fixture workspace, using the same shared registry cache.
@@ -106,15 +124,14 @@ the registry. It does not compile fixtures. The controller records
 `fixturePreparation` and `fixture-preparation.log`, stops if fetch fails, then
 runs every fixture in its own fresh workspace as before.
 
-The cache is trimmed only after every process in a wave has finished. It may
-grow beyond 2 GiB during a command or wave. Before a fixture wave, the command
-requires 3 GiB free plus 0.75 GiB per batch. A failed batch prevents later
-waves from starting; already active batches finish and retain their reports.
+A failed batch prevents later waves from starting; already active batches
+finish and retain their reports.
 Each successful batch must report the exact requested profile and targets,
 with no exclusions, failures, pending targets or snapshot updates.
 
-`--report` retains command logs, fixture workspaces/reports and `quality.json`,
-including cache sizes before and after trimming. Use a fresh report directory;
+**Results and cleanup.** `--report` retains command logs, fixture workspaces,
+reports and `quality.json`, including cache sizes before and after trimming.
+Use a fresh report directory;
 without the option, a temporary evidence directory is created and printed.
 The private Go cache is removed when the command finishes or reports failure;
 failed fixture sources, generated output and logs remain for diagnosis.
@@ -136,8 +153,9 @@ node tools/release/release-prepare.mjs \
   --native bin/gopurs-native --out /tmp/gopurs-candidate --preview
 ```
 
-The output directory must be empty. `--preview` permits an uncommitted tree
-and records that fact in the build metadata. Without it, preparation requires
+**Inputs:** the existing JavaScript and native binaries. **Output:** the files
+listed below, written into an empty directory. `--preview` permits an uncommitted
+tree and records that fact in the build metadata. Without it, preparation requires
 a clean tree at the matching annotated `vVERSION` tag and a final changelog
 section. Preparation packages existing binaries; it does not rebuild them or
 establish that an arbitrary supplied native binary matches the source. CI
@@ -150,7 +168,7 @@ Each platform produces:
 - `gopurs-VERSION-TARGET-SHA256SUMS`;
 - a separate checksum list for the JavaScript bundle and FFI parser files
   inside the npm package;
-- a CycloneDX 1.6 dependency inventory, build metadata and release notes;
+- a CycloneDX 1.6 dependency inventory (SBOM), build metadata and release notes;
 - copies of the npm, Spago and Nix locks and the bootstrap source manifest.
 
 The inventory includes npm build dependencies, PureScript packages, native
@@ -234,8 +252,9 @@ complete qualification; documentation filtering and PR reuse never apply to
 them. Each build uses the locked Nix environment and a fresh checkout. A successful tag
 run packages the candidate, verifies checksums, runs the offline application
 smoke and npm publication dry-run, and signs provenance and SBOM attestations
-using GitHub OIDC/Sigstore. The portable signature bundles are retained beside
-the artifacts. See the [GitHub attestation documentation](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations).
+using GitHub's build identity (OIDC) and Sigstore. These signed statements bind
+artifact hashes to the build's identity. The portable signature bundles are
+retained beside the artifacts. See the [GitHub attestation documentation](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations).
 
 Quick builds may reuse the pinned frontend tool's runtime closure as described
 in [nix.md](nix.md#ci-frontend-cache). This optional cache never contains the
@@ -259,6 +278,20 @@ platform hashes; the process does not claim their cross-platform identity.
 Quality/bootstrap logs are retained as workflow artifacts for 90 days. Copy
 long-term release evidence into the release archive before that retention
 period expires.
+
+Verify a downloaded executable or tarball against the repository, workflow and
+source tag:
+
+```bash
+gh attestation verify gopurs-VERSION-TARGET \
+  --repo 0x000000000000000000001/gopurs \
+  --signer-workflow 0x000000000000000000001/gopurs/.github/workflows/ci.yml \
+  --source-ref refs/tags/vVERSION --deny-self-hosted-runners
+```
+
+Use `--bundle FILE` to supply a downloaded Sigstore bundle for offline
+verification. The [GitHub CLI verification reference](https://cli.github.com/manual/gh_attestation_verify)
+describes the identity and digest checks.
 
 ### Reusing successful jobs after a targeted retry
 
@@ -298,7 +331,10 @@ release transition below has a separate, bounded qualification contract.
 
 ### Bounded RC20 to 0.1.1 qualification
 
-The 0.1.1 tag uses a one-hop recovery from signed `v0.1.0-rc.20`, commit
+**Historical exception for the 13 November 2026 release.** This section records
+the bounded recovery used for `0.1.1`; it is not a shortcut for future releases.
+
+The 0.1.1 tag used a one-hop recovery from signed `v0.1.0-rc.20`, commit
 `2202368d4b19849fdc365afacaffa4a617b0ea43`, Actions run `43412666316`.
 This mechanism cannot promote another base, another final version, or a chain
 of inherited qualifications. `tools/ci/rc20-recovery.json` must be explicitly
@@ -306,8 +342,8 @@ sealed after the exact obsolete goldens and the two fixture FFI migrations
 have been reviewed. An incomplete or
 invalid recovery stops the plan; it does not fall back to a complete rebuild.
 
-The source check permits only the listed golden paths with their before/after
-hashes and owning fixtures, the existing `tests/passing/PolyLabels.go` and
+**Allowed changes.** The source check permits only the listed golden paths with
+their before/after hashes and owning fixtures, the existing `tests/passing/PolyLabels.go` and
 `tests/passing/RowUnion.go` companions with their exact before/after hashes,
 the three package version fields, and the explicit
 documentation and release-control paths in `release-recovery.mjs`. Compiler
@@ -321,8 +357,8 @@ Their PureScript sources remain identical, and no other fixture source is
 allowed to change. `fixtureSources` in the manifest identifies each companion
 and its owning fixture; a missing or unreviewed hash prevents sealing.
 
-Only invalidated, missing or unsuccessful fixture shards run again. A changed
-companion invalidates its fixture's Release and Dev shards even when neither
+**Checks to rerun.** Only invalidated, missing or unsuccessful fixture shards run
+again. A changed companion invalidates its fixture's Release and Dev shards even when neither
 golden changes. Each job
 imports the exact compiler and prepared Nix closure from its original RC20
 producer. The aggregate still requires 222 core gates plus all 162 fixture
@@ -332,8 +368,8 @@ new reports name their actual final source and run. The schema-3 finalization
 context records both origins. Original report bytes are also retained in the
 signed `recovery-inputs.tar.gz` asset.
 
-Three small repackage jobs produce the final metadata and execute the installed
-final package with both JS and native hosts on their actual target platforms.
+**Final packages.** Three small repackage jobs produce the final metadata and
+execute the installed final package with both JS and native hosts on their actual target platforms.
 They reuse the compiler bytes without a bootstrap or core campaign. Final
 build metadata records the old `compilerOrigin` separately from the final
 packaging source. Finalization verifies the fresh package producers and exact
@@ -365,20 +401,6 @@ use it without rebuilding the development environment; see
 The four shards each mix Release and Dev batches while preserving the complete
 inventory and existing concurrency limits.
 
-Verify a downloaded executable or tarball against the repository, workflow and
-source tag:
-
-```bash
-gh attestation verify gopurs-VERSION-TARGET \
-  --repo 0x000000000000000000001/gopurs \
-  --signer-workflow 0x000000000000000000001/gopurs/.github/workflows/ci.yml \
-  --source-ref refs/tags/vVERSION --deny-self-hosted-runners
-```
-
-Use `--bundle FILE` to supply a downloaded Sigstore bundle for offline
-verification. The [GitHub CLI verification reference](https://cli.github.com/manual/gh_attestation_verify)
-describes the identity and digest checks.
-
 ## Publish the reviewed candidate
 
 Before the first dispatch, integrate the reviewed release workflow into the
@@ -389,12 +411,33 @@ See the [GitHub dispatch requirements](https://docs.github.com/en/actions/how-to
 
 Review the CI draft, external benchmark/b8x evidence and rollback prerequisites.
 Both normal paths below require the complete tag CI matrix to have succeeded
-and the reviewed source to be checked out at that tag. RC7 follows the explicit
-operator exception recorded above; it does not satisfy the green-workflow gate.
+and the reviewed source to be checked out at that tag. The historical RC7
+publication followed an explicit operator exception; it does not satisfy the
+green-workflow gate.
 Use the pinned Nix environment
 for npm 11.6.0. Keep downloaded files and local evidence outside the checkout.
 
-For the **first publication**, an npm trusted publisher cannot be configured
+**Existing npm package.** Configure npm's trusted publisher for this repository
+and `publish.yml`, with direct `npm publish` allowed. The public package and
+repository URL must match; see [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/).
+Dispatch the publication workflow on the reviewed release tag with its default
+mode:
+
+```bash
+gh workflow run publish.yml --ref vVERSION -f tag=vVERSION
+```
+
+The workflow requires the matching draft release and verified CI attestations.
+It records previous npm dist-tags, publishes the exact tested tarball with npm
+provenance (`next` for `-rc.N`, `latest` for a final version), fetches it again
+from the registry and compares it byte for byte. It repeats the fresh offline
+application smoke, then publishes the matching GitHub release. A failure after
+npm publication requires inspecting the retained publication evidence; reruns
+must not try to overwrite an existing npm version. The first-publication
+recovery mode specifically requires the exported CI bundle; it does not accept
+a different provenance bundle generated by a later trusted-publishing job.
+
+**First publication only.** An npm trusted publisher cannot be configured
 on a package that does not yet exist. Publish the real CI archive from the
 maintainer's already authenticated npm CLI, supplying the CI-generated bundle.
 No placeholder package, npm token export, or npm secret in GitHub is needed.
@@ -476,27 +519,7 @@ leaves the npm version immutable and the GitHub release in draft for diagnosis.
 
 This first-publication path must be qualified by a real CI OIDC signature and
 the registry checks above; unit tests of guards or local previews do not prove
-public publication. After the package exists, configure npm's trusted publisher
-for this repository and `publish.yml`, with direct `npm publish` allowed. The
-public package and repository URL must match. See
-[npm trusted publishing](https://docs.npmjs.com/trusted-publishers/).
-
-For **subsequent versions**, dispatch the publication workflow on the reviewed
-release tag with its default mode:
-
-```bash
-gh workflow run publish.yml --ref vVERSION -f tag=vVERSION
-```
-
-The workflow requires the matching draft release and verified CI attestations.
-It records previous npm dist-tags, publishes the exact tested tarball with npm
-provenance (`next` for `-rc.N`, `latest` for a final version), fetches it again
-from the registry and compares it byte for byte. It repeats the fresh offline
-application smoke, then publishes the matching GitHub release. A failure after
-npm publication requires inspecting the retained publication evidence; reruns
-must not try to overwrite an existing npm version. The first-publication
-recovery mode specifically requires the exported CI bundle; it does not accept
-a different provenance bundle generated by a later trusted-publishing job.
+public publication.
 
 After a successful publication, verify the README installation with the public
 version, finish the b8x check using the published artifacts, archive the proof,
@@ -525,7 +548,7 @@ immediately before any future publication or restoration.
 On 5 November 2026, RC14's public rollback exercise moved `next` to RC7,
 verified a fresh `gopurs@next` installation and the documented Hello, then
 restored `next` to RC14 and repeated that check in another empty project.
-`latest` stayed on RC7 throughout. See the [RC14 evidence and scope](quality-0.1.0.md#actual-public-rollback-and-restoration).
+`latest` stayed on RC7 throughout. See the [RC14 evidence and scope](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md#actual-public-rollback-and-restoration).
 This validates RC7 for that unchanged example only; applications requiring
 post-RC7 library fixes need a separately validated fallback. Immutable Git tags
 and release assets were preserved.

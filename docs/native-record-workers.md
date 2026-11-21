@@ -1,21 +1,25 @@
 # Shared native workers for read-only open records
 
-An open-row reader can use a native worker shared across record shapes:
+A function that reads known fields can sometimes share one generated Go
+function across several record shapes. In this example, the open row `r` allows
+callers to supply additional fields:
 
 ```purescript
 score :: forall r. { id :: Int, name :: String, active :: Boolean | r } -> Int
 ```
 
-If every use of the parameter reads one of those known fields, the worker
-accepts one native struct containing `active bool`, `id int64`, and `name string`.
+If every use of the parameter reads one of those known fields, the generated
+function, called a worker, accepts one native struct containing `active bool`,
+`id int64`, and `name string`.
 A caller with a larger native record projects those fields directly. The source
 record is evaluated once, including its extra fields; the caller's record and
 its immutable updates retain the full layout. The worker can return a native
 scalar or an existing native `Maybe`, `Either`, or `Tuple` layout.
 
-This is a **field projection**, not an interface wrapper or a new representation
-for all open records. It copies known primitive fields and needs neither an
-accessor chain nor a different function body for every caller's layout.
+This **field projection** copies only the known primitive fields into the
+worker's argument. It avoids an accessor chain and a separate function body for
+every caller's layout. Other open-record uses retain their existing
+representation; this is not a general change to open records.
 
 ## Eligibility and fallback
 
@@ -33,8 +37,9 @@ label. Unsupported labels or sanitization collisions retain the ordinary ABI.
 
 Only direct reads of declared fields qualify. Returning the row, aliasing it,
 passing it to another function, updating it, or capturing it in a closure rejects
-the projection. Lexical shadowing is respected. The transformed TCO body is
-checked independently by `workerArguments`, without relying on source usage
+the projection. Lexical shadowing is respected. The body transformed by
+tail-call optimization (TCO) is checked independently by `workerArguments`,
+without relying on source usage
 annotations. Published worker signatures are also used to emit their bodies
 and all direct callers.
 

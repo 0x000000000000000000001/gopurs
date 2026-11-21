@@ -4,6 +4,16 @@ Run these commands from the gopurs repository root with Node, Go, Spago and
 the typed PureScript frontend available. See [bootstrap](bootstrap.md) for
 the toolchain and library checkouts.
 
+Choose the scope before running a campaign:
+
+| What you need to check | Start here |
+| --- | --- |
+| A change to the compiler or tooling | [Targeted checks](#choose-a-targeted-check) |
+| A small PureScript regression program (a fixture) | [Selection and snapshots](#selection-and-snapshots) |
+| A library port | [Library tests](#library-tests) |
+| A failed or interrupted campaign | [Reports and resume](#isolation-reports-and-resume) |
+| A release candidate | [Full release procedure](release.md) |
+
 `bin/test` and `bin/modtest` use `bin/gopurs`: the native Go compiler when
 installed, otherwise the JavaScript bundle. Set `GOPURS_JS=1` to select JS or
 `GOPURS_RUST=1` to select the experimental Rust host. `-c` rebuilds the selected
@@ -55,6 +65,11 @@ coverage where supported.
 
 Keep the targeted suite and an end-to-end fixture when changing an optimization.
 The suites test admission and rejection cases as well as the generated Go.
+
+Here, **TAST** is the typed representation emitted by the PureScript fork,
+**PBO** is the PureScript Backend Optimizer, and **Rebox** is the compiler's
+conversion machinery between generated value representations. The table lists
+the guarantees each suite checks.
 
 | Contract | What the suites protect |
 | --- | --- |
@@ -241,7 +256,7 @@ in `spago.yaml` and an executable `bin/test`; backend worktrees are excluded.
 
 The full selection is the default. Names accept the `gopurs-` prefix optionally.
 Each target receives a private copy of the library source family, without
-checkout metadata, dependencies or generated outputs. Relative configuration
+Git metadata, dependency caches or generated output. Relative configuration
 links stay relative. The prebuilt compiler is shared read-only; `-c` rebuilds
 it once before the campaign. In Dev, a private launcher forwards `--dev`.
 

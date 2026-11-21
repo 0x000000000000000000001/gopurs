@@ -1,9 +1,16 @@
 # Native-PBO differential qualification
 
-Runs the eight native FFI differential contracts of the Rust-hosted gopurs
-compiler against a **retained** `npm run build:rust` workspace. The candidate
-native sources are taken from the local gopurs PBO checkout; the PureScript
-oracles and the embedded FFI under test come from the generated crates.
+This runner checks eight FFI contracts in the Rust-hosted gopurs compiler using
+a **retained** `npm run build:rust` workspace. The cases check native behavior
+against reference implementations and properties such as ordering and persistence.
+The PureScript reference implementations are called **oracles**.
+PBO means PureScript Backend Optimizer. Candidate native sources come from the
+local gopurs PBO checkout; the oracles and embedded FFI come from the generated
+Rust crates.
+
+Use the [commands](#commands) for the eight-case campaign or the separate
+[text decoder check](#standalone-text-gate-textmjs) for that decoder. Results and
+failure evidence are described under [Output and disk behavior](#output-and-disk-behavior).
 
 | Case | Contract | Injected from gopurs PBO | Needs corpus |
 | --- | --- | --- | --- |
@@ -29,6 +36,11 @@ counts, existing/incoming argument order and persistent versions.
 
 ## Prerequisites
 
+Run the commands from the gopurs repository root with the
+[Rust bootstrap toolchain](../../docs/bootstrap.md#rust-bootstrap) available.
+Use a build made from the sources you intend to check: the runner rejects a
+stale generated compiler instead of rebuilding it.
+
 - Retained Rust-hosted gopurs build. `build-rust.mjs` deletes the workspace
   unless keep is requested:
 
@@ -53,7 +65,9 @@ counts, existing/incoming argument order and persistent versions.
 
 ## Commands
 
-Full campaign (all eight cases, sequential, one shared target):
+Full campaign (all eight cases, run sequentially with one shared Cargo build
+directory). Replace `<workspace>` with the retained build path and `<log-dir>`
+with the directory for this campaign's evidence:
 
 ```sh
 node tools/test-native-pbo.mjs <workspace>/rust <log-dir>
@@ -109,11 +123,11 @@ When a corpus is present the orchestrator reads `modulePath` from the corefn
 modules and fails if the corpus names the Purust fork and no gopurs fork path.
 Pass `TAST_CORPUS` for a corpus outside the retained workspace.
 
-## Standalone text gate (`text.mjs`)
+## Standalone text gate (text.mjs)
 
-Final gate for the native CoreFn JSON text decoder (not part of the eight-case
-`test-native-pbo.mjs` list, which keeps the older ABI and does not expect the
-cursor path for every case). Run it standalone:
+This checks the native CoreFn JSON text decoder. It is separate from the eight
+cases above: `test-native-pbo.mjs` keeps the older calling interface (ABI) and
+does not expect the cursor path for every case. Run it standalone:
 
 ```sh
 node tools/native-pbo/text.mjs --workspace PATH --corpus PATH \

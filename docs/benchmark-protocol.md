@@ -3,6 +3,12 @@
 This page defines what the published gopurs measurements mean and what a new
 measurement must record. It is not a performance guarantee.
 
+To run a release comparison, use the [release benchmark guide](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-benchmark.md#before-a-measurement).
+Use this page to choose the metric, reproduce the conditions and report the
+result. Compare new measurements with the official
+[altbak.pub README baselines](https://github.com/0x000000000000000000001/altbak.pub#go)
+as well as the campaign's raw samples.
+
 ## Two different benchmarks
 
 - **Backend compilation time**: the gopurs driver's internal `backend total`,
@@ -94,7 +100,8 @@ cache policy fixed.
 
 ## Reproducing a result
 
-Use the release tag, not an arbitrary working tree:
+Check out the tag for the result you are reproducing. This example selects
+the historical RC14 compiler; use the tag named by your chosen campaign:
 
 ```bash
 git clone https://github.com/0x000000000000000000001/gopurs.git
@@ -104,8 +111,9 @@ npm ci
 ```
 
 Use the typed compiler revision and Go version recorded for that release.
-Generate the corpus, then run the compiler with the documented worker and cache
-settings. Record the exact commands, hashes and raw output.
+Use that campaign's frozen corpus, or follow its documented corpus-generation
+steps, then run the compiler with the recorded worker and cache settings.
+Record the exact commands, hashes and raw output.
 
 The benchmark scripts under `tools/` are development tools. They are not part of
 the npm runtime surface; use the versions in the tagged repository.

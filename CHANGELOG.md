@@ -29,7 +29,7 @@ The supported reference is Node.js 24.8.0 and Go 1.27.0 on Linux amd64,
 Linux arm64 and macOS arm64. This is a `0.x` release; the
 [compatibility policy](docs/publication-scope.md) and
 [limitations](docs/limitations.md) define its scope. The
-[RC20 benchmark](docs/release-benchmark.md#completed-rc20-campaign--13-november-2026-utc)
+[RC20 benchmark](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-benchmark.md#completed-rc20-campaign--13-november-2026-utc)
 measures backend generation, not application runtime.
 
 ## [0.1.0] — not published
@@ -194,7 +194,7 @@ following RC13's macOS Dev failure. The exact signed tag passed qualification
 on all three supported platforms and its artifacts were reviewed. Published on
 npm `next` and as a GitHub prerelease; public Hello, b8x compilation/linking and
 the real `next` rollback to RC7 followed by restoration to RC14 passed. `latest`
-remains RC7. The embedded documentation deviation and rollback scope are recorded in [the quality report](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
+remains RC7. The embedded documentation deviation and rollback scope are recorded in [the quality report](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
 
 ### Fixed
 

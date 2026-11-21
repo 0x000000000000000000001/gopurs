@@ -1,9 +1,13 @@
 # Counted function producers
 
-[`Gopurs.FunctionFusion`](../src/Gopurs/FunctionFusion.purs) runs after PBO and
-thunk fusion, before ownership analysis and tail-call optimization. It replaces
-a recursive chain of functions with a closure capturing its counter and calling
+A counted function producer builds a function that applies a callback a chosen
+number of times. For the recognized shape below, gopurs can replace the
+recursive chain of functions with one closure holding the count and calling
 a loop worker.
+
+[`Gopurs.FunctionFusion`](../src/Gopurs/FunctionFusion.purs) performs this
+transformation after PBO and thunk fusion, before ownership analysis and
+tail-call optimization.
 
 ## Recognized shape
 
@@ -35,9 +39,9 @@ The negative branch evaluates the original producer body at production time.
 The guard precedes the returned closure, preserving the public arity. Worker
 names are reserved against bindings and FFI names after Go normalization.
 
-Counter and accumulator parameters use `int64`; callbacks retain their `Value`
-ABI and `Apply` calls. The proof uses typed transformed bodies, independently
-of source usage annotations.
+Counter and accumulator parameters use `int64`. Callbacks keep the existing
+calling convention: boxed `Value` arguments and `Apply` calls. The proof uses
+typed transformed bodies, independently of source usage annotations.
 
 ## Validation
 

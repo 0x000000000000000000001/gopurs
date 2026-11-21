@@ -1,7 +1,9 @@
-# Packed String payloads
+# Packed string payloads
 
-[`runtime/runtime.go`](../runtime/runtime.go) stores `TypeString` directly in a
-`Value`, without allocating a separate `*string` header:
+Boxed strings do not need a separate allocation for their Go string header.
+[`runtime/runtime.go`](../runtime/runtime.go) stores the byte length and data
+pointer directly in the tagged `Value` container for `TypeString`. Runtime and
+FFI code must use the shared accessors so they respect this layout:
 
 | Field | Meaning |
 | --- | --- |

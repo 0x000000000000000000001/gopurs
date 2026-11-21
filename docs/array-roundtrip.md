@@ -1,8 +1,9 @@
 # Integer-array round-trip elimination
 
 A freshly generated filter buffer can avoid the two copies in an immediate
-`Value → []int64 → Value` round trip consumed by an integer fold. The generator
-normalizes the private buffer in place before the fold. Range generation,
+`Value → []int64 → Value` round trip consumed by an integer fold. Here, `Value`
+is the boxed runtime representation and `[]int64` is a native Go slice. The
+generator normalizes the private buffer in place before the fold. Range generation,
 filtering, fold iteration and callback dispatch retain their normal behavior.
 
 ## Recognition
@@ -46,7 +47,8 @@ func() Value {
 }()
 ```
 
-The producer runs once, before fresh IIFE-local temporaries enter scope.
+The producer runs once, before the immediately invoked function's fresh local
+temporaries enter scope.
 Translation statements, evaluation order, the seed, `Apply2` calls and element
 order are preserved. Normalization uses exactly `.IntVal` followed by `Int`:
 no additional tag check or signed-32-bit conversion is introduced. This resets

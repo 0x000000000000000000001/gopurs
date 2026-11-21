@@ -139,9 +139,9 @@ shows how to check the frontend selected on `PATH` and its generated output.
 
 ## Minimal check without FFI
 
-From `hello/`, remove `console` from both `dependencies` and `extraPackages`
-in `spago.yaml` to verify the compiler without a Go library port. Then use
-the following `src/Main.purs`.
+This optional check helps isolate a library-port problem. From `hello/`, remove
+`console` from both `dependencies` and `extraPackages` in `spago.yaml` to verify
+the compiler without a Go library port. Then use the following `src/Main.purs`.
 
 ```purescript
 module Main where
@@ -154,3 +154,11 @@ main = pure unit
 ```
 
 Then run the same `spago build`, `npx gopurs --main Main` and `go build` steps.
+
+## Next steps
+
+Use the [Go FFI guide](ffi-idiomatic.md) to call your own Go code, or the
+[migration walkthrough](migration.md#from-a-javascript-project) to port an
+existing application. The
+[task list API example](https://github.com/0x000000000000000000001/gopurs/blob/main/examples/task-list-api/README.md)
+shows HTTP, JSON and SQLite working together.

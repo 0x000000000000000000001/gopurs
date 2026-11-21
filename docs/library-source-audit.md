@@ -5,6 +5,11 @@ compiler, optimizer and Go library ports by repository URL and exact commit.
 Review that manifest together with the dependency locks and
 [third-party notices](../THIRD_PARTY_NOTICES.md) when preparing a release.
 
+A review should identify the old and new revisions, which distributed files
+they affect, any notice changes, and the checks run with the selected compiler.
+The steps below separate compiler packaging from library source selection and
+publication of a library in its own right.
+
 ## Distribution boundaries
 
 | Surface | Review |

@@ -1,7 +1,10 @@
 # Fused Either traversals
 
-Two compiler changes reduce allocations in ordinary PureScript JSON decoders.
-They do not introduce a schema-specific decoder or change the parser.
+These optimizations combine steps in ordinary PureScript JSON decoders so each
+optimized traversal builds its result in one private container. This is what
+“fusion” means here: it removes intermediate arrays or repeated map copies while preserving
+callback order and error behavior. The parser is unchanged, and the compiler
+does not generate a decoder for a particular schema.
 
 ## Foreign.Object
 
@@ -44,8 +47,9 @@ index order; only the first error is returned. The output array remains
 `[]Value`, so boxing the final element payload is still required. This is a
 local consumer optimization, not a complete native dictionary/callback ABI.
 
-PBO's `getField` and `getFieldOptional'` helpers construct `AtKey` wrappers only after a decoding failure. Missing fields,
-`null`, nested errors and the number of decoder calls retain their existing
+PBO's `getField` and `getFieldOptional'` helpers construct `AtKey` error wrappers
+only after a decoding failure. Missing fields, `null`, nested errors and the
+number of decoder calls retain their existing
 semantics. The parser and TypeTable helpers are unchanged.
 
 ## Validation

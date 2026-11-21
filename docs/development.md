@@ -4,10 +4,12 @@ Use the [quickstart](quickstart.md) to build an application, or the
 [bootstrap guide](bootstrap.md) to build the compiler itself. This guide covers
 changes to library ports, Go FFI and the embedded runtime.
 
-- [Libraries](#libraries)
-- [Go FFI](#go-ffi)
-- [FFI parser](#ffi-parser)
-- [Embedded runtime](#embedded-runtime)
+| Your change | Start here |
+| --- | --- |
+| Port or maintain a library | [Libraries](#libraries) |
+| Call Go from PureScript | [Go FFI author guide](ffi-idiomatic.md), then [bridge implementation notes](#go-ffi) |
+| Change how Go declarations are parsed | [FFI parser](#ffi-parser) |
+| Change the runtime included in generated programs | [Embedded runtime](#embedded-runtime) |
 
 ## Libraries
 
@@ -26,7 +28,13 @@ current executable library suite. The Go development sections in the library REA
    `command -v purs spago` and `purs --version; spago --version`. The interactive
    shell, npm and altbak can select different tools. A stock compiler's version
    number alone does not prove that it emits TAST.
-3. From the library root, inspect the resolved packages and build:
+3. From the library root, inspect the resolved packages, compile PureScript,
+   generate Go, then run the test program:
+
+   If the port declares external Go imports in `go-dependencies.json`, prepare
+   those [Go dependencies](ffi-idiomatic.md#external-go-modules) after `spago build`
+   and before invoking gopurs. The library's own `bin/test` is the place to check
+   for any additional setup.
 
    ```bash
    spago ls deps --transitive --json
@@ -97,6 +105,10 @@ subsequent builds.
 
 ## Go FFI
 
+For a new binding, start with the [Go FFI author guide](ffi-idiomatic.md).
+The notes here explain where the compiler finds bindings and how to maintain
+the bridge.
+
 Place a `.go` file beside the corresponding `.purs` file, or provide a lookup
 directory with `--ffi`. For a foreign import named `returnInt64`, export a Go
 function named `ReturnInt64`. The backend prefixes package-level declarations
@@ -124,6 +136,9 @@ tests. Parser and decoding failures report the PureScript module and FFI path
 and stop generation.
 
 ## FFI parser
+
+After a parser change, run the native contract tests, rebuild the WASM/parser
+runtime pair, rebuild the backend, then run the Node integration tests below.
 
 The Go parser lives in `tools/ffi-gen`. `parser.go` analyzes declarations and
 returns the JSON contract; `types.go` defines that contract, and

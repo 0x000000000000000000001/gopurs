@@ -1,14 +1,20 @@
 # Troubleshooting and FAQ
 
+Start with the failing command: `spago build` produces frontend output,
+`gopurs` generates Go, and `go build` creates the application executable.
+The sections below use the error messages printed at each step. The
+[FAQ](#faq) answers broader questions about support and library compatibility.
+
 ## Check the frontend when generation fails or behaves unexpectedly
 
 gopurs requires the typed compiler fork and checks every input module before
-optimization. Check the `purs` first on `PATH` and follow the
+optimization. Check which `purs` comes first on `PATH`, then follow the
 [migration walkthrough](migration.md#from-a-javascript-project) to regenerate
-and validate the typed output. An error
-containing `requires TAST metadata arrays` identifies the module and file
-missing `typeTable`, `dataDecls` or `classDecls`. Rebuild the frontend output
-with the pinned fork. If invoking Spago through an npm script, check for an
+and validate its output.
+
+An error containing `requires TAST metadata arrays` identifies the module and
+file missing `typeTable`, `dataDecls` or `classDecls`. Rebuild that output with
+the pinned fork. If invoking Spago through an npm script, also check for an
 upstream `purs` in `node_modules/.bin`, which npm prepends to `PATH`.
 
 ## `TAST decoding did not produce every inventoried module`

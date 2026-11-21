@@ -1,13 +1,22 @@
 # Terminology and naming
 
-Use these terms when describing the current compiler. Source links and module
-names must match the checkout; the [module map](module-map.md) lists the
-actual modules and dependencies.
+This guide keeps code, reviews and documentation consistent. In particular,
+it distinguishes the compiler host from the generated runtime, and generated
+workers from scheduled jobs. Source links and module names must match the
+checkout; the [module map](module-map.md) lists the actual modules and
+dependencies.
 
 ## Glossary
 
 | Term | Meaning |
 | --- | --- |
+| TAST | Typed abstract syntax tree from the PureScript fork, including structural types, layouts and call instantiations. |
+| PBO | PureScript Backend Optimizer, which reads TAST and supplies the shared optimizer and backend representation. |
+| IR | Intermediate representation: the program form consumed by a compiler phase. |
+| ADT | Algebraic data type, defined by its constructors and their fields. |
+| FFI | Foreign function interface between PureScript and handwritten target-language code. |
+| ABI | Application binary interface; here, the argument, result and value layouts used by generated Go calls. |
+| TCO | Tail-call optimization, which can turn eligible recursive calls into loops. |
 | `compile` | Complete driver invocation, from options through publication. |
 | `driver` | Orchestration, phase ordering and final result. |
 | `prepare` | TAST loading, metadata, specialization and preparation reuse. |

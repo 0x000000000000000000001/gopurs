@@ -1,6 +1,24 @@
 # Runtime and compiler FFI contracts
 
+This reference is for maintainers changing the runtime, generated value
+representations or the compiler's own foreign implementations. For application
+FFI, start with [Writing Go FFI](ffi-idiomatic.md).
+
+Two kinds of Go code appear here. The **runtime** accompanies each generated
+application and stores values, invokes functions and tracks unfinished work.
+The **compiler companions** implement operations used while the compiler itself
+runs on a JavaScript, Go or Rust host. The tables below identify who owns each
+contract.
+
+For a memory or mutation change, read [value storage](#value-storage-and-lifetime)
+and [JSON views](#json-views-and-updates). For a compiler host change, read
+[companion contracts](#compiler-companion-contracts). The
+[verification section](#verification) points to the tests for each area.
+
 ## Boundary owners
+
+TAST is the typed syntax tree exported by the PureScript fork. Its types drive
+the conversions at the language boundary.
 
 | Boundary | Owner |
 | --- | --- |
@@ -16,7 +34,10 @@ compiler does not read that source file at startup.
 
 ## Value storage and lifetime
 
-`Value` contains a `Type` tag, an `IntVal` field and a GC-tracked `UnsafePtr`.
+`Value` is the runtime's boxed representation: a tag identifies the kind of
+value, and the payload stores its contents or a reference to them. It contains
+a `Type` tag, an `IntVal` field and an `UnsafePtr` tracked by Go's garbage
+collector (GC).
 Copying it copies the wrapper, not the pointed-to storage. Its producer must
 supply the tag and layout expected by the chosen accessor. Direct FFI access
 is not a decoder for arbitrary values.
@@ -34,6 +55,9 @@ is not a decoder for arbitrary values.
 Container constructors and `Box`/`Unbox` do not promise deep copies.
 `Box([]Value)` shares backing storage; `Box([]any)` creates a new boxed slice.
 FFI must distinguish read-only views from privately owned writable buffers.
+Two values that share storage are aliases; changing that storage through one
+can affect the other. An ADT in the table is an algebraic data type, whose
+constructors and fields are described by TAST.
 See [packed strings](packed-strings.md), [closure lifetime](runtime-closures.md),
 [ADT reuse](adt-reuse.md) and [representation conversions](architecture.md#representations-and-conversions).
 `runtime.KeepAlive` alone does not replace the heap escape enforced by
@@ -127,8 +151,11 @@ never a copied builder; concurrent renders use different buffers.
 
 `Cache.Pool` exposes its native pointer; `BuildCache` and `Host.Snapshot`
 callbacks are native functions. The bridge still supplies required PureScript
-boxing. A final `_ any` parameter keeps effectful operations delayed; a
-`String -> Effect Unit` callback becomes `func(string) func()`.
+boxing. These companions retain some legacy effect conventions: a final
+`_ any` parameter keeps an operation delayed, and a `String -> Effect Unit`
+callback becomes `func(string) func()`. The returned function runs the effect.
+New application FFI can use the ordinary signatures in the
+[Go FFI guide](ffi-idiomatic.md#choose-the-purescript-contract-first).
 `GoImports.concatStringArrays` is generic to preserve element representation.
 
 For pointer-returning workers, the bridge reuses an argument's wrapper when
@@ -143,7 +170,18 @@ share parser and representation policy.
 
 ## Verification
 
-After building the compiler, select the relevant suites:
+After [building the compiler](bootstrap.md), select the suites for the contract
+you changed:
+
+| Tests | What they verify |
+| --- | --- |
+| `native-ffi` | Native companions against JavaScript reference implementations; buffers, caches, GC and clocks under the race detector. |
+| `runtime-contracts` | Canonical runtime tests, normally and with `-race`: aliases, immutable updates and task retention. |
+| String, integer and number suites | Executed Go against JavaScript for surrogate boundaries, integer operations and binary64 formats. |
+| `embed-runtime` | Embedded bytes, stable timestamps, regeneration and loading without the source file. |
+| Closure and application suites | Function arities, captures and partial application. |
+
+To run these suites together:
 
 ```sh
 node --test tools/native-ffi.test.mjs tools/embed-runtime.test.mjs \
@@ -153,15 +191,6 @@ node --test tools/native-ffi.test.mjs tools/embed-runtime.test.mjs \
   tools/apply-arity.test.mjs tools/function-data.test.mjs \
   tools/value-array-unboxing.test.mjs tools/go-imports.test.mjs
 ```
-
-`native-ffi` compares native companions against JS oracles and exercises
-buffers, caches, GC and clocks under the race detector. `runtime-contracts`
-runs canonical runtime tests normally and with `-race`, including aliases,
-immutable updates and task retention. Primitive suites compare executed Go
-against JS for surrogate boundaries, integer operations and binary64 formats.
-`embed-runtime` checks embedded bytes, stable timestamps, regeneration and
-loading without the source file. The closure and application suites exercise
-arities, captures and partial application.
 
 `native-go-code.test.mjs` additionally checks the compiled scanner with a
 bounded stack using `GOPURS_NATIVE_OUTPUT` from a retained bootstrap.

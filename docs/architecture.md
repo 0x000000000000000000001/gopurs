@@ -1,11 +1,21 @@
 # Backend architecture
 
-This guide follows the current [Driver](../src/Gopurs/Driver.purs), entered
-through [Main](../src/Main.purs). See the [overview](architecture-overview.md)
-for the public pipeline, the [module map](module-map.md) for source locations
-and direct dependencies, and [naming](naming.md) for terminology.
+This guide is for changes to the compiler: it explains which phase owns each
+decision, where its type information comes from, and which guarantees later
+phases rely on. It follows [Driver](../src/Gopurs/Driver.purs), entered through
+[Main](../src/Main.purs).
+
+Read the [overview](architecture-overview.md) first for the complete flow. Use
+the [module map](module-map.md) to locate source files and direct dependencies,
+and [naming](naming.md) for terminology.
 
 ## Typed input and pass order
+
+The frontend supplies a TAST (typed abstract syntax tree). PureScript Backend
+Optimizer (PBO) turns it into the shared backend intermediate representation
+(IR); gopurs then applies Go-specific transformations and emits Go. The order
+below matters because each phase must use metadata for the program it actually
+receives.
 
 1. The typed PureScript fork emits TAST in `output/<Module>/corefn.json`.
    The cache inventories and verifies these files, then copies inputs needed
@@ -52,9 +62,10 @@ Go or assume the type erasure of standard CoreFn.
 
 ## Metadata provenance
 
-`CodegenState` separates shared, immutable `CodegenMetadata` from the mutable
-state of one translation: declarations, fresh identifiers and requested Rebox
-pairs.
+`CodegenState` separates facts shared by translations from work owned by one
+translation. The shared `CodegenMetadata` is immutable. Declarations, fresh
+identifiers and requested Rebox conversions belong to the mutable translation
+state. The table below records where each shared fact comes from.
 
 | Data | Source and availability |
 | --- | --- |
@@ -164,9 +175,11 @@ convert their elements. Integer arrays retain dedicated AST nodes so the
 tags and slots. Closed-record payload slots may remain native; other payloads
 use `Value`. Composite payload conversions call the ordinary converter.
 
-`GoConversions.Rebox` records directed source/destination pairs, derives
-field conversions from `ReboxMetadata`, and emits helpers to a fixed point.
-Requests can introduce further requests, including recursive pairs. Helpers
+Rebox helpers convert between native layouts when field conversions are
+needed. `GoConversions.Rebox` records each source/destination pair and derives
+its field conversions from `ReboxMetadata`. Generating one helper can request
+others, including recursive pairs, so generation continues until no new helpers
+are needed. Helpers
 preserve `nil`; identical immutable layouts can share a pointer, while field
 conversions allocate a new value. `Rc` does not establish this equivalence.
 Missing metadata retains the `ERROR: Rebox missing!` diagnostic. Constructor

@@ -1,8 +1,16 @@
 # Parallel Go emission
 
+Go emission translates prepared modules into Go declarations. It can work on
+several modules together and overlap with PBO optimization, while keeping the
+same publication order and dependency visibility as sequential compilation.
+This page explains the scheduling and cleanup guarantees for changes to the
+driver; the [CLI reference](cli.md) covers user controls.
+
 `GOPURS_EMIT_JOBS` selects the maximum number of modules emitted together
 (default 8; set 1 for sequential emission).
 It is independent of `GOPURS_JOBS`, which only controls TAST loading.
+
+## Scheduling and dependency order
 
 The PBO coordinator enqueues finalized modules in canonical order, with either
 the sequential or parallel optimizer. By default it can optimize the next
@@ -12,13 +20,20 @@ this overlap; `GOPURS_EMIT_JOBS=1` also retains immediate sequential emission.
 At most one emission batch executes at a time. The pipeline tracks up to
 `max 2 (GOPURS_EMIT_JOBS * 2)` launched batches, including those waiting for
 their predecessor, plus one partially filled batch. At capacity, the producer
-joins the oldest batch before launching another. A full batch, a module
-depending on a queued module, or the end of the build flushes the queue. The
-dependency check uses optimized imports, including references introduced by
-inlining. A new batch starts only after the preceding batch finishes. Its
-immutable function-signature snapshot is read at that point; signatures are
-merged in source traversal order after all module workers finish. Go translation
-runs inside deferred Aff computations on native Aff goroutines.
+waits for the oldest batch to finish before launching another.
+
+A full batch, a module depending on a queued module, or the end of the build
+flushes the queue. The dependency check uses optimized imports, including
+references introduced by inlining. This ensures a consumer waits for signatures
+produced by modules it depends on.
+
+A new batch starts only after the preceding batch finishes. It reads an
+immutable snapshot of the available function signatures at that point. After
+all jobs in the batch finish, their signatures are merged in source traversal
+order. Go translation runs inside deferred Aff computations on native Aff
+goroutines.
+
+## Failure and cleanup
 
 `Driver.Build` uses `Emission.withEmitter` to own the build lifetime. The scope
 flushes and joins the final batch on success. Its `supervise` wraps both the
@@ -32,6 +47,8 @@ this method stops new admissions, skips the pending batch, and drains the
 launched chain without interrupting it. It does not supervise producer workers;
 the compiler uses `withEmitter` for that. Joining Aff children does not join
 detached filesystem callbacks whose `nonCanceler` cannot stop the OS operation.
+
+## Coordination with the optimizer
 
 `GOPURS_PBO_JOBS` selects optimizer concurrency (compiler default 1; the launcher
 selects 8 on machines with at least 32 GiB for Go, Rust and JS unless overridden).

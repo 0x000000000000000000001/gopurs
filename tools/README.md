@@ -4,6 +4,11 @@ The scripts in this directory build, test, measure and release gopurs. They are
 plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 `node --test tools/*.test.mjs` remains the canonical test entry point.
 
+For commands to run, start with the [testing guide](../docs/testing.md),
+[compiler bootstrap](../docs/bootstrap.md) or
+[release quickstart](../docs/release-quickstart.md). Use this catalog to find
+the scripts behind those procedures and the helpers to reuse when changing them.
+
 ## Shared helpers
 
 | Script | Purpose |
@@ -82,7 +87,9 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 | --- | --- |
 | `preparation-source-variants.mjs`, `preparation-transition-oracles.mjs` | preparation contract helpers used by tests |
 | `build/pgo.mjs` | profile-guided optimization for the Rust host |
-| `release/release-prepare.mjs`, `release/release-smoke.mjs`, `release/release-quality.mjs` | release gates |
+| `release/release-prepare.mjs` | package existing compiler artifacts and record their inputs |
+| `release/release-smoke.mjs` | install the prepared package and execute a fresh application |
+| `release/release-quality.mjs` | run the qualification checks and retain their reports |
 | `release/official-compiler.mjs` | select the stock frontend for the release JavaScript oracle without using PATH |
 | `release/release-benchmark.mjs` | release benchmark campaign |
 | `release/release-quality-modules.mjs` | module inventory and evidence |
@@ -130,8 +137,9 @@ Use it to check that a rename or move preserves generated files.
 | `tests/passing-snapshots*/*.go` | generated golden output |
 
 Handwritten FFI must stay in sync with the `foreign import` declarations of its
-`.purs` module. The other three host files are not generated from the `.purs`
-source; they are maintained manually.
+`.purs` module. Apart from the runtime companions listed above, the `.js`, `.go`
+and `.rs` host implementations are maintained manually; they are not generated
+from PureScript.
 
 ## Conventions
 

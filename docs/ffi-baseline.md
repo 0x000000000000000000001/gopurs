@@ -1,8 +1,19 @@
 # FFI idiomatique : état initial et contrat de preuve
 
-Inventaire du 12 novembre 2026, avant migration applicative. Il accompagne le
-[plan historique](https://github.com/0x000000000000000000001/gopurs/blob/e691356fe2f0e22bab0d97b4aa08ddd8676e1eed/todo.md) et distingue les comportements observés des extensions à
-valider. Les chiffres décrivent les sources manuscrites, pas le Go généré.
+Ce document conserve l'inventaire du **12 novembre 2026, avant migration
+applicative**. Il sert à comprendre le point de départ et les preuves demandées
+à cette date. Les mentions « actuel », « à construire » et « à vérifier »
+décrivent cet état historique, pas les possibilités de gopurs aujourd'hui.
+
+Pour écrire une FFI maintenant, suivre le [guide Go FFI](ffi-idiomatic.md).
+Pour lire les résultats de cette migration, consulter la
+[validation du 12 novembre](ffi-validation.md). Le
+[plan historique](https://github.com/0x000000000000000000001/gopurs/blob/e691356fe2f0e22bab0d97b4aa08ddd8676e1eed/todo.md)
+donne le contexte du travail.
+
+Les [comptages initiaux](#baseline-chiffrée) portent sur les sources Go
+manuscrites, pas sur le code généré. Le [contrat initial](#contrat-initial-et-statut)
+sépare ce qui était observé des extensions restant à valider.
 
 ## Versions et périmètre
 

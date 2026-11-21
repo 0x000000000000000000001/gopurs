@@ -1,8 +1,12 @@
 # Go AST and printer boundary
 
+The Go abstract syntax tree (AST) records the code selected by the emitters;
+the printer turns that tree into text. Keep this boundary in mind when adding
+a generated construct or changing how Go is printed.
+
 Emitters choose native types, boxing, names, evaluation order, parameters,
-captures and tail-call targets from the typed IR. `Printer` renders their
-nodes without reading or changing `CodegenState`.
+captures and tail-call targets from the typed intermediate representation.
+`Printer` renders those decisions without reading or changing `CodegenState`.
 
 `Printer.Builder` owns a mutable buffer per rendering operation. `withOut`
 confines its handle to a synchronous callback; `emit` and `emitMany` chain
@@ -31,8 +35,9 @@ ordered declaration groups to `GoFile`.
 
 ## Opaque fragments and imports
 
-Some source remains opaque: local declaration/control fragments, portions of
-record and ADT conversions, class-getter registration bodies and Rebox
+Some generated code is still stored as text rather than structured AST nodes:
+local declaration/control fragments, portions of record and ADT conversions,
+class-getter registration bodies and Rebox
 assignments. The owning emitter remains responsible for their semantics.
 FFI bridges are rendered from Go signatures and TAST metadata by `FfiBridge`.
 The runtime is canonical Go source embedded from `runtime/runtime.go`.

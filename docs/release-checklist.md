@@ -15,9 +15,10 @@ below retain their original scope. They do not qualify RC20's changed compiler.
 No historical benchmark or local RC19 equality proof substitutes for a fresh
 RC20 campaign. Recheck public registry state at publication.
 
-Check an item only after recording its exact source, artifact identity and
-result in the [quality record](quality-0.1.0.md). The [release procedure](release.md)
-defines the commands and evidence. Historical RC14 qualification and local
+For a new candidate, use a separate checklist and record each item's exact
+source, artifact identity and result in the [quality record](quality-0.1.0.md).
+Leave the historical boxes below unchanged. The [release procedure](release.md)
+defines the current commands and evidence; RC14 qualification and local
 development results retain their original scope.
 
 ## Source preparation

@@ -1,5 +1,9 @@
 # Native projection capsule regression
 
+This fixture is for maintainers changing how preparation metadata is encoded
+and shared between modules. It checks that the native compiler preserves that
+metadata and finishes parallel jobs before their resources are released.
+
 `Main.purs` exercises the current `ProjectionCapsule.create`, Wire codec and
 `ProjectionCapsule.open` through the enriched TAST and native Go backend. It
 checks covered and new present/absent global types, complete metadata bytes,
@@ -13,6 +17,8 @@ Use a workspace retained by `npm run build:native -- --keep-workspace` to supply
 the typed compiler and dependency inventory. The runner copies current project
 sources and the required dependency closure into a **new** directory; it does
 not modify the retained workspace or install a compiler.
+
+## Run the fixture
 
 From the gopurs project root:
 
@@ -30,9 +36,14 @@ native backend, `go build`, and the generated executable. Success prints
 and source hashes, all commands and their exit status. No JavaScript backend is
 used to generate the regression executable.
 
+## Historical runs
+
+The paths below refer to locally retained evidence from the dated runs, not to
+files distributed with this fixture.
+
 This test was executed on 2026-10-23 with the retained candidate I backend
 (`8d4ea8a29d2ee3da19c310affe403c7c24bbcb0bbbf21e1f169cb38eb06f4744`)
-and the corrected current source. Evidence is retained at
+and the corrected source captured for that run. Evidence is retained at
 `../../.gopurs-evidence/c2-10-sub2-20261023/capsule-record-repro/durable-native`
 relative to the project root.
 

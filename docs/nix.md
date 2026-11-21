@@ -8,6 +8,13 @@ gopurs binary.
 Intel Macs (`x86_64-darwin`) are not included in this flake or the release
 qualification. The supported macOS host is Apple Silicon (`aarch64-darwin`).
 
+| You need… | Use |
+| --- | --- |
+| The installed JavaScript backend | [Install or run the backend](#install-or-run-the-backend) |
+| Tools for a PureScript application | [Application shell](#application-shell) |
+| Tools for compiler development | [Development shell](#typed-frontend-and-development-shell) |
+| A native gopurs executable | [Native bootstrap](#native-bootstrap) |
+
 ## Install or run the backend
 
 From a checkout at the release revision:
@@ -58,6 +65,9 @@ The frontend's source derivation and pinned dependencies are described below.
 
 ## Typed frontend and development shell
 
+These commands build the typed frontend, inspect its version, and enter the
+compiler development shell, respectively:
+
 ```sh
 nix build .#purs-tast
 nix run .#purs -- --version
@@ -77,19 +87,23 @@ package, the package derivation relaxes Cabal version bounds to use this locked
 set. The end-to-end application check verifies that the result emits TAST with
 `typeTable`, `dataDecls` and `classDecls` and that gopurs accepts it.
 
-The dependency override applies a local test-only patch to Foundation 0.0.30's
+**Foundation test patch.** The dependency override applies a local test-only
+patch to Foundation 0.0.30's
 [division property](https://hackage.haskell.org/package/foundation-0.0.30/src/tests/Test/Foundation/Number.hs).
 RC15's Linux amd64 dependency build failed with seed `5576833819021412192`:
 the generator selected `Int8 (-128) / (-1)`, whose quotient `128` cannot be
 represented. Replaying the same seed with Nix GHC 9.8.4 on macOS arm64 reproduced
 the failure. Both Prelude and Foundation correctly raise arithmetic overflow.
+
 The property already excludes division by zero; the patch also excludes a
 quotient that fails an `Integer` round-trip through the tested type. An
 exhaustive check of all 65,280 nonzero-divisor Int8 pairs found this single
 overflow and no failed equality. The patched suite passed all 6,121 tests with
-the failing seed in an explicit local macOS run. Foundation's implementation,
-test count and default random seed selection are unchanged. Both Linux Nix
-derivations keep the suite enabled. The pre-existing nixpkgs Darwin override
+the failing seed in an explicit local macOS run.
+
+Foundation's implementation, test count and default random seed selection are
+unchanged. Both Linux Nix derivations keep the suite enabled. The pre-existing
+nixpkgs Darwin override
 disables its build-time suite; this patch leaves that separate policy unchanged.
 The explicit macOS replay does not replace a candidate's platform qualification.
 
@@ -121,6 +135,10 @@ separate checks described in [testing.md](https://github.com/0x00000000000000000
 [benchmark-protocol.md](benchmark-protocol.md).
 
 ## CI frontend cache
+
+In Nix, a **runtime closure** contains a tool's store path and the dependencies
+needed to run it. The cache described here carries that closure for the typed
+frontend.
 
 Quick PR and branch builds can restore an Actions cache containing only the
 runtime closure of the pinned `purs-tast` tool. A quick push or manual run on

@@ -8,6 +8,10 @@ and recovery paths.
 The sequence is: prepare and merge the release changes, push a signed tag,
 review the successful CI draft, then dispatch publication.
 
+Before starting, have the [pinned development tools](nix.md), a Git signing key
+recognized by GitHub, and maintainer access through the GitHub CLI. The tag
+creates a CI candidate; publication is a separate step after review.
+
 ## 1. Prepare the version
 
 Start with a clean working tree on your release preparation branch. Choose an

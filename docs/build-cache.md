@@ -5,6 +5,11 @@ inputs and integrity. JavaScript, Go and Rust hosts use the same Go storage
 implementation. A cache hit does not replace frontend compilation or Go's own
 dependency and build checks.
 
+For application development, start with [everyday use](#everyday-use) and
+[recovery](#recovery-and-maintenance). The sections from
+[implementation boundaries](#implementation-boundaries) onward describe the
+protocol for maintainers changing reuse, invalidation or publication.
+
 ## Everyday use
 
 Run from the application directory with its typed PureScript compiler and
@@ -90,7 +95,7 @@ time. Follow the [benchmark protocol](benchmark-protocol.md).
 | [Driver.Cache](../src/Gopurs/Driver/Cache.purs) | Driver adapter, semantic options and session lifetime |
 | [tools/build-cache](../tools/build-cache/) | Keys, validation, frozen inputs, locking, objects, packages and publication |
 | [Cache.Modules](../src/Gopurs/Cache/Modules.purs) | Typed module reuse decisions and canonical restoration |
-| [Cache.Wire](../src/Gopurs/Cache/Wire.purs) | Portable business codecs |
+| [Cache.Wire](../src/Gopurs/Cache/Wire.purs) | Portable encoders and decoders for typed compiler artifacts |
 | [Driver.Prepare.Persistent](../src/Gopurs/Driver/Prepare/Persistent.purs) | Durable preparation proofs and projection reuse |
 
 Native Go calls the storage package directly. JavaScript uses
@@ -105,6 +110,11 @@ and driver publication. Protocol errors are JSON responses; process-launch
 failures cross the Effect/Aff error boundary.
 
 ## Inputs and keys
+
+A cache key identifies the inputs and settings a result depends on. An
+observation records a file, directory or typed-input inventory checked during
+the build, including relevant absences. Reuse requires those observations to
+still match.
 
 Keys use SHA-256 over length-prefixed UTF-8 components. The prefix is
 `gopurs-build-cache`, `1`, then a domain. Compiler resources, options and
@@ -147,8 +157,9 @@ Different host binaries invalidate conservatively despite sharing the format.
 
 `current.json` points to a versioned immutable manifest containing the verified
 snapshot, sorted outputs, canonical module order and optional semantic
-diagnostics. Each module memo includes prepared, optimizer-environment,
-emitter-environment and caller-demand keys, plus these business artifacts:
+diagnostics. Each module has a stored record, called a memo, with keys for its
+prepared form, optimizer environment, emitter environment and caller demands.
+It also contains these typed artifacts:
 
 | Codec | Contents |
 | --- | --- |
@@ -159,7 +170,7 @@ emitter-environment and caller-demand keys, plus these business artifacts:
 
 Older backend/worker versions can remain readable for output recovery without
 qualifying for typed restoration. Storage integrity checks never replace the
-business codecs' constructor, arity and invariant checks.
+typed artifact decoders' checks of constructors, arities and invariants.
 
 Prepared keys describe the actual specialized module. Optimizer keys cover
 implementations and absences, inlined bodies, directives and analysis settings.
@@ -167,12 +178,15 @@ An unchanged provider may be invalidated by new caller specialization demands.
 Emission keys cover source metadata, layouts, actual worker signatures and
 resolved FFI contents, including absent signatures.
 
-PBO read observations can prove reuse when a conservative predecessor-prefix
-key changes. Observations belong to individual attempts; a predecessor not yet
-finalized means wait, not absence. Restored contributions and worker signatures
-are published in canonical order, never completion order. If every optimizer
-memo is reusable, verified backend and worker artifacts can feed emission
-without starting the optimizer; consumed contributions still require decoding.
+PBO records the lookups made during each optimization attempt. These
+observations can justify reuse even when the conservative key covering preceding
+modules has changed, provided the observed results still match. If a predecessor
+has not finished, the lookup must wait; it cannot record an absent result.
+
+Restored contributions and worker signatures become available in canonical
+module order, regardless of completion order. If every optimizer memo is
+reusable, verified backend and worker artifacts can feed emission without
+starting the optimizer. Contributions that are consumed still require decoding.
 
 An early emitter lookup is valid only when its input references cover all
 references introduced by local transformations. Otherwise lookup occurs after
@@ -205,6 +219,10 @@ fragments. Identity memoization is private to one encoding and cannot affect
 persistent bytes.
 
 ## Frozen inputs and publication
+
+A build reads private copies of its inputs so that an edit during compilation
+cannot change the bytes being processed. Publication checks that those inputs
+are still current before committing the result:
 
 1. The driver checks directives, recipe, blobs and outputs. A verified global
    hit returns before decoding or preparation.

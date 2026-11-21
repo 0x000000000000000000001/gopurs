@@ -1,5 +1,9 @@
 # Writing Go FFI
 
+Use this guide to implement a PureScript `foreign import` in Go. FFI means
+foreign function interface: the boundary where PureScript calls code written
+in another language.
+
 Write a `.go` file next to the PureScript module, with ordinary Go functions.
 The exported Go name is the PureScript foreign name with its first letter
 capitalized. Imports, package declarations and local type declarations are
@@ -8,8 +12,16 @@ allowed. The compiler adapts a copy; the handwritten file remains usable by
 
 For the complete path from an empty workspace to execution, follow the
 [quickstart](quickstart.md), then the [migration guide's first foreign
-import](migration.md#port-the-applications-foreign-functions). This guide specifies the
-contracts of the Go implementation once that project is configured.
+import](migration.md#port-the-applications-foreign-functions). Once your project
+is configured, choose a signature from the table below and implement the
+matching Go function.
+
+Read [deferred operations and errors](#deferred-operations-and-errors) for SDK
+calls that can fail, then [resource ownership](#handles-and-resource-ownership)
+if they acquire files, connections or other resources. The later sections cover
+[external dependencies](#external-go-modules), [generic functions](#generic-go-functions)
+and [data conversion](#foreign-values-and-records). Use
+[verification](#diagnostics-and-verification) when changing or testing a port.
 
 These conventions describe `0.1.1` and its matching typed
 frontend. Consult the live [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
@@ -32,15 +44,21 @@ number alone does not establish that capability.
 | `EffectFnAff String`, with cancellation | `func Pending(ctx context.Context) (string, error)` |
 
 Pure functions run when called. An `Effect` implementation runs when its effect
-is executed: do not add a `Unit` parameter or return an effect thunk. Existing
-explicit-thunk FFI remains supported during migration. The existing `EffectFnN`
-calling convention remains available for uncurried functions.
+is executed: do not add a `Unit` parameter or return an effect thunk, meaning
+another function that must be called to run the effect. Existing FFI that
+explicitly returns such a function remains supported during migration.
+`EffectFnN` remains available for uncurried functions, whose arguments are
+passed together in one call.
 
 A Go `error` return does not itself choose an effect. Use `EffectFnAff` for the
 ordinary error-returning operations shown here. A pure import or `Effect` does
 not silently acquire an error-handling policy.
 
 ## Deferred operations and errors
+
+`EffectFnAff` is the foreign representation of an asynchronous operation.
+Wrap it with `fromEffectFnAff` to expose an ordinary `Aff` action to PureScript
+callers:
 
 ```purescript
 import Effect.Aff (Aff)
@@ -66,8 +84,9 @@ func Hello(name string) (string, error) {
 ```
 
 Constructing `hello name`, or converting it with `fromEffectFnAff`, does not run
-the Go function. Every execution starts a fresh operation. Installation returns
-the canceler immediately; blocking Go work runs in a worker goroutine.
+the Go function. Every execution starts a fresh operation. When the Aff action
+starts, the bridge immediately returns a canceler to the Aff runtime; blocking
+Go work runs in a worker goroutine.
 
 `nil` error means success. A non-nil error reaches the PureScript error callback
 with its Go identity preserved. A typed nil pointer stored in an `error`
@@ -100,10 +119,10 @@ cancels this context, with the cancellation error as its cause. The context is
 also released when the operation finishes.
 
 Success, error and cancellation have a single winner. Once a result wins,
-cancellation waits for its callback publication before acknowledging; the Aff
-port does not discard that published value. If cancellation wins, late results
-do not invoke the result callbacks. An action canceled before installation does
-not start the operation.
+cancellation waits for the result to be published through its callback before
+acknowledging cancellation; the Aff port does not discard that published value.
+If cancellation wins, late results do not invoke the result callbacks. An action
+canceled before the bridge is installed does not start the operation.
 
 An SDK that ignores context can continue after its caller stops waiting.
 Cancellation does not forcibly stop a goroutine or undo an SDK side effect.
@@ -115,10 +134,12 @@ responsibility.
 
 ## Handles and resource ownership
 
-Opaque PureScript foreign data can use native Go pointers or SDK handle types.
-The adapter transports them without requiring handwritten unboxing. Handle
-identity and nil pointers are retained. The SDK still defines whether a handle
-may be shared, closed twice or used after closure.
+An opaque handle gives PureScript a reference to a resource without exposing
+its Go fields. Declare it with `foreign import data`, and use a native Go
+pointer or SDK handle type in the implementation.
+The adapter transports these handles without requiring handwritten unboxing.
+Handle identity and nil pointers are retained. The SDK still defines whether
+a handle may be shared, closed twice or used after closure.
 
 For an acquisition that could return a resource after cancellation, return a
 cleanup function along with the ordinary result:
@@ -163,6 +184,8 @@ A plain `(T, error)` acquisition provides no automatic late-result cleanup.
 Use a masked acquisition/release bracket or the explicit cleanup result when
 ownership matters. The port's bracket masks acquisition, then releases a
 resource acquired after cancellation before returning the cancellation error.
+Here, masking means postponing cancellation while acquisition or release runs,
+so cancellation cannot leave a resource between those two responsibilities.
 
 ## Typed callbacks
 
@@ -263,8 +286,9 @@ such as `string` or `int64` when the PureScript contract supplies that type.
 
 The general generated bridge instantiates these Go type parameters with
 `gopurs_runtime.Value`, including occurrences inside callbacks and slices.
-The handwritten implementation does not need to import the runtime. This
-avoids converting every polymorphic element to `any`; it does not promise
+`Value` is the runtime's common representation for values that need a tag and
+payload. The handwritten implementation does not need to import the runtime.
+This avoids converting every polymorphic element to `any`; it does not promise
 native scalar specialization at every call or zero allocations. A Go
 constraint requiring arithmetic, ordering or SDK methods is not established
 by a PureScript type variable alone. Keep such operations in concrete
@@ -281,9 +305,10 @@ short-circuiting and preservation of input arrays.
 `Foreign` can cross as `any`, and `Array Foreign` as `[]any`. Values originating
 in PureScript are exposed as Go primitives and containers; a Go author need not
 inspect backend tags. Already-native opaque payloads retain their identity and
-numeric types. Native nil slices remain nil when transported as Foreign. Native
-`map[string]any` and `[]any` containers left by legacy FFI are also checked for
-nested boxed values. Only branches needing conversion are copied; wholly native
+numeric types. Native nil slices remain nil when transported as Foreign.
+
+Native `map[string]any` and `[]any` containers left by legacy FFI are also checked
+for nested boxed values. Only branches needing conversion are copied; wholly native
 subgraphs retain their identity. Cycles and repeated references to a converted
 child are preserved. Opaque structs and unrelated SDK types are not traversed.
 
@@ -292,13 +317,16 @@ false and zero are not collapsed into nil. Undefined travels as an opaque native
 marker, distinct from nil, and becomes PureScript undefined again when returned
 or passed to a callback. Transport retains keys with undefined values; the
 Foreign/JSON library applies omission only when the application asks it to
-serialize. The marker is not a normal Go data value for arbitrary SDKs or Go's
+serialize.
+
+The marker is not a normal Go data value for arbitrary SDKs or Go's
 JSON encoder: application serialization must run before those boundaries.
 SQL formatting, JSON serialization and conversions such as decimal-to-string
 remain application code. PureScript functions and algebraic constructors still
 require an explicit conversion to native data.
 
-Closed records map to locally declared Go structs, for example:
+A closed record has a complete, known set of fields. It maps to a locally
+declared Go struct, for example:
 
 ```purescript
 type Child = { active :: Boolean, label :: String }
@@ -348,8 +376,9 @@ when a library primitive needs one.
 
 ## Copying, aliases and mutation
 
-Treat PureScript arrays, records and polymorphic inputs as borrowed values.
-A pure FFI implementation must preserve them. Do not infer exclusive
+Treat PureScript arrays, records and polymorphic inputs as borrowed values:
+the caller retains ownership, and a pure FFI implementation must preserve them.
+Aliases are references to the same underlying storage. Do not infer exclusive
 ownership from a native signature or from a conversion happening in one
 generated path: direct native calls and generic slices can retain aliases.
 Allocate a result before updating an input; a slice or map copy is shallow
@@ -375,17 +404,20 @@ cover conversion, nested values and identity boundaries.
 
 Unsupported signatures report the PureScript module, handwritten Go path,
 declaration location, encountered Go/PureScript signatures and a corrective
-hint. Multiple results are preserved, including in callbacks; an unsupported
-shape is rejected instead of being truncated. Fixed-size arrays, variadic
-parameters and multiple-result callbacks currently require a supported boundary
-such as slices and single-result callbacks. Type aliases requiring unavailable
-external export data are not guessed from their spelling.
+hint. Signature analysis preserves every declared Go result, including callback
+results. A shape the adapter cannot support is rejected instead of being
+truncated. Fixed-size arrays, variadic parameters and multiple-result callbacks
+currently require a supported boundary such as slices and single-result
+callbacks. Type aliases requiring unavailable external export data are not
+guessed from their spelling.
 
 The standalone Go implementation and real PureScript imports are exercised by
 `tools/ffi-aff-e2e.test.mjs`. It compares an official JavaScript Aff reference
 with generated Go for both release and dev, including reused caches. The
 JavaScript compiler host uses the WASM Go parser; the native compiler host uses
 the same parser core. Neither claim makes network SDKs executable on Go/WASM.
+
+### Tests in a development checkout
 
 From a development checkout with its local library ports and typed frontend:
 
@@ -396,6 +428,8 @@ node --test tools/ffi-docs.test.mjs
 GOPURS_TEST_MODES=js node --test tools/ffi-aff-e2e.test.mjs
 GOPURS_TEST_MODES=native-parallel node --test tools/ffi-aff-e2e.test.mjs
 ```
+
+### Select the frontend
 
 These test runners honor `GOPURS_PURS` when several typed frontends are installed.
 Ordinary application `spago build` instead resolves `purs` through `PATH`; make
@@ -409,6 +443,8 @@ new compiler. In b8x, `b -c` clears that output after the frontend is installed.
 Build the compiler hosts before testing them. Native Aff ownership
 and legacy cancellation tests live in the separate `gopurs-aff` checkout:
 `node --test tools/aff-native.test.mjs`.
+
+### Test the packaged compiler
 
 The packaged-consumer check installs an actual tarball with `--ignore-scripts`
 and an empty npm cache. It exercises a stock-compiler JavaScript project before

@@ -1,8 +1,11 @@
 # Publication scope and compatibility policy
 
-Status: decision record for the first public release of `gopurs`. It defines
-what users may rely on. Qualification evidence is recorded separately in the
-[quality record](quality-0.1.0.md); the gates are defined in [release.md](release.md).
+This page defines which interfaces, platforms and toolchains a release promises
+to support. For installation, follow the [quickstart](quickstart.md). For a
+practical overview of compatibility gaps, read the [known limitations](limitations.md).
+
+The [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md) records the checks actually performed.
+The [release procedure](release.md) defines the checks required for publication.
 
 ## Release identity
 
@@ -24,7 +27,7 @@ guides at its tag when installing a published version.
 
 Consult the live [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
 for qualification and publication status. The
-[historical release checklist](release-checklist.md) retains the preparation state.
+[historical release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md) retains the preparation state.
 
 During `0.y.z`, a minor release may change or remove documented behavior. Patch
 releases do not intentionally break the compatibility commitments below.
@@ -37,27 +40,7 @@ artifact and installation path as the final release.
 The registry's `latest` and `next` channels can change independently of this
 checkout. Their names alone do not establish qualification. Publication,
 rollback and consumer checks are retained in the dated
-[quality record](quality-0.1.0.md).
-
-### Historical publication context through RC20
-
-The final `v0.1.1` publication and its successful CI run are recorded in the
-[dated quality record](quality-0.1.0.md#011-publication--13-november-2026).
-The following paragraphs retain the earlier candidate history.
-
-On 5 November 2026, RC14 was published as a [GitHub prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14)
-and on npm `next`. Its qualification and consumer checks are recorded in the
-[quality record](quality-0.1.0.md).
-RC15–RC20 introduced the ordinary Go FFI and updated frontend and library
-pins. Their failed or partial qualifications retain their original scope in
-the [quality record](quality-0.1.0.md). Version `0.1.1` uses the RC20 compiler
-and completed its bounded fixture and package recovery before publication.
-
-For the first npm publication, the registry also assigned `latest` to RC7 and
-refused its removal. This was explicitly accepted and documented in the
-[quality record](quality-0.1.0.md). At RC18 preparation on 12 November 2026,
-unqualified `npm install gopurs` selected RC7; that alias does not establish a
-stable-release compatibility claim.
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
 
 ## Compatibility commitments for `0.1.x`
 
@@ -145,7 +128,7 @@ Generated `go.mod` files declare Go 1.22. That declaration is not a support
 claim for older toolchains: only the reference Go version is validated for
 `0.1.1`. The initial CI validated the Nix packages, application checks and
 development shell on `aarch64-linux`, `x86_64-linux` and `aarch64-darwin`.
-The [quality record](quality-0.1.0.md) records 0.1.1 publication and its CI
+The [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md) records 0.1.1 publication and its CI
 qualification, together with the historical RC14 public consumer checks. The development shell is a
 development environment, not a production artifact.
 
@@ -194,3 +177,25 @@ A new runtime dependency must not be added without updating
 - A regenerated third-party inventory that matches the release bundle.
 - A release candidate installed and exercised through the documented npm path.
 - A changelog entry that states the compatibility impact of the release.
+
+## Publication history
+
+### Historical publication context through RC20
+
+The final `v0.1.1` publication and its successful CI run are recorded in the
+[dated quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md#011-publication--13-november-2026).
+The following paragraphs retain the earlier candidate history.
+
+On 5 November 2026, RC14 was published as a [GitHub prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14)
+and on npm `next`. Its qualification and consumer checks are recorded in the
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
+RC15–RC20 introduced the ordinary Go FFI and updated frontend and library
+pins. Their failed or partial qualifications retain their original scope in
+the [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md). Version `0.1.1` uses the RC20 compiler
+and completed its bounded fixture and package recovery before publication.
+
+For the first npm publication, the registry also assigned `latest` to RC7 and
+refused its removal. This was explicitly accepted and documented in the
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md). At RC18 preparation on 12 November 2026,
+unqualified `npm install gopurs` selected RC7; that alias does not establish a
+stable-release compatibility claim.
