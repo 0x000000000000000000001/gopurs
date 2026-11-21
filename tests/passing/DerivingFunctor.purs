@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert console lists prelude tuples
+
 import Prelude
 import Data.Eq (class Eq1)
 import Effect.Console (log)

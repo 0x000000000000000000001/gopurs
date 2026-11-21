@@ -30,16 +30,16 @@ func Get_Main_usesShowTwice() gopurs_runtime.Value {
 	return cache_Main_usesShowTwice
 }
 
-var cache_Main_usesShowTwice__2069622520 gopurs_runtime.Value
-var once_Main_usesShowTwice__2069622520 sync.Once
+var cache_Main_usesShowTwice__1840873002 gopurs_runtime.Value
+var once_Main_usesShowTwice__1840873002 sync.Once
 
-func Get_Main_usesShowTwice__2069622520() gopurs_runtime.Value {
-	once_Main_usesShowTwice__2069622520.Do(func() {
-		cache_Main_usesShowTwice__2069622520 = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, __eta_norm_0_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_usesShowTwice__2069622520((v_0_box.IntVal) != (0), __eta_norm_0_1_box.StrVal())
+func Get_Main_usesShowTwice__1840873002() gopurs_runtime.Value {
+	once_Main_usesShowTwice__1840873002.Do(func() {
+		cache_Main_usesShowTwice__1840873002 = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, __eta_norm_0_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_usesShowTwice__1840873002((v_0_box.IntVal) != (0), __eta_norm_0_1_box.StrVal())
 		})
 	})
-	return cache_Main_usesShowTwice__2069622520
+	return cache_Main_usesShowTwice__1840873002
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -88,11 +88,11 @@ end_branch_0:
 	return __t0
 }
 
-func Call_Main_usesShowTwice__2069622520(v_0_loop bool, __eta_norm_0_1_loop string) gopurs_runtime.Value {
-usesShowTwice__2069622520:
+func Call_Main_usesShowTwice__1840873002(v_0_loop bool, __eta_norm_0_1_loop string) gopurs_runtime.Value {
+usesShowTwice__1840873002:
 	for {
 		if false {
-			continue usesShowTwice__2069622520
+			continue usesShowTwice__1840873002
 		}
 		var v_0 bool = v_0_loop
 		_ = v_0

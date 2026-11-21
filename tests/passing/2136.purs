@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert console effect integers prelude refs
+
 import Prelude
 import Data.Int.Bits as Bits
 import Effect (Effect)

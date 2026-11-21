@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console
+
 import Effect.Console
 
 data List a = Nil | Cons a (List a)

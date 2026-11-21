@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console prelude st
+
 import Prelude
 import Effect.Console (log)
 import Control.Monad.ST as ST

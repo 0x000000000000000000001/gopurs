@@ -18,16 +18,16 @@ func Get_Main_reflect() gopurs_runtime.Value {
 	return cache_Main_reflect
 }
 
-var cache_Main_reflect__824790448 gopurs_runtime.Value
-var once_Main_reflect__824790448 sync.Once
+var cache_Main_reflect__124057165 gopurs_runtime.Value
+var once_Main_reflect__124057165 sync.Once
 
-func Get_Main_reflect__824790448() gopurs_runtime.Value {
-	once_Main_reflect__824790448.Do(func() {
-		cache_Main_reflect__824790448 = gopurs_runtime.Func(func(dictReflectable_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_reflect__824790448(dictReflectable_0_box)
+func Get_Main_reflect__124057165() gopurs_runtime.Value {
+	once_Main_reflect__124057165.Do(func() {
+		cache_Main_reflect__124057165 = gopurs_runtime.Func(func(dictReflectable_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_reflect__124057165(dictReflectable_0_box)
 		})
 	})
-	return cache_Main_reflect__824790448
+	return cache_Main_reflect__124057165
 }
 
 var cache_Main_use gopurs_runtime.Value
@@ -67,11 +67,11 @@ func Call_Main_reflect(dictReflectable_0_loop gopurs_runtime.Value) gopurs_runti
 	return gopurs_runtime.Apply(Call_Data_Reflectable_reflectType(gopurs_runtime.CoerceToStruct[Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, gopurs_runtime.Value]](dictReflectable_0)), gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil}.IntVal)), UnsafePtr: nil})
 }
 
-func Call_Main_reflect__824790448(dictReflectable_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-reflect__824790448:
+func Call_Main_reflect__124057165(dictReflectable_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+reflect__124057165:
 	for {
 		if false {
-			continue reflect__824790448
+			continue reflect__124057165
 		}
 		var dictReflectable_0 gopurs_runtime.Value = dictReflectable_0_loop
 		_ = dictReflectable_0

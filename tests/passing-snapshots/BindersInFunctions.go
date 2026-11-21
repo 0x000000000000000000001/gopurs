@@ -17,13 +17,13 @@ func Get_Main_snd() gopurs_runtime.Value {
 	return cache_Main_snd
 }
 
-var cache_Main_snd__3188547773 gopurs_runtime.Value
-var once_Main_snd__3188547773 sync.Once
+var cache_Main_snd__689548512 gopurs_runtime.Value
+var once_Main_snd__689548512 sync.Once
 
-func Get_Main_snd__3188547773() gopurs_runtime.Value {
-	once_Main_snd__3188547773.Do(func() {
-		cache_Main_snd__3188547773 = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Float(Call_Main_snd__3188547773(func() []float64 {
+func Get_Main_snd__689548512() gopurs_runtime.Value {
+	once_Main_snd__689548512.Do(func() {
+		cache_Main_snd__689548512 = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Float(Call_Main_snd__689548512(func() []float64 {
 				arr := *(*[]gopurs_runtime.Value)(v_0_box.UnsafePtr)
 				unboxed := make([]float64, len(arr))
 				for i, v := range arr {
@@ -33,7 +33,7 @@ func Get_Main_snd__3188547773() gopurs_runtime.Value {
 			}()))
 		})
 	})
-	return cache_Main_snd__3188547773
+	return cache_Main_snd__689548512
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -74,11 +74,11 @@ end_branch_0:
 	return __t0
 }
 
-func Call_Main_snd__3188547773(v_0_loop []float64) float64 {
-snd__3188547773:
+func Call_Main_snd__689548512(v_0_loop []float64) float64 {
+snd__689548512:
 	for {
 		if false {
-			continue snd__3188547773
+			continue snd__689548512
 		}
 		var v_0 []float64 = v_0_loop
 		_ = v_0

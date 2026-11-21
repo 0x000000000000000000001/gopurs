@@ -17,28 +17,28 @@ func Get_Main_sum() gopurs_runtime.Value {
 	return cache_Main_sum
 }
 
-var cache_Main_sum__1135989556 gopurs_runtime.Value
-var once_Main_sum__1135989556 sync.Once
+var cache_Main_sum__1139587456 gopurs_runtime.Value
+var once_Main_sum__1139587456 sync.Once
 
-func Get_Main_sum__1135989556() gopurs_runtime.Value {
-	once_Main_sum__1135989556.Do(func() {
-		cache_Main_sum__1135989556 = gopurs_runtime.Func2(func(x_0_box gopurs_runtime.Value, y_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_Main_sum__1135989556(x_0_box.IntVal, y_1_box.IntVal))
+func Get_Main_sum__1139587456() gopurs_runtime.Value {
+	once_Main_sum__1139587456.Do(func() {
+		cache_Main_sum__1139587456 = gopurs_runtime.Func2(func(x_0_box gopurs_runtime.Value, y_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Int(Call_Main_sum__1139587456(x_0_box.IntVal, y_1_box.IntVal))
 		})
 	})
-	return cache_Main_sum__1135989556
+	return cache_Main_sum__1139587456
 }
 
-var cache_Main_sum__2506932 gopurs_runtime.Value
-var once_Main_sum__2506932 sync.Once
+var cache_Main_sum__1069076592 gopurs_runtime.Value
+var once_Main_sum__1069076592 sync.Once
 
-func Get_Main_sum__2506932() gopurs_runtime.Value {
-	once_Main_sum__2506932.Do(func() {
-		cache_Main_sum__2506932 = gopurs_runtime.Func2(func(x_0_box gopurs_runtime.Value, y_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Float(Call_Main_sum__2506932(x_0_box.FloatVal(), y_1_box.FloatVal()))
+func Get_Main_sum__1069076592() gopurs_runtime.Value {
+	once_Main_sum__1069076592.Do(func() {
+		cache_Main_sum__1069076592 = gopurs_runtime.Func2(func(x_0_box gopurs_runtime.Value, y_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Float(Call_Main_sum__1069076592(x_0_box.FloatVal(), y_1_box.FloatVal()))
 		})
 	})
-	return cache_Main_sum__2506932
+	return cache_Main_sum__1069076592
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -67,11 +67,11 @@ func Call_Main_sum(dictSemiring_0_loop *Constructor_Data_Semiring_Semiring[gopur
 	return gopurs_runtime.Apply2(dictSemiring_0.V0, x_1, y_2)
 }
 
-func Call_Main_sum__1135989556(x_0_loop int64, y_1_loop int64) int64 {
-sum__1135989556:
+func Call_Main_sum__1139587456(x_0_loop int64, y_1_loop int64) int64 {
+sum__1139587456:
 	for {
 		if false {
-			continue sum__1135989556
+			continue sum__1139587456
 		}
 		var x_0 int64 = x_0_loop
 		_ = x_0
@@ -81,11 +81,11 @@ sum__1135989556:
 	}
 }
 
-func Call_Main_sum__2506932(x_0_loop float64, y_1_loop float64) float64 {
-sum__2506932:
+func Call_Main_sum__1069076592(x_0_loop float64, y_1_loop float64) float64 {
+sum__1069076592:
 	for {
 		if false {
-			continue sum__2506932
+			continue sum__1069076592
 		}
 		var x_0 float64 = x_0_loop
 		_ = x_0

@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console
+
 import Effect.Console (log)
 
 test0 = ((((\_ -> 0) :: b -> Int) :: forall b. b -> Int) :: forall a. a -> Int)

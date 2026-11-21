@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console
+
 import Effect.Console (log)
 
 foreign import data R :: forall k. Row k -> Type

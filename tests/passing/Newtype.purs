@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console effect prelude
+
 import Prelude hiding (apply)
 import Effect
 import Effect.Console

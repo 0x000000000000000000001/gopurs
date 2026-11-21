@@ -64,28 +64,28 @@ func Get_Main_solve() gopurs_runtime.Value {
 	return cache_Main_solve
 }
 
-var cache_Main_solve__1443272647 gopurs_runtime.Value
-var once_Main_solve__1443272647 sync.Once
+var cache_Main_solve__3124497303 gopurs_runtime.Value
+var once_Main_solve__3124497303 sync.Once
 
-func Get_Main_solve__1443272647() gopurs_runtime.Value {
-	once_Main_solve__1443272647.Do(func() {
-		cache_Main_solve__1443272647 = gopurs_runtime.Func2(func(v_unused_0_box gopurs_runtime.Value, v1_unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_solve__1443272647(uint32(v_unused_0_box.IntVal), uint32(v1_unused_1_box.IntVal))), UnsafePtr: nil}
+func Get_Main_solve__3124497303() gopurs_runtime.Value {
+	once_Main_solve__3124497303.Do(func() {
+		cache_Main_solve__3124497303 = gopurs_runtime.Func2(func(v_unused_0_box gopurs_runtime.Value, v1_unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_solve__3124497303(uint32(v_unused_0_box.IntVal), uint32(v1_unused_1_box.IntVal))), UnsafePtr: nil}
 		})
 	})
-	return cache_Main_solve__1443272647
+	return cache_Main_solve__3124497303
 }
 
-var cache_Main_solve__1751852117 gopurs_runtime.Value
-var once_Main_solve__1751852117 sync.Once
+var cache_Main_solve__589748727 gopurs_runtime.Value
+var once_Main_solve__589748727 sync.Once
 
-func Get_Main_solve__1751852117() gopurs_runtime.Value {
-	once_Main_solve__1751852117.Do(func() {
-		cache_Main_solve__1751852117 = gopurs_runtime.Func2(func(v_unused_0_box gopurs_runtime.Value, v1_unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_solve__1751852117(uint32(v_unused_0_box.IntVal), uint32(v1_unused_1_box.IntVal))), UnsafePtr: nil}
+func Get_Main_solve__589748727() gopurs_runtime.Value {
+	once_Main_solve__589748727.Do(func() {
+		cache_Main_solve__589748727 = gopurs_runtime.Func2(func(v_unused_0_box gopurs_runtime.Value, v1_unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_solve__589748727(uint32(v_unused_0_box.IntVal), uint32(v1_unused_1_box.IntVal))), UnsafePtr: nil}
 		})
 	})
-	return cache_Main_solve__1751852117
+	return cache_Main_solve__589748727
 }
 
 var cache_Main_solveUnionBackwardsCons gopurs_runtime.Value
@@ -481,11 +481,11 @@ func Call_Main_solve(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint
 	return 227768594
 }
 
-func Call_Main_solve__1443272647(v_unused_0_loop uint32, v1_unused_1_loop uint32) uint32 {
-solve__1443272647:
+func Call_Main_solve__3124497303(v_unused_0_loop uint32, v1_unused_1_loop uint32) uint32 {
+solve__3124497303:
 	for {
 		if false {
-			continue solve__1443272647
+			continue solve__3124497303
 		}
 		var v_unused_0 uint32 = v_unused_0_loop
 		_ = v_unused_0
@@ -495,11 +495,11 @@ solve__1443272647:
 	}
 }
 
-func Call_Main_solve__1751852117(v_unused_0_loop uint32, v1_unused_1_loop uint32) uint32 {
-solve__1751852117:
+func Call_Main_solve__589748727(v_unused_0_loop uint32, v1_unused_1_loop uint32) uint32 {
+solve__589748727:
 	for {
 		if false {
-			continue solve__1751852117
+			continue solve__589748727
 		}
 		var v_unused_0 uint32 = v_unused_0_loop
 		_ = v_unused_0

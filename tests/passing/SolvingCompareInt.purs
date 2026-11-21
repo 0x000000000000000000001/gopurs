@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console
+
 import Effect.Console (log)
 import Prim.Int (class Compare)
 import Prim.Ordering (EQ, GT, LT)

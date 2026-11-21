@@ -2,6 +2,8 @@
 
 module Main where
 
+-- @dependencies: console
+
 import Effect.Console (log)
 
 -- Nat : Type

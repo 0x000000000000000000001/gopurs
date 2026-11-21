@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console prelude
+
 import Prelude
 import Data.Monoid (class Monoid, mempty)
 import Effect.Console (log, logShow)

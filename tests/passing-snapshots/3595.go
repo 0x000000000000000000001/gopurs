@@ -86,16 +86,16 @@ func Get_Main_id() gopurs_runtime.Value {
 	return cache_Main_id
 }
 
-var cache_Main_id__3658769210 gopurs_runtime.Value
-var once_Main_id__3658769210 sync.Once
+var cache_Main_id__3974671055 gopurs_runtime.Value
+var once_Main_id__3974671055 sync.Once
 
-func Get_Main_id__3658769210() gopurs_runtime.Value {
-	once_Main_id__3658769210.Do(func() {
-		cache_Main_id__3658769210 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_id__3658769210(__eta_norm_0_0_box.StrVal()))
+func Get_Main_id__3974671055() gopurs_runtime.Value {
+	once_Main_id__3974671055.Do(func() {
+		cache_Main_id__3974671055 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_id__3974671055(__eta_norm_0_0_box.StrVal()))
 		})
 	})
-	return cache_Main_id__3658769210
+	return cache_Main_id__3974671055
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -178,11 +178,11 @@ func Call_Main_id(dict_0_loop *Constructor_Main_Show[gopurs_runtime.Value]) gopu
 	return dict_0.V1
 }
 
-func Call_Main_id__3658769210(__eta_norm_0_0_loop string) string {
-id__3658769210:
+func Call_Main_id__3974671055(__eta_norm_0_0_loop string) string {
+id__3974671055:
 	for {
 		if false {
-			continue id__3658769210
+			continue id__3974671055
 		}
 		var __eta_norm_0_0 string = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0

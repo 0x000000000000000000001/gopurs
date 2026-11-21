@@ -3,6 +3,8 @@
 -- dictionary elimination code doesn't change semantics.
 module Main where
 
+-- @dependencies: console prelude
+
 import Prelude
 import Effect.Console (log)
 

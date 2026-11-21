@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console foldable-traversable maybe prelude
+
 import Prelude
 
 import Data.Foldable (fold)

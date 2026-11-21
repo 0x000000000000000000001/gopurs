@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console maybe prelude
+
 import Prelude
 import Prim.Row (class Union)
 

@@ -18,7 +18,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_1_1
 			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Main_readWhileDraining(), __local_var_1_1), gopurs_runtime.Value{})
 			_ = __local_var_2_2
-			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
+			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2660340401("", struct {
 				actual   bool
 				expected bool
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/

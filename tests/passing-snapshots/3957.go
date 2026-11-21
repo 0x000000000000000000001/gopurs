@@ -95,7 +95,7 @@ func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
-			__local_var_0_0 := Call_Test_Assert_assertEqual_prime___627669702("", struct {
+			__local_var_0_0 := Call_Test_Assert_assertEqual_prime___2813384465("", struct {
 				actual   int64
 				expected int64
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -103,13 +103,13 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_0_0
 			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = __local_var_1_1
-			__local_var_2_2 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+			__local_var_2_2 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2813384465("", struct {
 				actual   int64
 				expected int64
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_g(int64(100000)), int64(0)}), gopurs_runtime.Value{})
 			_ = __local_var_2_2
-			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2813384465("", struct {
 				actual   int64
 				expected int64
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -130,7 +130,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return __t4
 			}), int64(100000)), int64(20)}), gopurs_runtime.Value{})
 			_ = __local_var_3_3
-			__local_var_4_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+			__local_var_4_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2813384465("", struct {
 				actual   int64
 				expected int64
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/

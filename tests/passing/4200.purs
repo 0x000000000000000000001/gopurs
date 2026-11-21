@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console newtype
+
 import Data.Newtype (class Newtype)
 import Effect.Console (log)
 import Lib (TAlias)

@@ -17,16 +17,16 @@ func Get_Main_replicateM_() gopurs_runtime.Value {
 	return cache_Main_replicateM_
 }
 
-var cache_Main_replicateM___1903616512 gopurs_runtime.Value
-var once_Main_replicateM___1903616512 sync.Once
+var cache_Main_replicateM___919591297 gopurs_runtime.Value
+var once_Main_replicateM___919591297 sync.Once
 
-func Get_Main_replicateM___1903616512() gopurs_runtime.Value {
-	once_Main_replicateM___1903616512.Do(func() {
-		cache_Main_replicateM___1903616512 = gopurs_runtime.Func2(func(__eta_norm_1_0_box gopurs_runtime.Value, __eta_norm_0_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_replicateM___1903616512(__eta_norm_1_0_box.FloatVal(), __eta_norm_0_1_box)
+func Get_Main_replicateM___919591297() gopurs_runtime.Value {
+	once_Main_replicateM___919591297.Do(func() {
+		cache_Main_replicateM___919591297 = gopurs_runtime.Func2(func(__eta_norm_1_0_box gopurs_runtime.Value, __eta_norm_0_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_replicateM___919591297(__eta_norm_1_0_box.FloatVal(), __eta_norm_0_1_box)
 		})
 	})
-	return cache_Main_replicateM___1903616512
+	return cache_Main_replicateM___919591297
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -36,7 +36,7 @@ func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
-			__local_var_0_0 := Call_Main_replicateM___1903616512(10.0, gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Hello World!")))
+			__local_var_0_0 := Call_Main_replicateM___919591297(10.0, gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Hello World!")))
 			_ = __local_var_0_0
 			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = __local_var_1_1
@@ -81,11 +81,11 @@ replicateM_:
 	}
 }
 
-func Call_Main_replicateM___1903616512(__eta_norm_1_0_loop float64, __eta_norm_0_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
-replicateM___1903616512:
+func Call_Main_replicateM___919591297(__eta_norm_1_0_loop float64, __eta_norm_0_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
+replicateM___919591297:
 	for {
 		if false {
-			continue replicateM___1903616512
+			continue replicateM___919591297
 		}
 		var __eta_norm_1_0 float64 = __eta_norm_1_0_loop
 		_ = __eta_norm_1_0

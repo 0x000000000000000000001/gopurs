@@ -2,6 +2,8 @@
 
 module Main where
 
+-- @dependencies: console prelude
+
 import Prelude
 import Effect.Console
 

@@ -91,40 +91,40 @@ func Get_Main_ctorKind() gopurs_runtime.Value {
 	return cache_Main_ctorKind
 }
 
-var cache_Main_ctorKind__2741176445 gopurs_runtime.Value
-var once_Main_ctorKind__2741176445 sync.Once
+var cache_Main_ctorKind__901628163 gopurs_runtime.Value
+var once_Main_ctorKind__901628163 sync.Once
 
-func Get_Main_ctorKind__2741176445() gopurs_runtime.Value {
-	once_Main_ctorKind__2741176445.Do(func() {
-		cache_Main_ctorKind__2741176445 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_ctorKind__2741176445(uint32(v_unused_0_box.IntVal))), UnsafePtr: nil}
+func Get_Main_ctorKind__901628163() gopurs_runtime.Value {
+	once_Main_ctorKind__901628163.Do(func() {
+		cache_Main_ctorKind__901628163 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_ctorKind__901628163(uint32(v_unused_0_box.IntVal))), UnsafePtr: nil}
 		})
 	})
-	return cache_Main_ctorKind__2741176445
+	return cache_Main_ctorKind__901628163
 }
 
-var cache_Main_ctorKind__2591957949 gopurs_runtime.Value
-var once_Main_ctorKind__2591957949 sync.Once
+var cache_Main_ctorKind__342703587 gopurs_runtime.Value
+var once_Main_ctorKind__342703587 sync.Once
 
-func Get_Main_ctorKind__2591957949() gopurs_runtime.Value {
-	once_Main_ctorKind__2591957949.Do(func() {
-		cache_Main_ctorKind__2591957949 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_ctorKind__2591957949(uint32(v_unused_0_box.IntVal))), UnsafePtr: nil}
+func Get_Main_ctorKind__342703587() gopurs_runtime.Value {
+	once_Main_ctorKind__342703587.Do(func() {
+		cache_Main_ctorKind__342703587 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_ctorKind__342703587(uint32(v_unused_0_box.IntVal))), UnsafePtr: nil}
 		})
 	})
-	return cache_Main_ctorKind__2591957949
+	return cache_Main_ctorKind__342703587
 }
 
-var cache_Main_ctorKind__3668580157 gopurs_runtime.Value
-var once_Main_ctorKind__3668580157 sync.Once
+var cache_Main_ctorKind__3723349091 gopurs_runtime.Value
+var once_Main_ctorKind__3723349091 sync.Once
 
-func Get_Main_ctorKind__3668580157() gopurs_runtime.Value {
-	once_Main_ctorKind__3668580157.Do(func() {
-		cache_Main_ctorKind__3668580157 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_ctorKind__3668580157(uint32(v_unused_0_box.IntVal))), UnsafePtr: nil}
+func Get_Main_ctorKind__3723349091() gopurs_runtime.Value {
+	once_Main_ctorKind__3723349091.Do(func() {
+		cache_Main_ctorKind__3723349091 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_ctorKind__3723349091(uint32(v_unused_0_box.IntVal))), UnsafePtr: nil}
 		})
 	})
-	return cache_Main_ctorKind__3668580157
+	return cache_Main_ctorKind__3723349091
 }
 
 var cache_Main_testCtor1 gopurs_runtime.Value
@@ -215,11 +215,11 @@ func Call_Main_ctorKind(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop u
 	return 227768594
 }
 
-func Call_Main_ctorKind__2741176445(v_unused_0_loop uint32) uint32 {
-ctorKind__2741176445:
+func Call_Main_ctorKind__901628163(v_unused_0_loop uint32) uint32 {
+ctorKind__901628163:
 	for {
 		if false {
-			continue ctorKind__2741176445
+			continue ctorKind__901628163
 		}
 		var v_unused_0 uint32 = v_unused_0_loop
 		_ = v_unused_0
@@ -227,11 +227,11 @@ ctorKind__2741176445:
 	}
 }
 
-func Call_Main_ctorKind__2591957949(v_unused_0_loop uint32) uint32 {
-ctorKind__2591957949:
+func Call_Main_ctorKind__342703587(v_unused_0_loop uint32) uint32 {
+ctorKind__342703587:
 	for {
 		if false {
-			continue ctorKind__2591957949
+			continue ctorKind__342703587
 		}
 		var v_unused_0 uint32 = v_unused_0_loop
 		_ = v_unused_0
@@ -239,11 +239,11 @@ ctorKind__2591957949:
 	}
 }
 
-func Call_Main_ctorKind__3668580157(v_unused_0_loop uint32) uint32 {
-ctorKind__3668580157:
+func Call_Main_ctorKind__3723349091(v_unused_0_loop uint32) uint32 {
+ctorKind__3723349091:
 	for {
 		if false {
-			continue ctorKind__3668580157
+			continue ctorKind__3723349091
 		}
 		var v_unused_0 uint32 = v_unused_0_loop
 		_ = v_unused_0

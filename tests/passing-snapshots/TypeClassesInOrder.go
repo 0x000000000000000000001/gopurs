@@ -78,16 +78,16 @@ func Get_Main_foo() gopurs_runtime.Value {
 	return cache_Main_foo
 }
 
-var cache_Main_foo__3108595935 gopurs_runtime.Value
-var once_Main_foo__3108595935 sync.Once
+var cache_Main_foo__3182797071 gopurs_runtime.Value
+var once_Main_foo__3182797071 sync.Once
 
-func Get_Main_foo__3108595935() gopurs_runtime.Value {
-	once_Main_foo__3108595935.Do(func() {
-		cache_Main_foo__3108595935 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foo__3108595935(__eta_norm_0_0_box.StrVal()))
+func Get_Main_foo__3182797071() gopurs_runtime.Value {
+	once_Main_foo__3182797071.Do(func() {
+		cache_Main_foo__3182797071 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foo__3182797071(__eta_norm_0_0_box.StrVal()))
 		})
 	})
-	return cache_Main_foo__3108595935
+	return cache_Main_foo__3182797071
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -163,11 +163,11 @@ func Call_Main_foo(dict_0_loop *Constructor_Main_Foo[gopurs_runtime.Value]) gopu
 	return dict_0.V0
 }
 
-func Call_Main_foo__3108595935(__eta_norm_0_0_loop string) string {
-foo__3108595935:
+func Call_Main_foo__3182797071(__eta_norm_0_0_loop string) string {
+foo__3182797071:
 	for {
 		if false {
-			continue foo__3108595935
+			continue foo__3182797071
 		}
 		var __eta_norm_0_0 string = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0

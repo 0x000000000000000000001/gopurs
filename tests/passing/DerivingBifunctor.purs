@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: bifunctors console contravariant foldable-traversable prelude tuples
+
 import Prelude
 
 import Data.Bifoldable (class Bifoldable)

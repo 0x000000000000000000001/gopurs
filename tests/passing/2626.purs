@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: prelude effect console
+
 import Effect.Console (log)
 
 f = \(x :: forall a. a -> a) -> x x

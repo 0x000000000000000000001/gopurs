@@ -17,16 +17,16 @@ func Get_Main_shout() gopurs_runtime.Value {
 	return cache_Main_shout
 }
 
-var cache_Main_shout__2753497937 gopurs_runtime.Value
-var once_Main_shout__2753497937 sync.Once
+var cache_Main_shout__1418574979 gopurs_runtime.Value
+var once_Main_shout__1418574979 sync.Once
 
-func Get_Main_shout__2753497937() gopurs_runtime.Value {
-	once_Main_shout__2753497937.Do(func() {
-		cache_Main_shout__2753497937 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_shout__2753497937(__eta_norm_0_0_box.StrVal())
+func Get_Main_shout__1418574979() gopurs_runtime.Value {
+	once_Main_shout__1418574979.Do(func() {
+		cache_Main_shout__1418574979 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_shout__1418574979(__eta_norm_0_0_box.StrVal())
 		})
 	})
-	return cache_Main_shout__2753497937
+	return cache_Main_shout__1418574979
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -36,7 +36,7 @@ func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
-			__local_var_0_0 := Call_Main_shout__2753497937("Test")
+			__local_var_0_0 := Call_Main_shout__1418574979("Test")
 			_ = __local_var_0_0
 			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = __local_var_1_1
@@ -54,11 +54,11 @@ func Call_Main_shout(dictShow_0_loop *Constructor_Data_Show_Show[gopurs_runtime.
 	}), Call_Data_Show_show(dictShow_0)))
 }
 
-func Call_Main_shout__2753497937(__eta_norm_0_0_loop string) gopurs_runtime.Value {
-shout__2753497937:
+func Call_Main_shout__1418574979(__eta_norm_0_0_loop string) gopurs_runtime.Value {
+shout__1418574979:
 	for {
 		if false {
-			continue shout__2753497937
+			continue shout__1418574979
 		}
 		var __eta_norm_0_0 string = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0

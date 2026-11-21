@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: aff avar console effect prelude
+
 import Prelude
 import Effect (Effect)
 import Effect.Console (log, logShow)

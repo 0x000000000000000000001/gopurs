@@ -168,38 +168,6 @@ func Get_Main_priority() gopurs_runtime.Value {
 	return cache_Main_priority
 }
 
-var cache_Main_priority__3373190335 gopurs_runtime.Value
-var once_Main_priority__3373190335 sync.Once
-
-func Get_Main_priority__3373190335() gopurs_runtime.Value {
-	once_Main_priority__3373190335.Do(func() {
-		cache_Main_priority__3373190335 = gopurs_runtime.Value{Type: 9, IntVal: int64(1097047119), UnsafePtr: nil}
-	})
-	return cache_Main_priority__3373190335
-}
-
-var cache_Main_priority__3023229849 gopurs_runtime.Value
-var once_Main_priority__3023229849 sync.Once
-
-func Get_Main_priority__3023229849() gopurs_runtime.Value {
-	once_Main_priority__3023229849.Do(func() {
-		cache_Main_priority__3023229849 = gopurs_runtime.Value{Type: 9, IntVal: int64(4067170750), UnsafePtr: nil}
-	})
-	return cache_Main_priority__3023229849
-}
-
-var cache_Main_priority__4145524652 gopurs_runtime.Value
-var once_Main_priority__4145524652 sync.Once
-
-func Get_Main_priority__4145524652() gopurs_runtime.Value {
-	once_Main_priority__4145524652.Do(func() {
-		cache_Main_priority__4145524652 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_priority__4145524652(dict_0_box)
-		})
-	})
-	return cache_Main_priority__4145524652
-}
-
 var cache_Main_isSafe gopurs_runtime.Value
 var once_Main_isSafe sync.Once
 
@@ -212,32 +180,32 @@ func Get_Main_isSafe() gopurs_runtime.Value {
 	return cache_Main_isSafe
 }
 
-var cache_Main_isSafe__735247059 gopurs_runtime.Value
-var once_Main_isSafe__735247059 sync.Once
+var cache_Main_isSafe__3480060501 gopurs_runtime.Value
+var once_Main_isSafe__3480060501 sync.Once
 
-func Get_Main_isSafe__735247059() gopurs_runtime.Value {
-	once_Main_isSafe__735247059.Do(func() {
-		cache_Main_isSafe__735247059 = func() gopurs_runtime.Value {
+func Get_Main_isSafe__3480060501() gopurs_runtime.Value {
+	once_Main_isSafe__3480060501.Do(func() {
+		cache_Main_isSafe__3480060501 = func() gopurs_runtime.Value {
 			var __t_tag_0 gopurs_runtime.Value = Call_Main_priority(gopurs_runtime.Value{Type: 9, IntVal: 2242194644, UnsafePtr: unsafe.Pointer(Rebox_Main_3555759771_48729792(Rebox_Main_48729792_3555759771(gopurs_runtime.CoerceToStruct[Constructor_Main_Protected[gopurs_runtime.Value]](Get_Main_protectedInt()))))})
 			_ = __t_tag_0
 			return gopurs_runtime.Bool((uint32(__t_tag_0.IntVal) == 1097047119))
 		}()
 	})
-	return cache_Main_isSafe__735247059
+	return cache_Main_isSafe__3480060501
 }
 
-var cache_Main_isSafe__916403509 gopurs_runtime.Value
-var once_Main_isSafe__916403509 sync.Once
+var cache_Main_isSafe__4226065267 gopurs_runtime.Value
+var once_Main_isSafe__4226065267 sync.Once
 
-func Get_Main_isSafe__916403509() gopurs_runtime.Value {
-	once_Main_isSafe__916403509.Do(func() {
-		cache_Main_isSafe__916403509 = func() gopurs_runtime.Value {
+func Get_Main_isSafe__4226065267() gopurs_runtime.Value {
+	once_Main_isSafe__4226065267.Do(func() {
+		cache_Main_isSafe__4226065267 = func() gopurs_runtime.Value {
 			var __t_tag_0 gopurs_runtime.Value = Call_Main_priority(gopurs_runtime.Value{Type: 9, IntVal: 2242194644, UnsafePtr: unsafe.Pointer(Rebox_Main_2202314751_48729792(Rebox_Main_48729792_2202314751(gopurs_runtime.CoerceToStruct[Constructor_Main_Protected[gopurs_runtime.Value]](Get_Main_protectedString()))))})
 			_ = __t_tag_0
 			return gopurs_runtime.Bool((uint32(__t_tag_0.IntVal) == 1097047119))
 		}()
 	})
-	return cache_Main_isSafe__916403509
+	return cache_Main_isSafe__4226065267
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -247,7 +215,7 @@ func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
-			__local_var_0_0 := Call_Test_Assert_assertEqual_prime___1138829510("", struct {
+			__local_var_0_0 := Call_Test_Assert_assertEqual_prime___2660340401("", struct {
 				actual   bool
 				expected bool
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -255,7 +223,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_0_0
 			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = __local_var_1_1
-			__local_var_2_2 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
+			__local_var_2_2 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2660340401("", struct {
 				actual   bool
 				expected bool
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -358,18 +326,6 @@ func Call_Main_priority(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dict_0 gopurs_runtime.Value = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.RecordGet(dict_0, "priority").IntVal)), UnsafePtr: nil}
-}
-
-func Call_Main_priority__4145524652(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-priority__4145524652:
-	for {
-		if false {
-			continue priority__4145524652
-		}
-		var dict_0 gopurs_runtime.Value = dict_0_loop
-		_ = dict_0
-		return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.RecordGet(dict_0, "priority").IntVal)), UnsafePtr: nil}
-	}
 }
 
 func Call_Main_isSafe(dictProtected_0_loop gopurs_runtime.Value) gopurs_runtime.Value {

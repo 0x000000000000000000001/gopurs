@@ -83,16 +83,16 @@ func Get_Main_test() gopurs_runtime.Value {
 	return cache_Main_test
 }
 
-var cache_Main_test__2521650171 gopurs_runtime.Value
-var once_Main_test__2521650171 sync.Once
+var cache_Main_test__1170470205 gopurs_runtime.Value
+var once_Main_test__1170470205 sync.Once
 
-func Get_Main_test__2521650171() gopurs_runtime.Value {
-	once_Main_test__2521650171.Do(func() {
-		cache_Main_test__2521650171 = gopurs_runtime.Func(func(a_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_test__2521650171(a_0_box.StrVal()))
+func Get_Main_test__1170470205() gopurs_runtime.Value {
+	once_Main_test__1170470205.Do(func() {
+		cache_Main_test__1170470205 = gopurs_runtime.Func(func(a_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_test__1170470205(a_0_box.StrVal()))
 		})
 	})
-	return cache_Main_test__2521650171
+	return cache_Main_test__1170470205
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -168,11 +168,11 @@ func Call_Main_test(_dollar___unused_0_loop gopurs_runtime.Value, a_1_loop gopur
 	return a_1
 }
 
-func Call_Main_test__2521650171(a_0_loop string) string {
-test__2521650171:
+func Call_Main_test__1170470205(a_0_loop string) string {
+test__1170470205:
 	for {
 		if false {
-			continue test__2521650171
+			continue test__1170470205
 		}
 		var a_0 string = a_0_loop
 		_ = a_0

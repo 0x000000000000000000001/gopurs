@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console contravariant prelude
+
 import Prelude
 
 import Data.Predicate (Predicate)

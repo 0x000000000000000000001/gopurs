@@ -59,14 +59,14 @@ func Get_Main_foldMap() gopurs_runtime.Value {
 	return cache_Main_foldMap
 }
 
-var cache_Main_foldMap__869368821 gopurs_runtime.Value
-var once_Main_foldMap__869368821 sync.Once
+var cache_Main_foldMap__544411207 gopurs_runtime.Value
+var once_Main_foldMap__544411207 sync.Once
 
-func Get_Main_foldMap__869368821() gopurs_runtime.Value {
-	once_Main_foldMap__869368821.Do(func() {
-		cache_Main_foldMap__869368821 = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+func Get_Main_foldMap__544411207() gopurs_runtime.Value {
+	once_Main_foldMap__544411207.Do(func() {
+		cache_Main_foldMap__544411207 = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return func() gopurs_runtime.Value {
-				arr := Call_Main_foldMap__869368821(v_0_box, func() []int64 {
+				arr := Call_Main_foldMap__544411207(v_0_box, func() []int64 {
 					arr := *(*[]gopurs_runtime.Value)(v1_1_box.UnsafePtr)
 					unboxed := make([]int64, len(arr))
 					for i, v := range arr {
@@ -82,7 +82,7 @@ func Get_Main_foldMap__869368821() gopurs_runtime.Value {
 			}()
 		})
 	})
-	return cache_Main_foldMap__869368821
+	return cache_Main_foldMap__544411207
 }
 
 var cache_Main_empty gopurs_runtime.Value
@@ -101,7 +101,7 @@ var once_Main_regression sync.Once
 func Get_Main_regression() gopurs_runtime.Value {
 	once_Main_regression.Do(func() {
 		cache_Main_regression = func() gopurs_runtime.Value {
-			arr := Call_Main_foldMap__869368821(gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			arr := Call_Main_foldMap__544411207(gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				var __t0 gopurs_runtime.Value
 				{
 					if ((int64(1)) < (x_0.IntVal)) && ((x_0.IntVal) < (int64(4))) {
@@ -192,11 +192,11 @@ foldMap:
 	}
 }
 
-func Call_Main_foldMap__869368821(v_0_loop gopurs_runtime.Value, v1_1_loop []int64) []int64 {
-foldMap__869368821:
+func Call_Main_foldMap__544411207(v_0_loop gopurs_runtime.Value, v1_1_loop []int64) []int64 {
+foldMap__544411207:
 	for {
 		if false {
-			continue foldMap__869368821
+			continue foldMap__544411207
 		}
 		var v_0 gopurs_runtime.Value = v_0_loop
 		_ = v_0

@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert console effect prelude refs
+
 import Prelude ((==), (/=), (<>), discard, bind, pure, Unit)
 import Effect (Effect)
 import Effect.Ref as Ref

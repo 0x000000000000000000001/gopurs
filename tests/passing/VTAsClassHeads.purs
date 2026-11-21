@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: arrays console effect either foldable-traversable maybe prelude
+
 import Prelude
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA

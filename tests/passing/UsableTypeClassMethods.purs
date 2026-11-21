@@ -2,6 +2,8 @@
 -- class methods that should be valid based on various configurations of fundeps
 module Main where
 
+-- @dependencies: console
+
 import Effect.Console (log)
 
 -- no fundeps

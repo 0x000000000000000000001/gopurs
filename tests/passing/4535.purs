@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console effect maybe prelude tuples
+
 import Prelude
 
 import Data.Maybe (Maybe(..))

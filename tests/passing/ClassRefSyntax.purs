@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console
+
 import Lib (class X, go)
 import Effect.Console (log)
 

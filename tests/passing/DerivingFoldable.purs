@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert console foldable-traversable prelude
+
 import Prelude
 import Effect.Console (log)
 import Data.Foldable (class Foldable, foldl, foldr, foldMap)

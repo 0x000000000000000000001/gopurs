@@ -377,16 +377,16 @@ func Get_Main_check() gopurs_runtime.Value {
 	return cache_Main_check
 }
 
-var cache_Main_check__3900443344 gopurs_runtime.Value
-var once_Main_check__3900443344 sync.Once
+var cache_Main_check__1859319239 gopurs_runtime.Value
+var once_Main_check__1859319239 sync.Once
 
-func Get_Main_check__3900443344() gopurs_runtime.Value {
-	once_Main_check__3900443344.Do(func() {
-		cache_Main_check__3900443344 = gopurs_runtime.Func2(func(l_unused_0_box gopurs_runtime.Value, r_unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool(Call_Main_check__3900443344(l_unused_0_box, r_unused_1_box))
+func Get_Main_check__1859319239() gopurs_runtime.Value {
+	once_Main_check__1859319239.Do(func() {
+		cache_Main_check__1859319239 = gopurs_runtime.Func2(func(l_unused_0_box gopurs_runtime.Value, r_unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Bool(Call_Main_check__1859319239(l_unused_0_box, r_unused_1_box))
 		})
 	})
-	return cache_Main_check__3900443344
+	return cache_Main_check__1859319239
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -397,7 +397,7 @@ func Get_Main_main() gopurs_runtime.Value {
 		cache_Main_main = func() gopurs_runtime.Value {
 			var __t0 gopurs_runtime.Value
 			{
-				if Call_Main_check__3900443344(func() gopurs_runtime.Value {
+				if Call_Main_check__1859319239(func() gopurs_runtime.Value {
 					orig := func() struct {
 						bar struct {
 							baz int64
@@ -594,11 +594,11 @@ func Call_Main_check(dictEq_0_loop *Constructor_Data_Eq_Eq[gopurs_runtime.Value]
 	return ((gopurs_runtime.Apply2(dictEq_0.V0, gopurs_runtime.RecordGet(l_4, "foo"), gopurs_runtime.RecordGet(r_5, "foo")).IntVal) != (0)) && (((gopurs_runtime.Apply2(dictEq1_1.V0, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(l_4, "bar"), "baz"), gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(r_5, "bar"), "baz")).IntVal) != (0)) && (((gopurs_runtime.Apply2(dictEq2_2.V0, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(l_4, "bar"), "qux"), "lhs"), gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(r_5, "bar"), "qux"), "lhs")).IntVal) != (0)) && ((gopurs_runtime.Apply2(dictEq3_3.V0, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(l_4, "bar"), "qux"), "rhs"), gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(r_5, "bar"), "qux"), "rhs")).IntVal) != (0))))
 }
 
-func Call_Main_check__3900443344(l_unused_0_loop gopurs_runtime.Value, r_unused_1_loop gopurs_runtime.Value) bool {
-check__3900443344:
+func Call_Main_check__1859319239(l_unused_0_loop gopurs_runtime.Value, r_unused_1_loop gopurs_runtime.Value) bool {
+check__1859319239:
 	for {
 		if false {
-			continue check__3900443344
+			continue check__1859319239
 		}
 		var l_unused_0 gopurs_runtime.Value = l_unused_0_loop
 		_ = l_unused_0

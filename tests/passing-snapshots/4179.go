@@ -301,7 +301,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_2_3
 			__local_var_3_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Test_Assert_assert(), gopurs_runtime.Bool(((gopurs_runtime.Apply3(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), Get_Data_Maybe_isJust(), gopurs_runtime.Apply(Get_Data_String_CodeUnits_indexOf(), gopurs_runtime.Str("interface conversion")), gopurs_runtime.Str(__local_var_2_3.StrVal())).IntVal) != (0)) || (((gopurs_runtime.Apply3(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), Get_Data_Maybe_isJust(), gopurs_runtime.Apply(Get_Data_String_CodeUnits_indexOf(), gopurs_runtime.Str("Attempt to read property")), gopurs_runtime.Str(__local_var_2_3.StrVal())).IntVal) != (0)) || ((gopurs_runtime.Apply3(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), Get_Data_Maybe_isJust(), gopurs_runtime.Apply(Get_Data_String_CodeUnits_indexOf(), gopurs_runtime.Str("nil pointer")), gopurs_runtime.Str(__local_var_2_3.StrVal())).IntVal) != (0))))), gopurs_runtime.Value{})
 			_ = __local_var_3_8
-			__local_var_4_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+			__local_var_4_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2813384465("", struct {
 				actual   int64
 				expected int64
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -319,7 +319,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			}()))))}, Get_Data_Maybe_Just(), gopurs_runtime.Str("InitializationError"), gopurs_runtime.Func(func(err3_5 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 					// TAST (Let): __local_var_6_10 shape=App(Var) bindingType=Any
-					__local_var_6_10 := Call_Test_Assert_assertEqual_prime___1138829510("", struct {
+					__local_var_6_10 := Call_Test_Assert_assertEqual_prime___2660340401("", struct {
 						actual   bool
 						expected bool
 						/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/

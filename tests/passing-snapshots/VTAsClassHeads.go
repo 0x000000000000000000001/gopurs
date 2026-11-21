@@ -879,24 +879,24 @@ func Get_Main_singleton() gopurs_runtime.Value {
 	return cache_Main_singleton
 }
 
-var cache_Main_singleton__1504212583 gopurs_runtime.Value
-var once_Main_singleton__1504212583 sync.Once
+var cache_Main_singleton__801441668 gopurs_runtime.Value
+var once_Main_singleton__801441668 sync.Once
 
-func Get_Main_singleton__1504212583() gopurs_runtime.Value {
-	once_Main_singleton__1504212583.Do(func() {
-		cache_Main_singleton__1504212583 = gopurs_runtime.Str("int")
+func Get_Main_singleton__801441668() gopurs_runtime.Value {
+	once_Main_singleton__801441668.Do(func() {
+		cache_Main_singleton__801441668 = gopurs_runtime.Str("int")
 	})
-	return cache_Main_singleton__1504212583
+	return cache_Main_singleton__801441668
 }
 
-var cache_Main_singleton__2934422209 gopurs_runtime.Value
-var once_Main_singleton__2934422209 sync.Once
+var cache_Main_singleton__2709102498 gopurs_runtime.Value
+var once_Main_singleton__2709102498 sync.Once
 
-func Get_Main_singleton__2934422209() gopurs_runtime.Value {
-	once_Main_singleton__2934422209.Do(func() {
-		cache_Main_singleton__2934422209 = gopurs_runtime.Str("string")
+func Get_Main_singleton__2709102498() gopurs_runtime.Value {
+	once_Main_singleton__2709102498.Do(func() {
+		cache_Main_singleton__2709102498 = gopurs_runtime.Str("string")
 	})
-	return cache_Main_singleton__2934422209
+	return cache_Main_singleton__2709102498
 }
 
 var cache_Main_singletonWorks gopurs_runtime.Value
@@ -960,22 +960,6 @@ func Get_Main_partialOfABSet() gopurs_runtime.Value {
 	return cache_Main_partialOfABSet
 }
 
-var cache_Main_partialOfABSet__1140860974 gopurs_runtime.Value
-var once_Main_partialOfABSet__1140860974 sync.Once
-
-func Get_Main_partialOfABSet__1140860974() gopurs_runtime.Value {
-	once_Main_partialOfABSet__1140860974.Do(func() {
-		cache_Main_partialOfABSet__1140860974 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return func() gopurs_runtime.Value {
-				orig := Call_Main_partialOfABSet__1140860974((__eta_norm_0_0_box.IntVal) != (0))
-				_ = orig
-				return gopurs_runtime.RecordDict2("c", "d", gopurs_runtime.Bool(orig.c), gopurs_runtime.Bool(orig.d))
-			}()
-		})
-	})
-	return cache_Main_partialOfABSet__1140860974
-}
-
 var cache_Main_noneOfSets gopurs_runtime.Value
 var once_Main_noneOfSets sync.Once
 
@@ -986,26 +970,6 @@ func Get_Main_noneOfSets() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_noneOfSets
-}
-
-var cache_Main_noneOfSets__3742244302 gopurs_runtime.Value
-var once_Main_noneOfSets__3742244302 sync.Once
-
-func Get_Main_noneOfSets__3742244302() gopurs_runtime.Value {
-	once_Main_noneOfSets__3742244302.Do(func() {
-		cache_Main_noneOfSets__3742244302 = gopurs_runtime.Int(int64(1))
-	})
-	return cache_Main_noneOfSets__3742244302
-}
-
-var cache_Main_noneOfSets__215838447 gopurs_runtime.Value
-var once_Main_noneOfSets__215838447 sync.Once
-
-func Get_Main_noneOfSets__215838447() gopurs_runtime.Value {
-	once_Main_noneOfSets__215838447.Do(func() {
-		cache_Main_noneOfSets__215838447 = gopurs_runtime.Int(int64(2))
-	})
-	return cache_Main_noneOfSets__215838447
 }
 
 var cache_Main_multiWithFDs gopurs_runtime.Value
@@ -1067,26 +1031,6 @@ func Get_Main_multiWithBidiFDs() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_multiWithBidiFDs
-}
-
-var cache_Main_multiWithBidiFDs__110895617 gopurs_runtime.Value
-var once_Main_multiWithBidiFDs__110895617 sync.Once
-
-func Get_Main_multiWithBidiFDs__110895617() gopurs_runtime.Value {
-	once_Main_multiWithBidiFDs__110895617.Do(func() {
-		cache_Main_multiWithBidiFDs__110895617 = gopurs_runtime.Int(int64(0))
-	})
-	return cache_Main_multiWithBidiFDs__110895617
-}
-
-var cache_Main_multiWithBidiFDs__3832959361 gopurs_runtime.Value
-var once_Main_multiWithBidiFDs__3832959361 sync.Once
-
-func Get_Main_multiWithBidiFDs__3832959361() gopurs_runtime.Value {
-	once_Main_multiWithBidiFDs__3832959361.Do(func() {
-		cache_Main_multiWithBidiFDs__3832959361 = gopurs_runtime.Int(int64(1))
-	})
-	return cache_Main_multiWithBidiFDs__3832959361
 }
 
 var cache_Main_multiWithBidiFDsLeftWorks gopurs_runtime.Value
@@ -1175,24 +1119,24 @@ func Get_Main_multiNoFds() gopurs_runtime.Value {
 	return cache_Main_multiNoFds
 }
 
-var cache_Main_multiNoFds__3935880004 gopurs_runtime.Value
-var once_Main_multiNoFds__3935880004 sync.Once
+var cache_Main_multiNoFds__1994189633 gopurs_runtime.Value
+var once_Main_multiNoFds__1994189633 sync.Once
 
-func Get_Main_multiNoFds__3935880004() gopurs_runtime.Value {
-	once_Main_multiNoFds__3935880004.Do(func() {
-		cache_Main_multiNoFds__3935880004 = gopurs_runtime.Int(int64(0))
+func Get_Main_multiNoFds__1994189633() gopurs_runtime.Value {
+	once_Main_multiNoFds__1994189633.Do(func() {
+		cache_Main_multiNoFds__1994189633 = gopurs_runtime.Int(int64(0))
 	})
-	return cache_Main_multiNoFds__3935880004
+	return cache_Main_multiNoFds__1994189633
 }
 
-var cache_Main_multiNoFds__2664949762 gopurs_runtime.Value
-var once_Main_multiNoFds__2664949762 sync.Once
+var cache_Main_multiNoFds__1610202247 gopurs_runtime.Value
+var once_Main_multiNoFds__1610202247 sync.Once
 
-func Get_Main_multiNoFds__2664949762() gopurs_runtime.Value {
-	once_Main_multiNoFds__2664949762.Do(func() {
-		cache_Main_multiNoFds__2664949762 = gopurs_runtime.Int(int64(1))
+func Get_Main_multiNoFds__1610202247() gopurs_runtime.Value {
+	once_Main_multiNoFds__1610202247.Do(func() {
+		cache_Main_multiNoFds__1610202247 = gopurs_runtime.Int(int64(1))
 	})
-	return cache_Main_multiNoFds__2664949762
+	return cache_Main_multiNoFds__1610202247
 }
 
 var cache_Main_multiNoFdsWorks gopurs_runtime.Value
@@ -1281,16 +1225,6 @@ func Get_Main_mainClassInt() gopurs_runtime.Value {
 	return cache_Main_mainClassInt
 }
 
-var cache_Main_mainClassInt__3732355467 gopurs_runtime.Value
-var once_Main_mainClassInt__3732355467 sync.Once
-
-func Get_Main_mainClassInt__3732355467() gopurs_runtime.Value {
-	once_Main_mainClassInt__3732355467.Do(func() {
-		cache_Main_mainClassInt__3732355467 = gopurs_runtime.Int(int64(0))
-	})
-	return cache_Main_mainClassInt__3732355467
-}
-
 var cache_Main_mainClassWorks gopurs_runtime.Value
 var once_Main_mainClassWorks sync.Once
 
@@ -1340,16 +1274,16 @@ func Get_Main_conflictingIdentSynonym() gopurs_runtime.Value {
 	return cache_Main_conflictingIdentSynonym
 }
 
-var cache_Main_conflictingIdentSynonym__3260884094 gopurs_runtime.Value
-var once_Main_conflictingIdentSynonym__3260884094 sync.Once
+var cache_Main_conflictingIdentSynonym__1479890525 gopurs_runtime.Value
+var once_Main_conflictingIdentSynonym__1479890525 sync.Once
 
-func Get_Main_conflictingIdentSynonym__3260884094() gopurs_runtime.Value {
-	once_Main_conflictingIdentSynonym__3260884094.Do(func() {
-		cache_Main_conflictingIdentSynonym__3260884094 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_Main_conflictingIdentSynonym__3260884094(__eta_norm_0_0_box.IntVal))
+func Get_Main_conflictingIdentSynonym__1479890525() gopurs_runtime.Value {
+	once_Main_conflictingIdentSynonym__1479890525.Do(func() {
+		cache_Main_conflictingIdentSynonym__1479890525 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Int(Call_Main_conflictingIdentSynonym__1479890525(__eta_norm_0_0_box.IntVal))
 		})
 	})
-	return cache_Main_conflictingIdentSynonym__3260884094
+	return cache_Main_conflictingIdentSynonym__1479890525
 }
 
 var cache_Main_conflictingIdentSynonymWorks gopurs_runtime.Value
@@ -1401,16 +1335,16 @@ func Get_Main_conflictingIdent() gopurs_runtime.Value {
 	return cache_Main_conflictingIdent
 }
 
-var cache_Main_conflictingIdent__851704925 gopurs_runtime.Value
-var once_Main_conflictingIdent__851704925 sync.Once
+var cache_Main_conflictingIdent__739984303 gopurs_runtime.Value
+var once_Main_conflictingIdent__739984303 sync.Once
 
-func Get_Main_conflictingIdent__851704925() gopurs_runtime.Value {
-	once_Main_conflictingIdent__851704925.Do(func() {
-		cache_Main_conflictingIdent__851704925 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_Main_conflictingIdent__851704925(__eta_norm_0_0_box.IntVal))
+func Get_Main_conflictingIdent__739984303() gopurs_runtime.Value {
+	once_Main_conflictingIdent__739984303.Do(func() {
+		cache_Main_conflictingIdent__739984303 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Int(Call_Main_conflictingIdent__739984303(__eta_norm_0_0_box.IntVal))
 		})
 	})
-	return cache_Main_conflictingIdent__851704925
+	return cache_Main_conflictingIdent__739984303
 }
 
 var cache_Main_conflictingIdentWorks gopurs_runtime.Value
@@ -2158,53 +2092,6 @@ func Call_Main_partialOfABSet(dict_0_loop *Constructor_Main_MultiCoveringSets[go
 	return dict_0.V1
 }
 
-func Call_Main_partialOfABSet__1140860974(__eta_norm_0_0_loop bool) struct {
-	c bool
-	d bool
-	/*gopurs:record-v1:2:0063,0064*/
-} {
-partialOfABSet__1140860974:
-	for {
-		if false {
-			continue partialOfABSet__1140860974
-		}
-		var __eta_norm_0_0 bool = __eta_norm_0_0_loop
-		_ = __eta_norm_0_0
-		var __t0 string
-		{
-			if __eta_norm_0_0 {
-				__t0 = "101"
-				goto end_branch_0
-			} else {
-
-			}
-		}
-		{
-			__t0 = "100"
-		}
-	end_branch_0:
-		return func(record struct {
-			c string
-			d string
-			/*gopurs:record-v1:2:0063,0064*/
-		}) struct {
-			c bool
-			d bool
-			/*gopurs:record-v1:2:0063,0064*/
-		} {
-			return struct {
-				c bool
-				d bool
-				/*gopurs:record-v1:2:0063,0064*/
-			}{(gopurs_runtime.Str(record.c).IntVal) != (0), (gopurs_runtime.Str(record.d).IntVal) != (0)}
-		}(struct {
-			c string
-			d string
-			/*gopurs:record-v1:2:0063,0064*/
-		}{__t0, "1"})
-	}
-}
-
 func Call_Main_noneOfSets(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dict_0 gopurs_runtime.Value = dict_0_loop
 	_ = dict_0
@@ -2241,11 +2128,11 @@ func Call_Main_conflictingIdentSynonym(dict_0_loop *Constructor_Main_Conflicting
 	return dict_0.V0
 }
 
-func Call_Main_conflictingIdentSynonym__3260884094(__eta_norm_0_0_loop int64) int64 {
-conflictingIdentSynonym__3260884094:
+func Call_Main_conflictingIdentSynonym__1479890525(__eta_norm_0_0_loop int64) int64 {
+conflictingIdentSynonym__1479890525:
 	for {
 		if false {
-			continue conflictingIdentSynonym__3260884094
+			continue conflictingIdentSynonym__1479890525
 		}
 		var __eta_norm_0_0 int64 = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0
@@ -2259,11 +2146,11 @@ func Call_Main_conflictingIdent(dict_0_loop *Constructor_Main_ConflictingIdent[g
 	return dict_0.V0
 }
 
-func Call_Main_conflictingIdent__851704925(__eta_norm_0_0_loop int64) int64 {
-conflictingIdent__851704925:
+func Call_Main_conflictingIdent__739984303(__eta_norm_0_0_loop int64) int64 {
+conflictingIdent__739984303:
 	for {
 		if false {
-			continue conflictingIdent__851704925
+			continue conflictingIdent__739984303
 		}
 		var __eta_norm_0_0 int64 = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0

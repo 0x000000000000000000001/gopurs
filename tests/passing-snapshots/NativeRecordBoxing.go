@@ -324,7 +324,7 @@ func Call_Main_check(label_0_loop string, expected_1_loop string, actual_2_loop 
 	_ = actual_2
 	return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 		// TAST (Let): __local_var_3_0 shape=App(Var) bindingType=Any
-		__local_var_3_0 := Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+		__local_var_3_0 := Call_Test_Assert_assertEqual_prime___2399920497("", struct {
 			actual   string
 			expected string
 			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/

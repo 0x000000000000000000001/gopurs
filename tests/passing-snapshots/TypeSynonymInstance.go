@@ -91,16 +91,16 @@ func Get_Main_convert() gopurs_runtime.Value {
 	return cache_Main_convert
 }
 
-var cache_Main_convert__2990510892 gopurs_runtime.Value
-var once_Main_convert__2990510892 sync.Once
+var cache_Main_convert__1356198049 gopurs_runtime.Value
+var once_Main_convert__1356198049 sync.Once
 
-func Get_Main_convert__2990510892() gopurs_runtime.Value {
-	once_Main_convert__2990510892.Do(func() {
-		cache_Main_convert__2990510892 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_convert__2990510892(__eta_norm_0_0_box.IntVal))
+func Get_Main_convert__1356198049() gopurs_runtime.Value {
+	once_Main_convert__1356198049.Do(func() {
+		cache_Main_convert__1356198049 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_convert__1356198049(__eta_norm_0_0_box.IntVal))
 		})
 	})
-	return cache_Main_convert__2990510892
+	return cache_Main_convert__1356198049
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -176,11 +176,11 @@ func Call_Main_convert(dict_0_loop *Constructor_Main_Convert[gopurs_runtime.Valu
 	return dict_0.V0
 }
 
-func Call_Main_convert__2990510892(__eta_norm_0_0_loop int64) string {
-convert__2990510892:
+func Call_Main_convert__1356198049(__eta_norm_0_0_loop int64) string {
+convert__1356198049:
 	for {
 		if false {
-			continue convert__2990510892
+			continue convert__1356198049
 		}
 		var __eta_norm_0_0 int64 = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0

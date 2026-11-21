@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console prelude safe-coerce
+
 import Coercible.Lib (NTLib1(..), NTLib2(..), NTLib3)
 
 import Effect.Console (log)

@@ -113,16 +113,16 @@ func Get_Main_test1() gopurs_runtime.Value {
 	return cache_Main_test1
 }
 
-var cache_Main_test1__3904222681 gopurs_runtime.Value
-var once_Main_test1__3904222681 sync.Once
+var cache_Main_test1__3842060573 gopurs_runtime.Value
+var once_Main_test1__3842060573 sync.Once
 
-func Get_Main_test1__3904222681() gopurs_runtime.Value {
-	once_Main_test1__3904222681.Do(func() {
-		cache_Main_test1__3904222681 = gopurs_runtime.Func3(func(x_0_box gopurs_runtime.Value, y_1_box gopurs_runtime.Value, z_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Float(Call_Main_test1__3904222681(x_0_box.FloatVal(), y_1_box.FloatVal(), z_2_box))
+func Get_Main_test1__3842060573() gopurs_runtime.Value {
+	once_Main_test1__3842060573.Do(func() {
+		cache_Main_test1__3842060573 = gopurs_runtime.Func3(func(x_0_box gopurs_runtime.Value, y_1_box gopurs_runtime.Value, z_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Float(Call_Main_test1__3842060573(x_0_box.FloatVal(), y_1_box.FloatVal(), z_2_box))
 		})
 	})
-	return cache_Main_test1__3904222681
+	return cache_Main_test1__3842060573
 }
 
 var cache_Main_op5 gopurs_runtime.Value
@@ -367,11 +367,11 @@ func Call_Main_test1(dictSemiring_0_loop *Constructor_Data_Semiring_Semiring[gop
 	return gopurs_runtime.Apply2(dictSemiring_0.V0, gopurs_runtime.Apply2(dictSemiring_0.V1, x_1, y_2), gopurs_runtime.Apply2(z_3, x_1, y_2))
 }
 
-func Call_Main_test1__3904222681(x_0_loop float64, y_1_loop float64, z_2_loop gopurs_runtime.Value) float64 {
-test1__3904222681:
+func Call_Main_test1__3842060573(x_0_loop float64, y_1_loop float64, z_2_loop gopurs_runtime.Value) float64 {
+test1__3842060573:
 	for {
 		if false {
-			continue test1__3904222681
+			continue test1__3842060573
 		}
 		var x_0 float64 = x_0_loop
 		_ = x_0

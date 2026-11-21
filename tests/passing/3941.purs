@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console unsafe-coerce
+
 import Effect.Console (log)
 import Unsafe.Coerce (unsafeCoerce)
 

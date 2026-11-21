@@ -204,7 +204,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Array(boxed)
 			}()
 			_ = arrayIntrinsic_arg_5
-			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2499841393("", struct {
+			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4294120134("", struct {
 				actual   []string
 				expected []string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -228,7 +228,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return unboxed
 			}(), []string{"x:typed:42"}}), gopurs_runtime.Value{})
 			_ = __local_var_3_3
-			__local_var_4_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+			__local_var_4_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2813384465("", struct {
 				actual   int64
 				expected int64
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/

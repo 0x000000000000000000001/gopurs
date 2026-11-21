@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console effect either maybe prelude
+
 import Prelude
 
 import Data.Either (Either(..))

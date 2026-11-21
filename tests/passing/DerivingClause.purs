@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert bifunctors console effect foldable-traversable newtype prelude
+
 import Prelude
 
 import Data.Bifunctor (class Bifunctor, bimap)

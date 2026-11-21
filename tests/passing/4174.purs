@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console prelude
+
 import Data.Unit (Unit, unit)
 import Effect.Console (log)
 

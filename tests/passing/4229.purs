@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console partial
+
 import Effect.Console (log)
 import Partial.Unsafe (unsafePartial)
 

@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console integers maybe prelude
+
 import Prelude
 import Effect.Console (log)
 import Data.Int (fromNumber)

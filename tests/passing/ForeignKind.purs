@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console prelude
+
 import Prelude
 import ForeignKinds.Lib (Nat, Zero, Succ, N3, NatProxy, class AddNat, addNat, proxy1, proxy2)
 import Effect.Console (log)

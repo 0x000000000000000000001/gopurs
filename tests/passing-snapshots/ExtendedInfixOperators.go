@@ -29,13 +29,13 @@ func Get_Main_comparing() gopurs_runtime.Value {
 	return cache_Main_comparing
 }
 
-var cache_Main_comparing__1991096015 gopurs_runtime.Value
-var once_Main_comparing__1991096015 sync.Once
+var cache_Main_comparing__3462002636 gopurs_runtime.Value
+var once_Main_comparing__3462002636 sync.Once
 
-func Get_Main_comparing__1991096015() gopurs_runtime.Value {
-	once_Main_comparing__1991096015.Do(func() {
-		cache_Main_comparing__1991096015 = gopurs_runtime.Func3(func(__eta_norm_2_unused_0_box gopurs_runtime.Value, __eta_norm_1_1_box gopurs_runtime.Value, __eta_norm_0_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_comparing__1991096015(__eta_norm_2_unused_0_box, func() []float64 {
+func Get_Main_comparing__3462002636() gopurs_runtime.Value {
+	once_Main_comparing__3462002636.Do(func() {
+		cache_Main_comparing__3462002636 = gopurs_runtime.Func3(func(__eta_norm_2_unused_0_box gopurs_runtime.Value, __eta_norm_1_1_box gopurs_runtime.Value, __eta_norm_0_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_comparing__3462002636(__eta_norm_2_unused_0_box, func() []float64 {
 				arr := *(*[]gopurs_runtime.Value)(__eta_norm_1_1_box.UnsafePtr)
 				unboxed := make([]float64, len(arr))
 				for i, v := range arr {
@@ -52,7 +52,7 @@ func Get_Main_comparing__1991096015() gopurs_runtime.Value {
 			}())), UnsafePtr: nil}
 		})
 	})
-	return cache_Main_comparing__1991096015
+	return cache_Main_comparing__3462002636
 }
 
 var cache_Main_test gopurs_runtime.Value
@@ -134,11 +134,11 @@ func Call_Main_comparing(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime
 	})
 }
 
-func Call_Main_comparing__1991096015(__eta_norm_2_unused_0_loop gopurs_runtime.Value, __eta_norm_1_1_loop []float64, __eta_norm_0_2_loop []float64) uint32 {
-comparing__1991096015:
+func Call_Main_comparing__3462002636(__eta_norm_2_unused_0_loop gopurs_runtime.Value, __eta_norm_1_1_loop []float64, __eta_norm_0_2_loop []float64) uint32 {
+comparing__3462002636:
 	for {
 		if false {
-			continue comparing__1991096015
+			continue comparing__3462002636
 		}
 		var __eta_norm_2_unused_0 gopurs_runtime.Value = __eta_norm_2_unused_0_loop
 		_ = __eta_norm_2_unused_0

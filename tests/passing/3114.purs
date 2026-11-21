@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console effect either maybe partial prelude tuples unsafe-coerce
+
 import Prelude
 
 import Data.Either

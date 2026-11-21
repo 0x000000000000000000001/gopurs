@@ -74,16 +74,16 @@ func Get_Main_f() gopurs_runtime.Value {
 	return cache_Main_f
 }
 
-var cache_Main_f__2289165299 gopurs_runtime.Value
-var once_Main_f__2289165299 sync.Once
+var cache_Main_f__2942836640 gopurs_runtime.Value
+var once_Main_f__2942836640 sync.Once
 
-func Get_Main_f__2289165299() gopurs_runtime.Value {
-	once_Main_f__2289165299.Do(func() {
-		cache_Main_f__2289165299 = gopurs_runtime.Func2(func(__eta_norm_1_0_box gopurs_runtime.Value, __eta_norm_0_unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_f__2289165299(__eta_norm_1_0_box, uint32(__eta_norm_0_unused_1_box.IntVal))), UnsafePtr: nil}
+func Get_Main_f__2942836640() gopurs_runtime.Value {
+	once_Main_f__2942836640.Do(func() {
+		cache_Main_f__2942836640 = gopurs_runtime.Func2(func(__eta_norm_1_0_box gopurs_runtime.Value, __eta_norm_0_unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_f__2942836640(__eta_norm_1_0_box, uint32(__eta_norm_0_unused_1_box.IntVal))), UnsafePtr: nil}
 		})
 	})
-	return cache_Main_f__2289165299
+	return cache_Main_f__2942836640
 }
 
 var cache_Main_test1 gopurs_runtime.Value
@@ -161,11 +161,11 @@ func Call_Main_f(dict_0_loop *Constructor_Main_F[gopurs_runtime.Value]) gopurs_r
 	return dict_0.V0
 }
 
-func Call_Main_f__2289165299(__eta_norm_1_0_loop gopurs_runtime.Value, __eta_norm_0_unused_1_loop uint32) uint32 {
-f__2289165299:
+func Call_Main_f__2942836640(__eta_norm_1_0_loop gopurs_runtime.Value, __eta_norm_0_unused_1_loop uint32) uint32 {
+f__2942836640:
 	for {
 		if false {
-			continue f__2289165299
+			continue f__2942836640
 		}
 		var __eta_norm_1_0 gopurs_runtime.Value = __eta_norm_1_0_loop
 		_ = __eta_norm_1_0

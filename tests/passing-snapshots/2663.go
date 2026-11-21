@@ -17,16 +17,16 @@ func Get_Main_foo() gopurs_runtime.Value {
 	return cache_Main_foo
 }
 
-var cache_Main_foo__530935803 gopurs_runtime.Value
-var once_Main_foo__530935803 sync.Once
+var cache_Main_foo__3362252390 gopurs_runtime.Value
+var once_Main_foo__3362252390 sync.Once
 
-func Get_Main_foo__530935803() gopurs_runtime.Value {
-	once_Main_foo__530935803.Do(func() {
-		cache_Main_foo__530935803 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_Main_foo__530935803(x_0_box.IntVal))
+func Get_Main_foo__3362252390() gopurs_runtime.Value {
+	once_Main_foo__3362252390.Do(func() {
+		cache_Main_foo__3362252390 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Int(Call_Main_foo__3362252390(x_0_box.IntVal))
 		})
 	})
-	return cache_Main_foo__530935803
+	return cache_Main_foo__3362252390
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -47,11 +47,11 @@ func Call_Main_foo(_dollar___unused_0_loop gopurs_runtime.Value, x_1_loop gopurs
 	return x_1
 }
 
-func Call_Main_foo__530935803(x_0_loop int64) int64 {
-foo__530935803:
+func Call_Main_foo__3362252390(x_0_loop int64) int64 {
+foo__3362252390:
 	for {
 		if false {
-			continue foo__530935803
+			continue foo__3362252390
 		}
 		var x_0 int64 = x_0_loop
 		_ = x_0

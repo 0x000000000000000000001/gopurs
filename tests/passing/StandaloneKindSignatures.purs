@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console
+
 import Effect.Console (log)
 
 data Pair :: forall k. k -> k -> Type

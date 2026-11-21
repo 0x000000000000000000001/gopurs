@@ -263,7 +263,9 @@ var once_Main_whenAccessingSuperDict sync.Once
 
 func Get_Main_whenAccessingSuperDict() gopurs_runtime.Value {
 	once_Main_whenAccessingSuperDict.Do(func() {
-		cache_Main_whenAccessingSuperDict = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.Value{Type: 9, IntVal: int64(60647608), UnsafePtr: nil}.IntVal)), UnsafePtr: nil}
+		cache_Main_whenAccessingSuperDict = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.Apply2(gopurs_runtime.Func2(func(_dollar___unused_0 gopurs_runtime.Value, x_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			return x_1
+		}), gopurs_runtime.Value{}, gopurs_runtime.Value{Type: 9, IntVal: int64(60647608), UnsafePtr: nil}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_whenAccessingSuperDict
 }

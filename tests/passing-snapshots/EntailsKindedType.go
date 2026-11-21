@@ -17,16 +17,16 @@ func Get_Main_test() gopurs_runtime.Value {
 	return cache_Main_test
 }
 
-var cache_Main_test__1683400371 gopurs_runtime.Value
-var once_Main_test__1683400371 sync.Once
+var cache_Main_test__462775186 gopurs_runtime.Value
+var once_Main_test__462775186 sync.Once
 
-func Get_Main_test__1683400371() gopurs_runtime.Value {
-	once_Main_test__1683400371.Do(func() {
-		cache_Main_test__1683400371 = gopurs_runtime.Func(func(x_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_test__1683400371(x_unused_0_box))
+func Get_Main_test__462775186() gopurs_runtime.Value {
+	once_Main_test__462775186.Do(func() {
+		cache_Main_test__462775186 = gopurs_runtime.Func(func(x_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_test__462775186(x_unused_0_box))
 		})
 	})
-	return cache_Main_test__1683400371
+	return cache_Main_test__462775186
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -51,11 +51,11 @@ func Call_Main_test(dictShow_0_loop *Constructor_Data_Show_Show[gopurs_runtime.V
 	return gopurs_runtime.Apply(dictShow_0.V0, x_1).StrVal()
 }
 
-func Call_Main_test__1683400371(x_unused_0_loop gopurs_runtime.Value) string {
-test__1683400371:
+func Call_Main_test__462775186(x_unused_0_loop gopurs_runtime.Value) string {
+test__462775186:
 	for {
 		if false {
-			continue test__1683400371
+			continue test__462775186
 		}
 		var x_unused_0 gopurs_runtime.Value = x_unused_0_loop
 		_ = x_unused_0

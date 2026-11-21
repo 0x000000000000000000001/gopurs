@@ -180,16 +180,16 @@ func Get_Main_ala() gopurs_runtime.Value {
 	return cache_Main_ala
 }
 
-var cache_Main_ala__754736784 gopurs_runtime.Value
-var once_Main_ala__754736784 sync.Once
+var cache_Main_ala__650274094 gopurs_runtime.Value
+var once_Main_ala__650274094 sync.Once
 
-func Get_Main_ala__754736784() gopurs_runtime.Value {
-	once_Main_ala__754736784.Do(func() {
-		cache_Main_ala__754736784 = gopurs_runtime.Func3(func(v_unused_0_box gopurs_runtime.Value, f_unused_1_box gopurs_runtime.Value, __eta_norm_0_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_ala__754736784(v_unused_0_box, f_unused_1_box, __eta_norm_0_2_box)
+func Get_Main_ala__650274094() gopurs_runtime.Value {
+	once_Main_ala__650274094.Do(func() {
+		cache_Main_ala__650274094 = gopurs_runtime.Func3(func(v_unused_0_box gopurs_runtime.Value, f_unused_1_box gopurs_runtime.Value, __eta_norm_0_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_ala__650274094(v_unused_0_box, f_unused_1_box, __eta_norm_0_2_box)
 		})
 	})
-	return cache_Main_ala__754736784
+	return cache_Main_ala__650274094
 }
 
 var cache_Main_test gopurs_runtime.Value
@@ -204,16 +204,16 @@ func Get_Main_test() gopurs_runtime.Value {
 	return cache_Main_test
 }
 
-var cache_Main_test__1409993861 gopurs_runtime.Value
-var once_Main_test__1409993861 sync.Once
+var cache_Main_test__2116427537 gopurs_runtime.Value
+var once_Main_test__2116427537 sync.Once
 
-func Get_Main_test__1409993861() gopurs_runtime.Value {
-	once_Main_test__1409993861.Do(func() {
-		cache_Main_test__1409993861 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_Main_test__1409993861(Rebox_Main_791404512_1557125915(gopurs_runtime.CoerceToStruct[Constructor_Main_Pair[gopurs_runtime.Value]](__eta_norm_0_0_box))))
+func Get_Main_test__2116427537() gopurs_runtime.Value {
+	once_Main_test__2116427537.Do(func() {
+		cache_Main_test__2116427537 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Int(Call_Main_test__2116427537(Rebox_Main_791404512_1557125915(gopurs_runtime.CoerceToStruct[Constructor_Main_Pair[gopurs_runtime.Value]](__eta_norm_0_0_box))))
 		})
 	})
-	return cache_Main_test__1409993861
+	return cache_Main_test__2116427537
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -238,7 +238,7 @@ var once_Main_test1 sync.Once
 
 func Get_Main_test1() gopurs_runtime.Value {
 	once_Main_test1.Do(func() {
-		cache_Main_test1 = gopurs_runtime.Int(Call_Main_ala__754736784(Get_Main_Multiplicative(), gopurs_runtime.Apply(Get_Main_foldPair(), Call_Main_semiringMultiplicative(gopurs_runtime.Value{Type: 9, IntVal: 134961754, UnsafePtr: unsafe.Pointer(Rebox_Main_348932501_2826095630(Rebox_Main_2826095630_348932501(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](Get_Data_Semiring_semiringInt()))))})), gopurs_runtime.Value{Type: 9, IntVal: 893478516, UnsafePtr: unsafe.Pointer(Rebox_Main_1557125915_791404512((&Constructor_Main_Pair[int64]{1, int64(2), int64(3)})))}).IntVal)
+		cache_Main_test1 = gopurs_runtime.Int(Call_Main_ala__650274094(Get_Main_Multiplicative(), gopurs_runtime.Apply(Get_Main_foldPair(), Call_Main_semiringMultiplicative(gopurs_runtime.Value{Type: 9, IntVal: 134961754, UnsafePtr: unsafe.Pointer(Rebox_Main_348932501_2826095630(Rebox_Main_2826095630_348932501(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](Get_Data_Semiring_semiringInt()))))})), gopurs_runtime.Value{Type: 9, IntVal: 893478516, UnsafePtr: unsafe.Pointer(Rebox_Main_1557125915_791404512((&Constructor_Main_Pair[int64]{1, int64(2), int64(3)})))}).IntVal)
 	})
 	return cache_Main_test1
 }
@@ -346,11 +346,11 @@ func Call_Main_ala(dictFunctor_0_loop *Constructor_Data_Functor_Functor[gopurs_r
 	return gopurs_runtime.Apply2(dictFunctor_0.V0, Call_Main_unwrap(gopurs_runtime.CoerceToStruct[Constructor_Main_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](gopurs_runtime.Value{})), gopurs_runtime.Apply(f_3, Call_Main_wrap(gopurs_runtime.CoerceToStruct[Constructor_Main_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](gopurs_runtime.Value{}))))
 }
 
-func Call_Main_ala__754736784(v_unused_0_loop gopurs_runtime.Value, f_unused_1_loop gopurs_runtime.Value, __eta_norm_0_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
-ala__754736784:
+func Call_Main_ala__650274094(v_unused_0_loop gopurs_runtime.Value, f_unused_1_loop gopurs_runtime.Value, __eta_norm_0_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
+ala__650274094:
 	for {
 		if false {
-			continue ala__754736784
+			continue ala__650274094
 		}
 		var v_unused_0 gopurs_runtime.Value = v_unused_0_loop
 		_ = v_unused_0
@@ -368,11 +368,11 @@ func Call_Main_test(dictSemiring_0_loop *Constructor_Data_Semiring_Semiring[gopu
 	return Call_Main_ala(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](Get_Data_Functor_functorFn()), gopurs_runtime.CoerceToStruct[Constructor_Main_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](gopurs_runtime.Value{}), Get_Main_Multiplicative(), gopurs_runtime.Apply(Get_Main_foldPair(), Call_Main_semiringMultiplicative(gopurs_runtime.Value{Type: 9, IntVal: 134961754, UnsafePtr: unsafe.Pointer(dictSemiring_0)})))
 }
 
-func Call_Main_test__1409993861(__eta_norm_0_0_loop *Constructor_Main_Pair[int64]) int64 {
-test__1409993861:
+func Call_Main_test__2116427537(__eta_norm_0_0_loop *Constructor_Main_Pair[int64]) int64 {
+test__2116427537:
 	for {
 		if false {
-			continue test__1409993861
+			continue test__2116427537
 		}
 		var __eta_norm_0_0 *Constructor_Main_Pair[int64] = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0

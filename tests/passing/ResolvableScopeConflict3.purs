@@ -1,5 +1,7 @@
 module Main (thing, main, module A) where
 
+-- @dependencies: console
+
 import A
 import Effect.Console (log)
 

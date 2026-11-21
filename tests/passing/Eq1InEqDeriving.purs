@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console prelude
+
 import Prelude
 import Data.Eq (class Eq1)
 import Effect.Console (log)

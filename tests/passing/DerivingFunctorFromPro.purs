@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert console effect prelude profunctor refs
+
 -- The function Profunctor instance must be in the import closure when this
 -- fixture is compiled on its own; having the package installed is not enough.
 

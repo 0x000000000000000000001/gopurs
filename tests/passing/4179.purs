@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert console effect maybe prelude strings
+
 import Prelude
 
 import Data.Maybe (Maybe(..))

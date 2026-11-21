@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert bifunctors console contravariant effect prelude profunctor refs tuples
+
 import Prelude
 
 -- Deriving needs these instance modules in the import closure, even though

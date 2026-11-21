@@ -223,16 +223,16 @@ func Get_Main_monadStateState() gopurs_runtime.Value {
 	return cache_Main_monadStateState
 }
 
-var cache_Main_modify__86672813 gopurs_runtime.Value
-var once_Main_modify__86672813 sync.Once
+var cache_Main_modify__871705243 gopurs_runtime.Value
+var once_Main_modify__871705243 sync.Once
 
-func Get_Main_modify__86672813() gopurs_runtime.Value {
-	once_Main_modify__86672813.Do(func() {
-		cache_Main_modify__86672813 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_modify__86672813(__eta_norm_0_0_box)
+func Get_Main_modify__871705243() gopurs_runtime.Value {
+	once_Main_modify__871705243.Do(func() {
+		cache_Main_modify__871705243 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_modify__871705243(__eta_norm_0_0_box)
 		})
 	})
-	return cache_Main_modify__86672813
+	return cache_Main_modify__871705243
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -241,7 +241,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			__local_var_0_0 := gopurs_runtime.Apply(Call_Effect_Console_logShow(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Main_showTuple(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}, gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showUnit()))})), gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(Call_Main_runState(gopurs_runtime.Int(int64(0)), Call_Main_modify__86672813(gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			__local_var_0_0 := gopurs_runtime.Apply(Call_Effect_Console_logShow(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Main_showTuple(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}, gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showUnit()))})), gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(Call_Main_runState(gopurs_runtime.Int(int64(0)), Call_Main_modify__871705243(gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Int(gopurs_runtime.IntAdd(v_0.IntVal, int64(1)))
 			}))))}), gopurs_runtime.Value{})
 			_ = __local_var_0_0
@@ -358,11 +358,11 @@ func Call_Main_modify(dictBind_0_loop *Constructor_Control_Bind_Bind[gopurs_runt
 	})
 }
 
-func Call_Main_modify__86672813(__eta_norm_0_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-modify__86672813:
+func Call_Main_modify__871705243(__eta_norm_0_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+modify__871705243:
 	for {
 		if false {
-			continue modify__86672813
+			continue modify__871705243
 		}
 		var __eta_norm_0_0 gopurs_runtime.Value = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0

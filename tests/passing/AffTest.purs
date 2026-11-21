@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: aff console datetime effect prelude refs
+
 import Prelude
 
 import Effect (Effect)

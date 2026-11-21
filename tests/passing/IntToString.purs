@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console prelude
+
 import Prelude
 import Effect.Console (log)
 import Prim.Int (class Add, class Mul, class ToString)

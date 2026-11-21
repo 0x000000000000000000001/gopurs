@@ -96,16 +96,16 @@ func Get_Main_fn() gopurs_runtime.Value {
 	return cache_Main_fn
 }
 
-var cache_Main_fn__425925499 gopurs_runtime.Value
-var once_Main_fn__425925499 sync.Once
+var cache_Main_fn__911227818 gopurs_runtime.Value
+var once_Main_fn__911227818 sync.Once
 
-func Get_Main_fn__425925499() gopurs_runtime.Value {
-	once_Main_fn__425925499.Do(func() {
-		cache_Main_fn__425925499 = gopurs_runtime.Func2(func(__eta_norm_1_0_box gopurs_runtime.Value, __eta_norm_0_unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool(Call_Main_fn__425925499((__eta_norm_1_0_box.IntVal) != (0), (__eta_norm_0_unused_1_box.IntVal) != (0)))
+func Get_Main_fn__911227818() gopurs_runtime.Value {
+	once_Main_fn__911227818.Do(func() {
+		cache_Main_fn__911227818 = gopurs_runtime.Func2(func(__eta_norm_1_0_box gopurs_runtime.Value, __eta_norm_0_unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Bool(Call_Main_fn__911227818((__eta_norm_1_0_box.IntVal) != (0), (__eta_norm_0_unused_1_box.IntVal) != (0)))
 		})
 	})
-	return cache_Main_fn__425925499
+	return cache_Main_fn__911227818
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -201,11 +201,11 @@ func Call_Main_fn(dict_0_loop *Constructor_Main_Test[gopurs_runtime.Value]) gopu
 	return dict_0.V0
 }
 
-func Call_Main_fn__425925499(__eta_norm_1_0_loop bool, __eta_norm_0_unused_1_loop bool) bool {
-fn__425925499:
+func Call_Main_fn__911227818(__eta_norm_1_0_loop bool, __eta_norm_0_unused_1_loop bool) bool {
+fn__911227818:
 	for {
 		if false {
-			continue fn__425925499
+			continue fn__911227818
 		}
 		var __eta_norm_1_0 bool = __eta_norm_1_0_loop
 		_ = __eta_norm_1_0

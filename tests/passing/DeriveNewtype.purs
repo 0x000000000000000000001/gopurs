@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console newtype
+
 import Effect.Console (log)
 
 import Data.Newtype

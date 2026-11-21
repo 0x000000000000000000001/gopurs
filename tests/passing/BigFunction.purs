@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: arrays console maybe prelude
+
 import Prelude
 import Data.Maybe
 import Data.Array(index)

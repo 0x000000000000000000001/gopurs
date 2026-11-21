@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console prelude
+
 import Data.Symbol (class IsSymbol, reflectSymbol)
 import Effect.Console (log)
 import Type.Proxy (Proxy(..))

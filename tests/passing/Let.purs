@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console effect partial prelude st
+
 import Prelude
 import Partial.Unsafe (unsafePartial)
 import Effect

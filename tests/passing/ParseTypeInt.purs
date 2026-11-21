@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console
+
 import Effect.Console (log)
 
 data Proxy :: forall k. k -> Type

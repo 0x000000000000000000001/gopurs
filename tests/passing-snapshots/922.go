@@ -100,14 +100,14 @@ func Get_Main_defaultI() gopurs_runtime.Value {
 	return cache_Main_defaultI
 }
 
-var cache_Main_def__1122847620 gopurs_runtime.Value
-var once_Main_def__1122847620 sync.Once
+var cache_Main_def__4021259285 gopurs_runtime.Value
+var once_Main_def__4021259285 sync.Once
 
-func Get_Main_def__1122847620() gopurs_runtime.Value {
-	once_Main_def__1122847620.Do(func() {
-		cache_Main_def__1122847620 = gopurs_runtime.RecordGet(Call_Main_defaultI(gopurs_runtime.Value{Type: 9, IntVal: 1853528597, UnsafePtr: unsafe.Pointer(Rebox_Main_998170654_401051297(Rebox_Main_401051297_998170654(gopurs_runtime.CoerceToStruct[Constructor_Main_Default[gopurs_runtime.Value]](Get_Main_defaultString()))))}), "def")
+func Get_Main_def__4021259285() gopurs_runtime.Value {
+	once_Main_def__4021259285.Do(func() {
+		cache_Main_def__4021259285 = gopurs_runtime.RecordGet(Call_Main_defaultI(gopurs_runtime.Value{Type: 9, IntVal: 1853528597, UnsafePtr: unsafe.Pointer(Rebox_Main_998170654_401051297(Rebox_Main_401051297_998170654(gopurs_runtime.CoerceToStruct[Constructor_Main_Default[gopurs_runtime.Value]](Get_Main_defaultString()))))}), "def")
 	})
-	return cache_Main_def__1122847620
+	return cache_Main_def__4021259285
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -115,7 +115,7 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Get_Main_def__1122847620().StrVal()))
+		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Get_Main_def__4021259285().StrVal()))
 	})
 	return cache_Main_main
 }

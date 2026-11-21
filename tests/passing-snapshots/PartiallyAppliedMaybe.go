@@ -73,7 +73,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_3_3
 			__local_var_4_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_3_3), gopurs_runtime.Value{})
 			_ = __local_var_4_4
-			__local_var_5_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___692899441("", struct {
+			__local_var_5_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1573067846("", struct {
 				actual   *Constructor_Data_Maybe_Just[int64]
 				expected *Constructor_Data_Maybe_Just[int64]
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -88,7 +88,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
 			}()))}), gopurs_runtime.Value{})
 			_ = __local_var_5_5
-			__local_var_6_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___692899441("", struct {
+			__local_var_6_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1573067846("", struct {
 				actual   *Constructor_Data_Maybe_Just[int64]
 				expected *Constructor_Data_Maybe_Just[int64]
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -103,7 +103,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
 			}()))}), gopurs_runtime.Value{})
 			_ = __local_var_6_6
-			__local_var_7_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___692899441("", struct {
+			__local_var_7_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1573067846("", struct {
 				actual   *Constructor_Data_Maybe_Just[int64]
 				expected *Constructor_Data_Maybe_Just[int64]
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -113,7 +113,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_8_8
 			__local_var_9_9 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_8_8), gopurs_runtime.Value{})
 			_ = __local_var_9_9
-			__local_var_10_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___692899441("", struct {
+			__local_var_10_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1573067846("", struct {
 				actual   *Constructor_Data_Maybe_Just[int64]
 				expected *Constructor_Data_Maybe_Just[int64]
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/

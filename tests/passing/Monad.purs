@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console
+
 import Effect.Console (log)
 
 type Monad m = { return :: forall a. a -> m a

@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console effect functions prelude
+
 import Prelude
 import Data.Function.Uncurried
 import Effect

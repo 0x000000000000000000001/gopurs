@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console
+
 import Effect.Console (log)
 
 type List a = forall r. r -> (a -> r -> r) -> r

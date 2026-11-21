@@ -191,16 +191,16 @@ func Get_Main_after() gopurs_runtime.Value {
 	return cache_Main_after
 }
 
-var cache_Main_check__1055591803 gopurs_runtime.Value
-var once_Main_check__1055591803 sync.Once
+var cache_Main_check__754877583 gopurs_runtime.Value
+var once_Main_check__754877583 sync.Once
 
-func Get_Main_check__1055591803() gopurs_runtime.Value {
-	once_Main_check__1055591803.Do(func() {
-		cache_Main_check__1055591803 = gopurs_runtime.Func2(func(l_unused_0_box gopurs_runtime.Value, r_unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool(Call_Main_check__1055591803(l_unused_0_box, r_unused_1_box))
+func Get_Main_check__754877583() gopurs_runtime.Value {
+	once_Main_check__754877583.Do(func() {
+		cache_Main_check__754877583 = gopurs_runtime.Func2(func(l_unused_0_box gopurs_runtime.Value, r_unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Bool(Call_Main_check__754877583(l_unused_0_box, r_unused_1_box))
 		})
 	})
-	return cache_Main_check__1055591803
+	return cache_Main_check__754877583
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -211,7 +211,7 @@ func Get_Main_main() gopurs_runtime.Value {
 		cache_Main_main = func() gopurs_runtime.Value {
 			var __t0 gopurs_runtime.Value
 			{
-				if Call_Main_check__1055591803(func() gopurs_runtime.Value {
+				if Call_Main_check__754877583(func() gopurs_runtime.Value {
 					orig := func() struct {
 						bar struct {
 							baz int64
@@ -348,11 +348,11 @@ func Call_Main_check(dictEq_0_loop *Constructor_Data_Eq_Eq[gopurs_runtime.Value]
 	return ((gopurs_runtime.Apply2(dictEq_0.V0, gopurs_runtime.RecordGet(l_3, "foo"), gopurs_runtime.RecordGet(r_4, "foo")).IntVal) != (0)) && (((gopurs_runtime.Apply2(dictEq1_1.V0, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(l_3, "bar"), "baz"), gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(r_4, "bar"), "baz")).IntVal) != (0)) && ((gopurs_runtime.Apply2(dictEq2_2.V0, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(l_3, "bar"), "qux"), gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(r_4, "bar"), "qux")).IntVal) != (0)))
 }
 
-func Call_Main_check__1055591803(l_unused_0_loop gopurs_runtime.Value, r_unused_1_loop gopurs_runtime.Value) bool {
-check__1055591803:
+func Call_Main_check__754877583(l_unused_0_loop gopurs_runtime.Value, r_unused_1_loop gopurs_runtime.Value) bool {
+check__754877583:
 	for {
 		if false {
-			continue check__1055591803
+			continue check__754877583
 		}
 		var l_unused_0 gopurs_runtime.Value = l_unused_0_loop
 		_ = l_unused_0

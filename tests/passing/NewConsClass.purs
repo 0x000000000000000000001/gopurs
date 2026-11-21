@@ -2,6 +2,8 @@
 -- in the presence of the `Cons` class from `Prim.Row`.
 module Main where
 
+-- @dependencies: console
+
 import Effect.Console (log)
 import Prim.Row(class Union)
 

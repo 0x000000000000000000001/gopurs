@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console effect prelude safe-coerce
+
 import Prelude
 import Effect
 import Effect.Console

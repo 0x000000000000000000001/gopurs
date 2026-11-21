@@ -195,6 +195,10 @@ Companion `.go`, `.js` files and fixture directories are copied with the source.
 otherwise the shared list in `bin/pkg` applies. Core library checkouts are
 required, and Spago's global package cache is shared.
 
+Declare the packages imported by each fixture and all its companion modules
+with `@dependencies`. This keeps unrelated libraries out of frontend compilation
+and Go generation while preserving each fixture's isolated workspace.
+
 Logs separate frontend compilation, Go generation, formatting, snapshots,
 dependency resolution, Go compilation and execution. Reports and logs are
 always kept. Successful generated workspaces are removed unless

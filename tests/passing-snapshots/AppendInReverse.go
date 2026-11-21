@@ -95,52 +95,52 @@ func Get_Main_balanced() gopurs_runtime.Value {
 	return cache_Main_balanced
 }
 
-var cache_Main_balanced__2739615157 gopurs_runtime.Value
-var once_Main_balanced__2739615157 sync.Once
+var cache_Main_balanced__2682842417 gopurs_runtime.Value
+var once_Main_balanced__2682842417 sync.Once
 
-func Get_Main_balanced__2739615157() gopurs_runtime.Value {
-	once_Main_balanced__2739615157.Do(func() {
-		cache_Main_balanced__2739615157 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_balanced__2739615157(uint32(v_unused_0_box.IntVal)))
+func Get_Main_balanced__2682842417() gopurs_runtime.Value {
+	once_Main_balanced__2682842417.Do(func() {
+		cache_Main_balanced__2682842417 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_balanced__2682842417(uint32(v_unused_0_box.IntVal)))
 		})
 	})
-	return cache_Main_balanced__2739615157
+	return cache_Main_balanced__2682842417
 }
 
-var cache_Main_balanced__312822740 gopurs_runtime.Value
-var once_Main_balanced__312822740 sync.Once
+var cache_Main_balanced__1633826001 gopurs_runtime.Value
+var once_Main_balanced__1633826001 sync.Once
 
-func Get_Main_balanced__312822740() gopurs_runtime.Value {
-	once_Main_balanced__312822740.Do(func() {
-		cache_Main_balanced__312822740 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_balanced__312822740(uint32(v_unused_0_box.IntVal)))
+func Get_Main_balanced__1633826001() gopurs_runtime.Value {
+	once_Main_balanced__1633826001.Do(func() {
+		cache_Main_balanced__1633826001 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_balanced__1633826001(uint32(v_unused_0_box.IntVal)))
 		})
 	})
-	return cache_Main_balanced__312822740
+	return cache_Main_balanced__1633826001
 }
 
-var cache_Main_balanced__2179065685 gopurs_runtime.Value
-var once_Main_balanced__2179065685 sync.Once
+var cache_Main_balanced__260463985 gopurs_runtime.Value
+var once_Main_balanced__260463985 sync.Once
 
-func Get_Main_balanced__2179065685() gopurs_runtime.Value {
-	once_Main_balanced__2179065685.Do(func() {
-		cache_Main_balanced__2179065685 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_balanced__2179065685(uint32(v_unused_0_box.IntVal)))
+func Get_Main_balanced__260463985() gopurs_runtime.Value {
+	once_Main_balanced__260463985.Do(func() {
+		cache_Main_balanced__260463985 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_balanced__260463985(uint32(v_unused_0_box.IntVal)))
 		})
 	})
-	return cache_Main_balanced__2179065685
+	return cache_Main_balanced__260463985
 }
 
-var cache_Main_balanced__2564430452 gopurs_runtime.Value
-var once_Main_balanced__2564430452 sync.Once
+var cache_Main_balanced__3984774097 gopurs_runtime.Value
+var once_Main_balanced__3984774097 sync.Once
 
-func Get_Main_balanced__2564430452() gopurs_runtime.Value {
-	once_Main_balanced__2564430452.Do(func() {
-		cache_Main_balanced__2564430452 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_balanced__2564430452(uint32(v_unused_0_box.IntVal)))
+func Get_Main_balanced__3984774097() gopurs_runtime.Value {
+	once_Main_balanced__3984774097.Do(func() {
+		cache_Main_balanced__3984774097 = gopurs_runtime.Func(func(v_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_balanced__3984774097(uint32(v_unused_0_box.IntVal)))
 		})
 	})
-	return cache_Main_balanced__2564430452
+	return cache_Main_balanced__3984774097
 }
 
 var cache_Main_b3 gopurs_runtime.Value
@@ -286,11 +286,11 @@ func Call_Main_balanced(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop u
 	return "ok"
 }
 
-func Call_Main_balanced__2739615157(v_unused_0_loop uint32) string {
-balanced__2739615157:
+func Call_Main_balanced__2682842417(v_unused_0_loop uint32) string {
+balanced__2682842417:
 	for {
 		if false {
-			continue balanced__2739615157
+			continue balanced__2682842417
 		}
 		var v_unused_0 uint32 = v_unused_0_loop
 		_ = v_unused_0
@@ -298,11 +298,11 @@ balanced__2739615157:
 	}
 }
 
-func Call_Main_balanced__312822740(v_unused_0_loop uint32) string {
-balanced__312822740:
+func Call_Main_balanced__1633826001(v_unused_0_loop uint32) string {
+balanced__1633826001:
 	for {
 		if false {
-			continue balanced__312822740
+			continue balanced__1633826001
 		}
 		var v_unused_0 uint32 = v_unused_0_loop
 		_ = v_unused_0
@@ -310,11 +310,11 @@ balanced__312822740:
 	}
 }
 
-func Call_Main_balanced__2179065685(v_unused_0_loop uint32) string {
-balanced__2179065685:
+func Call_Main_balanced__260463985(v_unused_0_loop uint32) string {
+balanced__260463985:
 	for {
 		if false {
-			continue balanced__2179065685
+			continue balanced__260463985
 		}
 		var v_unused_0 uint32 = v_unused_0_loop
 		_ = v_unused_0
@@ -322,11 +322,11 @@ balanced__2179065685:
 	}
 }
 
-func Call_Main_balanced__2564430452(v_unused_0_loop uint32) string {
-balanced__2564430452:
+func Call_Main_balanced__3984774097(v_unused_0_loop uint32) string {
+balanced__3984774097:
 	for {
 		if false {
-			continue balanced__2564430452
+			continue balanced__3984774097
 		}
 		var v_unused_0 uint32 = v_unused_0_loop
 		_ = v_unused_0

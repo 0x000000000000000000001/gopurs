@@ -264,14 +264,14 @@ func Get_Main_singleton() gopurs_runtime.Value {
 	return cache_Main_singleton
 }
 
-var cache_Main_singleton__125190524 gopurs_runtime.Value
-var once_Main_singleton__125190524 sync.Once
+var cache_Main_singleton__1047566281 gopurs_runtime.Value
+var once_Main_singleton__1047566281 sync.Once
 
-func Get_Main_singleton__125190524() gopurs_runtime.Value {
-	once_Main_singleton__125190524.Do(func() {
-		cache_Main_singleton__125190524 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+func Get_Main_singleton__1047566281() gopurs_runtime.Value {
+	once_Main_singleton__1047566281.Do(func() {
+		cache_Main_singleton__1047566281 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return func() gopurs_runtime.Value {
-				arr := Call_Main_singleton__125190524(__eta_norm_0_0_box.StrVal())
+				arr := Call_Main_singleton__1047566281(__eta_norm_0_0_box.StrVal())
 				boxed := make([]gopurs_runtime.Value, len(arr))
 				for i, v := range arr {
 					boxed[i] = gopurs_runtime.Str(v)
@@ -280,7 +280,7 @@ func Get_Main_singleton__125190524() gopurs_runtime.Value {
 			}()
 		})
 	})
-	return cache_Main_singleton__125190524
+	return cache_Main_singleton__1047566281
 }
 
 var cache_Main_showY gopurs_runtime.Value
@@ -668,11 +668,11 @@ func Call_Main_singleton(dict_0_loop *Constructor_Main_Singleton[gopurs_runtime.
 	return dict_0.V0
 }
 
-func Call_Main_singleton__125190524(__eta_norm_0_0_loop string) []string {
-singleton__125190524:
+func Call_Main_singleton__1047566281(__eta_norm_0_0_loop string) []string {
+singleton__1047566281:
 	for {
 		if false {
-			continue singleton__125190524
+			continue singleton__1047566281
 		}
 		var __eta_norm_0_0 string = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0

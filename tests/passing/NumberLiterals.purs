@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert console effect prelude refs
+
 -- See issue #2115. Expectations follow the current JS Prelude, preserving the
 -- shortest round-tripping digits rather than the old 14-digit fixture oracle.
 

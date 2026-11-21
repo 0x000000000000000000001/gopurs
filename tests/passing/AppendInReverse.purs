@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console prelude
+
 import Prelude
 import Prim.Symbol (class Append)
 import Effect.Console (log)

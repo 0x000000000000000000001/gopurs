@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: arrays console partial prelude
+
 import Prelude
 import Effect.Console
 import Data.Array.Partial

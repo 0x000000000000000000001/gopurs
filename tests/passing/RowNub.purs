@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console prelude
+
 import Effect.Console (log)
 import Prim.Row (class Nub, class Union)
 import Type.Proxy (Proxy(..))

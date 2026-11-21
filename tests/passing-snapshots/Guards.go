@@ -29,16 +29,16 @@ func Get_Main_min() gopurs_runtime.Value {
 	return cache_Main_min
 }
 
-var cache_Main_min__4200641300 gopurs_runtime.Value
-var once_Main_min__4200641300 sync.Once
+var cache_Main_min__1100613830 gopurs_runtime.Value
+var once_Main_min__1100613830 sync.Once
 
-func Get_Main_min__4200641300() gopurs_runtime.Value {
-	once_Main_min__4200641300.Do(func() {
-		cache_Main_min__4200641300 = gopurs_runtime.Func2(func(n_0_box gopurs_runtime.Value, m_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_min__4200641300(n_0_box.StrVal(), m_1_box.StrVal()))
+func Get_Main_min__1100613830() gopurs_runtime.Value {
+	once_Main_min__1100613830.Do(func() {
+		cache_Main_min__1100613830 = gopurs_runtime.Func2(func(n_0_box gopurs_runtime.Value, m_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_min__1100613830(n_0_box.StrVal(), m_1_box.StrVal()))
 		})
 	})
-	return cache_Main_min__4200641300
+	return cache_Main_min__1100613830
 }
 
 var cache_Main_max gopurs_runtime.Value
@@ -53,16 +53,16 @@ func Get_Main_max() gopurs_runtime.Value {
 	return cache_Main_max
 }
 
-var cache_Main_max__4195722324 gopurs_runtime.Value
-var once_Main_max__4195722324 sync.Once
+var cache_Main_max__3352780352 gopurs_runtime.Value
+var once_Main_max__3352780352 sync.Once
 
-func Get_Main_max__4195722324() gopurs_runtime.Value {
-	once_Main_max__4195722324.Do(func() {
-		cache_Main_max__4195722324 = gopurs_runtime.Func2(func(n_0_box gopurs_runtime.Value, m_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_Main_max__4195722324(n_0_box.IntVal, m_1_box.IntVal))
+func Get_Main_max__3352780352() gopurs_runtime.Value {
+	once_Main_max__3352780352.Do(func() {
+		cache_Main_max__3352780352 = gopurs_runtime.Func2(func(n_0_box gopurs_runtime.Value, m_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Int(Call_Main_max__3352780352(n_0_box.IntVal, m_1_box.IntVal))
 		})
 	})
-	return cache_Main_max__4195722324
+	return cache_Main_max__3352780352
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -224,11 +224,11 @@ end_branch_1:
 	return __t1
 }
 
-func Call_Main_min__4200641300(n_0_loop string, m_1_loop string) string {
-min__4200641300:
+func Call_Main_min__1100613830(n_0_loop string, m_1_loop string) string {
+min__1100613830:
 	for {
 		if false {
-			continue min__4200641300
+			continue min__1100613830
 		}
 		var n_0 string = n_0_loop
 		_ = n_0
@@ -278,11 +278,11 @@ end_branch_1:
 	return __t1
 }
 
-func Call_Main_max__4195722324(n_0_loop int64, m_1_loop int64) int64 {
-max__4195722324:
+func Call_Main_max__3352780352(n_0_loop int64, m_1_loop int64) int64 {
+max__3352780352:
 	for {
 		if false {
-			continue max__4195722324
+			continue max__3352780352
 		}
 		var n_0 int64 = n_0_loop
 		_ = n_0

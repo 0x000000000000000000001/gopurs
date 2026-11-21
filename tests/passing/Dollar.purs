@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console
+
 import Effect.Console (log)
 
 applyFn :: forall a b. (a -> b) -> a -> b

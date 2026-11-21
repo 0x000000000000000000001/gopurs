@@ -114,28 +114,28 @@ func Get_Main_b() gopurs_runtime.Value {
 	return cache_Main_b
 }
 
-var cache_Main_b__4024554 gopurs_runtime.Value
-var once_Main_b__4024554 sync.Once
+var cache_Main_b__386776680 gopurs_runtime.Value
+var once_Main_b__386776680 sync.Once
 
-func Get_Main_b__4024554() gopurs_runtime.Value {
-	once_Main_b__4024554.Do(func() {
-		cache_Main_b__4024554 = gopurs_runtime.Func(func(__eta_norm_0_0 gopurs_runtime.Value) gopurs_runtime.Value {
+func Get_Main_b__386776680() gopurs_runtime.Value {
+	once_Main_b__386776680.Do(func() {
+		cache_Main_b__386776680 = gopurs_runtime.Func(func(__eta_norm_0_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Apply(Rebox_Main_3159052616_2084057936(gopurs_runtime.CoerceToStruct[Constructor_Main_B[gopurs_runtime.Value]](Get_Main_bNumber())).V0, __eta_norm_0_0)
 		})
 	})
-	return cache_Main_b__4024554
+	return cache_Main_b__386776680
 }
 
-var cache_Main_a__61794345 gopurs_runtime.Value
-var once_Main_a__61794345 sync.Once
+var cache_Main_a__3468437384 gopurs_runtime.Value
+var once_Main_a__3468437384 sync.Once
 
-func Get_Main_a__61794345() gopurs_runtime.Value {
-	once_Main_a__61794345.Do(func() {
-		cache_Main_a__61794345 = gopurs_runtime.Func(func(__eta_norm_0_0 gopurs_runtime.Value) gopurs_runtime.Value {
+func Get_Main_a__3468437384() gopurs_runtime.Value {
+	once_Main_a__3468437384.Do(func() {
+		cache_Main_a__3468437384 = gopurs_runtime.Func(func(__eta_norm_0_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Apply(Rebox_Main_3943979371_2868984691(gopurs_runtime.CoerceToStruct[Constructor_Main_A[gopurs_runtime.Value]](Get_Main_aNumber())).V0, __eta_norm_0_0)
 		})
 	})
-	return cache_Main_a__61794345
+	return cache_Main_a__3468437384
 }
 
 var cache_Main_bNumber gopurs_runtime.Value
@@ -154,7 +154,7 @@ func Get_Main_bNumber() gopurs_runtime.Value {
 				}
 			}
 			{
-				__t0 = gopurs_runtime.Apply(Get_Main_a__61794345(), gopurs_runtime.Float((v_0.FloatVal())-(1.0)))
+				__t0 = gopurs_runtime.Apply(Get_Main_a__3468437384(), gopurs_runtime.Float((v_0.FloatVal())-(1.0)))
 			}
 		end_branch_0:
 			return __t0
@@ -179,7 +179,7 @@ func Get_Main_aNumber() gopurs_runtime.Value {
 				}
 			}
 			{
-				__t0 = gopurs_runtime.Apply(Get_Main_b__4024554(), gopurs_runtime.Float((v_0.FloatVal())-(1.0)))
+				__t0 = gopurs_runtime.Apply(Get_Main_b__386776680(), gopurs_runtime.Float((v_0.FloatVal())-(1.0)))
 			}
 		end_branch_0:
 			return __t0
@@ -206,7 +206,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			__local_var_0_0 := gopurs_runtime.Apply(Call_Effect_Console_logShow(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))), gopurs_runtime.Bool((gopurs_runtime.Apply(Get_Main_a__61794345(), gopurs_runtime.Float(8.0)).IntVal) != (0))), gopurs_runtime.Value{})
+			__local_var_0_0 := gopurs_runtime.Apply(Call_Effect_Console_logShow(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))), gopurs_runtime.Bool((gopurs_runtime.Apply(Get_Main_a__3468437384(), gopurs_runtime.Float(8.0)).IntVal) != (0))), gopurs_runtime.Value{})
 			_ = __local_var_0_0
 			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
 		})

@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert console prelude
+
 import Prelude
 import Test.Assert
 import Effect.Console (log)

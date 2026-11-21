@@ -110,16 +110,16 @@ func Get_Main_fooLens() gopurs_runtime.Value {
 	return cache_Main_fooLens
 }
 
-var cache_Main_fooLens__3333359234 gopurs_runtime.Value
-var once_Main_fooLens__3333359234 sync.Once
+var cache_Main_fooLens__1149046356 gopurs_runtime.Value
+var once_Main_fooLens__1149046356 sync.Once
 
-func Get_Main_fooLens__3333359234() gopurs_runtime.Value {
-	once_Main_fooLens__3333359234.Do(func() {
-		cache_Main_fooLens__3333359234 = gopurs_runtime.Func2(func(__eta_norm_1_unused_0_box gopurs_runtime.Value, __eta_norm_0_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_fooLens__3333359234(__eta_norm_1_unused_0_box, __eta_norm_0_1_box)
+func Get_Main_fooLens__1149046356() gopurs_runtime.Value {
+	once_Main_fooLens__1149046356.Do(func() {
+		cache_Main_fooLens__1149046356 = gopurs_runtime.Func2(func(__eta_norm_1_unused_0_box gopurs_runtime.Value, __eta_norm_0_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_fooLens__1149046356(__eta_norm_1_unused_0_box, __eta_norm_0_1_box)
 		})
 	})
-	return cache_Main_fooLens__3333359234
+	return cache_Main_fooLens__1149046356
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -210,11 +210,11 @@ func Call_Main_fooLens(dictFunctor_0_loop *Constructor_Data_Functor_Functor[gopu
 	return gopurs_runtime.Apply5(Get_Main_lens(), gopurs_runtime.Value{Type: 9, IntVal: 2134024384, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]](Get_Main_fooIsSymbol()))}, gopurs_runtime.Value{}, gopurs_runtime.Value{}, gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer(dictFunctor_0)}, gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil})
 }
 
-func Call_Main_fooLens__3333359234(__eta_norm_1_unused_0_loop gopurs_runtime.Value, __eta_norm_0_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
-fooLens__3333359234:
+func Call_Main_fooLens__1149046356(__eta_norm_1_unused_0_loop gopurs_runtime.Value, __eta_norm_0_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
+fooLens__1149046356:
 	for {
 		if false {
-			continue fooLens__3333359234
+			continue fooLens__1149046356
 		}
 		var __eta_norm_1_unused_0 gopurs_runtime.Value = __eta_norm_1_unused_0_loop
 		_ = __eta_norm_1_unused_0

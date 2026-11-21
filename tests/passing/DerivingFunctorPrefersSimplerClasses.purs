@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert bifunctors console effect prelude profunctor
+
 import Prelude
 
 import Data.Bifunctor (class Bifunctor)

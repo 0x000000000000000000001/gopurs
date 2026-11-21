@@ -209,7 +209,7 @@ func Get_Main_checkEffects() gopurs_runtime.Value {
 			_ = __local_var_7_7
 			__local_var_8_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_1_1), gopurs_runtime.Value{})
 			_ = __local_var_8_8
-			__local_var_9_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2499841393("", struct {
+			__local_var_9_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4294120134("", struct {
 				actual   []string
 				expected []string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -774,7 +774,7 @@ func Call_Main_check(label_0_loop string, expected_1_loop string, actual_2_loop 
 	_ = actual_2
 	return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 		// TAST (Let): __local_var_3_0 shape=App(Var) bindingType=Any
-		__local_var_3_0 := Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+		__local_var_3_0 := Call_Test_Assert_assertEqual_prime___2399920497("", struct {
 			actual   string
 			expected string
 			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/

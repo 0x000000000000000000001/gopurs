@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console effect prelude
+
 import Prelude
 import Eg (Foo'(Bar'), (:->))
 import Effect (Effect)

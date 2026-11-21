@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert bifunctors console contravariant effect prelude profunctor refs tuples
+
 import Prelude
 
 -- Test4 maps the first tuple argument through this instance module.

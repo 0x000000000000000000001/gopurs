@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert bifunctors console effect foldable-traversable prelude refs tuples
+
 import Prelude
 
 -- The corresponding tuple instances live in these modules, not Data.Tuple.

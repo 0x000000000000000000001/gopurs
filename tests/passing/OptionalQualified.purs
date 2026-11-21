@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console prelude
+
 import Prelude as P
 
 -- qualified import without the "qualified" keyword

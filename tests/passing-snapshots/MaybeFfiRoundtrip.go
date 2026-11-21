@@ -272,13 +272,13 @@ func Get_Main_main() gopurs_runtime.Value {
 				return unboxed
 			}())
 			_ = result_22_22
-			__local_var_23_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+			__local_var_23_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2813384465("", struct {
 				actual   int64
 				expected int64
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Int(int64(len(result_22_22.go__init))).IntVal, int64(10000)}), gopurs_runtime.Value{})
 			_ = __local_var_23_23
-			__local_var_24_24 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+			__local_var_24_24 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2813384465("", struct {
 				actual   int64
 				expected int64
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -379,13 +379,13 @@ func Call_Main_checkSpan(label_0_loop string, predicate_1_loop gopurs_runtime.Va
 			return unboxed
 		}())
 		_ = actual_8_3
-		__local_var_9_4 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
+		__local_var_9_4 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___3927875206("", struct {
 			actual   []int64
 			expected []int64
 			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 		}{actual_8_3.go__init, expectedInit_3}), gopurs_runtime.Value{})
 		_ = __local_var_9_4
-		__local_var_10_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
+		__local_var_10_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___3927875206("", struct {
 			actual   []int64
 			expected []int64
 			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -410,7 +410,7 @@ func Call_Main_checkMaybe(label_0_loop string, expected_1_loop string, value_2_l
 		_ = __local_var_4_1
 		__local_var_5_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_4_1), gopurs_runtime.Value{})
 		_ = __local_var_5_2
-		__local_var_6_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+		__local_var_6_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("", struct {
 			actual   string
 			expected string
 			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/

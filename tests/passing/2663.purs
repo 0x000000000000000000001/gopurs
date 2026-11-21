@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: prelude effect console
+
 import Prelude
 import Prim.TypeError (class Warn, Text)
 import Effect.Console (log)

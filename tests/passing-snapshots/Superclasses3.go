@@ -218,16 +218,16 @@ func Get_Main_writerMTrace() gopurs_runtime.Value {
 	return cache_Main_writerMTrace
 }
 
-var cache_Main_test__1489837928 gopurs_runtime.Value
-var once_Main_test__1489837928 sync.Once
+var cache_Main_test__4038528480 gopurs_runtime.Value
+var once_Main_test__4038528480 sync.Once
 
-func Get_Main_test__1489837928() gopurs_runtime.Value {
-	once_Main_test__1489837928.Do(func() {
-		cache_Main_test__1489837928 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_test__1489837928(__eta_norm_0_0_box.StrVal())
+func Get_Main_test__4038528480() gopurs_runtime.Value {
+	once_Main_test__4038528480.Do(func() {
+		cache_Main_test__4038528480 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_test__4038528480(__eta_norm_0_0_box.StrVal())
 		})
 	})
-	return cache_Main_test__1489837928
+	return cache_Main_test__4038528480
 }
 
 var cache_Main_runMTrace__1016380029 gopurs_runtime.Value
@@ -247,7 +247,7 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = Call_Main_test__1489837928("Done")
+		cache_Main_main = Call_Main_test__4038528480("Done")
 	})
 	return cache_Main_main
 }
@@ -373,11 +373,11 @@ func Call_Main_runMTrace(v_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	return v_0
 }
 
-func Call_Main_test__1489837928(__eta_norm_0_0_loop string) gopurs_runtime.Value {
-test__1489837928:
+func Call_Main_test__4038528480(__eta_norm_0_0_loop string) gopurs_runtime.Value {
+test__4038528480:
 	for {
 		if false {
-			continue test__1489837928
+			continue test__4038528480
 		}
 		var __eta_norm_0_0 string = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0

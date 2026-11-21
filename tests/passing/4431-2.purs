@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: console const prelude
+
 import Prelude
 import Data.Const (Const)
 import Effect.Console (log)

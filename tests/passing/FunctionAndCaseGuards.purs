@@ -1,6 +1,8 @@
 -- See #3443
 module Main where
 
+-- @dependencies: console effect prelude
+
 import Prelude
 import Effect (Effect)
 import Effect.Console (log)

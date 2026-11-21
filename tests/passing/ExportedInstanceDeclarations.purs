@@ -7,6 +7,8 @@ module Main
   , main
   ) where
 
+-- @dependencies: console prelude
+
 import Prelude
 import Effect.Console (log)
 

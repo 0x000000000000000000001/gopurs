@@ -1425,100 +1425,100 @@ func Get_Main_foldableM1() gopurs_runtime.Value {
 	return cache_Main_foldableM1
 }
 
-var cache_Main_foldrStr__2116068004 gopurs_runtime.Value
-var once_Main_foldrStr__2116068004 sync.Once
+var cache_Main_foldrStr__559547092 gopurs_runtime.Value
+var once_Main_foldrStr__559547092 sync.Once
 
-func Get_Main_foldrStr__2116068004() gopurs_runtime.Value {
-	once_Main_foldrStr__2116068004.Do(func() {
-		cache_Main_foldrStr__2116068004 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldrStr__2116068004(__eta_norm_0_unused_0_box))
+func Get_Main_foldrStr__559547092() gopurs_runtime.Value {
+	once_Main_foldrStr__559547092.Do(func() {
+		cache_Main_foldrStr__559547092 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldrStr__559547092(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldrStr__2116068004
+	return cache_Main_foldrStr__559547092
 }
 
-var cache_Main_foldrStr__325071877 gopurs_runtime.Value
-var once_Main_foldrStr__325071877 sync.Once
+var cache_Main_foldrStr__2906096053 gopurs_runtime.Value
+var once_Main_foldrStr__2906096053 sync.Once
 
-func Get_Main_foldrStr__325071877() gopurs_runtime.Value {
-	once_Main_foldrStr__325071877.Do(func() {
-		cache_Main_foldrStr__325071877 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldrStr__325071877(__eta_norm_0_unused_0_box))
+func Get_Main_foldrStr__2906096053() gopurs_runtime.Value {
+	once_Main_foldrStr__2906096053.Do(func() {
+		cache_Main_foldrStr__2906096053 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldrStr__2906096053(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldrStr__325071877
+	return cache_Main_foldrStr__2906096053
 }
 
-var cache_Main_foldrStr__412824550 gopurs_runtime.Value
-var once_Main_foldrStr__412824550 sync.Once
+var cache_Main_foldrStr__3331296278 gopurs_runtime.Value
+var once_Main_foldrStr__3331296278 sync.Once
 
-func Get_Main_foldrStr__412824550() gopurs_runtime.Value {
-	once_Main_foldrStr__412824550.Do(func() {
-		cache_Main_foldrStr__412824550 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldrStr__412824550(__eta_norm_0_unused_0_box))
+func Get_Main_foldrStr__3331296278() gopurs_runtime.Value {
+	once_Main_foldrStr__3331296278.Do(func() {
+		cache_Main_foldrStr__3331296278 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldrStr__3331296278(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldrStr__412824550
+	return cache_Main_foldrStr__3331296278
 }
 
-var cache_Main_foldrStr__3602154567 gopurs_runtime.Value
-var once_Main_foldrStr__3602154567 sync.Once
+var cache_Main_foldrStr__3170765303 gopurs_runtime.Value
+var once_Main_foldrStr__3170765303 sync.Once
 
-func Get_Main_foldrStr__3602154567() gopurs_runtime.Value {
-	once_Main_foldrStr__3602154567.Do(func() {
-		cache_Main_foldrStr__3602154567 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldrStr__3602154567(__eta_norm_0_unused_0_box))
+func Get_Main_foldrStr__3170765303() gopurs_runtime.Value {
+	once_Main_foldrStr__3170765303.Do(func() {
+		cache_Main_foldrStr__3170765303 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldrStr__3170765303(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldrStr__3602154567
+	return cache_Main_foldrStr__3170765303
 }
 
-var cache_Main_foldrStr__3287222048 gopurs_runtime.Value
-var once_Main_foldrStr__3287222048 sync.Once
+var cache_Main_foldrStr__625260368 gopurs_runtime.Value
+var once_Main_foldrStr__625260368 sync.Once
 
-func Get_Main_foldrStr__3287222048() gopurs_runtime.Value {
-	once_Main_foldrStr__3287222048.Do(func() {
-		cache_Main_foldrStr__3287222048 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldrStr__3287222048(__eta_norm_0_unused_0_box))
+func Get_Main_foldrStr__625260368() gopurs_runtime.Value {
+	once_Main_foldrStr__625260368.Do(func() {
+		cache_Main_foldrStr__625260368 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldrStr__625260368(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldrStr__3287222048
+	return cache_Main_foldrStr__625260368
 }
 
-var cache_Main_foldrStr__1496225921 gopurs_runtime.Value
-var once_Main_foldrStr__1496225921 sync.Once
+var cache_Main_foldrStr__2971809329 gopurs_runtime.Value
+var once_Main_foldrStr__2971809329 sync.Once
 
-func Get_Main_foldrStr__1496225921() gopurs_runtime.Value {
-	once_Main_foldrStr__1496225921.Do(func() {
-		cache_Main_foldrStr__1496225921 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldrStr__1496225921(__eta_norm_0_unused_0_box))
+func Get_Main_foldrStr__2971809329() gopurs_runtime.Value {
+	once_Main_foldrStr__2971809329.Do(func() {
+		cache_Main_foldrStr__2971809329 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldrStr__2971809329(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldrStr__1496225921
+	return cache_Main_foldrStr__2971809329
 }
 
-var cache_Main_foldrStr__1583978594 gopurs_runtime.Value
-var once_Main_foldrStr__1583978594 sync.Once
+var cache_Main_foldrStr__3397009554 gopurs_runtime.Value
+var once_Main_foldrStr__3397009554 sync.Once
 
-func Get_Main_foldrStr__1583978594() gopurs_runtime.Value {
-	once_Main_foldrStr__1583978594.Do(func() {
-		cache_Main_foldrStr__1583978594 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldrStr__1583978594(__eta_norm_0_unused_0_box))
+func Get_Main_foldrStr__3397009554() gopurs_runtime.Value {
+	once_Main_foldrStr__3397009554.Do(func() {
+		cache_Main_foldrStr__3397009554 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldrStr__3397009554(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldrStr__1583978594
+	return cache_Main_foldrStr__3397009554
 }
 
-var cache_Main_foldrStr__478341315 gopurs_runtime.Value
-var once_Main_foldrStr__478341315 sync.Once
+var cache_Main_foldrStr__3236478579 gopurs_runtime.Value
+var once_Main_foldrStr__3236478579 sync.Once
 
-func Get_Main_foldrStr__478341315() gopurs_runtime.Value {
-	once_Main_foldrStr__478341315.Do(func() {
-		cache_Main_foldrStr__478341315 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldrStr__478341315(__eta_norm_0_unused_0_box))
+func Get_Main_foldrStr__3236478579() gopurs_runtime.Value {
+	once_Main_foldrStr__3236478579.Do(func() {
+		cache_Main_foldrStr__3236478579 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldrStr__3236478579(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldrStr__478341315
+	return cache_Main_foldrStr__3236478579
 }
 
 var cache_Main_foldlStr gopurs_runtime.Value
@@ -1533,100 +1533,100 @@ func Get_Main_foldlStr() gopurs_runtime.Value {
 	return cache_Main_foldlStr
 }
 
-var cache_Main_foldlStr__2116068004 gopurs_runtime.Value
-var once_Main_foldlStr__2116068004 sync.Once
+var cache_Main_foldlStr__559547092 gopurs_runtime.Value
+var once_Main_foldlStr__559547092 sync.Once
 
-func Get_Main_foldlStr__2116068004() gopurs_runtime.Value {
-	once_Main_foldlStr__2116068004.Do(func() {
-		cache_Main_foldlStr__2116068004 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldlStr__2116068004(__eta_norm_0_unused_0_box))
+func Get_Main_foldlStr__559547092() gopurs_runtime.Value {
+	once_Main_foldlStr__559547092.Do(func() {
+		cache_Main_foldlStr__559547092 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldlStr__559547092(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldlStr__2116068004
+	return cache_Main_foldlStr__559547092
 }
 
-var cache_Main_foldlStr__325071877 gopurs_runtime.Value
-var once_Main_foldlStr__325071877 sync.Once
+var cache_Main_foldlStr__2906096053 gopurs_runtime.Value
+var once_Main_foldlStr__2906096053 sync.Once
 
-func Get_Main_foldlStr__325071877() gopurs_runtime.Value {
-	once_Main_foldlStr__325071877.Do(func() {
-		cache_Main_foldlStr__325071877 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldlStr__325071877(__eta_norm_0_unused_0_box))
+func Get_Main_foldlStr__2906096053() gopurs_runtime.Value {
+	once_Main_foldlStr__2906096053.Do(func() {
+		cache_Main_foldlStr__2906096053 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldlStr__2906096053(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldlStr__325071877
+	return cache_Main_foldlStr__2906096053
 }
 
-var cache_Main_foldlStr__412824550 gopurs_runtime.Value
-var once_Main_foldlStr__412824550 sync.Once
+var cache_Main_foldlStr__3331296278 gopurs_runtime.Value
+var once_Main_foldlStr__3331296278 sync.Once
 
-func Get_Main_foldlStr__412824550() gopurs_runtime.Value {
-	once_Main_foldlStr__412824550.Do(func() {
-		cache_Main_foldlStr__412824550 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldlStr__412824550(__eta_norm_0_unused_0_box))
+func Get_Main_foldlStr__3331296278() gopurs_runtime.Value {
+	once_Main_foldlStr__3331296278.Do(func() {
+		cache_Main_foldlStr__3331296278 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldlStr__3331296278(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldlStr__412824550
+	return cache_Main_foldlStr__3331296278
 }
 
-var cache_Main_foldlStr__3602154567 gopurs_runtime.Value
-var once_Main_foldlStr__3602154567 sync.Once
+var cache_Main_foldlStr__3170765303 gopurs_runtime.Value
+var once_Main_foldlStr__3170765303 sync.Once
 
-func Get_Main_foldlStr__3602154567() gopurs_runtime.Value {
-	once_Main_foldlStr__3602154567.Do(func() {
-		cache_Main_foldlStr__3602154567 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldlStr__3602154567(__eta_norm_0_unused_0_box))
+func Get_Main_foldlStr__3170765303() gopurs_runtime.Value {
+	once_Main_foldlStr__3170765303.Do(func() {
+		cache_Main_foldlStr__3170765303 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldlStr__3170765303(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldlStr__3602154567
+	return cache_Main_foldlStr__3170765303
 }
 
-var cache_Main_foldlStr__3287222048 gopurs_runtime.Value
-var once_Main_foldlStr__3287222048 sync.Once
+var cache_Main_foldlStr__625260368 gopurs_runtime.Value
+var once_Main_foldlStr__625260368 sync.Once
 
-func Get_Main_foldlStr__3287222048() gopurs_runtime.Value {
-	once_Main_foldlStr__3287222048.Do(func() {
-		cache_Main_foldlStr__3287222048 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldlStr__3287222048(__eta_norm_0_unused_0_box))
+func Get_Main_foldlStr__625260368() gopurs_runtime.Value {
+	once_Main_foldlStr__625260368.Do(func() {
+		cache_Main_foldlStr__625260368 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldlStr__625260368(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldlStr__3287222048
+	return cache_Main_foldlStr__625260368
 }
 
-var cache_Main_foldlStr__1496225921 gopurs_runtime.Value
-var once_Main_foldlStr__1496225921 sync.Once
+var cache_Main_foldlStr__2971809329 gopurs_runtime.Value
+var once_Main_foldlStr__2971809329 sync.Once
 
-func Get_Main_foldlStr__1496225921() gopurs_runtime.Value {
-	once_Main_foldlStr__1496225921.Do(func() {
-		cache_Main_foldlStr__1496225921 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldlStr__1496225921(__eta_norm_0_unused_0_box))
+func Get_Main_foldlStr__2971809329() gopurs_runtime.Value {
+	once_Main_foldlStr__2971809329.Do(func() {
+		cache_Main_foldlStr__2971809329 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldlStr__2971809329(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldlStr__1496225921
+	return cache_Main_foldlStr__2971809329
 }
 
-var cache_Main_foldlStr__1583978594 gopurs_runtime.Value
-var once_Main_foldlStr__1583978594 sync.Once
+var cache_Main_foldlStr__3397009554 gopurs_runtime.Value
+var once_Main_foldlStr__3397009554 sync.Once
 
-func Get_Main_foldlStr__1583978594() gopurs_runtime.Value {
-	once_Main_foldlStr__1583978594.Do(func() {
-		cache_Main_foldlStr__1583978594 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldlStr__1583978594(__eta_norm_0_unused_0_box))
+func Get_Main_foldlStr__3397009554() gopurs_runtime.Value {
+	once_Main_foldlStr__3397009554.Do(func() {
+		cache_Main_foldlStr__3397009554 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldlStr__3397009554(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldlStr__1583978594
+	return cache_Main_foldlStr__3397009554
 }
 
-var cache_Main_foldlStr__478341315 gopurs_runtime.Value
-var once_Main_foldlStr__478341315 sync.Once
+var cache_Main_foldlStr__3236478579 gopurs_runtime.Value
+var once_Main_foldlStr__3236478579 sync.Once
 
-func Get_Main_foldlStr__478341315() gopurs_runtime.Value {
-	once_Main_foldlStr__478341315.Do(func() {
-		cache_Main_foldlStr__478341315 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldlStr__478341315(__eta_norm_0_unused_0_box))
+func Get_Main_foldlStr__3236478579() gopurs_runtime.Value {
+	once_Main_foldlStr__3236478579.Do(func() {
+		cache_Main_foldlStr__3236478579 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldlStr__3236478579(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldlStr__478341315
+	return cache_Main_foldlStr__3236478579
 }
 
 var cache_Main_foldMapStr gopurs_runtime.Value
@@ -1641,100 +1641,100 @@ func Get_Main_foldMapStr() gopurs_runtime.Value {
 	return cache_Main_foldMapStr
 }
 
-var cache_Main_foldMapStr__2116068004 gopurs_runtime.Value
-var once_Main_foldMapStr__2116068004 sync.Once
+var cache_Main_foldMapStr__559547092 gopurs_runtime.Value
+var once_Main_foldMapStr__559547092 sync.Once
 
-func Get_Main_foldMapStr__2116068004() gopurs_runtime.Value {
-	once_Main_foldMapStr__2116068004.Do(func() {
-		cache_Main_foldMapStr__2116068004 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldMapStr__2116068004(__eta_norm_0_unused_0_box))
+func Get_Main_foldMapStr__559547092() gopurs_runtime.Value {
+	once_Main_foldMapStr__559547092.Do(func() {
+		cache_Main_foldMapStr__559547092 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldMapStr__559547092(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldMapStr__2116068004
+	return cache_Main_foldMapStr__559547092
 }
 
-var cache_Main_foldMapStr__325071877 gopurs_runtime.Value
-var once_Main_foldMapStr__325071877 sync.Once
+var cache_Main_foldMapStr__2906096053 gopurs_runtime.Value
+var once_Main_foldMapStr__2906096053 sync.Once
 
-func Get_Main_foldMapStr__325071877() gopurs_runtime.Value {
-	once_Main_foldMapStr__325071877.Do(func() {
-		cache_Main_foldMapStr__325071877 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldMapStr__325071877(__eta_norm_0_unused_0_box))
+func Get_Main_foldMapStr__2906096053() gopurs_runtime.Value {
+	once_Main_foldMapStr__2906096053.Do(func() {
+		cache_Main_foldMapStr__2906096053 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldMapStr__2906096053(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldMapStr__325071877
+	return cache_Main_foldMapStr__2906096053
 }
 
-var cache_Main_foldMapStr__412824550 gopurs_runtime.Value
-var once_Main_foldMapStr__412824550 sync.Once
+var cache_Main_foldMapStr__3331296278 gopurs_runtime.Value
+var once_Main_foldMapStr__3331296278 sync.Once
 
-func Get_Main_foldMapStr__412824550() gopurs_runtime.Value {
-	once_Main_foldMapStr__412824550.Do(func() {
-		cache_Main_foldMapStr__412824550 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldMapStr__412824550(__eta_norm_0_unused_0_box))
+func Get_Main_foldMapStr__3331296278() gopurs_runtime.Value {
+	once_Main_foldMapStr__3331296278.Do(func() {
+		cache_Main_foldMapStr__3331296278 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldMapStr__3331296278(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldMapStr__412824550
+	return cache_Main_foldMapStr__3331296278
 }
 
-var cache_Main_foldMapStr__3602154567 gopurs_runtime.Value
-var once_Main_foldMapStr__3602154567 sync.Once
+var cache_Main_foldMapStr__3170765303 gopurs_runtime.Value
+var once_Main_foldMapStr__3170765303 sync.Once
 
-func Get_Main_foldMapStr__3602154567() gopurs_runtime.Value {
-	once_Main_foldMapStr__3602154567.Do(func() {
-		cache_Main_foldMapStr__3602154567 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldMapStr__3602154567(__eta_norm_0_unused_0_box))
+func Get_Main_foldMapStr__3170765303() gopurs_runtime.Value {
+	once_Main_foldMapStr__3170765303.Do(func() {
+		cache_Main_foldMapStr__3170765303 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldMapStr__3170765303(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldMapStr__3602154567
+	return cache_Main_foldMapStr__3170765303
 }
 
-var cache_Main_foldMapStr__3287222048 gopurs_runtime.Value
-var once_Main_foldMapStr__3287222048 sync.Once
+var cache_Main_foldMapStr__625260368 gopurs_runtime.Value
+var once_Main_foldMapStr__625260368 sync.Once
 
-func Get_Main_foldMapStr__3287222048() gopurs_runtime.Value {
-	once_Main_foldMapStr__3287222048.Do(func() {
-		cache_Main_foldMapStr__3287222048 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldMapStr__3287222048(__eta_norm_0_unused_0_box))
+func Get_Main_foldMapStr__625260368() gopurs_runtime.Value {
+	once_Main_foldMapStr__625260368.Do(func() {
+		cache_Main_foldMapStr__625260368 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldMapStr__625260368(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldMapStr__3287222048
+	return cache_Main_foldMapStr__625260368
 }
 
-var cache_Main_foldMapStr__1496225921 gopurs_runtime.Value
-var once_Main_foldMapStr__1496225921 sync.Once
+var cache_Main_foldMapStr__2971809329 gopurs_runtime.Value
+var once_Main_foldMapStr__2971809329 sync.Once
 
-func Get_Main_foldMapStr__1496225921() gopurs_runtime.Value {
-	once_Main_foldMapStr__1496225921.Do(func() {
-		cache_Main_foldMapStr__1496225921 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldMapStr__1496225921(__eta_norm_0_unused_0_box))
+func Get_Main_foldMapStr__2971809329() gopurs_runtime.Value {
+	once_Main_foldMapStr__2971809329.Do(func() {
+		cache_Main_foldMapStr__2971809329 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldMapStr__2971809329(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldMapStr__1496225921
+	return cache_Main_foldMapStr__2971809329
 }
 
-var cache_Main_foldMapStr__1583978594 gopurs_runtime.Value
-var once_Main_foldMapStr__1583978594 sync.Once
+var cache_Main_foldMapStr__3397009554 gopurs_runtime.Value
+var once_Main_foldMapStr__3397009554 sync.Once
 
-func Get_Main_foldMapStr__1583978594() gopurs_runtime.Value {
-	once_Main_foldMapStr__1583978594.Do(func() {
-		cache_Main_foldMapStr__1583978594 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldMapStr__1583978594(__eta_norm_0_unused_0_box))
+func Get_Main_foldMapStr__3397009554() gopurs_runtime.Value {
+	once_Main_foldMapStr__3397009554.Do(func() {
+		cache_Main_foldMapStr__3397009554 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldMapStr__3397009554(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldMapStr__1583978594
+	return cache_Main_foldMapStr__3397009554
 }
 
-var cache_Main_foldMapStr__478341315 gopurs_runtime.Value
-var once_Main_foldMapStr__478341315 sync.Once
+var cache_Main_foldMapStr__3236478579 gopurs_runtime.Value
+var once_Main_foldMapStr__3236478579 sync.Once
 
-func Get_Main_foldMapStr__478341315() gopurs_runtime.Value {
-	once_Main_foldMapStr__478341315.Do(func() {
-		cache_Main_foldMapStr__478341315 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_foldMapStr__478341315(__eta_norm_0_unused_0_box))
+func Get_Main_foldMapStr__3236478579() gopurs_runtime.Value {
+	once_Main_foldMapStr__3236478579.Do(func() {
+		cache_Main_foldMapStr__3236478579 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foldMapStr__3236478579(__eta_norm_0_unused_0_box))
 		})
 	})
-	return cache_Main_foldMapStr__478341315
+	return cache_Main_foldMapStr__3236478579
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -1744,7 +1744,7 @@ func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
-			__local_var_0_0 := Call_Test_Assert_assertEqual_prime___4176622598("foldl - M0", struct {
+			__local_var_0_0 := Call_Test_Assert_assertEqual_prime___2399920497("foldl - M0", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -1754,7 +1754,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_0_0
 			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = __local_var_1_1
-			__local_var_2_2 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldl - M1", struct {
+			__local_var_2_2 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldl - M1", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -1762,7 +1762,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_2.StrVal(), "<"), next_3.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m1()).StrVal(), "Start<a<b<c"}), gopurs_runtime.Value{})
 			_ = __local_var_2_2
-			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldl - M2", struct {
+			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldl - M2", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -1770,7 +1770,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_3.StrVal(), "<"), next_4.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m2()).StrVal(), "Start"}), gopurs_runtime.Value{})
 			_ = __local_var_3_3
-			__local_var_4_4 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldl - M3", struct {
+			__local_var_4_4 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldl - M3", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -1778,7 +1778,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_4.StrVal(), "<"), next_5.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m3()).StrVal(), "Start<a<b<c"}), gopurs_runtime.Value{})
 			_ = __local_var_4_4
-			__local_var_5_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldl - M4", struct {
+			__local_var_5_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldl - M4", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -1888,7 +1888,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return clone
 			}())})))}).StrVal(), "Start<a<b<c"}), gopurs_runtime.Value{})
 			_ = __local_var_5_5
-			__local_var_6_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldl - M5", struct {
+			__local_var_6_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldl - M5", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -1896,7 +1896,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_6.StrVal(), "<"), next_7.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m5()).StrVal(), "Start<a<b<c"}), gopurs_runtime.Value{})
 			_ = __local_var_6_6
-			__local_var_7_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldl - M6", struct {
+			__local_var_7_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldl - M6", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -1904,7 +1904,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_7.StrVal(), "<"), next_8.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m6()).StrVal(), "Start<a<b<c<a<b<c<a<b<c"}), gopurs_runtime.Value{})
 			_ = __local_var_7_7
-			__local_var_8_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldl - M7", struct {
+			__local_var_8_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldl - M7", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -1912,7 +1912,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_8.StrVal(), "<"), next_9.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m7()).StrVal(), "Start<a<b<c"}), gopurs_runtime.Value{})
 			_ = __local_var_8_8
-			__local_var_9_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M0", struct {
+			__local_var_9_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldr - M0", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -1920,7 +1920,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_9.StrVal(), ">"), acc_10.StrVal()))
 			}), gopurs_runtime.Str("Start"), gopurs_runtime.Value{Type: 9, IntVal: 3852365315, UnsafePtr: unsafe.Pointer(Rebox_Main_3741832558_67812977(nil))}).StrVal(), "Start"}), gopurs_runtime.Value{})
 			_ = __local_var_9_9
-			__local_var_10_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M1", struct {
+			__local_var_10_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldr - M1", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -1928,7 +1928,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_10.StrVal(), ">"), acc_11.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m1()).StrVal(), "a>b>c>Start"}), gopurs_runtime.Value{})
 			_ = __local_var_10_10
-			__local_var_11_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M2", struct {
+			__local_var_11_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldr - M2", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -1936,7 +1936,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_11.StrVal(), ">"), acc_12.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m2()).StrVal(), "Start"}), gopurs_runtime.Value{})
 			_ = __local_var_11_11
-			__local_var_12_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M3", struct {
+			__local_var_12_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldr - M3", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -1944,7 +1944,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_12.StrVal(), ">"), acc_13.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m3()).StrVal(), "a>b>c>Start"}), gopurs_runtime.Value{})
 			_ = __local_var_12_12
-			__local_var_13_13 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M4", struct {
+			__local_var_13_13 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldr - M4", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -2054,7 +2054,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return clone
 			}())})))}).StrVal(), "a>b>c>Start"}), gopurs_runtime.Value{})
 			_ = __local_var_13_13
-			__local_var_14_14 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M5", struct {
+			__local_var_14_14 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldr - M5", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -2062,7 +2062,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_14.StrVal(), ">"), acc_15.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m5()).StrVal(), "a>b>c>Start"}), gopurs_runtime.Value{})
 			_ = __local_var_14_14
-			__local_var_15_15 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M6", struct {
+			__local_var_15_15 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldr - M6", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -2070,7 +2070,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_15.StrVal(), ">"), acc_16.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m6()).StrVal(), "a>b>c>a>b>c>a>b>c>Start"}), gopurs_runtime.Value{})
 			_ = __local_var_15_15
-			__local_var_16_16 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M7", struct {
+			__local_var_16_16 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldr - M7", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -2078,7 +2078,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_16.StrVal(), ">"), acc_17.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m7()).StrVal(), "a>b>c>Start"}), gopurs_runtime.Value{})
 			_ = __local_var_16_16
-			__local_var_17_17 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldMap - M0", struct {
+			__local_var_17_17 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldMap - M0", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -2086,7 +2086,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return x_17
 			}), gopurs_runtime.Value{Type: 9, IntVal: 3852365315, UnsafePtr: unsafe.Pointer(Rebox_Main_3741832558_67812977(nil))}).StrVal(), ""}), gopurs_runtime.Value{})
 			_ = __local_var_17_17
-			__local_var_18_18 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldMap - M1", struct {
+			__local_var_18_18 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldMap - M1", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -2094,7 +2094,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return x_18
 			}), Get_Main_m1()).StrVal(), "abc"}), gopurs_runtime.Value{})
 			_ = __local_var_18_18
-			__local_var_19_19 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldMap - M2", struct {
+			__local_var_19_19 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldMap - M2", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -2102,7 +2102,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return x_19
 			}), Get_Main_m2()).StrVal(), ""}), gopurs_runtime.Value{})
 			_ = __local_var_19_19
-			__local_var_20_20 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldMap - M3", struct {
+			__local_var_20_20 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldMap - M3", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -2110,7 +2110,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return x_20
 			}), Get_Main_m3()).StrVal(), "abc"}), gopurs_runtime.Value{})
 			_ = __local_var_20_20
-			__local_var_21_21 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldMap - M4", struct {
+			__local_var_21_21 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldMap - M4", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -2220,7 +2220,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return clone
 			}())})))}).StrVal(), "abc"}), gopurs_runtime.Value{})
 			_ = __local_var_21_21
-			__local_var_22_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldMap - M5", struct {
+			__local_var_22_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldMap - M5", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -2228,7 +2228,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return x_22
 			}), Get_Main_m5()).StrVal(), "abc"}), gopurs_runtime.Value{})
 			_ = __local_var_22_22
-			__local_var_23_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldMap - M6", struct {
+			__local_var_23_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldMap - M6", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -2236,7 +2236,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return x_23
 			}), Get_Main_m6()).StrVal(), "abcabcabc"}), gopurs_runtime.Value{})
 			_ = __local_var_23_23
-			__local_var_24_24 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldMap - M7", struct {
+			__local_var_24_24 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2399920497("foldMap - M7", struct {
 				actual   string
 				expected string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
@@ -3225,11 +3225,11 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 	})}))}
 }
 
-func Call_Main_foldrStr__2116068004(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldrStr__2116068004:
+func Call_Main_foldrStr__559547092(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldrStr__559547092:
 	for {
 		if false {
-			continue foldrStr__2116068004
+			continue foldrStr__559547092
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3239,11 +3239,11 @@ foldrStr__2116068004:
 	}
 }
 
-func Call_Main_foldrStr__325071877(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldrStr__325071877:
+func Call_Main_foldrStr__2906096053(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldrStr__2906096053:
 	for {
 		if false {
-			continue foldrStr__325071877
+			continue foldrStr__2906096053
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3253,11 +3253,11 @@ foldrStr__325071877:
 	}
 }
 
-func Call_Main_foldrStr__412824550(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldrStr__412824550:
+func Call_Main_foldrStr__3331296278(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldrStr__3331296278:
 	for {
 		if false {
-			continue foldrStr__412824550
+			continue foldrStr__3331296278
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3267,11 +3267,11 @@ foldrStr__412824550:
 	}
 }
 
-func Call_Main_foldrStr__3602154567(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldrStr__3602154567:
+func Call_Main_foldrStr__3170765303(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldrStr__3170765303:
 	for {
 		if false {
-			continue foldrStr__3602154567
+			continue foldrStr__3170765303
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3281,11 +3281,11 @@ foldrStr__3602154567:
 	}
 }
 
-func Call_Main_foldrStr__3287222048(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldrStr__3287222048:
+func Call_Main_foldrStr__625260368(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldrStr__625260368:
 	for {
 		if false {
-			continue foldrStr__3287222048
+			continue foldrStr__625260368
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3397,11 +3397,11 @@ foldrStr__3287222048:
 	}
 }
 
-func Call_Main_foldrStr__1496225921(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldrStr__1496225921:
+func Call_Main_foldrStr__2971809329(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldrStr__2971809329:
 	for {
 		if false {
-			continue foldrStr__1496225921
+			continue foldrStr__2971809329
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3411,11 +3411,11 @@ foldrStr__1496225921:
 	}
 }
 
-func Call_Main_foldrStr__1583978594(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldrStr__1583978594:
+func Call_Main_foldrStr__3397009554(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldrStr__3397009554:
 	for {
 		if false {
-			continue foldrStr__1583978594
+			continue foldrStr__3397009554
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3425,11 +3425,11 @@ foldrStr__1583978594:
 	}
 }
 
-func Call_Main_foldrStr__478341315(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldrStr__478341315:
+func Call_Main_foldrStr__3236478579(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldrStr__3236478579:
 	for {
 		if false {
-			continue foldrStr__478341315
+			continue foldrStr__3236478579
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3447,11 +3447,11 @@ func Call_Main_foldlStr(dictFoldable_0_loop *Constructor_Data_Foldable_Foldable[
 	}), gopurs_runtime.Str("Start"))
 }
 
-func Call_Main_foldlStr__2116068004(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldlStr__2116068004:
+func Call_Main_foldlStr__559547092(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldlStr__559547092:
 	for {
 		if false {
-			continue foldlStr__2116068004
+			continue foldlStr__559547092
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3461,11 +3461,11 @@ foldlStr__2116068004:
 	}
 }
 
-func Call_Main_foldlStr__325071877(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldlStr__325071877:
+func Call_Main_foldlStr__2906096053(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldlStr__2906096053:
 	for {
 		if false {
-			continue foldlStr__325071877
+			continue foldlStr__2906096053
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3475,11 +3475,11 @@ foldlStr__325071877:
 	}
 }
 
-func Call_Main_foldlStr__412824550(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldlStr__412824550:
+func Call_Main_foldlStr__3331296278(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldlStr__3331296278:
 	for {
 		if false {
-			continue foldlStr__412824550
+			continue foldlStr__3331296278
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3489,11 +3489,11 @@ foldlStr__412824550:
 	}
 }
 
-func Call_Main_foldlStr__3602154567(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldlStr__3602154567:
+func Call_Main_foldlStr__3170765303(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldlStr__3170765303:
 	for {
 		if false {
-			continue foldlStr__3602154567
+			continue foldlStr__3170765303
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3503,11 +3503,11 @@ foldlStr__3602154567:
 	}
 }
 
-func Call_Main_foldlStr__3287222048(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldlStr__3287222048:
+func Call_Main_foldlStr__625260368(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldlStr__625260368:
 	for {
 		if false {
-			continue foldlStr__3287222048
+			continue foldlStr__625260368
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3619,11 +3619,11 @@ foldlStr__3287222048:
 	}
 }
 
-func Call_Main_foldlStr__1496225921(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldlStr__1496225921:
+func Call_Main_foldlStr__2971809329(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldlStr__2971809329:
 	for {
 		if false {
-			continue foldlStr__1496225921
+			continue foldlStr__2971809329
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3633,11 +3633,11 @@ foldlStr__1496225921:
 	}
 }
 
-func Call_Main_foldlStr__1583978594(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldlStr__1583978594:
+func Call_Main_foldlStr__3397009554(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldlStr__3397009554:
 	for {
 		if false {
-			continue foldlStr__1583978594
+			continue foldlStr__3397009554
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3647,11 +3647,11 @@ foldlStr__1583978594:
 	}
 }
 
-func Call_Main_foldlStr__478341315(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldlStr__478341315:
+func Call_Main_foldlStr__3236478579(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldlStr__3236478579:
 	for {
 		if false {
-			continue foldlStr__478341315
+			continue foldlStr__3236478579
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3669,11 +3669,11 @@ func Call_Main_foldMapStr(dictFoldable_0_loop *Constructor_Data_Foldable_Foldabl
 	}))
 }
 
-func Call_Main_foldMapStr__2116068004(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldMapStr__2116068004:
+func Call_Main_foldMapStr__559547092(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldMapStr__559547092:
 	for {
 		if false {
-			continue foldMapStr__2116068004
+			continue foldMapStr__559547092
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3683,11 +3683,11 @@ foldMapStr__2116068004:
 	}
 }
 
-func Call_Main_foldMapStr__325071877(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldMapStr__325071877:
+func Call_Main_foldMapStr__2906096053(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldMapStr__2906096053:
 	for {
 		if false {
-			continue foldMapStr__325071877
+			continue foldMapStr__2906096053
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3697,11 +3697,11 @@ foldMapStr__325071877:
 	}
 }
 
-func Call_Main_foldMapStr__412824550(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldMapStr__412824550:
+func Call_Main_foldMapStr__3331296278(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldMapStr__3331296278:
 	for {
 		if false {
-			continue foldMapStr__412824550
+			continue foldMapStr__3331296278
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3711,11 +3711,11 @@ foldMapStr__412824550:
 	}
 }
 
-func Call_Main_foldMapStr__3602154567(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldMapStr__3602154567:
+func Call_Main_foldMapStr__3170765303(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldMapStr__3170765303:
 	for {
 		if false {
-			continue foldMapStr__3602154567
+			continue foldMapStr__3170765303
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3725,11 +3725,11 @@ foldMapStr__3602154567:
 	}
 }
 
-func Call_Main_foldMapStr__3287222048(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldMapStr__3287222048:
+func Call_Main_foldMapStr__625260368(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldMapStr__625260368:
 	for {
 		if false {
-			continue foldMapStr__3287222048
+			continue foldMapStr__625260368
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3841,11 +3841,11 @@ foldMapStr__3287222048:
 	}
 }
 
-func Call_Main_foldMapStr__1496225921(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldMapStr__1496225921:
+func Call_Main_foldMapStr__2971809329(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldMapStr__2971809329:
 	for {
 		if false {
-			continue foldMapStr__1496225921
+			continue foldMapStr__2971809329
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3855,11 +3855,11 @@ foldMapStr__1496225921:
 	}
 }
 
-func Call_Main_foldMapStr__1583978594(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldMapStr__1583978594:
+func Call_Main_foldMapStr__3397009554(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldMapStr__3397009554:
 	for {
 		if false {
-			continue foldMapStr__1583978594
+			continue foldMapStr__3397009554
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
@@ -3869,11 +3869,11 @@ foldMapStr__1583978594:
 	}
 }
 
-func Call_Main_foldMapStr__478341315(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
-foldMapStr__478341315:
+func Call_Main_foldMapStr__3236478579(__eta_norm_0_unused_0_loop gopurs_runtime.Value) string {
+foldMapStr__3236478579:
 	for {
 		if false {
-			continue foldMapStr__478341315
+			continue foldMapStr__3236478579
 		}
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
