@@ -1,8 +1,8 @@
-
 package gopurs_runtime
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"math"
 	"reflect"
@@ -15,6 +15,30 @@ import (
 )
 
 var EventLoop sync.WaitGroup
+
+// Keep the published *any reference envelope. A private payload lets new
+// writes replace Value fields without allocating another boxed interface.
+// Legacy writes may replace the payload; the next new write promotes it again.
+type stValueCell struct{ value Value }
+
+func NewSTRef(value Value) Value {
+	var cell any = &stValueCell{value}
+	return Any(&cell)
+}
+
+func ReadSTRef(ref Value) Value {
+	return AnyToValue(*ref.PtrVal().(*any))
+}
+
+func WriteSTRef(ref, value Value) Value {
+	slot := ref.PtrVal().(*any)
+	if cell, ok := (*slot).(*stValueCell); ok {
+		cell.value = value
+	} else {
+		*slot = &stValueCell{value}
+	}
+	return value
+}
 
 func Retain() {
 	EventLoop.Add(1)
@@ -83,11 +107,11 @@ func EffectFnAffAcquire(run func(context.Context) (Value, func(), error)) Value 
 // delivery belongs to the winning completion, including when cancellation is
 // requested while that callback is already executing.
 type ffiAffOperation struct {
-	state atomic.Uint32
-	ctx context.Context
-	cancel context.CancelCauseFunc
+	state     atomic.Uint32
+	ctx       context.Context
+	cancel    context.CancelCauseFunc
 	delivered chan struct{}
-	onError Value
+	onError   Value
 	onSuccess Value
 }
 
@@ -148,32 +172,32 @@ func (operation *ffiAffOperation) stop(reason Value) <-chan struct{} {
 var StructGetters = map[int64]func(unsafe.Pointer, string) Value{}
 
 const (
-	TypeFunc = 1
-	TypeFunc2 = 2
-	TypeFunc3 = 3
-	TypeFunc4 = 4
-	TypeFunc5 = 5
-	TypeInt = 6
-	TypeString = 7
-	TypeRecord = 8
-	TypeConstructor = 9
-	TypeFloat = 10
-	TypeBool = 11
-	TypeArray = 12
-	TypeAny = 13
-	TypeFunc6 = 14
-	TypeFunc7 = 15
-	TypeFunc8 = 16
-	TypeFunc9 = 17
-	TypeFunc10 = 18
-	TypeRecord0 = 19
-	TypeRecord1 = 20
-	TypeRecord2 = 21
-	TypeRecord3 = 22
-	TypeRecord4 = 23
-	TypeRecord5 = 24
-	TypeRecordData = 25
-	TypeFunc11 = 26
+	TypeFunc         = 1
+	TypeFunc2        = 2
+	TypeFunc3        = 3
+	TypeFunc4        = 4
+	TypeFunc5        = 5
+	TypeInt          = 6
+	TypeString       = 7
+	TypeRecord       = 8
+	TypeConstructor  = 9
+	TypeFloat        = 10
+	TypeBool         = 11
+	TypeArray        = 12
+	TypeAny          = 13
+	TypeFunc6        = 14
+	TypeFunc7        = 15
+	TypeFunc8        = 16
+	TypeFunc9        = 17
+	TypeFunc10       = 18
+	TypeRecord0      = 19
+	TypeRecord1      = 20
+	TypeRecord2      = 21
+	TypeRecord3      = 22
+	TypeRecord4      = 23
+	TypeRecord5      = 24
+	TypeRecordData   = 25
+	TypeFunc11       = 26
 	TypeFunctionData = 27
 )
 
@@ -184,7 +208,6 @@ type Value struct {
 	Type      int
 	IntVal    int64
 	UnsafePtr unsafe.Pointer
-
 }
 
 // IncRef increments the Rc field if the value is a pointer ADT.
@@ -205,15 +228,21 @@ func (v Value) FloatVal() float64 {
 
 // StrValue reads a TypeString payload.
 //
-// Strings are packed into the Value: IntVal holds the byte length and
-// UnsafePtr the immutable string data (unsafe.StringData). The referenced
-// bytes must never be mutated for the whole lifetime of the Value, as
+// Strings are packed into the Value: a nonnegative IntVal holds the byte
+// length. A negative IntVal encodes optional immutable UTF-16 and byte lengths
+// as -1 - ((byteLength << 31) | codeUnits). UnsafePtr holds the immutable
+// string data (unsafe.StringData). The referenced bytes must never be mutated
+// for the whole lifetime of the Value, as
 // required by unsafe.String. A substring keeps its whole backing alive.
 func StrValue(v Value) string {
 	if v.UnsafePtr == nil {
 		return ""
 	}
-	return unsafe.String((*byte)(v.UnsafePtr), int(v.IntVal))
+	length := v.IntVal
+	if length < 0 {
+		length = (-1 - length) >> 31
+	}
+	return unsafe.String((*byte)(v.UnsafePtr), int(length))
 }
 
 func Str(v string) Value {
@@ -225,6 +254,151 @@ func Str(v string) Value {
 
 func (v Value) StrVal() string {
 	return StrValue(v)
+}
+
+const stringCodeUnitsMask int64 = 1<<31 - 1
+
+// packStringCodeUnits accepts only representable lengths. Its separate length
+// arguments let boundary tests cover large strings without allocating them.
+func packStringCodeUnits(bytes, units int) (int64, bool) {
+	if bytes < 0 || int64(bytes) > stringCodeUnitsMask || units < 0 || units > bytes {
+		return 0, false
+	}
+	return -1 - ((int64(bytes) << 31) | int64(units)), true
+}
+
+// StrWithCodeUnits attaches an already computed UTF-16 length to an immutable
+// string. Callers must supply the exact CodeUnits length of these bytes,
+// including WTF-8 surrogates and one unit per malformed UTF-8 byte. It never
+// computes the length itself. Unrepresentable lengths keep the ordinary string
+// representation and use the decoder when length is requested.
+func StrWithCodeUnits(s string, units int) Value {
+	value := Str(s)
+	if len(s) == 0 {
+		return value
+	}
+	if packed, ok := packStringCodeUnits(len(s), units); ok {
+		value.IntVal = packed
+	}
+	return value
+}
+
+// NormalizeStringValue replaces an identity String unbox/rebox without losing
+// optional immutable length metadata. Other values retain the previous path.
+func NormalizeStringValue(value Value) Value {
+	if value.Type == TypeString {
+		return value
+	}
+	return Str(value.StrVal())
+}
+
+// CachedStringCodeUnits returns a known UTF-16 length, if present. The ordinary
+// empty-string representation also has a known zero length without metadata.
+// Unknown strings are left to the caller's normal decoder.
+func CachedStringCodeUnits(value Value) (int, bool) {
+	if value.Type != TypeString {
+		return 0, false
+	}
+	if value.IntVal == 0 {
+		return 0, true
+	}
+	if value.IntVal < 0 {
+		return int((-1 - value.IntVal) & stringCodeUnitsMask), true
+	}
+	return 0, false
+}
+
+// StringCodeUnitsLength returns the UTF-16 length, using metadata when a
+// producer already knows it. Ordinary strings use the same scan as the FFI.
+func StringCodeUnitsLength(value Value) int {
+	if units, known := CachedStringCodeUnits(value); known {
+		return units
+	}
+	return CountStringCodeUnits(value.StrVal())
+}
+
+// Zero entries are invalid leading bytes. Surrogate encodings use width 3,
+// because native strings also preserve isolated UTF-16 units as WTF-8.
+var stringUnitSequenceWidth = [256]byte{
+	0xc2: 2, 0xc3: 2, 0xc4: 2, 0xc5: 2, 0xc6: 2, 0xc7: 2,
+	0xc8: 2, 0xc9: 2, 0xca: 2, 0xcb: 2, 0xcc: 2, 0xcd: 2, 0xce: 2, 0xcf: 2,
+	0xd0: 2, 0xd1: 2, 0xd2: 2, 0xd3: 2, 0xd4: 2, 0xd5: 2, 0xd6: 2, 0xd7: 2,
+	0xd8: 2, 0xd9: 2, 0xda: 2, 0xdb: 2, 0xdc: 2, 0xdd: 2, 0xde: 2, 0xdf: 2,
+	0xe0: 3, 0xe1: 3, 0xe2: 3, 0xe3: 3, 0xe4: 3, 0xe5: 3, 0xe6: 3, 0xe7: 3,
+	0xe8: 3, 0xe9: 3, 0xea: 3, 0xeb: 3, 0xec: 3, 0xed: 3, 0xee: 3, 0xef: 3,
+	0xf0: 4, 0xf1: 4, 0xf2: 4, 0xf3: 4, 0xf4: 4,
+}
+
+func stringASCIIUnitPrefix(s string) int {
+	i := 0
+	for i+32 <= len(s) {
+		b := []byte(s[i : i+32])
+		word := binary.LittleEndian.Uint64(b) | binary.LittleEndian.Uint64(b[8:]) |
+			binary.LittleEndian.Uint64(b[16:]) | binary.LittleEndian.Uint64(b[24:])
+		if word&0x8080808080808080 != 0 {
+			break
+		}
+		i += 32
+	}
+	for i+8 <= len(s) {
+		if binary.LittleEndian.Uint64([]byte(s[i:i+8]))&0x8080808080808080 != 0 {
+			break
+		}
+		i += 8
+	}
+	for i < len(s) && s[i] < utf8.RuneSelf {
+		i++
+	}
+	return i
+}
+
+// CountStringCodeUnits scans a native string using PureScript UTF-16 semantics.
+func CountStringCodeUnits(s string) int {
+	// Count ASCII runs a word at a time. The width table avoids trying every
+	// UTF-8 sequence width for each non-ASCII character. Invalid sequences
+	// still consume one byte, matching the UTF-8/WTF-8 decoder.
+	units := 0
+	for len(s) > 0 {
+		b := s[0]
+		if b < utf8.RuneSelf {
+			s = s[1:]
+			units++
+			if len(s) == 0 {
+				break
+			}
+			b = s[0]
+			if b < utf8.RuneSelf {
+				n := stringASCIIUnitPrefix(s)
+				units += n
+				s = s[n:]
+				if len(s) == 0 {
+					break
+				}
+				b = s[0]
+			}
+		}
+		units++
+		switch stringUnitSequenceWidth[b] {
+		case 2:
+			if len(s) >= 2 && s[1]&0xc0 == 0x80 {
+				s = s[2:]
+				continue
+			}
+		case 3:
+			if len(s) >= 3 && s[1]&0xc0 == 0x80 && s[2]&0xc0 == 0x80 && (b != 0xe0 || s[1] >= 0xa0) {
+				s = s[3:]
+				continue
+			}
+		case 4:
+			if len(s) >= 4 && s[1]&0xc0 == 0x80 && s[2]&0xc0 == 0x80 && s[3]&0xc0 == 0x80 && (b != 0xf0 || s[1] >= 0x90) && (b != 0xf4 || s[1] <= 0x8f) {
+				units++
+				s = s[4:]
+				continue
+			}
+		}
+		s = s[1:]
+	}
+	return units
 }
 
 // ConcatString concatenates PureScript UTF-16 strings in their canonical WTF-8
@@ -241,6 +415,61 @@ func ConcatString(left, right string) string {
 		return left[:n-3] + string(0x10000+(high<<10)+low) + right[3:]
 	}
 	return left + right
+}
+
+// ConcatStrings implements a strict fold of the canonical string append. The
+// projection is compiler-generated (identity or Value.StrVal), never a user
+// callback. Holding a trailing high surrogate preserves ConcatString's boundary
+// normalization, including when empty fragments separate a surrogate pair.
+func ConcatStrings[T any](initial string, parts []T, text func(T) string) string {
+	if len(parts) == 0 {
+		return initial
+	}
+	total := len(initial)
+	for _, part := range parts {
+		total += len(text(part))
+	}
+	var b strings.Builder
+	b.Grow(total)
+	// Keep the last three bytes, including partial/malformed UTF-8. An append
+	// may complete a high surrogate from bytes split across previous fragments.
+	var tail [3]byte
+	n := 0
+	appendRaw := func(s string) {
+		if n+len(s) <= len(tail) {
+			copy(tail[n:], s)
+			n += len(s)
+			return
+		}
+		flush := n + len(s) - len(tail)
+		if flush < n {
+			b.Write(tail[:flush])
+			copy(tail[:], tail[flush:n])
+			copy(tail[n-flush:], s)
+		} else {
+			b.Write(tail[:n])
+			cut := flush - n
+			b.WriteString(s[:cut])
+			copy(tail[:], s[cut:])
+		}
+		n = len(tail)
+	}
+	appendRaw(initial)
+	for _, part := range parts {
+		s := text(part)
+		if n == 3 && len(s) >= 3 &&
+			tail[0] == 0xed && tail[1]&0xf0 == 0xa0 && tail[2]&0xc0 == 0x80 &&
+			s[0] == 0xed && s[1]&0xf0 == 0xb0 && s[2]&0xc0 == 0x80 {
+			high := rune(tail[1]&0x0f)<<6 | rune(tail[2]&0x3f)
+			low := rune(s[1]&0x0f)<<6 | rune(s[2]&0x3f)
+			n = 0
+			appendRaw(string(0x10000 + (high << 10) + low))
+			s = s[3:]
+		}
+		appendRaw(s)
+	}
+	b.Write(tail[:n])
+	return b.String()
 }
 
 func Int(v int64) Value {
@@ -261,13 +490,13 @@ func IntMul(a, b int64) int64 {
 	return int64(int32(int64(math.Mod(float64(a)*float64(b), 4294967296))))
 }
 
-func IntBitNot(a int64) int64 { return int64(^int32(a)) }
+func IntBitNot(a int64) int64    { return int64(^int32(a)) }
 func IntBitAnd(a, b int64) int64 { return int64(int32(a) & int32(b)) }
-func IntBitOr(a, b int64) int64 { return int64(int32(a) | int32(b)) }
+func IntBitOr(a, b int64) int64  { return int64(int32(a) | int32(b)) }
 func IntBitXor(a, b int64) int64 { return int64(int32(a) ^ int32(b)) }
-func IntShl(a, b int64) int64 { return int64(int32(a) << (uint32(b) & 31)) }
-func IntShr(a, b int64) int64 { return int64(int32(a) >> (uint32(b) & 31)) }
-func IntZshr(a, b int64) int64 { return int64(uint32(a) >> (uint32(b) & 31)) }
+func IntShl(a, b int64) int64    { return int64(int32(a) << (uint32(b) & 31)) }
+func IntShr(a, b int64) int64    { return int64(int32(a) >> (uint32(b) & 31)) }
+func IntZshr(a, b int64) int64   { return int64(uint32(a) >> (uint32(b) & 31)) }
 
 // PureScript uses Euclidean division: a non-negative remainder, and zero
 // for both division and modulo by zero. Go instead truncates toward zero.
@@ -276,7 +505,7 @@ func IntDiv(a, b int64) int64 {
 		return 0
 	}
 	q := a / b
-	if a % b < 0 {
+	if a%b < 0 {
 		if b > 0 {
 			q--
 		} else {
@@ -317,18 +546,38 @@ func Bool(v bool) Value {
 	return Value{Type: TypeBool, IntVal: i}
 }
 
-func FloatAdd(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) + math.Float64frombits(uint64(b.IntVal))) }
-func FloatSub(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) - math.Float64frombits(uint64(b.IntVal))) }
-func FloatMul(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) * math.Float64frombits(uint64(b.IntVal))) }
-func FloatDiv(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) / math.Float64frombits(uint64(b.IntVal))) }
+func FloatAdd(a, b Value) Value {
+	return Float(math.Float64frombits(uint64(a.IntVal)) + math.Float64frombits(uint64(b.IntVal)))
+}
+func FloatSub(a, b Value) Value {
+	return Float(math.Float64frombits(uint64(a.IntVal)) - math.Float64frombits(uint64(b.IntVal)))
+}
+func FloatMul(a, b Value) Value {
+	return Float(math.Float64frombits(uint64(a.IntVal)) * math.Float64frombits(uint64(b.IntVal)))
+}
+func FloatDiv(a, b Value) Value {
+	return Float(math.Float64frombits(uint64(a.IntVal)) / math.Float64frombits(uint64(b.IntVal)))
+}
 func FloatNeg(a Value) Value { return Float(-math.Float64frombits(uint64(a.IntVal))) }
 
-func FloatEq(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) == math.Float64frombits(uint64(b.IntVal))) }
-func FloatNeq(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) != math.Float64frombits(uint64(b.IntVal))) }
-func FloatLt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) < math.Float64frombits(uint64(b.IntVal))) }
-func FloatLte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) <= math.Float64frombits(uint64(b.IntVal))) }
-func FloatGt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) > math.Float64frombits(uint64(b.IntVal))) }
-func FloatGte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) >= math.Float64frombits(uint64(b.IntVal))) }
+func FloatEq(a, b Value) Value {
+	return Bool(math.Float64frombits(uint64(a.IntVal)) == math.Float64frombits(uint64(b.IntVal)))
+}
+func FloatNeq(a, b Value) Value {
+	return Bool(math.Float64frombits(uint64(a.IntVal)) != math.Float64frombits(uint64(b.IntVal)))
+}
+func FloatLt(a, b Value) Value {
+	return Bool(math.Float64frombits(uint64(a.IntVal)) < math.Float64frombits(uint64(b.IntVal)))
+}
+func FloatLte(a, b Value) Value {
+	return Bool(math.Float64frombits(uint64(a.IntVal)) <= math.Float64frombits(uint64(b.IntVal)))
+}
+func FloatGt(a, b Value) Value {
+	return Bool(math.Float64frombits(uint64(a.IntVal)) > math.Float64frombits(uint64(b.IntVal)))
+}
+func FloatGte(a, b Value) Value {
+	return Bool(math.Float64frombits(uint64(a.IntVal)) >= math.Float64frombits(uint64(b.IntVal)))
+}
 
 func Zshr(a Value, b Value) Value {
 	return Int(IntZshr(a.IntVal, b.IntVal))
@@ -370,14 +619,22 @@ func (v Value) BoolVal() bool {
 
 func (v Value) AnyVal() any {
 	switch v.Type {
-	case TypeInt: return v.IntVal
-	case TypeFloat: return math.Float64frombits(uint64(v.IntVal))
-	case TypeString: return StrValue(v)
-	case TypeBool: return v.IntVal != 0
-	case TypeArray: return *(*[]Value)(v.UnsafePtr)
-	case TypeRecord: return *(*map[string]Value)(v.UnsafePtr)
-	case TypeAny: return v.PtrVal()
-	case TypeConstructor: return v
+	case TypeInt:
+		return v.IntVal
+	case TypeFloat:
+		return math.Float64frombits(uint64(v.IntVal))
+	case TypeString:
+		return StrValue(v)
+	case TypeBool:
+		return v.IntVal != 0
+	case TypeArray:
+		return *(*[]Value)(v.UnsafePtr)
+	case TypeRecord:
+		return *(*map[string]Value)(v.UnsafePtr)
+	case TypeAny:
+		return v.PtrVal()
+	case TypeConstructor:
+		return v
 	default:
 		if v.Type >= TypeRecord0 && v.Type <= TypeRecordData {
 			return RecordToMap(v)
@@ -566,22 +823,53 @@ func RecordDict(keys []string, vals []Value) Value {
 }
 
 type RecordData0 struct{}
+
 func RecordDict0() Value { return Value{Type: TypeRecord0, UnsafePtr: unsafe.Pointer(&RecordData0{})} }
 
-type RecordData1 struct { K0 string; V0 Value }
-func RecordDict1(k0 string, v0 Value) Value { return Value{Type: TypeRecord1, UnsafePtr: unsafe.Pointer(&RecordData1{k0, v0})} }
+type RecordData1 struct {
+	K0 string
+	V0 Value
+}
 
-type RecordData2 struct { K0, K1 string; V0, V1 Value }
-func RecordDict2(k0, k1 string, v0, v1 Value) Value { return Value{Type: TypeRecord2, UnsafePtr: unsafe.Pointer(&RecordData2{k0, k1, v0, v1})} }
+func RecordDict1(k0 string, v0 Value) Value {
+	return Value{Type: TypeRecord1, UnsafePtr: unsafe.Pointer(&RecordData1{k0, v0})}
+}
 
-type RecordData3 struct { K0, K1, K2 string; V0, V1, V2 Value }
-func RecordDict3(k0, k1, k2 string, v0, v1, v2 Value) Value { return Value{Type: TypeRecord3, UnsafePtr: unsafe.Pointer(&RecordData3{k0, k1, k2, v0, v1, v2})} }
+type RecordData2 struct {
+	K0, K1 string
+	V0, V1 Value
+}
 
-type RecordData4 struct { K0, K1, K2, K3 string; V0, V1, V2, V3 Value }
-func RecordDict4(k0, k1, k2, k3 string, v0, v1, v2, v3 Value) Value { return Value{Type: TypeRecord4, UnsafePtr: unsafe.Pointer(&RecordData4{k0, k1, k2, k3, v0, v1, v2, v3})} }
+func RecordDict2(k0, k1 string, v0, v1 Value) Value {
+	return Value{Type: TypeRecord2, UnsafePtr: unsafe.Pointer(&RecordData2{k0, k1, v0, v1})}
+}
 
-type RecordData5 struct { K0, K1, K2, K3, K4 string; V0, V1, V2, V3, V4 Value }
-func RecordDict5(k0, k1, k2, k3, k4 string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeRecord5, UnsafePtr: unsafe.Pointer(&RecordData5{k0, k1, k2, k3, k4, v0, v1, v2, v3, v4})} }
+type RecordData3 struct {
+	K0, K1, K2 string
+	V0, V1, V2 Value
+}
+
+func RecordDict3(k0, k1, k2 string, v0, v1, v2 Value) Value {
+	return Value{Type: TypeRecord3, UnsafePtr: unsafe.Pointer(&RecordData3{k0, k1, k2, v0, v1, v2})}
+}
+
+type RecordData4 struct {
+	K0, K1, K2, K3 string
+	V0, V1, V2, V3 Value
+}
+
+func RecordDict4(k0, k1, k2, k3 string, v0, v1, v2, v3 Value) Value {
+	return Value{Type: TypeRecord4, UnsafePtr: unsafe.Pointer(&RecordData4{k0, k1, k2, k3, v0, v1, v2, v3})}
+}
+
+type RecordData5 struct {
+	K0, K1, K2, K3, K4 string
+	V0, V1, V2, V3, V4 Value
+}
+
+func RecordDict5(k0, k1, k2, k3, k4 string, v0, v1, v2, v3, v4 Value) Value {
+	return Value{Type: TypeRecord5, UnsafePtr: unsafe.Pointer(&RecordData5{k0, k1, k2, k3, k4, v0, v1, v2, v3, v4})}
+}
 
 func UnboxObject(v Value) map[string]any {
 	if v.Type == TypeAny {
@@ -600,7 +888,9 @@ func UnboxObject(v Value) map[string]any {
 	}
 	m := RecordToMap(v)
 	res := make(map[string]any, len(m))
-	for k, v2 := range m { res[k] = v2 }
+	for k, v2 := range m {
+		res[k] = v2
+	}
 	return res
 }
 
@@ -608,14 +898,18 @@ func RecordToMap(obj Value) map[string]Value {
 	if obj.Type == TypeRecord {
 		m := *(*map[string]Value)(obj.UnsafePtr)
 		res := make(map[string]Value, len(m))
-		for k, v := range m { res[k] = v }
+		for k, v := range m {
+			res[k] = v
+		}
 		return res
 	}
 	if obj.Type == TypeAny {
 		v := obj.PtrVal()
 		if m, ok := v.(map[string]any); ok {
 			res := make(map[string]Value, len(m))
-			for k, v2 := range m { res[k] = Box(v2) }
+			for k, v2 := range m {
+				res[k] = Box(v2)
+			}
 			return res
 		}
 		if m, ok := v.(map[string]Value); ok {
@@ -634,18 +928,35 @@ func RecordToMap(obj Value) map[string]Value {
 	switch obj.Type {
 	case TypeRecord0:
 	case TypeRecord1:
-		r := (*RecordData1)(obj.UnsafePtr); res[r.K0] = r.V0
+		r := (*RecordData1)(obj.UnsafePtr)
+		res[r.K0] = r.V0
 	case TypeRecord2:
-		r := (*RecordData2)(obj.UnsafePtr); res[r.K0] = r.V0; res[r.K1] = r.V1
+		r := (*RecordData2)(obj.UnsafePtr)
+		res[r.K0] = r.V0
+		res[r.K1] = r.V1
 	case TypeRecord3:
-		r := (*RecordData3)(obj.UnsafePtr); res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2
+		r := (*RecordData3)(obj.UnsafePtr)
+		res[r.K0] = r.V0
+		res[r.K1] = r.V1
+		res[r.K2] = r.V2
 	case TypeRecord4:
-		r := (*RecordData4)(obj.UnsafePtr); res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2; res[r.K3] = r.V3
+		r := (*RecordData4)(obj.UnsafePtr)
+		res[r.K0] = r.V0
+		res[r.K1] = r.V1
+		res[r.K2] = r.V2
+		res[r.K3] = r.V3
 	case TypeRecord5:
-		r := (*RecordData5)(obj.UnsafePtr); res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2; res[r.K3] = r.V3; res[r.K4] = r.V4
+		r := (*RecordData5)(obj.UnsafePtr)
+		res[r.K0] = r.V0
+		res[r.K1] = r.V1
+		res[r.K2] = r.V2
+		res[r.K3] = r.V3
+		res[r.K4] = r.V4
 	case TypeRecordData:
 		r := (*RecordData)(obj.UnsafePtr)
-		for i, k := range r.Keys { res[k] = r.Vals[i] }
+		for i, k := range r.Keys {
+			res[k] = r.Vals[i]
+		}
 	}
 	return res
 }
@@ -656,7 +967,9 @@ func CoerceToStruct[T any](val Value) *T {
 	}
 	res := new(T)
 	// Empty and single-field records need neither a map nor key sorting.
-	if val.Type == TypeRecord0 { return res }
+	if val.Type == TypeRecord0 {
+		return res
+	}
 	resVal := reflect.ValueOf(res).Elem()
 	if val.Type == TypeRecord1 {
 		resVal.Field(1).Set(reflect.ValueOf((*RecordData1)(val.UnsafePtr).V0))
@@ -668,7 +981,7 @@ func CoerceToStruct[T any](val Value) *T {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	
+
 	for i, k := range keys {
 		resVal.Field(i + 1).Set(reflect.ValueOf(m[k]))
 	}
@@ -698,37 +1011,70 @@ func RecordGet(obj Value, key string) Value {
 			return Box(value)
 		}
 	}
-    switch obj.Type {
-    case TypeRecord: return (*(*map[string]Value)(obj.UnsafePtr))[key]
+	switch obj.Type {
+	case TypeRecord:
+		return (*(*map[string]Value)(obj.UnsafePtr))[key]
 	case TypeRecord1:
 		r := (*RecordData1)(obj.UnsafePtr)
-		if r.K0 == key { return r.V0 }
+		if r.K0 == key {
+			return r.V0
+		}
 	case TypeRecord2:
 		r := (*RecordData2)(obj.UnsafePtr)
-		if r.K0 == key { return r.V0 }
-		if r.K1 == key { return r.V1 }
+		if r.K0 == key {
+			return r.V0
+		}
+		if r.K1 == key {
+			return r.V1
+		}
 	case TypeRecord3:
 		r := (*RecordData3)(obj.UnsafePtr)
-		if r.K0 == key { return r.V0 }
-		if r.K1 == key { return r.V1 }
-		if r.K2 == key { return r.V2 }
+		if r.K0 == key {
+			return r.V0
+		}
+		if r.K1 == key {
+			return r.V1
+		}
+		if r.K2 == key {
+			return r.V2
+		}
 	case TypeRecord4:
 		r := (*RecordData4)(obj.UnsafePtr)
-		if r.K0 == key { return r.V0 }
-		if r.K1 == key { return r.V1 }
-		if r.K2 == key { return r.V2 }
-		if r.K3 == key { return r.V3 }
+		if r.K0 == key {
+			return r.V0
+		}
+		if r.K1 == key {
+			return r.V1
+		}
+		if r.K2 == key {
+			return r.V2
+		}
+		if r.K3 == key {
+			return r.V3
+		}
 	case TypeRecord5:
 		r := (*RecordData5)(obj.UnsafePtr)
-		if r.K0 == key { return r.V0 }
-		if r.K1 == key { return r.V1 }
-		if r.K2 == key { return r.V2 }
-		if r.K3 == key { return r.V3 }
-		if r.K4 == key { return r.V4 }
+		if r.K0 == key {
+			return r.V0
+		}
+		if r.K1 == key {
+			return r.V1
+		}
+		if r.K2 == key {
+			return r.V2
+		}
+		if r.K3 == key {
+			return r.V3
+		}
+		if r.K4 == key {
+			return r.V4
+		}
 	case TypeRecordData:
 		r := (*RecordData)(obj.UnsafePtr)
 		for i, k := range r.Keys {
-			if k == key { return r.Vals[i] }
+			if k == key {
+				return r.Vals[i]
+			}
 		}
 	case TypeConstructor:
 		if getter, ok := StructGetters[obj.IntVal]; ok {
@@ -850,31 +1196,61 @@ func RecordUpdateDict(orig Value, keys []string, vals []Value) Value {
 	case TypeRecord1:
 		clone := *(*RecordData1)(orig.UnsafePtr)
 		for i, k := range keys {
-			if clone.K0 == k { clone.V0 = vals[i] }
+			if clone.K0 == k {
+				clone.V0 = vals[i]
+			}
 		}
 		return Value{Type: TypeRecord1, UnsafePtr: unsafe.Pointer(&clone)}
 	case TypeRecord2:
 		clone := *(*RecordData2)(orig.UnsafePtr)
 		for i, k := range keys {
-			if clone.K0 == k { clone.V0 = vals[i] } else if clone.K1 == k { clone.V1 = vals[i] }
+			if clone.K0 == k {
+				clone.V0 = vals[i]
+			} else if clone.K1 == k {
+				clone.V1 = vals[i]
+			}
 		}
 		return Value{Type: TypeRecord2, UnsafePtr: unsafe.Pointer(&clone)}
 	case TypeRecord3:
 		clone := *(*RecordData3)(orig.UnsafePtr)
 		for i, k := range keys {
-			if clone.K0 == k { clone.V0 = vals[i] } else if clone.K1 == k { clone.V1 = vals[i] } else if clone.K2 == k { clone.V2 = vals[i] }
+			if clone.K0 == k {
+				clone.V0 = vals[i]
+			} else if clone.K1 == k {
+				clone.V1 = vals[i]
+			} else if clone.K2 == k {
+				clone.V2 = vals[i]
+			}
 		}
 		return Value{Type: TypeRecord3, UnsafePtr: unsafe.Pointer(&clone)}
 	case TypeRecord4:
 		clone := *(*RecordData4)(orig.UnsafePtr)
 		for i, k := range keys {
-			if clone.K0 == k { clone.V0 = vals[i] } else if clone.K1 == k { clone.V1 = vals[i] } else if clone.K2 == k { clone.V2 = vals[i] } else if clone.K3 == k { clone.V3 = vals[i] }
+			if clone.K0 == k {
+				clone.V0 = vals[i]
+			} else if clone.K1 == k {
+				clone.V1 = vals[i]
+			} else if clone.K2 == k {
+				clone.V2 = vals[i]
+			} else if clone.K3 == k {
+				clone.V3 = vals[i]
+			}
 		}
 		return Value{Type: TypeRecord4, UnsafePtr: unsafe.Pointer(&clone)}
 	case TypeRecord5:
 		clone := *(*RecordData5)(orig.UnsafePtr)
 		for i, k := range keys {
-			if clone.K0 == k { clone.V0 = vals[i] } else if clone.K1 == k { clone.V1 = vals[i] } else if clone.K2 == k { clone.V2 = vals[i] } else if clone.K3 == k { clone.V3 = vals[i] } else if clone.K4 == k { clone.V4 = vals[i] }
+			if clone.K0 == k {
+				clone.V0 = vals[i]
+			} else if clone.K1 == k {
+				clone.V1 = vals[i]
+			} else if clone.K2 == k {
+				clone.V2 = vals[i]
+			} else if clone.K3 == k {
+				clone.V3 = vals[i]
+			} else if clone.K4 == k {
+				clone.V4 = vals[i]
+			}
 		}
 		return Value{Type: TypeRecord5, UnsafePtr: unsafe.Pointer(&clone)}
 	case TypeRecordData:
@@ -883,14 +1259,19 @@ func RecordUpdateDict(orig Value, keys []string, vals []Value) Value {
 		copy(newVals, r.Vals)
 		for i, k := range keys {
 			for j, rk := range r.Keys {
-				if rk == k { newVals[j] = vals[i]; break }
+				if rk == k {
+					newVals[j] = vals[i]
+					break
+				}
 			}
 		}
 		newR := RecordData{Keys: r.Keys, Vals: newVals}
 		return Value{Type: TypeRecordData, UnsafePtr: unsafe.Pointer(&newR)}
 	}
 	m := RecordToMap(orig)
-	for i, k := range keys { m[k] = vals[i] }
+	for i, k := range keys {
+		m[k] = vals[i]
+	}
 	return Record(m)
 }
 
@@ -916,32 +1297,51 @@ func RecordUpdate(orig Value, updates map[string]Value) Value {
 	return RecordUpdateDict(orig, keys, vals)
 }
 
-
 type ConstructorData []Value
 
 func Constructor(tag string, args []Value) Value {
 	ptr := unsafe.Pointer(nil)
-	if len(args) > 0 { ptr = unsafe.Pointer(&args[0]) }
+	if len(args) > 0 {
+		ptr = unsafe.Pointer(&args[0])
+	}
 	return Value{Type: TypeConstructor, UnsafePtr: ptr}
 }
 
 type ConstructorData0 struct{}
-func Constructor0(tag string) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData0{})} }
 
-type ConstructorData1 struct { V0 Value }
-func Constructor1(tag string, v0 Value) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData1{v0})} }
+func Constructor0(tag string) Value {
+	return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData0{})}
+}
 
-type ConstructorData2 struct { V0, V1 Value }
-func Constructor2(tag string, v0, v1 Value) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData2{v0, v1})} }
+type ConstructorData1 struct{ V0 Value }
 
-type ConstructorData3 struct { V0, V1, V2 Value }
-func Constructor3(tag string, v0, v1, v2 Value) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData3{v0, v1, v2})} }
+func Constructor1(tag string, v0 Value) Value {
+	return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData1{v0})}
+}
 
-type ConstructorData4 struct { V0, V1, V2, V3 Value }
-func Constructor4(tag string, v0, v1, v2, v3 Value) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData4{v0, v1, v2, v3})} }
+type ConstructorData2 struct{ V0, V1 Value }
 
-type ConstructorData5 struct { V0, V1, V2, V3, V4 Value }
-func Constructor5(tag string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData5{v0, v1, v2, v3, v4})} }
+func Constructor2(tag string, v0, v1 Value) Value {
+	return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData2{v0, v1})}
+}
+
+type ConstructorData3 struct{ V0, V1, V2 Value }
+
+func Constructor3(tag string, v0, v1, v2 Value) Value {
+	return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData3{v0, v1, v2})}
+}
+
+type ConstructorData4 struct{ V0, V1, V2, V3 Value }
+
+func Constructor4(tag string, v0, v1, v2, v3 Value) Value {
+	return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData4{v0, v1, v2, v3})}
+}
+
+type ConstructorData5 struct{ V0, V1, V2, V3, V4 Value }
+
+func Constructor5(tag string, v0, v1, v2, v3, v4 Value) Value {
+	return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData5{v0, v1, v2, v3, v4})}
+}
 
 var EscapeSink any
 var escapeAlwaysFalse bool
@@ -962,16 +1362,46 @@ func Func(f func(Value) Value) Value {
 }
 
 // Function constructors
-func Func2(f func(Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc2, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func3(f func(Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc3, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func4(f func(Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc4, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func5(f func(Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc5, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func6(f func(Value, Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc6, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func7(f func(Value, Value, Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc7, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func8(f func(Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc8, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func9(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc9, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func10(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc10, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func11(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc11, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func2(f func(Value, Value) Value) Value {
+	forceEscape(f)
+	return Value{Type: TypeFunc2, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
+}
+func Func3(f func(Value, Value, Value) Value) Value {
+	forceEscape(f)
+	return Value{Type: TypeFunc3, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
+}
+func Func4(f func(Value, Value, Value, Value) Value) Value {
+	forceEscape(f)
+	return Value{Type: TypeFunc4, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
+}
+func Func5(f func(Value, Value, Value, Value, Value) Value) Value {
+	forceEscape(f)
+	return Value{Type: TypeFunc5, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
+}
+func Func6(f func(Value, Value, Value, Value, Value, Value) Value) Value {
+	forceEscape(f)
+	return Value{Type: TypeFunc6, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
+}
+func Func7(f func(Value, Value, Value, Value, Value, Value, Value) Value) Value {
+	forceEscape(f)
+	return Value{Type: TypeFunc7, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
+}
+func Func8(f func(Value, Value, Value, Value, Value, Value, Value, Value) Value) Value {
+	forceEscape(f)
+	return Value{Type: TypeFunc8, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
+}
+func Func9(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value {
+	forceEscape(f)
+	return Value{Type: TypeFunc9, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
+}
+func Func10(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value {
+	forceEscape(f)
+	return Value{Type: TypeFunc10, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
+}
+func Func11(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value {
+	forceEscape(f)
+	return Value{Type: TypeFunc11, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
+}
 
 func FuncAny(f any) Value {
 	ptr := new(any)
@@ -984,7 +1414,7 @@ func FuncAny(f any) Value {
 // Keeping a separate tag avoids depending on Go's closure memory layout.
 type functionData struct {
 	function Value
-	data any
+	data     any
 }
 
 func WithFunctionData(function Value, data any) Value {
@@ -1010,7 +1440,6 @@ func FunctionData[T any](function Value) (T, bool) {
 	var zero T
 	return zero, false
 }
-
 
 func Apply(f Value, arg Value) Value {
 	if f.UnsafePtr == nil {
@@ -1189,7 +1618,6 @@ func Apply5(f Value, arg1, arg2, arg3, arg4, arg5 Value) Value {
 	return Apply(Apply4(f, arg1, arg2, arg3, arg4), arg5)
 }
 
-
 func ArrayAccess(arr Value, index int) Value {
 	return (*(*[]Value)(arr.UnsafePtr))[index]
 }
@@ -1286,53 +1714,69 @@ func Unbox[T any](v any) T {
 	if res, ok := v.(T); ok {
 		return res
 	}
-	
+
 	val, isValue := v.(Value)
 	if !isValue {
 		var t any = *new(T)
 		// If T is any, we can just return v
 		switch t.(type) {
-		case any: return any(v).(T)
+		case any:
+			return any(v).(T)
 		}
 		panic("Cannot unbox non-Value into T")
 	}
-	
+
 	var t any = *new(T)
 	switch t.(type) {
 	case int32:
 		if val.Type == TypeAny && val.UnsafePtr != nil {
-			if value, ok := (*(*any)(val.UnsafePtr)).(int32); ok { return any(value).(T) }
+			if value, ok := (*(*any)(val.UnsafePtr)).(int32); ok {
+				return any(value).(T)
+			}
 		}
 		return any(int32(Unbox[int64](val))).(T)
-	case int64: 
+	case int64:
 		if val.Type == TypeFloat {
 			return any(int64(math.Float64frombits(uint64(val.IntVal)))).(T)
 		}
 		if val.Type == TypeAny {
 			if ptr := val.UnsafePtr; ptr != nil {
 				v := *(*any)(ptr)
-				if f, ok := v.(float64); ok { return any(int64(f)).(T) }
-				if i, ok := v.(int); ok { return any(int64(i)).(T) }
-				if i, ok := v.(int64); ok { return any(i).(T) }
+				if f, ok := v.(float64); ok {
+					return any(int64(f)).(T)
+				}
+				if i, ok := v.(int); ok {
+					return any(int64(i)).(T)
+				}
+				if i, ok := v.(int64); ok {
+					return any(i).(T)
+				}
 			}
 			return any(int64(0)).(T)
 		}
 		return any(val.IntVal).(T)
-	case int: 
+	case int:
 		if val.Type == TypeFloat {
 			return any(int(math.Float64frombits(uint64(val.IntVal)))).(T)
 		}
 		if val.Type == TypeAny {
 			if ptr := val.UnsafePtr; ptr != nil {
 				v := *(*any)(ptr)
-				if f, ok := v.(float64); ok { return any(int(f)).(T) }
-				if i, ok := v.(int); ok { return any(i).(T) }
-				if i, ok := v.(int64); ok { return any(int(i)).(T) }
+				if f, ok := v.(float64); ok {
+					return any(int(f)).(T)
+				}
+				if i, ok := v.(int); ok {
+					return any(i).(T)
+				}
+				if i, ok := v.(int64); ok {
+					return any(int(i)).(T)
+				}
 			}
 			return any(0).(T)
 		}
 		return any(int(val.IntVal)).(T)
-	case string: return any(StrValue(val)).(T)
+	case string:
+		return any(StrValue(val)).(T)
 	case float64:
 		if val.Type == TypeInt {
 			return any(float64(val.IntVal)).(T)
@@ -1340,24 +1784,36 @@ func Unbox[T any](v any) T {
 		if val.Type == TypeAny {
 			if ptr := val.UnsafePtr; ptr != nil {
 				v := *(*any)(ptr)
-				if f, ok := v.(float64); ok { return any(f).(T) }
-				if i, ok := v.(int); ok { return any(float64(i)).(T) }
-				if i, ok := v.(int64); ok { return any(float64(i)).(T) }
+				if f, ok := v.(float64); ok {
+					return any(f).(T)
+				}
+				if i, ok := v.(int); ok {
+					return any(float64(i)).(T)
+				}
+				if i, ok := v.(int64); ok {
+					return any(float64(i)).(T)
+				}
 			}
 			return any(float64(0)).(T)
 		}
 		return any(math.Float64frombits(uint64(val.IntVal))).(T)
-	case bool: return any(val.IntVal == 1).(T)
-	case Value: return any(val).(T)
+	case bool:
+		return any(val.IntVal == 1).(T)
+	case Value:
+		return any(val).(T)
 	case map[string]any:
 		m := RecordToMap(val)
 		res := make(map[string]any, len(m))
-		for k, v2 := range m { res[k] = v2 }
+		for k, v2 := range m {
+			res[k] = v2
+		}
 		return any(res).(T)
 	case []any:
 		arr := *(*[]Value)(val.UnsafePtr)
 		res := make([]any, len(arr))
-		for i, v2 := range arr { res[i] = v2 }
+		for i, v2 := range arr {
+			res[i] = v2
+		}
 		return any(res).(T)
 	case func(any) any:
 		res := func(arg any) any { return Apply(val, Box(arg)) }
@@ -1375,18 +1831,30 @@ func Box[T any](val T) Value {
 		return v
 	}
 	switch v := any(val).(type) {
-	case int32: return Int(int64(v))
-	case int64: return Int(v)
-	case int: return Int(int64(v))
-	case string: return Str(v)
-	case float64: return Value{Type: TypeFloat, IntVal: int64(math.Float64bits(v))}
-	case bool: 
-		if v { return Value{Type: TypeBool, IntVal: 1} }
+	case int32:
+		return Int(int64(v))
+	case int64:
+		return Int(v)
+	case int:
+		return Int(int64(v))
+	case string:
+		return Str(v)
+	case float64:
+		return Value{Type: TypeFloat, IntVal: int64(math.Float64bits(v))}
+	case bool:
+		if v {
+			return Value{Type: TypeBool, IntVal: 1}
+		}
 		return Value{Type: TypeBool, IntVal: 0}
 	case func():
 		return Func(func(_ Value) Value { v(); return Value{} })
 	case func() bool:
-		return Func(func(_ Value) Value { if v() { return Value{Type: TypeBool, IntVal: 1} }; return Value{Type: TypeBool, IntVal: 0} })
+		return Func(func(_ Value) Value {
+			if v() {
+				return Value{Type: TypeBool, IntVal: 1}
+			}
+			return Value{Type: TypeBool, IntVal: 0}
+		})
 	case func() int:
 		return Func(func(_ Value) Value { return Int(int64(v())) })
 	case func() int64:
@@ -1407,12 +1875,17 @@ func Box[T any](val T) Value {
 		return Func(func(arg Value) Value { return Box(v(arg)) })
 	case []any:
 		arr := make([]Value, len(v))
-		for i, val := range v { arr[i] = Box(val) }
+		for i, val := range v {
+			arr[i] = Box(val)
+		}
 		return Array(arr)
-	case []Value: return Array(v)
+	case []Value:
+		return Array(v)
 
-	case Value: return v
-	default: return Any(v)
+	case Value:
+		return v
+	default:
+		return Any(v)
 	}
 }
 
@@ -1500,6 +1973,11 @@ func Apply7(f Value, arg1, arg2, arg3, arg4, arg5, arg6, arg7 Value) Value {
 }
 
 func AnyToValue(val any) Value {
+	// The old ST FFI reads the reference envelope through this bridge too.
+	// Return a Value copy so subsequent writes cannot change read snapshots.
+	if cell, ok := val.(*stValueCell); ok {
+		return cell.value
+	}
 	if val == nil {
 		return Value{}
 	}
@@ -1568,10 +2046,6 @@ func Apply10(f Value, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg1
 	return Apply(Apply9(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9), arg10)
 }
 
-
-
-
-
 func ExtractVariant(variant interface{}) (string, interface{}, bool) {
 	if val, ok := variant.(Value); ok {
 		if val.Type == TypeRecord {
@@ -1587,62 +2061,62 @@ func ExtractVariant(variant interface{}) (string, interface{}, bool) {
 				}
 			}
 		} else if val.Type == TypeRecord2 {
-            rec := (*RecordData2)(val.UnsafePtr)
-            var str string
-            var valVal interface{}
-            hasVal := false
-            if rec.K0 == "type" && rec.V0.Type == TypeString {
-                str = StrValue(rec.V0)
-            } else if rec.K1 == "type" && rec.V1.Type == TypeString {
-                str = StrValue(rec.V1)
-            } else {
-                return "", nil, false
-            }
+			rec := (*RecordData2)(val.UnsafePtr)
+			var str string
+			var valVal interface{}
+			hasVal := false
+			if rec.K0 == "type" && rec.V0.Type == TypeString {
+				str = StrValue(rec.V0)
+			} else if rec.K1 == "type" && rec.V1.Type == TypeString {
+				str = StrValue(rec.V1)
+			} else {
+				return "", nil, false
+			}
 
-            if rec.K0 == "value" {
-                valVal = rec.V0
-                hasVal = true
-            } else if rec.K1 == "value" {
-                valVal = rec.V1
-                hasVal = true
-            }
+			if rec.K0 == "value" {
+				valVal = rec.V0
+				hasVal = true
+			} else if rec.K1 == "value" {
+				valVal = rec.V1
+				hasVal = true
+			}
 
-            if hasVal {
-                return str, valVal, true
-            }
-            return str, nil, true
-        } else if val.Type == TypeRecord3 {
-            rec := (*RecordData3)(val.UnsafePtr)
-            var str string
-            var valVal interface{}
-            hasVal := false
-            
-            if rec.K0 == "type" && rec.V0.Type == TypeString {
-                str = StrValue(rec.V0)
-            } else if rec.K1 == "type" && rec.V1.Type == TypeString {
-                str = StrValue(rec.V1)
-            } else if rec.K2 == "type" && rec.V2.Type == TypeString {
-                str = StrValue(rec.V2)
-            } else {
-                return "", nil, false
-            }
+			if hasVal {
+				return str, valVal, true
+			}
+			return str, nil, true
+		} else if val.Type == TypeRecord3 {
+			rec := (*RecordData3)(val.UnsafePtr)
+			var str string
+			var valVal interface{}
+			hasVal := false
 
-            if rec.K0 == "value" {
-                valVal = rec.V0
-                hasVal = true
-            } else if rec.K1 == "value" {
-                valVal = rec.V1
-                hasVal = true
-            } else if rec.K2 == "value" {
-                valVal = rec.V2
-                hasVal = true
-            }
+			if rec.K0 == "type" && rec.V0.Type == TypeString {
+				str = StrValue(rec.V0)
+			} else if rec.K1 == "type" && rec.V1.Type == TypeString {
+				str = StrValue(rec.V1)
+			} else if rec.K2 == "type" && rec.V2.Type == TypeString {
+				str = StrValue(rec.V2)
+			} else {
+				return "", nil, false
+			}
 
-            if hasVal {
-                return str, valVal, true
-            }
-            return str, nil, true
-        } else if val.Type == TypeString {
+			if rec.K0 == "value" {
+				valVal = rec.V0
+				hasVal = true
+			} else if rec.K1 == "value" {
+				valVal = rec.V1
+				hasVal = true
+			} else if rec.K2 == "value" {
+				valVal = rec.V2
+				hasVal = true
+			}
+
+			if hasVal {
+				return str, valVal, true
+			}
+			return str, nil, true
+		} else if val.Type == TypeString {
 			str := StrValue(val)
 			return str, nil, true
 		}
@@ -1654,17 +2128,17 @@ func ReboxStruct[Src any, Dest any](srcVal *Src) *Dest {
 	if srcVal == nil {
 		return nil
 	}
-	
+
 	src := reflect.ValueOf(srcVal).Elem()
 	destPtr := reflect.New(reflect.TypeOf(*new(Dest)))
 	dest := destPtr.Elem()
-	
+
 	for i := 0; i < src.NumField(); i++ {
 		srcField := src.Field(i)
 		destField := dest.Field(i)
 		destField.Set(copyReflectField(srcField, destField.Type()))
 	}
-	
+
 	return destPtr.Interface().(*Dest)
 }
 
@@ -1672,12 +2146,12 @@ func copyReflectField(src reflect.Value, destType reflect.Type) reflect.Value {
 	if src.Type() == destType {
 		return src
 	}
-	
+
 	valueType := reflect.TypeOf(Value{})
-	
+
 	if src.Type() == valueType {
 		val := src.Interface().(Value)
-		
+
 		switch destType.Kind() {
 		case reflect.Int64:
 			if val.Type == TypeFloat {
@@ -1700,11 +2174,11 @@ func copyReflectField(src reflect.Value, destType reflect.Type) reflect.Value {
 			return reflect.ValueOf(math.Float64frombits(uint64(val.IntVal)))
 		}
 	}
-	
+
 	if destType == valueType {
 		return reflect.ValueOf(AnyToValue(src.Interface()))
 	}
-	
+
 	if src.Kind() == reflect.Ptr && destType.Kind() == reflect.Ptr {
 		if src.IsNil() {
 			return reflect.Zero(destType)
@@ -1712,13 +2186,13 @@ func copyReflectField(src reflect.Value, destType reflect.Type) reflect.Value {
 		srcElem := src.Elem()
 		destElemPtr := reflect.New(destType.Elem())
 		destElem := destElemPtr.Elem()
-		
+
 		for i := 0; i < srcElem.NumField(); i++ {
 			destElem.Field(i).Set(copyReflectField(srcElem.Field(i), destElem.Field(i).Type()))
 		}
 		return destElemPtr
 	}
-	
+
 	if src.Type().ConvertibleTo(destType) {
 		return src.Convert(destType)
 	}

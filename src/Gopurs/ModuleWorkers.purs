@@ -14,6 +14,7 @@ import Gopurs.GoSymbol (GoReference(..), generated)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoFunctions (Parameters, curriedFunction, iterationBindings, loopParameters, namedParameters)
 import Gopurs.Int32Loops as Int32Loops
+import Gopurs.AffineLoops as AffineLoops
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 
 type Worker =
@@ -51,7 +52,9 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
       Nothing -> TypeValue
     body returning =
       let statements = flattenStmts result.stmts <> [ GoReturn returning ]
-      in if isSelfRecursive then Int32Loops.loop fn.ident params resultType statements
+      in if isSelfRecursive then
+        AffineLoops.wrap (AffineLoops.globalTarget modNameStr fn.ident) params resultType fn.body
+          (Int32Loops.loop fn.ident params resultType statements)
         else GoBlock (iterationBindings params <> statements)
     value = if Array.null fn.args then
       -- A zero-argument abstraction still defers its whole body until called.

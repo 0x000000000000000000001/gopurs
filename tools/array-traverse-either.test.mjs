@@ -56,7 +56,7 @@ test('Either traversal fusion requires the standard qualified Array and Either d
     reject(target, [...args, args[3]]);
     reject(target, [variable('Other', 'traversableWithIndexArray'), ...args.slice(1)]);
     reject(target, [args[0], variable('Other', 'applicativeEither'), ...args.slice(2)]);
-    reject(target, [args[0], variable('Data.Maybe', 'applicativeMaybe'), ...args.slice(2)]);
+    reject(target, [args[0], variable('Other', 'applicativeMaybe'), ...args.slice(2)]);
     reject(target, [args[0], new TcoExpr(null, new S.Local(new Just('dictionary'), 0)), ...args.slice(2)]);
 });
 
@@ -84,7 +84,7 @@ test('nonindexed traversal accepts only the standard dictionary accessor and exa
     reject(nonindexed, [...nonindexedArgs, args[3]]);
     reject(method, []);
     reject(method, args);
-    reject(method, [variable('Data.Maybe', 'applicativeMaybe'), ...args.slice(2)]);
+    reject(method, [variable('Other', 'applicativeMaybe'), ...args.slice(2)]);
     reject(new TcoExpr(null, new S.Accessor(variable('Other', 'traversableArray'), new S.GetProp('traverse'))), args.slice(1));
     reject(new TcoExpr(null, new S.Accessor(traversal, new S.GetProp('sequence'))), args.slice(1));
 

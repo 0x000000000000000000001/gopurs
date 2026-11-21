@@ -15,7 +15,11 @@ import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.ArrayIntrinsics as ArrayIntrinsics
 import Gopurs.ArrayTraverse as ArrayTraverse
+import Gopurs.ArrayEquality as ArrayEquality
+import Gopurs.ScalarArrayFold as ScalarArrayFold
+import Gopurs.ArraySort as ArraySort
 import Gopurs.ObjectTraverse as ObjectTraverse
+import Gopurs.TailRecEffect as TailRecEffect
 import Gopurs.CallAnalysis (CallTarget, collectGoSpine, getGoSpineArgs, curriedTarget, qualifiedTarget)
 import Gopurs.CallArguments (Arguments, applyBoxed)
 import Gopurs.CallArguments as CallArguments
@@ -41,9 +45,21 @@ application translate context nextId expression =
       Just target -> tailCall translate context nextId expression args target
       Nothing -> case ObjectTraverse.emit translate context nextId (qualifiedTarget fn) args of
         Just result -> result
-        Nothing -> regularApplication fn args
+        Nothing -> case TailRecEffect.emit translate context nextId fn args of
+          Just result -> result
+          Nothing -> regularApplication fn args
   where
-  regularApplication fn args = case ArrayTraverse.emit translate context nextId fn args of
+  regularApplication fn args = case ArraySort.emit translate context nextId fn args of
+    Just result -> result
+    Nothing -> scalarApplication fn args
+
+  scalarApplication fn args = case ScalarArrayFold.emit translate context nextId fn args of
+    Just result -> result
+    Nothing -> arrayApplication fn args
+
+  arrayApplication fn args = case ArrayEquality.emit translate context nextId fn args of
+    Just result -> result
+    Nothing -> case ArrayTraverse.emit translate context nextId fn args of
         Just result -> result
         Nothing ->
           let target = curriedTarget context.bound fn
@@ -104,19 +120,33 @@ nativeCall context@{ codegenStateRef, modNameStr } fn expected ret arity args =
 uncurriedApplication :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> Array TcoExpr -> ExprResult
 uncurriedApplication translate context nextId expression fn args =
   -- Uncurried calls recognize intrinsics before considering a tail jump.
-  case ArrayIntrinsics.safeIndex translate context nextId (qualifiedTarget fn) args of
+  case ArraySort.emit translate context nextId fn args of
     Just result -> result
-    Nothing -> case ArrayIntrinsics.recognize ArrayIntrinsics.Uncurried context.modNameStr (qualifiedTarget fn) (Array.length args) of
-      Just intrinsic ->
-        ArrayIntrinsics.emitUncurried translate context nextId args intrinsic
-      Nothing ->
-        let
-          Tuple flatFn spine = collectGoSpine expression
-          flatArgs = getGoSpineArgs spine
-        in
-          case tailTarget context flatFn of
-            Just target -> tailCall translate context nextId expression flatArgs target
-            Nothing -> uncurriedCall translate context 10 nextId fn args
+    Nothing -> uncurriedScalarApplication translate context nextId expression fn args
+
+uncurriedScalarApplication :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> Array TcoExpr -> ExprResult
+uncurriedScalarApplication translate context nextId expression fn args =
+  case ScalarArrayFold.emit translate context nextId fn args of
+    Just result -> result
+    Nothing -> uncurriedArrayApplication translate context nextId expression fn args
+
+uncurriedArrayApplication :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> Array TcoExpr -> ExprResult
+uncurriedArrayApplication translate context nextId expression fn args =
+  case ArrayEquality.emit translate context nextId fn args of
+    Just result -> result
+    Nothing -> case ArrayIntrinsics.safeIndex translate context nextId (qualifiedTarget fn) args of
+      Just result -> result
+      Nothing -> case ArrayIntrinsics.recognize ArrayIntrinsics.Uncurried context.modNameStr (qualifiedTarget fn) (Array.length args) of
+        Just intrinsic ->
+          ArrayIntrinsics.emitUncurried translate context nextId args intrinsic
+        Nothing ->
+          let
+            Tuple flatFn spine = collectGoSpine expression
+            flatArgs = getGoSpineArgs spine
+          in
+            case tailTarget context flatFn of
+              Just target -> tailCall translate context nextId expression flatArgs target
+              Nothing -> uncurriedCall translate context 10 nextId fn args
 
 effectApplication :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array TcoExpr -> ExprResult
 effectApplication translate context = uncurriedCall translate context 5

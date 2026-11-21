@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import test from 'node:test';
 
+const { LocalReference } = await import('../output/Gopurs.GoSymbol/index.js');
 const project = fileURLToPath(new URL('../', import.meta.url));
 const load = module => import(pathToFileURL(join(project, 'output', module, 'index.js')).href);
 const [Maps, Maybe, Ord, Sets, Ref, Go, Conversions, Printer, Runtime, Tco, Core, Syntax, Statements, Calls] = await Promise.all(
@@ -36,8 +37,8 @@ function lower(kind, mode, extra = false) {
     const nativeSeed = mode.endsWith('Seed');
     const callbackArity = kind === 'fold' ? 2 : 1;
     const callbackResult = kind === 'filter' ? Go.TypeBool.value : Go.TypeInt64.value;
-    if (worker) ctx.moduleFunctions = Maps.insert(Ord.ordString)(`Probe.${kind}`)(
-        { arity: callbackArity, fArgs: Array(callbackArity).fill(Go.TypeInt64.value), fRet: callbackResult })(Maps.empty);
+    if (worker) ctx.moduleFunctions = Maps.insert(Ord.ordString)(kind)(
+        { reference: new LocalReference(`Call_Probe_${kind}`), arity: callbackArity, fArgs: Array(callbackArity).fill(Go.TypeInt64.value), fRet: callbackResult })(Maps.empty);
     const callback = variable(worker ? kind : `callback_${kind}`);
     const seed = variable('seed');
     const array = variable('array');

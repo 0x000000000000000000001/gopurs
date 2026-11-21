@@ -48,7 +48,7 @@ nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, m
           -- crosses the Value boundary, which can otherwise copy whole lists.
           trueFRet = resBodyMut.exprType
           localModuleFunctions = Map.insert name (LocalWorkers.signature context name params trueFRet) moduleFunctions
-          worker = LocalWorkers.emit context name params false resBodyMut
+          worker = LocalWorkers.emit context name params Nothing resBodyMut
 
           newBound = Map.insert originalName { name, goType: TypeValue } bound
           resBodyOuter = translate (context { depth = (depth + 1), moduleFunctions = localModuleFunctions, bound = newBound, tcoIdent = Nothing, mbExpectedExprType = Nothing }) resBodyMut.nextId body
@@ -123,7 +123,7 @@ recursive translate context@{ metadata, depth, modNameStr, recVars, moduleFuncti
                   loopBound = bindParameters params published.bound
                   resBodyMut = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = acc.moduleFunctions, bound = loopBound, tcoIdent = (Just newName), loopCtx = currentLoopCtx, options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = worker.expectedReturn, mbExpectedGoType = Just worker.resultType }) acc.nextId worker.body
                   trueFRet = resBodyMut.exprType
-                  emitted = LocalWorkers.emit context newName params true resBodyMut
+                  emitted = LocalWorkers.emit (context { bound = published.bound }) newName params (Just worker.body) resBodyMut
                   newFunctions = Map.insert newName (LocalWorkers.signature context newName params trueFRet) acc.moduleFunctions
                   newBound2 = Map.insert oldName { name: newName, goType: TypeFunc (map snd params) trueFRet } acc.newBound
                 in

@@ -22,7 +22,7 @@ import PureScript.Backend.Optimizer.CoreFn (ExprType(..), ModuleName(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (BackendAccessor(GetProp), BackendSyntax(Abs, Accessor))
 
--- The known Array/Either instances permit a strict loop instead of building
+-- The known Array/Either and Array/Maybe instances permit a strict loop instead of building
 -- intermediate arrays through generic applicative composition. PBO may expose
 -- either the class method, its static dictionary accessor, or the FFI worker.
 -- Every form must prove the same dictionaries; arbitrary Applicatives stay on
@@ -33,7 +33,48 @@ emit translate context nextId fn args = do
   let captured = captureArguments translate context nextId traversal
   pure (emitLoop context traversal captured)
 
-type Traversal = { indexed :: Boolean, callbackOffset :: Int, args :: Array TcoExpr }
+type ApplicativePlan =
+  { moduleName :: String
+  , sourceType :: ExprType
+  , success :: String
+  , failure :: String
+  , prefix :: String
+  }
+
+type Traversal = { indexed :: Boolean, callbackOffset :: Int, args :: Array TcoExpr, plan :: ApplicativePlan }
+
+-- These are the canonical library constructors, never inferred from a custom
+-- dictionary's shape. The regular ADT emitter handles nullable Maybe layouts.
+applicativePlan :: TcoExpr -> Maybe ApplicativePlan
+applicativePlan dictionary
+  | isNamed "Data.Either" "applicativeEither" dictionary = Just eitherPlan
+  | isNamed "Data.Maybe" "applicativeMaybe" dictionary = Just maybePlan
+  | otherwise = Nothing
+
+eitherPlan :: ApplicativePlan
+eitherPlan =
+  { moduleName: "Data.Either"
+  , sourceType: ADT "Data.Either.Either" [ "Data", "Either", "Either" ] [ Any, Any ]
+  , success: "Right", failure: "Left", prefix: "traverseEither"
+  }
+
+maybePlan :: ApplicativePlan
+maybePlan =
+  { moduleName: "Data.Maybe"
+  , sourceType: ADT "Data.Maybe.Maybe" [ "Data", "Maybe", "Maybe" ] [ Any ]
+  , success: "Just", failure: "Nothing", prefix: "traverseMaybe"
+  }
+
+ffiPlan :: TcoExpr -> TcoExpr -> TcoExpr -> Maybe ApplicativePlan
+ffiPlan applyFn mapFn pureFn =
+  let
+    matches mod suffix = isMethod "Control.Apply" "apply" mod ("apply" <> suffix) applyFn
+      && isMethod "Data.Functor" "map" mod ("functor" <> suffix) mapFn
+      && isMethod "Control.Applicative" "pure" mod ("applicative" <> suffix) pureFn
+  in
+    if matches "Data.Either" "Either" then Just eitherPlan
+    else if matches "Data.Maybe" "Maybe" then Just maybePlan
+    else Nothing
 
 recognize :: TcoExpr -> Array TcoExpr -> Maybe Traversal
 recognize fn args = do
@@ -47,10 +88,10 @@ recognizeForm fn args = case unwrapTcoExpr fn of
   Accessor dictionary (GetProp "traverse") -> do
     guard (isNamed "Data.Traversable" "traversableArray" dictionary)
     applicative <- Array.index args 0
-    guard (isNamed "Data.Either" "applicativeEither" applicative)
+    plan <- applicativePlan applicative
     -- Retain the dictionary getter before the supplied arguments, just as for
     -- an ordinary method call. Reading this known field has no extra effects.
-    pure { indexed: false, callbackOffset: 2, args: Array.cons dictionary args }
+    pure { indexed: false, callbackOffset: 2, args: Array.cons dictionary args, plan }
   _ -> do
     { mbMod, name } <- qualifiedTarget fn
     if mbMod == Just (ModuleName "Data.Traversable") && name == "traverseArrayImpl" then do
@@ -58,11 +99,9 @@ recognizeForm fn args = case unwrapTcoExpr fn of
       mapFn <- Array.index args 1
       pureFn <- Array.index args 2
       appendFn <- Array.index args 3
-      guard (isMethod "Control.Apply" "apply" "Data.Either" "applyEither" applyFn)
-      guard (isMethod "Data.Functor" "map" "Data.Either" "functorEither" mapFn)
-      guard (isMethod "Control.Applicative" "pure" "Data.Either" "applicativeEither" pureFn)
+      plan <- ffiPlan applyFn mapFn pureFn
       guard (isMethod "Data.Semigroup" "append" "Data.Semigroup" "semigroupArray" appendFn)
-      pure { indexed: false, callbackOffset: 4, args }
+      pure { indexed: false, callbackOffset: 4, args, plan }
     else do
       let indexed = mbMod == Just (ModuleName "Data.TraversableWithIndex")
       guard (if indexed then name == "traverseWithIndexDefault" || name == "traverseWithIndex"
@@ -71,8 +110,8 @@ recognizeForm fn args = case unwrapTcoExpr fn of
       applicative <- Array.index args 1
       guard (if indexed then isNamed "Data.TraversableWithIndex" "traversableWithIndexArray" dictionary
         else isNamed "Data.Traversable" "traversableArray" dictionary)
-      guard (isNamed "Data.Either" "applicativeEither" applicative)
-      pure { indexed, callbackOffset: 2, args }
+      plan <- applicativePlan applicative
+      pure { indexed, callbackOffset: 2, args, plan }
 
 isNamed :: String -> String -> TcoExpr -> Boolean
 isNamed mod name expr = case qualifiedTarget expr of
@@ -93,7 +132,7 @@ isMethod mod name dictMod dictName expression =
 -- Only the callback position may bypass the ordinary boxed function ABI.
 captureArguments :: TranslateExpr -> ExprContext -> Int -> Traversal -> Arguments
 captureArguments translate context nextId traversal =
-  CallArguments.capture { prefix: "traverseEither_arg_", markUsed: true }
+  CallArguments.capture { prefix: traversal.plan.prefix <> "_arg_", markUsed: true }
     translateArgument nextId traversal.args
   where
   translateArgument index currentId arg =
@@ -102,7 +141,7 @@ captureArguments translate context nextId traversal =
       Nothing -> translate (childContext context Nothing) currentId arg
 
 emitLoop :: ExprContext -> Traversal -> Arguments -> ExprResult
-emitLoop { metadata, codegenStateRef, modNameStr } { indexed, callbackOffset, args } captured =
+emitLoop { metadata, codegenStateRef, modNameStr } { indexed, callbackOffset, args, plan } captured =
   let
     argument index = fromMaybe (rawGo "nil") (Array.index captured.exprs index)
     argumentType index = fromMaybe TypeValue (Array.index captured.exprTypes index)
@@ -114,15 +153,15 @@ emitLoop { metadata, codegenStateRef, modNameStr } { indexed, callbackOffset, ar
       TypeFunc _ resultType -> resultType
       _ -> TypeValue
     suffix = show captured.nextId
-    callbackName = "traverseEither_callback_" <> suffix
-    inputName = "traverseEither_input_" <> suffix
-    valuesName = "traverseEither_values_" <> suffix
-    outputName = "traverseEither_output_" <> suffix
-    indexName = "traverseEither_index_" <> suffix
-    valueName = "traverseEither_value_" <> suffix
-    resultName = "traverseEither_result_" <> suffix
-    errorName = "traverseEither_firstError_" <> suffix
-    failedName = "traverseEither_failed_" <> suffix
+    callbackName = plan.prefix <> "_callback_" <> suffix
+    inputName = plan.prefix <> "_input_" <> suffix
+    valuesName = plan.prefix <> "_values_" <> suffix
+    outputName = plan.prefix <> "_output_" <> suffix
+    indexName = plan.prefix <> "_index_" <> suffix
+    valueName = plan.prefix <> "_value_" <> suffix
+    resultName = plan.prefix <> "_result_" <> suffix
+    errorName = plan.prefix <> "_firstError_" <> suffix
+    failedName = plan.prefix <> "_failed_" <> suffix
     input = if hasInput then argument (callbackOffset + 1) else GoVar inputName
     inputType = if hasInput then argumentType (callbackOffset + 1) else TypeValue
     source = case inputType of
@@ -131,14 +170,13 @@ emitLoop { metadata, codegenStateRef, modNameStr } { indexed, callbackOffset, ar
         { expr: rawArray input
         , elementType: TypeValue
         }
-    eitherModule = Just (ModuleName "Data.Either")
-    eitherType = ADT "Data.Either.Either" [ "Data", "Either", "Either" ] [ Any, Any ]
+    adtModule = Just (ModuleName plan.moduleName)
     result = { expr: GoVar resultName, exprType: callbackResultType, stmts: StmtEmpty, nextId: captured.nextId }
-    tag name = (AdtExprs.isTag metadata codegenStateRef modNameStr eitherModule name result).expr
+    tag name = (AdtExprs.isTag metadata codegenStateRef modNameStr adtModule name result).expr
     payload = AdtExprs.getField metadata codegenStateRef modNameStr
-      { moduleName: eitherModule, ctorName: "Right", index: 0 }
-      { expr: GoVar resultName, exprType: callbackResultType, sourceType: eitherType }
-    prepared = AdtExprs.prepareSaturated metadata modNameStr eitherModule "Right" eitherType
+      { moduleName: adtModule, ctorName: plan.success, index: 0 }
+      { expr: GoVar resultName, exprType: callbackResultType, sourceType: plan.sourceType }
+    prepared = AdtExprs.prepareSaturated metadata modNameStr adtModule plan.success plan.sourceType
     arrayValue = boxGoExpr codegenStateRef modNameStr (GoVar outputName) (TypeNativeArray TypeValue)
     success = AdtExprs.saturated codegenStateRef prepared { exprs: [ arrayValue ], exprTypes: [ TypeValue ] }
     boxedSuccess = boxGoExpr codegenStateRef modNameStr success.expr success.exprType
@@ -150,9 +188,9 @@ emitLoop { metadata, codegenStateRef, modNameStr } { indexed, callbackOffset, ar
         (if indexed then [ GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ indexExpr ], value ] else [ value ])
     loop =
       [ GoAssign resultName callbackCall
-      , GoIfElse (tag "Right")
+      , GoIfElse (tag plan.success)
           [ GoMutate (outputName <> "[" <> indexName <> "]") (boxGoExpr codegenStateRef modNameStr payload.expr payload.exprType) ]
-          [ GoIfElse (tag "Left")
+          [ GoIfElse (tag plan.failure)
               [ GoIfElse (GoPrefixOp "!" (GoVar failedName))
                   [ GoMutate errorName (boxGoExpr codegenStateRef modNameStr (GoVar resultName) callbackResultType)
                   , GoMutate failedName (rawGo "true")
@@ -161,7 +199,7 @@ emitLoop { metadata, codegenStateRef, modNameStr } { indexed, callbackOffset, ar
               [ GoCall (GoVar "panic") [ GoString "Failed pattern match" ] ]
           ]
       ]
-    -- Keep invoking the callback after a Left. The original strict map evaluates
+    -- Keep invoking the callback after Left/Nothing. The original strict map evaluates
     -- every element before sequence selects the first error.
     body =
       [ GoAssign valuesName source.expr

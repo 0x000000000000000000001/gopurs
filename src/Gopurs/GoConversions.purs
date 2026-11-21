@@ -12,6 +12,7 @@ import Data.Array as Array
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
+import Data.String.CodeUnits as CodeUnits
 import Data.String.Pattern (Pattern(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
@@ -31,24 +32,24 @@ coerceGoExpr _ _ expr from to | from == to = expr
 coerceGoExpr stateRef moduleName expr (TypeRecord sourceFields) (TypeRecord targetFields)
   | canProjectRecord sourceFields targetFields =
       projectRecord (coerceGoExpr stateRef moduleName) expr sourceFields targetFields
-coerceGoExpr stateRef moduleName ctor@(GoConstructor _ structName typeArgs args) _ (TypeStructValue adtName fields) =
-  let
-    parts = String.split (Pattern "_") structName.name
-    ctorName = fromMaybe "" (Array.last parts)
-  in
-    case Map.lookup adtName NativeAdts.unboxableADTs of
-      Just adt ->
-        let
-          provided = Array.mapWithIndex (\i arg -> Tuple (adt.fieldIndex ctorName i) arg) args
-          slotExpr slot = case Array.find (\(Tuple mbSlot _) -> mbSlot == Just slot) provided of
-            Just (Tuple _ arg) ->
-              coerceGoExpr stateRef moduleName arg (slotType typeArgs slot) (slotType fields slot)
-            Nothing -> zeroGoExpr (slotType fields slot)
-        in
-          GoStructValue adtName fields (Array.mapWithIndex (\i _ -> slotExpr i) fields)
-      Nothing -> ctor
-coerceGoExpr stateRef moduleName expr source@(TypeStructValue _ _) target@(TypeStructValue _ _) =
-  unboxGoExpr stateRef moduleName (boxGoExpr stateRef moduleName expr source) TypeValue target
+coerceGoExpr stateRef moduleName expr source target@(TypeStructValue adtName fields) = case expr of
+  GoConstructor _ structName typeArgs args ->
+    let
+      parts = String.split (Pattern "_") structName.name
+      ctorName = fromMaybe "" (Array.last parts)
+    in
+      case Map.lookup adtName NativeAdts.unboxableADTs of
+        Just adt ->
+          let
+            provided = Array.mapWithIndex (\i arg -> Tuple (adt.fieldIndex ctorName i) arg) args
+            slotExpr slot = case Array.find (\(Tuple mbSlot _) -> mbSlot == Just slot) provided of
+              Just (Tuple _ arg) ->
+                coerceGoExpr stateRef moduleName arg (slotType typeArgs slot) (slotType fields slot)
+              Nothing -> zeroGoExpr (slotType fields slot)
+          in
+            GoStructValue adtName fields (Array.mapWithIndex (\i _ -> slotExpr i) fields)
+        Nothing -> expr
+  _ -> unboxGoExpr stateRef moduleName (boxGoExpr stateRef moduleName expr source) TypeValue target
 -- Pointer identity ignores the PureScript fullName when the instantiated Go
 -- layout and runtime tag are already identical.
 coerceGoExpr _ _ expr (TypeStructPointer source) (TypeStructPointer target)
@@ -111,15 +112,15 @@ boxNativeExpr :: Ref CodegenState -> String -> GoExpr -> GoType -> GoExpr
 boxNativeExpr _ _ expr TypeValue = expr
 boxNativeExpr _ _ expr TypeInt64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ expr ]
 boxNativeExpr _ _ expr TypeFloat64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ expr ]
-boxNativeExpr _ _ expr TypeString = GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ expr ]
+boxNativeExpr _ _ expr TypeString = boxStringExpr expr
 boxNativeExpr _ _ expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ expr ]
 boxNativeExpr _ _ expr (TypeStructPointer { baseStructName }) = GoBoxStructPointer (hashString baseStructName) expr
 boxNativeExpr stateRef moduleName expr (TypeRecord fields) = boxRecord (boxGoExpr stateRef moduleName) expr fields
 boxNativeExpr _ _ expr (TypeInterface _) = expr
 boxNativeExpr _ _ expr (TypeNamed _) = GoCall (GoSelector (GoVar "gopurs_runtime") "Box") [ expr ]
 boxNativeExpr _ _ expr (TypePointer _) = GoCall (GoSelector (GoVar "gopurs_runtime") "Box") [ expr ]
-boxNativeExpr _ _ expr (TypeNativeArray TypeValue) = GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expr ]
-boxNativeExpr _ _ expr (TypeNativeArray TypeInt64) = GoBoxIntArray expr
+boxNativeExpr _ _ expr (TypeNativeArray TypeValue) = boxValueArray expr
+boxNativeExpr _ _ expr (TypeNativeArray TypeInt64) = boxIntArray expr
 boxNativeExpr stateRef moduleName expr (TypeNativeArray inner) = boxArray (boxGoExpr stateRef moduleName) expr inner
 boxNativeExpr _ _ expr TypeUint32 = rawGo ("gopurs_runtime.Value{Type: 9, IntVal: int64(" <> printGoExpr expr <> "), UnsafePtr: nil}")
 boxNativeExpr _ _ expr (TypeGenericParam _) = expr
@@ -128,6 +129,16 @@ boxNativeExpr stateRef moduleName expr (TypeStructValue adtName fields) =
   case Map.lookup adtName NativeAdts.unboxableADTs of
     Just adt -> adt.boxExpr (boxGoExpr stateRef moduleName) fields expr
     Nothing -> rawGo ("func() gopurs_runtime.Value {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"boxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
+
+-- These identity conversions retain optional immutable string metadata. A
+-- genuinely native string still uses the ordinary constant-time Str box.
+boxStringExpr :: GoExpr -> GoExpr
+boxStringExpr expr = case expr of
+  GoCall (GoSelector source "StrVal") [] ->
+    GoCall (GoSelector (GoVar "gopurs_runtime") "NormalizeStringValue") [ source ]
+  GoString literal ->
+    GoCall (GoSelector (GoVar "gopurs_runtime") "StrWithCodeUnits") [ expr, GoInt (CodeUnits.length literal) ]
+  _ -> GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ expr ]
 
 -- Normalize the source to Value once. The destination reader below never sees
 -- a native source; typed pointer payload adaptation belongs to coerceGoExpr.
@@ -152,8 +163,11 @@ unboxValue stateRef moduleName expr desiredType = case desiredType of
   TypeNamed _ -> GoCall (GoTypeApply (GoSelector (GoVar "gopurs_runtime") "Unbox") [ desiredType ]) [ expr ]
   TypePointer _ -> GoCall (GoTypeApply (GoSelector (GoVar "gopurs_runtime") "Unbox") [ desiredType ]) [ expr ]
   -- Value arrays borrow their immutable slice; boxing []Value also shares it.
-  TypeNativeArray TypeValue -> rawGo ("(*(*[]gopurs_runtime.Value)((" <> printGoExpr expr <> ").UnsafePtr))")
-  TypeNativeArray TypeInt64 -> GoUnboxIntArray expr
+  TypeNativeArray TypeValue -> GoPrefixOp "*"
+    (GoCall (rawGo "(*[]gopurs_runtime.Value)") [ GoSelector expr "UnsafePtr" ])
+  TypeNativeArray TypeInt64 -> case expr of
+    GoBoxIntArray source -> GoCall copyIntArray [ source ]
+    _ -> GoUnboxIntArray expr
   TypeNativeArray inner -> unboxArray (coerceGoExpr stateRef moduleName) expr inner
   TypeGenericParam _ -> expr
   TypeFunc _ _ -> expr
@@ -161,6 +175,36 @@ unboxValue stateRef moduleName expr desiredType = case desiredType of
     case Map.lookup adtName NativeAdts.unboxableADTs of
       Just adt -> adt.unboxExpr (\value fieldType -> unboxGoExpr stateRef moduleName value TypeValue fieldType) fields expr
       Nothing -> rawGo ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"unboxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
+
+-- Array/extract only changes the slice header when its operand is already a
+-- proven runtime Array. Unknown Values retain the original tag normalization.
+boxValueArray :: GoExpr -> GoExpr
+boxValueArray expression = case expression of
+  GoPrefixOp "*" (GoCall cast [ GoSelector source "UnsafePtr" ])
+    | cast == rawGo "(*[]gopurs_runtime.Value)" && constructedArray source -> source
+  _ -> GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expression ]
+  where
+  constructedArray (GoBoxIntArray _) = true
+  constructedArray (GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ _ ]) = true
+  constructedArray _ = false
+
+-- Int(v).IntVal is exactly v, including values outside Int32. The roundtrip
+-- still returns fresh storage: a native copy replaces the two element buffers.
+-- Use make/copy instead of slices.Clone so nil inputs still yield nonnil [].
+copyIntArray :: GoExpr
+copyIntArray = GoFuncLit [ Tuple "arrayCopy_input" (TypeNativeArray TypeInt64) ]
+  [ GoAssign "arrayCopy_output" (GoCall (GoVar "make")
+      [ rawGo "[]int64", GoCall (GoVar "len") [ GoVar "arrayCopy_input" ] ])
+  , GoCall (GoVar "copy") [ GoVar "arrayCopy_output", GoVar "arrayCopy_input" ]
+  ] (GoVar "arrayCopy_output") (TypeNativeArray TypeInt64)
+
+boxIntArray :: GoExpr -> GoExpr
+boxIntArray expression = case expression of
+  -- The final box itself copies every scalar into a fresh Value buffer; an
+  -- immediately preceding private copy cannot be observed. No variables,
+  -- stored values or arbitrary calls are searched through for this identity.
+  GoCall copier [ source ] | copier == copyIntArray -> GoBoxIntArray source
+  _ -> GoBoxIntArray expression
 
 -- Records and arrays capture their operand once, then adapt fields/elements in
 -- source order. These callbacks can register Rebox dependencies recursively.

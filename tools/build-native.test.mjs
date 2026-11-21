@@ -47,6 +47,7 @@ workspace:
   for (const [source, target] of [
     ['./build/build-native.mjs', 'tools/build/build-native.mjs'],
     ['./build/native-workspace.mjs', 'tools/build/native-workspace.mjs'],
+    ['./library-go-dependencies.mjs', 'tools/library-go-dependencies.mjs'],
     ['./lib/process.mjs', 'tools/lib/process.mjs'],
     ['./lib/fs.mjs', 'tools/lib/fs.mjs'],
   ]) {
@@ -56,9 +57,11 @@ workspace:
   const mockTool = `#!/usr/bin/env node
 const fs = require('node:fs'), path = require('node:path');
 const name = path.basename(process.argv[1]);
+const args = process.argv.slice(2);
 const purs = process.env.PATH.split(path.delimiter).map(dir => path.join(dir, 'purs')).find(fs.existsSync);
-fs.appendFileSync(process.env.MOCK_LOG, JSON.stringify({ name, args: process.argv.slice(2), cwd: process.cwd(), purs: fs.realpathSync(purs) }) + '\\n');
+fs.appendFileSync(process.env.MOCK_LOG, JSON.stringify({ name, args, cwd: process.cwd(), purs: fs.realpathSync(purs) }) + '\\n');
 if (process.env.MOCK_FAIL === name) process.exit(42);
+if (name === 'go' && process.env.MOCK_FAIL_GO_COMMAND === args[0]) process.exit(42);
 if (name === 'spago') {
   fs.mkdirSync('output/Main', { recursive: true });
   fs.mkdirSync('output/main', { recursive: true });
@@ -72,7 +75,22 @@ if (process.env.MOCK_PAUSE === name) {
   child.once('spawn', () => fs.writeFileSync(process.env.MOCK_READY, JSON.stringify({ parent: process.pid, child: child.pid })));
   setInterval(() => {}, 1000);
 } else if (name === 'go') {
-  fs.writeFileSync(process.argv[process.argv.indexOf('-o') + 1], 'new-native-binary');
+  if (args[0] === 'mod' && args[1] === 'edit') {
+    const state = fs.existsSync('mock-go-module.json')
+      ? JSON.parse(fs.readFileSync('mock-go-module.json', 'utf8'))
+      : { Module: { Path: 'gopurs/output' }, Go: '1.22', Require: [] };
+    process.stdout.write(JSON.stringify(state));
+  } else if (args[0] === 'get') {
+    const Require = args.slice(1).map(pin => {
+      const [Path, Version] = pin.split('@');
+      return { Path, Version };
+    });
+    fs.writeFileSync('mock-go-module.json', JSON.stringify({ Module: { Path: 'gopurs/output' }, Go: '1.22', Require }));
+  } else if (args[0] === 'build') {
+    fs.writeFileSync(args[args.indexOf('-o') + 1], 'new-native-binary');
+  } else if (!(args[0] === 'mod' && args[1] === 'download')) {
+    throw new Error('Unexpected mocked Go command: ' + args.join(' '));
+  }
 }
 `;
   for (const name of ['npm', 'spago', 'purs', 'go']) put(join(localBin, name), mockTool, 0o755);
@@ -91,7 +109,7 @@ appendFileSync(process.env.MOCK_LOG, JSON.stringify({ name: 'parser' }) + '\\n')
   const ready = join(temporary, 'ready.json');
   const environmentFor = overrides => ({
     ...process.env, TMPDIR: join(temporary, 'tmp'), MOCK_LOG: log, MOCK_READY: ready,
-    MOCK_FAIL: '', MOCK_UNTYPED: '', MOCK_PAUSE: '', GOPURS_PURS: '', GOPURS_PBO_DIR: '',
+    MOCK_FAIL: '', MOCK_FAIL_GO_COMMAND: '', MOCK_UNTYPED: '', MOCK_PAUSE: '', GOPURS_PURS: '', GOPURS_PBO_DIR: '',
     GOPURS_LIBRARY_ROOT: join(temporary, 'checkout/gopurs'), ...overrides,
   });
   const summarize = result => ({
@@ -215,6 +233,50 @@ test('native helper preserves the published binary when Go compilation fails', t
   assert.deepEqual(result.calls.map(call => call.name), ['npm', 'spago', 'parser', 'gopurs.js', 'go']);
   assert.equal(readFileSync(f.binary, 'utf8'), 'old-native-binary');
   assert.ok(existsSync(join(result.workspace, 'go-build.log')), 'failure logs must remain available');
+});
+
+test('native helper prepares exact Go dependencies from the effective library root before compilation', t => {
+  const f = fixture(t);
+  const libraryRoot = join(dirname(f.root), 'selected libraries');
+  const port = join(libraryRoot, 'gopurs-argonaut-codecs');
+  f.put(join(port, 'spago.yaml'), 'package:\n  name: argonaut-codecs\n');
+  f.put(join(port, 'go-dependencies.json'), JSON.stringify({
+    schema: 1, require: { 'example.test/bootstrap': 'v1.2.3' },
+  }));
+  // A source in the unused sibling family must not override the selected pin.
+  f.put(join(dirname(f.root), 'gopurs-aff/go-dependencies.json'), JSON.stringify({
+    schema: 1, require: { 'example.test/bootstrap': 'latest' },
+  }));
+  const result = f.run({ GOPURS_LIBRARY_ROOT: libraryRoot });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const go = result.calls.filter(call => call.name === 'go');
+  assert.deepEqual(go.slice(0, -1).map(call => call.args), [
+    ['mod', 'edit', '-json'],
+    ['get', 'example.test/bootstrap@v1.2.3'],
+    ['mod', 'edit', '-json'],
+    ['mod', 'download', 'all'],
+  ]);
+  assert.equal(go.at(-1).args[0], 'build');
+  assert.equal(result.calls.at(-1), go.at(-1));
+  for (const call of go) assert.equal(call.cwd, realpathSync(join(result.workspace, 'output')));
+  assert.match(readFileSync(join(result.workspace, 'go-dependencies.log'), 'utf8'), /example\.test\/bootstrap@v1\.2\.3/);
+  assert.equal(readFileSync(f.binary, 'utf8'), 'new-native-binary');
+});
+
+test('native helper stops before Go compilation and preserves the binary when dependency preparation fails', t => {
+  const f = fixture(t);
+  f.put(join(dirname(f.root), 'gopurs-aff/go-dependencies.json'), JSON.stringify({
+    schema: 1, require: { 'example.test/bootstrap': 'v1.2.3' },
+  }));
+  const result = f.run({ MOCK_FAIL_GO_COMMAND: 'get' });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /failed during go-dependencies/);
+  assert.deepEqual(result.calls.filter(call => call.name === 'go').map(call => call.args), [
+    ['mod', 'edit', '-json'], ['get', 'example.test/bootstrap@v1.2.3'],
+  ]);
+  assert.equal(existsSync(join(result.workspace, 'go-build.log')), false);
+  assert.ok(existsSync(join(result.workspace, 'go-dependencies.log')));
+  assert.equal(readFileSync(f.binary, 'utf8'), 'old-native-binary');
 });
 
 test('native helper removes a successful workspace unless retention is requested', t => {

@@ -5,8 +5,10 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   renameSync,
   rmSync,
+  statSync,
   symlinkSync,
   writeFileSync,
 } from "node:fs";
@@ -140,6 +142,19 @@ async function buildNative({ keepWorkspace }) {
       ["--stack-size=65536", join(root, "bin/gopurs.js"), "--main", "Main"],
       { cwd: workspace },
     );
+    // Use the same effective library root as the TAST workspace: pinned
+    // snapshots by default, development ports only when explicitly selected.
+    // Run after generation so its go.mod cannot overwrite the prepared pins.
+    const dependencyPorts = readdirSync(libraryRoot).sort()
+      .filter((name) => name.startsWith("gopurs-"))
+      .map((name) => join(libraryRoot, name))
+      .filter((directory) => statSync(directory, { throwIfNoEntry: false })?.isDirectory())
+      .filter((directory) => statSync(join(directory, "spago.yaml"), { throwIfNoEntry: false })?.isFile()
+        && statSync(join(directory, "go-dependencies.json"), { throwIfNoEntry: false })?.isFile());
+    if (dependencyPorts.length) {
+      await runStage("go-dependencies", process.execPath,
+        [join(root, "tools/library-go-dependencies.mjs"), output, ...dependencyPorts], { cwd: root });
+    }
     const binary = join(workspace, "gopurs-native");
     await runStage("go-build", "go", ["build", "-trimpath", "-o", binary, "./main/main.go"], { cwd: output });
 

@@ -140,7 +140,17 @@ executeIfOpaque :: TcoExpr -> GoExpr -> GoExpr
 
 executeIfOpaque expr goExpr =
   if isEffectNode expr then goExpr
-  else GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ goExpr, rawGo "gopurs_runtime.Value{}" ]
+  else
+    -- The final Unit is inert: an immediately executed application can consume
+    -- it in the same runtime call. Saved actions retain their normal closure.
+    case goExpr of
+      GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ fn, arg ] ->
+        GoCall (GoSelector (GoVar "gopurs_runtime") "Apply2") [ fn, arg, unit ]
+      GoCall (GoSelector (GoVar "gopurs_runtime") "Apply2") [ fn, arg1, arg2 ] ->
+        GoCall (GoSelector (GoVar "gopurs_runtime") "Apply3") [ fn, arg1, arg2, unit ]
+      _ -> GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ goExpr, unit ]
+  where
+  unit = rawGo "gopurs_runtime.Value{}"
 
 bindFieldFunctionParameters :: (ExprType -> GoType) -> LocalEnv -> ExprType -> TcoExpr -> LocalEnv
 bindFieldFunctionParameters toGoType bound expectedExprType value =

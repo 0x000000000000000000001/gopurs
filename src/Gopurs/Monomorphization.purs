@@ -51,6 +51,7 @@ type SpecializationBarriers =
   { foreignGlobals :: Set String
   , foreignForwarders :: Set String
   , sharedRecordWorkers :: Set String
+  , decoderReaders :: Set String
   }
 
 -- Receive the original global types and modules enriched with class declarations.
@@ -137,6 +138,15 @@ monomorphizeModulesUsing collectTransitive dispatch rewrite unchanged globalType
       { foreignGlobals: Set.union intrinsicGlobals (collectForeignGlobals modules)
       , foreignForwarders: collectForeignForwarders modules
       , sharedRecordWorkers: Map.keys (Map.filter candidateToShare globalAstMap)
+      -- These canonical Argonaut wrappers expose the actual decoder dictionary
+      -- to PBO, BorrowedObjects and DecoderSchemas. Cloning them embeds closed
+      -- dictionaries in imported workers and hides that proof from callers.
+      -- Keep their bodies available during collection and ordinary inlining.
+      , decoderReaders: Set.fromFoldable
+          [ "Data.Argonaut.Decode.Combinators.getField"
+          , "Data.Argonaut.Decode.Combinators.getFieldOptional"
+          , "Data.Argonaut.Decode.Combinators.getFieldOptional'"
+          ]
       }
     rawInstantiations = foldl (collectInstantiations globalAstMap) Map.empty modules
   -- PBO owns the immutable round snapshots, ordered merge and fixed point. Do
@@ -190,6 +200,7 @@ addForeignGlobal moduleName globals (Tuple (Ident name) _) =
 eligible :: Map String ExprType -> SpecializationBarriers -> String -> Boolean
 eligible globalTypes barriers name =
   not (Set.member name barriers.sharedRecordWorkers)
+    && not (Set.member name barriers.decoderReaders)
     && not (Set.member name barriers.foreignForwarders)
     && not (Set.member name barriers.foreignGlobals)
     && case Map.lookup name globalTypes of

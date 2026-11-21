@@ -12,9 +12,8 @@ import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.ExprAnalysis (executeIfOpaque, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), flattenStmts)
-import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..))
+import Gopurs.GoAst (GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr)
-import Gopurs.Printer (printGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (Ident)
 import PureScript.Backend.Optimizer.FreeVars (localId)
@@ -62,13 +61,10 @@ primitive translate context@{ codegenStateRef, depth, modNameStr } nextId eff =
   EffectRefNew a ->
     let
       resA = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId a
-      refIdent = "__local_ref_" <> show resA.nextId
-      declStmt = GoAssign refIdent (boxGoExpr codegenStateRef modNameStr resA.expr resA.exprType)
-      ifaceIdent = "__local_iface_" <> show resA.nextId
-      ifaceStmt = rawGo ("var " <> ifaceIdent <> " interface{} = " <> refIdent)
     in
-      { stmts: resA.stmts <> StmtLeaf declStmt <> StmtLeaf ifaceStmt
-      , expr: rawGo ("gopurs_runtime.Any(&" <> ifaceIdent <> ")")
+      { stmts: resA.stmts
+      , expr: GoCall (GoSelector (GoVar "gopurs_runtime") "NewSTRef")
+          [ boxGoExpr codegenStateRef modNameStr resA.expr resA.exprType ]
       , exprType: TypeValue
       , nextId: resA.nextId + 1
       }
@@ -77,7 +73,8 @@ primitive translate context@{ codegenStateRef, depth, modNameStr } nextId eff =
       resA = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId a
     in
       { stmts: resA.stmts
-      , expr: rawGo ("(*(" <> printGoExpr resA.expr <> ".PtrVal().(*interface{}))).(gopurs_runtime.Value)")
+      , expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ReadSTRef")
+          [ boxGoExpr codegenStateRef modNameStr resA.expr resA.exprType ]
       , exprType: TypeValue
       , nextId: resA.nextId
       }
@@ -85,10 +82,12 @@ primitive translate context@{ codegenStateRef, depth, modNameStr } nextId eff =
     let
       resRef = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId ref
       resVal = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) resRef.nextId val
-      writeStmt = rawGo ("*(" <> printGoExpr resRef.expr <> ".PtrVal().(*interface{})) = " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType))
     in
-      { stmts: resRef.stmts <> resVal.stmts <> StmtLeaf writeStmt
-      , expr: boxGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType
+      { stmts: resRef.stmts <> resVal.stmts
+      , expr: GoCall (GoSelector (GoVar "gopurs_runtime") "WriteSTRef")
+          [ boxGoExpr codegenStateRef modNameStr resRef.expr resRef.exprType
+          , boxGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType
+          ]
       , exprType: TypeValue
       , nextId: resVal.nextId
       }

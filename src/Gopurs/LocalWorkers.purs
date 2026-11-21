@@ -17,6 +17,7 @@ import Gopurs.GoSymbol (GoReference(..))
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoFunctions (Parameters, curriedFunction, iterationBindings, loopParameters, namedParameters)
 import Gopurs.Int32Loops as Int32Loops
+import Gopurs.AffineLoops as AffineLoops
 import Gopurs.GoTypes (exprTypeToGoType)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 
@@ -41,8 +42,8 @@ signature { modNameStr } name params result =
 -- The translated body determines the native result. Only the curried wrapper
 -- crosses Value. Declarations stay separate so recursive callers can place the
 -- whole group's declarations before any assignment captures a peer worker.
-emit :: ExprContext -> String -> Parameters -> Boolean -> ExprResult -> { declarations :: Array GoExpr, assignments :: Array GoExpr }
-emit { codegenStateRef, modNameStr } name params isLoop result =
+emit :: ExprContext -> String -> Parameters -> Maybe TcoExpr -> ExprResult -> { declarations :: Array GoExpr, assignments :: Array GoExpr }
+emit { codegenStateRef, modNameStr, bound } name params loopBody result =
   let
     nativeName = workerName modNameStr name
     resultType = result.exprType
@@ -53,8 +54,10 @@ emit { codegenStateRef, modNameStr } name params isLoop result =
       , rawGo ("_ = " <> name)
       ]
     body = flattenStmts result.stmts <> [ GoReturn result.expr ]
-    functionBody = if isLoop then Int32Loops.loop name params resultType body
-      else GoBlock (iterationBindings params <> body)
+    functionBody = case loopBody of
+      Just source -> AffineLoops.wrap (AffineLoops.localTarget bound name) params resultType source
+        (Int32Loops.loop name params resultType body)
+      Nothing -> GoBlock (iterationBindings params <> body)
     nativeAssignment = GoMutate nativeName (GoFuncBlock (loopParameters params) [ functionBody ] resultType)
     call = GoCall (GoVar nativeName) (map (\(Tuple param ty) ->
       coerceGoExpr codegenStateRef modNameStr (GoVar (param <> "_loop_val")) TypeValue ty) params)

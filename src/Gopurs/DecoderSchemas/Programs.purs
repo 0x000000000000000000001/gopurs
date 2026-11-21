@@ -74,9 +74,7 @@ deriveProgram proofs expr = do
               Just ObjectInput -> true
               _ -> false)
             key <- stringExpr label
-            { fn: decode, args: dictionaries } <- callExpr method
-            guard (standard "decodeJson" decode)
-            dictionary <- one dictionaries
+            dictionary <- decoderDictionary method
             schema <- proofs.readSchema dictionary
             guard (complete schema)
             guard (forwards 128 level (Map.insert level (Result false (Failure level)) env) body)
@@ -181,6 +179,17 @@ decodedAtom :: Atom -> Maybe Level
 decodedAtom = case _ of
   Decoded level -> Just level
   _ -> Nothing
+
+-- Inlining the standard class method leaves the same dictionary as a property
+-- access. Keep that operand for the existing schema proof; its result type alone
+-- cannot certify a decoder, and the original source expression stays unchanged.
+decoderDictionary :: NeutralExpr -> Maybe NeutralExpr
+decoderDictionary method = case strip method of
+  Accessor dictionary (GetProp "decodeJson") -> Just dictionary
+  _ -> do
+    { fn, args } <- callExpr method
+    guard (standard "decodeJson" fn)
+    one args
 
 callExpr :: NeutralExpr -> Maybe { fn :: NeutralExpr, args :: Array NeutralExpr }
 callExpr expr = case strip expr of

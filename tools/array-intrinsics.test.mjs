@@ -12,6 +12,7 @@ import * as Ref from '../output/Effect.Ref/index.js';
 import { Curried, Uncurried, recognize, emitCurried, emitUncurried } from '../output/Gopurs.ArrayIntrinsics/index.js';
 import { StmtEmpty, flattenStmts } from '../output/Gopurs.ExprContext/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
+import { LocalReference } from '../output/Gopurs.GoSymbol/index.js';
 import { boxGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
 import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
@@ -99,7 +100,8 @@ test('generated map/filter/fold loops preserve callbacks, left-fold order, nativ
             const worker = mode === 'worker';
             const arity = kind === 'fold' ? 2 : 1;
             const resultType = kind === 'filter' ? Go.TypeBool.value : Go.TypeInt64.value;
-            if (worker) ctx.moduleFunctions = insert(ordString)(`Probe.${kind}`)({
+            if (worker) ctx.moduleFunctions = insert(ordString)(kind)({
+                reference: new LocalReference(`Call_Probe_${kind}`),
                 arity, fArgs: Array(arity).fill(Go.TypeInt64.value), fRet: resultType,
             })(emptyMap);
             const callbackType = worker ? new Go.TypeFunc(Array(arity).fill(Go.TypeInt64.value), resultType) : Go.TypeValue.value;

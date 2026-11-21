@@ -147,6 +147,28 @@ test('foreign wrappers and row-only readers retain their bodies for collection a
  for(const name of ['Foreign.forward','Foreign.read','Foreign.ffi'])assert.deepEqual(specialized(result,name),[]);
 });
 
+test('canonical JSON reader wrappers retain dictionary operands without blocking their callees or other readers',()=>{
+ const owner='Data.Argonaut.Decode.Combinators';
+ const readers=['getField','getFieldOptional',"getFieldOptional'"];
+ const definitions=names=>names.map(name=>nonrec(name,poly,lambda('value',app(ref('Generic','identity'),ref(null,'value',variable),variable))));
+ const calls=[...readers.map(name=>[owner,name]),[owner,'otherReader'],['Other','getField']];
+ const modules=[moduleOf('Generic',[identity()]),moduleOf(owner,definitions([...readers,'otherReader'])),
+  moduleOf('Other',definitions(['getField'])),moduleOf('Caller',calls.map(([mod,name],index)=>
+   nonrec('answer'+index,int,app(ref(mod,name),literal(index))))),
+ ];
+ const result=run(modules,buildGlobalTypes(modules),ast=>raw=>{
+  for(const name of readers){
+   assert.ok(keys(ast).includes(owner+'.'+name),'retain the real wrapper body for PBO');
+   assert.ok(keys(raw).includes(owner+'.'+name),'collect its dictionary instantiations before filtering');
+  }
+  return PBO.transitiveCollect(ast)(raw);
+ });
+ for(const name of readers)assert.deepEqual(specialized(result,owner+'.'+name),[]);
+ for(const name of ['Generic.identity',owner+'.otherReader','Other.getField']){
+  assert.ok(specialized(result,name).length>0,name+' remains eligible');
+ }
+});
+
 test('recursive groups are indexed and rewritten without reordering modules',()=>{
  const modules=program();
  modules[0].decls=[new C.Rec([modules[0].decls[0].value0])];

@@ -240,6 +240,26 @@ test('derived reads require complete dictionaries, literal keys and the proven b
  }
 });
 
+test('derived field accessors retain the actual decoder dictionary after method inlining',()=>{
+ const property=(dict,name='decodeJson')=>new E(new S.Accessor(dict,new S.GetProp(name)));
+ const read=decoder=>app(global('Data.Argonaut.Decode.Decoders','getField'),decoder,access('Right',1),literal('payload'));
+ const check=decoder=>derived(bind(2,read(decoder),ctor('Right',access('Right',2))));
+ for(const decoder of [property(str),typed(C.Any.value,new E(new S.TypeApp(property(str),C.String.value)))]){
+  const result=check(decoder);
+  assert.ok(hasProgram(result),'the field method is the proven standard dictionary accessor');
+  assert.match(result.code,/argonautCompileTextSchema/);
+  assert.deepEqual(result.module.bindings.at(-1).bindings[0].value1,
+   typed(C.Any.value,method(app(cls('decodeArray'),global('Probe','custom')))),
+   'the original decoder source remains intact');
+ }
+ for(const decoder of [property(str,'other'),property(global('Opaque','custom')),
+  property(local(9)),app(property(str),local(9))]){
+  const result=check(decoder);
+  assert.equal(hasProgram(result),false);
+  assert.doesNotMatch(result.code,/argonautCompileTextSchema/);
+ }
+});
+
 test('each derived read must forward its exact Left payload, including through aliases',()=>{
  const read=getField('payload');
  const branch=failure=>new E(new S.Branch([
