@@ -74,6 +74,7 @@
     "tools/ffi-gen/types.go",
     "tools/ffi-gen/workspace.go",
     "tools/ffi-runner.mjs",
+    "tools/library-go-dependencies.mjs",
     "tools/ffi_gen.wasm",
     "tools/go-packages.mjs",
     "tools/wasm_exec.js"

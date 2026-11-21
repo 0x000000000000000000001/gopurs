@@ -75,6 +75,22 @@ func TestChildren(t *testing.T) {
   if Children(nil) != nil { t.Fatal("nil changed to an empty slice") }
   if result := Children([]Child{}); result == nil || len(result) != 0 { t.Fatal("empty slice changed") }
 }
+
+func TestTransform(t *testing.T) {
+  input := []int{3, 1, 2}
+  var visited []int
+  result := Transform(func(value int) string {
+    visited = append(visited, value)
+    return string(rune('a' + value))
+  }, input)
+  if !reflect.DeepEqual(result, []string{"d", "b", "c"}) { t.Fatal(result) }
+  if !reflect.DeepEqual(visited, input) { t.Fatal("callback order changed", visited) }
+  copied := Transform(func(value int) int { return value }, input)
+  copied[0] = 99
+  if input[0] != 3 { t.Fatal("result aliases input") }
+  empty := Transform(func(value int) string { t.Fatal("callback on empty input"); return "" }, []int{})
+  if empty == nil || len(empty) != 0 { t.Fatal("empty result changed") }
+}
 `);
   const result = spawnSync("go", ["test", "-race", "-count=1", "-timeout=20s", "-v", "./..."], {
     cwd: work, env: { ...process.env, GOWORK: "off" }, encoding: "utf8", timeout: 60000,
@@ -82,6 +98,6 @@ func TestChildren(t *testing.T) {
   writeFileSync(join(work, "test.log"), (result.stdout ?? "") + (result.stderr ?? ""));
   assert.ifError(result.error);
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  console.log(`${snippets.length} exact Go examples, five behavior checks under -race`);
+  console.log(`${snippets.length} exact Go examples, six behavior checks under -race`);
   passed = true;
 });

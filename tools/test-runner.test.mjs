@@ -63,7 +63,7 @@ function fixture(t) {
   for (const dir of ["mockbin", "tmp", "gopurs-prelude"]) mkdirSync(join(base, dir));
   writeFileSync(join(base, "package.json"), '{"type":"module"}');
   for (const name of ["test", "modtest"]) cpSync(join(repository, "bin", name), join(root, "bin", name));
-  for (const name of ["test-selection", "test-process", "test-workspace", "test-snapshots", "test-campaign", "test-compiler", "test-go", "test-runner", "modtest-runner"]) cpSync(join(repository, "tools", name + ".mjs"), join(root, "tools", name + ".mjs"));
+  for (const name of ["test-selection", "test-process", "test-workspace", "test-snapshots", "test-campaign", "test-compiler", "test-go", "test-runner", "modtest-runner", "library-go-dependencies"]) cpSync(join(repository, "tools", name + ".mjs"), join(root, "tools", name + ".mjs"));
   cpSync(join(repository, "tools/lib/process.mjs"), join(root, "tools/lib/process.mjs"));
   cpSync(join(repository, "tools/lib/fs.mjs"), join(root, "tools/lib/fs.mjs"));
   writeFileSync(join(root, "bin/pkg"), "CORE_PACKAGES=(prelude)\n");
@@ -834,8 +834,10 @@ test("installed library runners limit direct cleanup to their own checkout", asy
     try {
       mkdirSync(join(base, name, "bin"), { recursive: true });
       cpSync(join(directory, "bin/test"), join(base, name, "bin/test"));
+      const delegatedRunners = [...readFileSync(join(directory, "bin/test"), "utf8").matchAll(/^exec node ([A-Za-z0-9_./-]+\.mjs)\b/gm)]
+        .map(match => match[1]).filter(file => existsSync(join(directory, file)));
       const nativePreflights = ["test/chmod-native.mjs", "test/listener-added-native.mjs", "test/https-response-native.mjs",
-        "test/pipe-native.mjs", "test/json-records.mjs", "tools/aff-native.test.mjs"]
+        "test/pipe-native.mjs", "test/json-records.mjs", "tools/aff-native.test.mjs", ...delegatedRunners]
         .filter(file => existsSync(join(directory, file)));
       const shellPreflights = ["test-child-process-native"]
         .filter(file => existsSync(join(directory, "bin", file)));
@@ -846,7 +848,10 @@ test("installed library runners limit direct cleanup to their own checkout", asy
       for (const file of nativePreflights) {
         const target = join(base, name, file);
         mkdirSync(dirname(target), { recursive: true });
-        writeFileSync(target, `import { writeFileSync } from "node:fs";\nwriteFileSync(${JSON.stringify(target + ".reached")}, "reached");\n`);
+        const delegate = delegatedRunners.includes(file)
+          ? 'import { spawnSync } from "node:child_process";\nspawnSync("spago", ["build"], { stdio: "inherit" });\nprocess.exit(1);\n'
+          : "";
+        writeFileSync(target, `import { writeFileSync } from "node:fs";\nwriteFileSync(${JSON.stringify(target + ".reached")}, "reached");\n${delegate}`);
       }
       writeFileSync(join(base, name, "spago.go.yaml"), "package: {}\n");
       mkdirSync(join(base, "mockbin"));

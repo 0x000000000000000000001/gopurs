@@ -225,7 +225,10 @@ toValue dataDecls (TFunc args ret) mbTast valName =
             TNamed "interface{}" -> "arg"
             TNamed "gopurs_runtime.Value" -> "arg"
             f@(TFunc _ _) -> String.replaceAll (Pattern "\n") (Replacement "\n\t\t\t") (fromValue dataDecls f (mbTast >>= \tast -> getTastArgType tast 0) "arg" 99)
-            _ -> "gopurs_runtime.Unbox[" <> printTypeNode a <> "](arg)"
+            -- Native callbacks can receive structural records and nested
+            -- containers too. Their PS arguments need the same field/element
+            -- conversion as ordinary FFI parameters, not a raw reinterpretation.
+            _ -> fromValue dataDecls a (mbTast >>= \tast -> getTastArgType tast 0) "arg" 99
         in
           case ret of
             Nothing -> genInnerArg valName "gopurs_runtime.Value{}" argUnwrap

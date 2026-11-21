@@ -61,6 +61,7 @@ npx gopurs --main Main      # Generate Go source and go.mod in output/
 | I want to… | Read |
 | --- | --- |
 | Build my first application | [Hello World quickstart](docs/quickstart.md) |
+| Explore HTTP, JSON and SQLite together | [Task list API example](https://github.com/0x000000000000000000001/gopurs/blob/main/examples/task-list-api/README.md) |
 | Set up the pinned toolchain | [Nix guide](docs/nix.md#typed-frontend-and-development-shell) |
 | Use compiler flags or select a compiler host | [CLI reference](docs/cli.md) |
 | Check whether a project will work with gopurs | [Known limitations](docs/limitations.md) and [migration guide](docs/migration.md) |

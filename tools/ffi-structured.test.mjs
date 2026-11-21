@@ -8,6 +8,7 @@ import { Just, Nothing } from '../output/Data.Maybe/index.js';
 import { Tuple } from '../output/Data.Tuple/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import * as Structured from '../output/Gopurs.FfiBridge.Structured/index.js';
+import { toValue } from '../output/Gopurs.FfiBridge.Values/index.js';
 import { printTypeNode, resolveNewtype } from '../output/Gopurs.FfiBridge.TypeSupport/index.js';
 import { generateFfiBridge, ffiProblems, ffiProblemsWithTypes, ffiFunctionInfos, ffiValueWorkers } from '../output/Gopurs.FfiBridge/index.js';
 import * as Map from '../output/Data.Map/index.js';
@@ -185,4 +186,47 @@ test('record array results keep field conversion when a callback would otherwise
     assert.equal(Map.size(ffiFunctionInfos('Structured')(foreigns)(parsed.decls)), 0);
     assert.equal(ffiValueWorkers('Structured')([])(foreigns)(parsed.decls), '');
     assert.match(generateFfiBridge('Structured')([])(parsed.decls)(foreigns), /RecordDict1/);
+});
+
+test('native callbacks accept structural records and nested arrays from PureScript', t => {
+    const parsed = parse(`type Child struct { Active bool; Label string }
+func RecordCallback(f func(Child) int64) func(Child) int64 { return f }
+func ArrayCallback(f func([][]Child) int64) func([][]Child) int64 { return f }
+`);
+    const contracts = [child, new C.Array(new C.Array(child))];
+    const bridges = parsed.decls.map((decl, index) => {
+        const type = decl.results[0];
+        const callback = new C.Func([contracts[index]], C.Int.value);
+        return `func Bridge${index}(callback ${printTypeNode(type)}) gopurs_runtime.Value { return ${toValue([])(type)(new Just(callback))('callback')} }`;
+    }).join('\n');
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-native-record-callback-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'gopurs_runtime'));
+    copyFileSync(new URL('../runtime/runtime.go', import.meta.url), join(directory, 'gopurs_runtime/runtime.go'));
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'bridge.go'), 'package fixture\nimport "gopurs/output/gopurs_runtime"\n' + parsed.content + '\n' + bridges);
+    writeFileSync(join(directory, 'bridge_test.go'), `package fixture
+import ("testing"; rt "gopurs/output/gopurs_runtime")
+func TestNativeCallbacks(t *testing.T) {
+    calls := 0
+    input := rt.RecordDict2("label", "active", rt.Str("reply"), rt.Bool(true))
+    one := Bridge0(func(value Child) int64 {
+        calls++
+        if value.Label != "reply" || !value.Active { t.Fatal("record fields were not converted") }
+        return 42
+    })
+    if result := rt.Apply(one, input); result.IntVal != 42 || calls != 1 { t.Fatal("record callback", result, calls) }
+    many := Bridge1(func(values [][]Child) int64 {
+        calls++
+        if len(values) != 2 || len(values[0]) != 1 || len(values[1]) != 0 || values[0][0].Label != "reply" { t.Fatal("nested array conversion", values) }
+        values[0][0].Label = "changed"
+        return 7
+    })
+    if result := rt.Apply(many, rt.Array([]rt.Value{rt.Array([]rt.Value{input}), rt.Array(nil)})); result.IntVal != 7 || calls != 2 { t.Fatal("array callback", result, calls) }
+    if rt.RecordGet(input, "label").StrVal() != "reply" { t.Fatal("callback mutated the original record") }
+}
+`);
+    const result = spawnSync('go', ['test', '-race', '-count=1', './...'], { cwd: directory, encoding: 'utf8', timeout: 60000, env: { ...process.env, GOWORK: 'off' } });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
 });

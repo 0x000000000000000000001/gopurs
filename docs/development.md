@@ -89,6 +89,11 @@ Follow a library's existing npm/CI commands for those workflows; `npm test`
 does not universally run Go. Preserve npm lockfiles used by those commands.
 Go helper modules live in `tools/ffi-gen`, `tools/build-cache` and `tools/c1c`.
 The backend creates each application's Go module under `output`.
+Ports with external Go imports declare exact versions in `go-dependencies.json`.
+Run the [Go dependency preparation](ffi-idiomatic.md#external-go-modules)
+after output cleanup and before generation; the repository fixture harness
+does this for local overrides. Keep the resulting `go.mod` and `go.sum` for
+subsequent builds.
 
 ## Go FFI
 
@@ -104,8 +109,11 @@ and callbacks. Their conversion rules are implemented in
 [FfiBridge](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/FfiBridge.purs); see the executable
 [integer FFI fixture](https://github.com/0x000000000000000000001/gopurs/blob/main/tests/passing/FFIIntegerReturns.purs) and its
 [Go implementation](https://github.com/0x000000000000000000001/gopurs/blob/main/tests/passing/FFIIntegerReturns.go) for native `int`, `int64`,
-slice, and dynamic return examples. Effect bindings must follow the thunk
-convention used by the Go library ports.
+slice, and dynamic return examples. New effect bindings use ordinary Go
+functions: `Effect String` can be implemented by `func Label() string`,
+and `Effect Unit` by `func Fire()`. The adapter defers execution until the
+effect runs. Legacy explicit-thunk implementations remain supported; see the
+[Go FFI guide](ffi-idiomatic.md) for effect, callback and resource contracts.
 
 The Go parser is not a general binding generator for every Go API. Confirm that
 an imported signature is supported before using it. Source builds after RC14

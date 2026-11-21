@@ -39,8 +39,8 @@ async function runFixture(fixture, options, processes, env) {
   await formatSnapshots(snapshots, processes, fixture, env);
   if (!options.update) await verifySnapshots(snapshots, processes, fixture, env);
   const output = join(directory, "output");
-  // Fixtures use only the Go standard library. Build the generated go.mod
-  // unchanged, without module/toolchain downloads or an enclosing workspace.
+  // prepareFixture has already resolved exact port dependencies. Build the
+  // generated go.mod unchanged, without downloads or an enclosing workspace.
   if (options.dev) console.log(devGoMessage);
   await processes.run(
     "go-build",

@@ -14,6 +14,7 @@ import { ensureDirectory } from "./lib/fs.mjs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { isLibraryCheckout } from "./test-selection.mjs";
+import { prepareLibraryGoDependencies } from "./library-go-dependencies.mjs";
 
 function libraryRoot(root) {
   return resolve(process.env.GOPURS_LIBRARY_ROOT || dirname(root));
@@ -85,6 +86,12 @@ export function prepareFixture(root, workspace, file, index, packages) {
     "workspace:\n  packageSet:\n    registry: 77.10.1\n  extraPackages:\n" +
     overrides.map((name) => `    ${name}:\n      path: ${JSON.stringify(libraryPath(root, name))}\n`).join("");
   writeFileSync(join(directory, "spago.yaml"), config);
+  // Explicit preparation belongs to the repository test harness. The compiler
+  // itself never installs dependencies on behalf of applications.
+  prepareLibraryGoDependencies(
+    join(directory, "output"),
+    overrides.map((name) => libraryPath(root, name)),
+  );
   return { name, directory, snapshotFfi: /^-- @snapshot-ffi\r?$/m.test(content) };
 }
 
@@ -114,12 +121,11 @@ export function prepareModule(root, directory, name, { dev = false } = {}) {
       filter: (path) => !generated.has(basename(path)),
     });
   }
-  // The compiler is consumed read-only; -c is handled once by the outer runner.
-  // Library scripts call ../gopurs/bin/gopurs themselves. A private launcher
-  // supplies the selected profile without changing each library's arguments.
+  // Library scripts can remove output after prepareModule returns. Prepare Go
+  // dependencies at their compiler invocation, after that cleanup, using only
+  // the isolated library copies. -c remains handled by the outer runner.
   const compiler = join(packages, "gopurs");
-  if (!dev) symlinkSync(root, compiler, "dir");
-  else {
+  {
     ensureDirectory(join(compiler, "bin"));
     for (const entry of readdirSync(root)) {
       if (entry !== "bin") symlinkSync(join(root, entry), join(compiler, entry));
@@ -128,9 +134,23 @@ export function prepareModule(root, directory, name, { dev = false } = {}) {
       if (entry !== "gopurs") symlinkSync(join(root, "bin", entry), join(compiler, "bin", entry));
     }
     const launcher = join(root, "bin/gopurs").replace(/'/g, "'\\''");
+    const prepare = join(root, "tools/library-go-dependencies.mjs").replace(/'/g, "'\\''");
+    const dependencyPorts = new Set([join(packages, name)]);
+    // Library configs explicitly list their local overrides. Follow those
+    // paths in the isolated family, including overrides of overrides, rather
+    // than installing dependencies of every unrelated sibling checkout.
+    for (const port of dependencyPorts) {
+      const config = join(port, "spago.yaml");
+      if (!existsSync(config)) continue;
+      for (const match of readFileSync(config, "utf8").matchAll(/^\s+path:\s*["']?([^"'\r\n]+?)["']?\s*$/gm)) {
+        const dependency = resolve(port, match[1]);
+        if (dependency.startsWith(packages + "/") && existsSync(dependency)) dependencyPorts.add(dependency);
+      }
+    }
+    const portArguments = [...dependencyPorts].map((port) => `'${port.replace(/'/g, "'\\''")}'`).join(" ");
     writeFileSync(
       join(compiler, "bin/gopurs"),
-      `#!/usr/bin/env bash\necho '[gopurs] Build mode: DEV (--dev).' >&2\nexec '${launcher}' --dev "$@"\n`,
+      `#!/usr/bin/env bash\nset -e\nnode '${prepare}' output ${portArguments}\n${dev ? "echo '[gopurs] Build mode: DEV (--dev).' >&2\n" : ""}exec '${launcher}' ${dev ? "--dev " : ""}"$@"\n`,
       { mode: 0o755 },
     );
   }

@@ -11,6 +11,7 @@ These guides describe the current source tree. Start with the
 | [CLI reference](cli.md) | Options, environment variables and exit status |
 | [Migration](migration.md) | Move a JavaScript project to Go |
 | [Go FFI](ffi-idiomatic.md) | Implement foreign imports with ordinary Go functions |
+| [Task list API example](../examples/task-list-api/README.md) | Build a PureScript HTTP and JSON API backed by SQLite |
 | [Limitations](limitations.md) | Unsupported features and compatibility gaps |
 | [Troubleshooting](troubleshooting.md) | Diagnose build and runtime errors |
 | [Publication scope](publication-scope.md) | Supported platforms and compatibility policy |

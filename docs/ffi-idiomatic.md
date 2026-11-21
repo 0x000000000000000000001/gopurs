@@ -6,6 +6,11 @@ capitalized. Imports, package declarations and local type declarations are
 allowed. The compiler adapts a copy; the handwritten file remains usable by
 `gofmt`, `go test` and Go tooling. No per-function registration is needed.
 
+For the complete path from an empty workspace to execution, follow the
+[quickstart](quickstart.md), then the [migration guide's first foreign
+import](migration.md#port-the-applications-foreign-functions). This guide specifies the
+contracts of the Go implementation once that project is configured.
+
 These conventions describe `0.1.1` and its matching typed
 frontend. Consult the live [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
 for qualification and publication status. Published `0.1.0-rc.14` predates
@@ -188,6 +193,89 @@ Callbacks retained beyond the call require a defined stop/unsubscribe lifetime.
 Generated argument conversion alone does not guarantee that a callback cannot
 run after a service is closed.
 
+## External Go modules
+
+Go dependencies are separate from Spago dependencies. Declare them before
+generation: the native compiler's package planner can inspect imported Go
+packages with `-mod=readonly`. Running `go mod tidy` only after generation
+is too late for that path.
+
+A library port can publish `go-dependencies.json` at its root:
+
+```json
+{
+  "schema": 1,
+  "require": { "github.com/dlclark/regexp2": "v1.11.5" }
+}
+```
+
+Prepare an application's output module explicitly, passing the relevant
+ports, including transitive ones with Go dependencies:
+
+```sh
+node /path/to/gopurs/tools/library-go-dependencies.mjs output ../gopurs-strings
+gopurs --main Main
+(cd output && GOWORK=off GOPROXY=off GOTOOLCHAIN=local go build -mod=readonly ./main)
+```
+
+For an npm installation, the helper is at
+`node_modules/gopurs/tools/library-go-dependencies.mjs`; in a source checkout,
+use its `tools/` directory.
+
+The preparation command creates `module gopurs/output` with Go 1.22 when
+needed, installs the exact declared versions and downloads their transitive
+graph. It preserves existing application requirements, replacements and
+checksums. Conflicting port pins, application pins or required toolchain
+changes stop preparation and restore `go.mod`/`go.sum`; reconcile them
+explicitly. Replacements already chosen by the application remain in effect.
+Keep both files when rebuilding frontend output. The compiler does not
+implicitly install modules or select `latest`.
+
+Repository fixture runners perform this preparation for their selected local
+port overrides. A standalone application or port runner must invoke it after
+any cleanup of `output/`, before gopurs. The
+[dependency preparation tests](https://github.com/0x000000000000000000001/gopurs/blob/main/tools/library-go-dependencies.test.mjs)
+cover merging, conflicts and rollback without network access.
+
+## Generic Go functions
+
+Unconstrained Go type parameters can preserve a PureScript function's
+polymorphism, including its callbacks and arrays:
+
+```purescript
+foreign import transform :: forall a b. (a -> b) -> Array a -> Array b
+```
+
+```go
+func Transform[A, B any](f func(A) B, values []A) []B {
+    result := make([]B, len(values))
+    for i, value := range values {
+        result[i] = f(value)
+    }
+    return result
+}
+```
+
+The element types remain opaque to this implementation; it forwards each
+element to the supplied callback and allocates a separate result slice.
+The callback runs once per element, in input order. Use a concrete parameter
+such as `string` or `int64` when the PureScript contract supplies that type.
+
+The general generated bridge instantiates these Go type parameters with
+`gopurs_runtime.Value`, including occurrences inside callbacks and slices.
+The handwritten implementation does not need to import the runtime. This
+avoids converting every polymorphic element to `any`; it does not promise
+native scalar specialization at every call or zero allocations. A Go
+constraint requiring arithmetic, ordering or SDK methods is not established
+by a PureScript type variable alone. Keep such operations in concrete
+functions or pass the required operation as a typed callback.
+
+Production examples include `OrdCharImpl`/`OrdStringImpl` in `gopurs-prelude`
+and `AnyImpl` in `gopurs-arrays`. The
+[generic FFI tests](https://github.com/0x000000000000000000001/gopurs/blob/main/tools/ffi-generics.test.mjs)
+exercise their actual sources, several type parameters, callback results,
+short-circuiting and preservation of input arrays.
+
 ## Foreign values and records
 
 `Foreign` can cross as `any`, and `Array Foreign` as `[]any`. Values originating
@@ -240,6 +328,48 @@ have an inferred structural mapping. Newtypes and ADT transport must follow
 their existing qualified representations; there is no general new automatic
 Go sum-type mapping. Use an explicitly supported contract or retain a documented
 specialized FFI until a mapping is established.
+
+Choose the boundary according to the meaning of the value:
+
+| Value or operation | Supported approach and limit |
+| --- | --- |
+| Polymorphic value forwarded without inspection | An unconstrained Go type parameter and typed callbacks, as above. The general bridge can still use `Value`. |
+| `Foreign` data consumed by an SDK | `any` or `[]any` with the native conversion described above; validate the shape before asserting SDK-specific types. |
+| Open-row record helper | An explicit map-based helper can copy or forward opaque entries. Keep its Go parameters together; see [curried record helpers](migration.md#curried-record-helper-signatures). This does not establish an arbitrary struct layout. |
+| ADT or newtype | Use an existing qualified representation, or explicit PureScript construction/deconstruction around the boundary. An available TAST type does not by itself define a public Go sum-type ABI. |
+| Imported SDK struct | Use an opaque foreign handle, or a local checked struct and explicit SDK conversion. The bridge does not guess unavailable imported field layouts. |
+
+`any` and `interface{}` are the same Go type. Prefer `any` in new code, but
+changing its spelling does not remove boxing. A legacy polymorphic `any`
+parameter may carry a backend value; it is not interchangeable with a
+`Foreign` parameter that requests native conversion. Do not inspect backend
+tags in ordinary application FFI. Document a specialized runtime boundary
+when a library primitive needs one.
+
+## Copying, aliases and mutation
+
+Treat PureScript arrays, records and polymorphic inputs as borrowed values.
+A pure FFI implementation must preserve them. Do not infer exclusive
+ownership from a native signature or from a conversion happening in one
+generated path: direct native calls and generic slices can retain aliases.
+Allocate a result before updating an input; a slice or map copy is shallow
+and does not give ownership of its nested handles or containers.
+
+Closed-record structural conversion reconstructs the checked fields and
+arrays, while opaque handles retain identity. Native `Foreign` subgraphs may
+also be shared; only branches requiring conversion are copied. Consequently,
+neither structural conversion nor `Foreign` transport promises a deep clone
+of a resource graph. A nullable struct record has value semantics, distinct
+from an opaque pointer handle with a shared lifetime.
+
+For an effect that intentionally mutates a native resource, state which
+operation creates it, which aliases may observe updates, whether concurrent
+calls are allowed, and who closes it. Retaining a callback requires an
+explicit stop operation. Use the acquisition cleanup contract above for
+failure or cancellation, and the caller's explicit release after success.
+The [structured-value tests](https://github.com/0x000000000000000000001/gopurs/blob/main/tools/ffi-structured.test.mjs)
+and [Foreign transport tests](https://github.com/0x000000000000000000001/gopurs/blob/main/runtime/ffi_foreign_test.go)
+cover conversion, nested values and identity boundaries.
 
 ## Diagnostics and verification
 
