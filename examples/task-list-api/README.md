@@ -17,7 +17,20 @@ executable, with a JSON API you can explore from your terminal.
 
 ## Build and run
 
-You'll need Node.js, Go, Spago, the matching
+The checked-in [output/](output/) is a complete Go project generated from this
+example with the release profile. Build and run it with Go alone, from the
+gopurs repository root:
+
+```sh
+cd examples/task-list-api
+mkdir -p .build
+cd output
+go build -mod=readonly -o ../.build/task-list-api ./main
+cd ..
+./.build/task-list-api
+```
+
+To regenerate the Go from PureScript, you'll need Node.js, Go, Spago, the matching
 [typed PureScript frontend](../../docs/nix.md#typed-frontend-and-development-shell),
 and a built gopurs compiler with its sibling Go library ports.
 For a fresh checkout, follow the [bootstrap guide](../../docs/bootstrap.md)
@@ -62,6 +75,11 @@ The build script copies library sources into a private temporary workspace,
 compiles the PureScript application, prepares pinned Go dependencies, generates
 Go and builds `.build/task-list-api`. Logs and a build description are kept in
 `.build/`. Library checkout outputs are left untouched.
+
+After a successful release build, the script refreshes the checked-in
+`output/` project. A build with `--dev` leaves that release snapshot unchanged.
+Generated files should not be edited by hand: change the PureScript or FFI
+sources, then run `node tools/build.mjs` again.
 
 Set `GOPURS_OFFLINE=1` for an already cached Spago graph; Go dependency
 preparation still needs its pinned module cache or access to the Go module
@@ -257,6 +275,22 @@ serve :: String -> (Request -> (Response -> Effect Unit) -> Effect Unit) -> Aff 
 | [HTTP.purs](src/Example/HTTP.purs) | Typed callbacks and the server's acquisition/release bracket. |
 | [HTTP.go](src/Example/HTTP.go) | Native sockets, body limits, signals and draining handlers during shutdown. |
 | [gopurs-sqlite3](https://github.com/0x000000000000000000001/gopurs-sqlite3) | SQLite operations, transactions and database resource management. |
+
+### Follow the generated Go
+
+Browse [output/](output/) to see the release build as a complete Go project,
+including its library dependencies and runtime. Compare
+[Main.purs](src/Main.purs) with [Main.go](output/purescript/Main.go) to follow
+the application logic through compilation.
+
+| Generated file | What to explore |
+| --- | --- |
+| [main/main.go](output/main/main.go) | Executable entry point and event loop. |
+| [Main.go](output/purescript/Main.go) | Compiled routes, validation, queries and responses. |
+| [Example_HTTP.go](output/purescript/Example_HTTP.go) | Compiled server acquisition, release and Aff lifecycle. |
+| [Example_HTTP_ffi.go](output/purescript/Example_HTTP_ffi.go) | HTTP transport and generated FFI adapters. |
+| [Database_SQLite3.go](output/purescript/Database_SQLite3.go) and [Database_SQLite3_ffi.go](output/purescript/Database_SQLite3_ffi.go) | Compiled SQLite API and its native implementation. |
+| [runtime.go](output/gopurs_runtime/runtime.go) | Runtime support used by the generated application. |
 
 ## Configuration
 

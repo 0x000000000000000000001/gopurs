@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, delimiter, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -47,15 +47,60 @@ function run(label, command, args, cwd = workspace) {
   assert.ifError(result.error);
   assert.equal(result.status, 0, `${label} failed in ${workspace}\n${log}`);
 }
+
+function stageGoOutput() {
+  const source = join(workspace, 'output');
+  const staged = join(destination, 'output');
+  rmSync(staged, { recursive: true, force: true });
+  mkdirSync(join(staged, 'main'), { recursive: true });
+  for (const name of ['go.mod', 'go.sum', 'main/main.go']) {
+    cpSync(join(source, name), join(staged, name));
+  }
+  for (const name of ['purescript', 'gopurs_runtime']) {
+    cpSync(join(source, name), join(staged, name), {
+      recursive: true,
+      filter: path => statSync(path).isDirectory() || path.endsWith('.go'),
+    });
+  }
+  // Diagnostic metadata should identify the source port, not the temporary
+  // workspace (which changes on every build, even for identical sources).
+  for (const name of readdirSync(staged, { recursive: true }).filter(name => name.endsWith('.go'))) {
+    const path = join(staged, name);
+    const source = readFileSync(path, 'utf8');
+    const stable = source.replace(/^\/\/gopurs:missing-ffi-v1:(.+)$/gm, (_, json) => {
+      const diagnostic = JSON.parse(json);
+      for (const prefix of [snapshots + '/', workspace + '/']) {
+        const start = diagnostic.path.indexOf(prefix);
+        if (start !== -1) diagnostic.path = diagnostic.path.slice(start + prefix.length);
+      }
+      return '//gopurs:missing-ffi-v1:' + JSON.stringify(diagnostic);
+    });
+    if (stable !== source) writeFileSync(path, stable);
+  }
+  // Export the shared entry point under a canonical lowercase directory:
+  // the frontend's Main/ aliases main/ on case-insensitive filesystems.
+  run('format', 'gofmt', ['-w', staged]);
+  return staged;
+}
+
 console.log(`Workspace: ${workspace}`);
 run('frontend', 'spago', ['build', ...(process.env.GOPURS_OFFLINE === '1' ? ['--offline'] : [])]);
 run('go-dependencies', process.execPath, [join(compiler, 'tools/library-go-dependencies.mjs'),
   join(workspace, 'output'), ...overrides.map(name => join(snapshots, 'gopurs-' + name))]);
 run('generate', join(compiler, 'bin/gopurs'), ['--' + profile, '--main', 'Main']);
+// Build the exact standalone snapshot before replacing the checked-in output.
+// Development builds keep the release snapshot intact.
+const goOutput = profile === 'release' ? stageGoOutput() : join(workspace, 'output');
 run('build', 'go', ['build', '-mod=readonly', ...(race ? ['-race'] : []),
-  ...(profile === 'dev' ? ['-gcflags=all=-N -l'] : []), '-o', join(destination, 'task-list-api'), './main'], join(workspace, 'output'));
+  ...(profile === 'dev' ? ['-gcflags=all=-N -l'] : []), '-o', join(destination, 'task-list-api'), './main'], goOutput);
 writeFileSync(join(destination, 'build.json'), JSON.stringify({ profile, race, compiler, libraries,
   host: env.GOPURS_JS === '1' ? 'javascript' : 'native',
   goModule: readFileSync(join(workspace, 'output/go.mod'), 'utf8') }, null, 2) + '\n');
+if (profile === 'release') {
+  const output = join(root, 'output');
+  rmSync(output, { recursive: true, force: true });
+  renameSync(goOutput, output);
+  console.log(`Refreshed ${output}`);
+}
 if (process.env.GOPURS_TEST_KEEP_WORKSPACE !== '1') rmSync(workspace, { recursive: true, force: true });
 console.log(`Built ${join(destination, 'task-list-api')}`);
