@@ -41,7 +41,7 @@ execute Go programs, so they require Go even when invoked through Node.
 | Bindings, closures and recursion | `node --test tools/binding-contracts.test.mjs tools/recursive-initialization.test.mjs tools/local-native-returns.test.mjs tools/zero-arity-functions.test.mjs`; `./bin/test TCO TCOMutRec CurriedLambdas` |
 | Function fusion | `node --test tools/thunk-fusion.test.mjs tools/counted-functions.test.mjs tools/immediate-applications.test.mjs`; `./bin/test ThunkFusion ThunkFusionNewtype CountedFunctions` |
 | Int32 loop fast paths | `node --test tools/int32-loops.test.mjs tools/integer-boundaries.test.mjs`; `./bin/test Int32Loops TCO ThunkFusion 2136` |
-| Array intrinsics and evaluation order | `node --test tools/array-intrinsics.test.mjs tools/array-intrinsic-evaluation.test.mjs tools/array-safe-index.test.mjs tools/array-unsafe-index.test.mjs` |
+| Array intrinsics and evaluation order | `node --test tools/array-intrinsics.test.mjs tools/array-intrinsic-evaluation.test.mjs tools/array-safe-index.test.mjs tools/array-unsafe-index.test.mjs tools/array-snoc.test.mjs`; `./bin/test NativeArraySnoc NativeArrayReboxing CompositeRepresentationFlow` |
 | Either traversals | `node --test tools/array-traverse-either.test.mjs tools/object-traverse-either.test.mjs`; `./bin/test NativeTraverseCallback ArrayTraverseEither ObjectTraverseEither ArrayRoundtrip` |
 | Tree ownership | `node --test tools/owned-trees.test.mjs`; `./bin/test OwnedTrees RBTree ConstructorReuse` |
 | Dictionaries and JSON decoders | `node --test tools/closed-dictionaries.test.mjs tools/borrowed-objects.test.mjs tools/decoder-schemas.test.mjs`; `./bin/test StaticDictionary JsonRecordPlan` |

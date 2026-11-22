@@ -109,6 +109,15 @@ constructors, arrays and the event loop. Where the type information permits it,
 values use native Go representations; the tagged `Value` path remains the
 general fallback.
 
+Canonical `Data.Array.snoc` workers, including specialized copies, use a fresh
+native slice and a shallow copy. Admission checks the TAST-derived worker
+signature and the complete thaw/push/freeze body before replacing it. Elements
+keep their existing representation and references; partial applications retain
+the ordinary wrappers. Unrecognized bodies use the normal translation path.
+In the current Dev profile, the `ST.run (withArray (push x) xs)` body remains
+unexpanded and uses that fallback; the native worker optimization applies to
+the recognized Release form.
+
 Composite annotations do not force an allocation: an already boxed immutable
 producer can retain that representation through local bindings until a native
 consumer requires conversion. Literal record keys are shared before output

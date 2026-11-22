@@ -15,6 +15,7 @@ import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoFunctions (Parameters, curriedFunction, iterationBindings, loopParameters, namedParameters)
 import Gopurs.Int32Loops as Int32Loops
 import Gopurs.AffineLoops as AffineLoops
+import Gopurs.ArraySnoc as ArraySnoc
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 
 type Worker =
@@ -38,14 +39,16 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
     loop = if isSelfRecursive then
       [ { ident: fn.ident, loopParams: map fst (loopParameters params), goTypes: map snd params } ]
       else []
-    result = translate (context
-      { depth = 0
-      , bound = bindParameters params Map.empty
-      , tcoIdent = Just fn.ident
-      , loopCtx = loop
-      , options = { isTail: isSelfRecursive, inEffectBlock: false }
-      , mbExpectedExprType = expectedBodyType
-      }) 0 fn.body
+    result = case ArraySnoc.worker modNameStr fn.ident params resultType fn.body of
+      Just native -> native
+      Nothing -> translate (context
+        { depth = 0
+        , bound = bindParameters params Map.empty
+        , tcoIdent = Just fn.ident
+        , loopCtx = loop
+        , options = { isTail: isSelfRecursive, inEffectBlock: false }
+        , mbExpectedExprType = expectedBodyType
+        }) 0 fn.body
     resultType = case info of
       Just signature | Array.length fn.args < Array.length signature.fArgs -> TypeValue
       Just signature -> signature.fRet
