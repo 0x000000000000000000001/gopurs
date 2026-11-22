@@ -373,6 +373,10 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
           ArrayIntrinsics.unsafeIndex translateExpr context nextId e1 e2
 
         PrimOp (Op2 op2 e1 e2)
+          | Just result <- PrimitiveExprs.stringLengthComparison translateExpr context nextId op2 e1 e2 ->
+              result
+
+        PrimOp (Op2 op2 e1 e2)
           | Just emit <- PrimitiveExprs.binary codegenStateRef modNameStr op2 ->
               let
                 res1 = translateExpr child nextId e1

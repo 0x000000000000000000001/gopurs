@@ -7,7 +7,7 @@ host-level transition tests.
 
 | Path | Contents |
 | --- | --- |
-| `passing/*.purs` | 403 selected PureScript fixtures. Numeric names are upstream issue numbers and are kept as-is. |
+| `passing/*.purs` | 404 selected PureScript fixtures. Numeric names are upstream issue numbers and are kept as-is. |
 | `passing/<Name>/` | multi-module fixtures (`Lib.purs`, `Main.purs`, …). |
 | `passing-snapshots/` | Release golden output, one `.go` file per fixture. |
 | `passing-snapshots-dev/` | Dev-profile golden output. |
@@ -24,7 +24,7 @@ Run from the repository root, with Go, Node, Spago and the TAST `purs` on
 `PATH`:
 
 ```bash
-./bin/test --list                 # 403 fixtures, no build
+./bin/test --list                 # 404 fixtures, no build
 ./bin/test ClassRefSyntax         # one fixture
 ./bin/test                        # all fixtures, Release
 ./bin/test -d                     # all fixtures, Dev profile

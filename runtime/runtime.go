@@ -317,6 +317,16 @@ func StringCodeUnitsLength(value Value) int {
 	return CountStringCodeUnits(value.StrVal())
 }
 
+// StringCodeUnitsLengthsEqual compares UTF-16 lengths without scanning identical
+// immutable string views. Other views retain their optional length metadata.
+func StringCodeUnitsLengthsEqual(left, right Value) bool {
+	l, r := left.StrVal(), right.StrVal()
+	if len(l) == len(r) && unsafe.StringData(l) == unsafe.StringData(r) {
+		return true
+	}
+	return StringCodeUnitsLength(left) == StringCodeUnitsLength(right)
+}
+
 // Zero entries are invalid leading bytes. Surrogate encodings use width 3,
 // because native strings also preserve isolated UTF-16 units as WTF-8.
 var stringUnitSequenceWidth = [256]byte{

@@ -118,6 +118,12 @@ In the current Dev profile, the `ST.run (withArray (push x) xs)` body remains
 unexpanded and uses that fallback; the native worker optimization applies to
 the recognized Release form.
 
+Equality and inequality between canonical `Data.String.CodeUnits.length`
+calls compare identical string views directly. Other views retain the UTF-16
+length comparison and any cached lengths. The generated call evaluates each
+string argument once, in source order; ordered comparisons keep their normal
+translation.
+
 Composite annotations do not force an allocation: an already boxed immutable
 producer can retain that representation through local bindings until a native
 consumer requires conversion. Literal record keys are shared before output

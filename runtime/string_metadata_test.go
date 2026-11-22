@@ -95,6 +95,55 @@ func TestStringMetadataBounds(t *testing.T) {
 	}
 }
 
+func TestStringCodeUnitsLengthsEqual(t *testing.T) {
+	inputs := []string{
+		"", "a", "ab", "\x00", "é", "中", "😀", "éé", "aé😀z",
+		"\xed\xa0\x80", "\xed\xbf\xbf", "\xed\xa0\x80\xed\xb0\x80",
+		"\xff\xc0\xaf", "\xe0\x9f\xbf", "\xf0\x8f\xbf\xbf", "\xf4\x90\x80\x80",
+	}
+	type fixture struct {
+		value Value
+		units int
+	}
+	var fixtures []fixture
+	for _, input := range inputs {
+		// Include shared prefixes/suffixes and slices inside UTF-8 sequences.
+		// Equal byte lengths need not imply equal UTF-16 lengths, or vice versa.
+		for start := 0; start <= len(input); start++ {
+			for end := start; end <= len(input); end++ {
+				view := input[start:end]
+				units := referenceCodeUnits(view)
+				copy := strings.Clone(view)
+				for _, value := range []Value{Str(view), StrWithCodeUnits(view, units), Str(copy), StrWithCodeUnits(copy, units)} {
+					fixtures = append(fixtures, fixture{value, units})
+				}
+			}
+		}
+	}
+	for _, left := range fixtures {
+		for _, right := range fixtures {
+			if got, want := StringCodeUnitsLengthsEqual(left.value, right.value), left.units == right.units; got != want {
+				t.Fatalf("length equality of %x and %x: got %v, want %v", left.value.StrVal(), right.value.StrVal(), got, want)
+			}
+		}
+	}
+}
+
+var stringLengthComparisonSink bool
+
+func TestStringCodeUnitsLengthComparisonDoesNotAllocate(t *testing.T) {
+	text := strings.Repeat("a😀é", 1000)
+	plain := Str(text)
+	cachedCopy := StrWithCodeUnits(strings.Clone(text), referenceCodeUnits(text))
+	for _, pair := range [][2]Value{{plain, plain}, {plain, cachedCopy}, {plain, Str("different")}} {
+		if allocations := testing.AllocsPerRun(100, func() {
+			stringLengthComparisonSink = StringCodeUnitsLengthsEqual(pair[0], pair[1])
+		}); allocations != 0 {
+			t.Fatalf("length comparison allocated: %v", allocations)
+		}
+	}
+}
+
 var stringMetadataSink Value
 
 func TestStringBoxingRemainsAllocationFree(t *testing.T) {

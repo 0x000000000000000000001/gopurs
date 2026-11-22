@@ -3,23 +3,82 @@ module Gopurs.PrimitiveExprs
   , literal
   , unary
   , binary
+  , stringLengthComparison
   ) where
 
 import Prelude
 
+import Control.Alternative (guard)
+import Data.Array.NonEmpty as NEA
 import Data.Maybe (Maybe(..))
 import Data.String.CodeUnits as SCU
 import Effect.Ref (Ref)
+import Gopurs.Cache.LookupTable as LookupTable
+import Gopurs.CallAnalysis (qualifiedTarget)
 import Gopurs.CodegenState (CodegenState)
+import Gopurs.ExprAnalysis (getExprType, unwrapTcoExpr)
+import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, childContext, wrapInStmts)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr, unboxGoExpr)
-import PureScript.Backend.Optimizer.CoreFn (Literal(..))
+import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
+import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Literal(..), ModuleName(..))
 import PureScript.Backend.Optimizer.Syntax (BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..))
+import PureScript.Backend.Optimizer.Syntax as Syn
 
 type PrimitiveExpr =
   { expr :: GoExpr
   , exprType :: GoType
   }
+
+-- Length equality needs neither complete scan when both immutable strings are
+-- the same view. Admit the canonical, typed operation before lowering its
+-- calls; similarly named functions and other comparisons keep their fallback.
+stringLengthComparison :: TranslateExpr -> ExprContext -> Int -> BackendOperator2 -> TcoExpr -> TcoExpr -> Maybe ExprResult
+stringLengthComparison translate context nextId operator lhs rhs = do
+  negate <- case operator of
+    OpIntOrd OpEq -> Just false
+    OpIntOrd OpNotEq -> Just true
+    _ -> Nothing
+  left <- lengthInput context lhs
+  right <- lengthInput context rhs
+  let
+    child = childContext context (Just String)
+    res1 = translate child nextId left
+    res2 = translate child res1.nextId right
+    operand result = wrapInStmts context.recVars result.stmts TypeValue
+      (boxGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType)
+    equal = GoCall (GoSelector (GoVar "gopurs_runtime") "StringCodeUnitsLengthsEqual")
+      [ operand res1, operand res2 ]
+  -- Keep each operand's statements with its value. Hoisting the right-hand
+  -- statements ahead of the left-hand call would change evaluation order.
+  pure { stmts: StmtEmpty, expr: if negate then GoPrefixOp "!" equal else equal
+    , exprType: TypeBool, nextId: res2.nextId }
+
+lengthInput :: ExprContext -> TcoExpr -> Maybe TcoExpr
+lengthInput context expression = case unwrapTcoExpr expression of
+  Syn.App fn args -> case NEA.toArray args of
+    [ argument ] -> admit fn argument
+    _ -> Nothing
+  Syn.UncurriedApp fn [ argument ] -> admit fn argument
+  _ -> Nothing
+  where
+  admit fn argument = do
+    target <- qualifiedTarget fn
+    guard (target.mbMod == Just (ModuleName "Data.String.CodeUnits") && target.name == "length")
+    let
+      signature = case getExprType fn of
+        Any -> LookupTable.lookup "Data.String.CodeUnits.length" context.metadata.globalTypes
+        ty -> Just ty
+    guard (signature == Just (Func [ String ] Int))
+    guard (case getExprType expression of
+      Any -> true
+      Int -> true
+      _ -> false)
+    guard (case getExprType argument of
+      Any -> true
+      String -> true
+      _ -> false)
+    pure argument
 
 -- Arrays and records retain their recursive translation in CodeGen.
 literal :: forall a. Literal a -> Maybe PrimitiveExpr
