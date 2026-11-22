@@ -82,6 +82,7 @@ newtype SaturatedConstructor = SaturatedConstructor
   , modNameStr :: String
   , name :: String
   , prepared :: PreparedConstructor
+  , nativeTuplePointer :: Boolean
   }
 
 prepareSaturated :: CodegenMetadata -> String -> Maybe ModuleName -> String -> ExprType -> SaturatedConstructor
@@ -96,15 +97,27 @@ prepareSaturatedAs metadata modNameStr mbMod name ctorType expected =
       Nothing -> modNameStr
     prepared = ConstructorLayout.withExpectedRepresentation expected
       (ConstructorLayout.prepare ConstructorLayout.Saturated metadata modNameStr fallbackModule name ctorType)
+    -- A Tuple consumer can require a typed pointer rather than the ordinary
+    -- struct-value ABI. Preserve that choice through field translation and
+    -- construction, so composite fields are not boxed and traversed again.
+    nativeTuplePointer = case expected, prepared.pointerType of
+      Just (TypeStructPointer target), TypeStructPointer source ->
+        prepared.adtFullName == Just "Data.Tuple.Tuple" && name == "Tuple"
+          && Array.length source.typeArgs == 2
+          && source.baseStructName == target.baseStructName
+          && source.fullPath == target.fullPath
+          && source.symbol == target.symbol
+          && source.typeArgs == target.typeArgs
+      _, _ -> false
   in
-    SaturatedConstructor { metadata, modNameStr, name, prepared }
+    SaturatedConstructor { metadata, modNameStr, name, prepared, nativeTuplePointer }
 
 saturatedFieldType :: SaturatedConstructor -> Int -> { exprType :: ExprType, goType :: GoType }
-saturatedFieldType (SaturatedConstructor { metadata, modNameStr, prepared }) fieldIdx =
+saturatedFieldType (SaturatedConstructor { metadata, modNameStr, prepared, nativeTuplePointer }) fieldIdx =
   let
     expectedExprType = fromMaybe Any (Array.index prepared.layout.fields.fields fieldIdx)
     fallbackType = ConstructorLayout.fieldType metadata modNameStr prepared.layout.fields prepared.fieldTypeArgs fieldIdx
-    expectedType = case prepared.adtFullName >>= \fn -> Map.lookup fn unboxableADTs of
+    expectedType = if nativeTuplePointer then fallbackType else case prepared.adtFullName >>= \fn -> Map.lookup fn unboxableADTs of
       Just adt ->
         let
           signature = adt.signature prepared.typeArgs
@@ -119,7 +132,7 @@ saturatedFieldType (SaturatedConstructor { metadata, modNameStr, prepared }) fie
 -- Fields arrive in source order, already translated and immediately coerced.
 -- ConstructorExprs owns reuse and statement assembly after field translation.
 saturated :: Ref CodegenState -> SaturatedConstructor -> { exprs :: Array GoExpr, exprTypes :: Array GoType } -> AdtExpr
-saturated codegenStateRef (SaturatedConstructor { metadata, modNameStr, name, prepared }) accProps =
+saturated codegenStateRef (SaturatedConstructor { metadata, modNameStr, name, prepared, nativeTuplePointer }) accProps =
   let
     { structName, baseStructName } = prepared.layout.identity
     native =
@@ -132,6 +145,7 @@ saturated codegenStateRef (SaturatedConstructor { metadata, modNameStr, name, pr
         -- Fields have already been coerced to their instantiated representation.
         Just expr -> { expr: boxGoExpr codegenStateRef modNameStr expr (fromMaybe TypeValue (Array.head accProps.exprTypes)), exprType: TypeValue }
         Nothing -> native
+    else if nativeTuplePointer then native
     else case prepared.adtFullName >>= \fn -> Map.lookup fn unboxableADTs >>= \adt -> Just (Tuple fn adt) of
       Just (Tuple fn adt) ->
         let

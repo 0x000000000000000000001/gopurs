@@ -12,11 +12,11 @@ import Gopurs.ExprAnalysis (bindFieldFunctionParameters, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, childContext)
 import Gopurs.GoAst (GoExpr(..), GoType(..), StructPointer)
 import Gopurs.GoConversions (coerceGoExpr, getUnboxedADT)
-import Gopurs.GoTypes (exprTypeToGenericGoType, exprTypeToGoType, instantiateGenericGoType)
+import Gopurs.GoTypes (exprTypeToGenericGoType, exprTypeToGoType, instantiateGenericGoType, isCompositeGoType)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
-import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Literal(..), Prop(..))
+import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), Prop(..))
 import PureScript.Backend.Optimizer.FfiSupport (hashString)
-import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Let, LetRec, Lit, Local, Typed))
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(CtorSaturated, Let, LetRec, Lit, Local, Typed))
 
 annotated :: TranslateExpr -> ExprContext -> Int -> ExprType -> TcoExpr -> ExprResult
 annotated translate context@{ metadata, modNameStr, mbExpectedExprType, mbExpectedGoType } nextId type_ expression =
@@ -28,14 +28,14 @@ annotated translate context@{ metadata, modNameStr, mbExpectedExprType, mbExpect
       Lit (LitRecord props), TypeStructPointer pointer ->
         case classDictionary translate context nextId type_ pointer props of
           Just result -> coerceResult context expression expectedGoType result
-          Nothing -> coerceResult context expression expectedGoType (translateValue expression)
+          Nothing -> coerceResult context expression expectedGoType (translateValue expectedGoType expression)
       Let ident level value body, _ ->
         translateBinding (Let ident level value (annotate type_ body))
       LetRec level bindings body, _ ->
         translateBinding (LetRec level bindings (annotate type_ body))
       _, _ ->
         let
-          result = translateValue expression
+          result = translateValue expectedGoType expression
           preserveBoxedRecord = case expectedGoType, mbExpectedExprType of
             TypeRecord _, Just Any -> result.exprType == TypeValue
             _, _ -> false
@@ -55,7 +55,16 @@ annotated translate context@{ metadata, modNameStr, mbExpectedExprType, mbExpect
   where
   -- Translate only the selected branch: translation can register helpers in
   -- codegenStateRef even though the callback has a pure interface.
-  translateValue value = translate (context { mbExpectedExprType = Just type_ }) nextId value
+  translateValue expectedGoType value =
+    let
+      -- A freshly constructed Tuple can allocate its final annotated layout
+      -- directly. Existing producers keep their representation until consumed.
+      constructorExpected = case unwrapTcoExpr value, expectedGoType of
+        CtorSaturated _ _ _ (Ident "Tuple") _, TypeStructPointer pointer
+          | pointer.fullName == "Data.Tuple.Tuple" -> Just expectedGoType
+        _, _ -> mbExpectedGoType
+    in
+      translate (context { mbExpectedExprType = Just type_, mbExpectedGoType = constructorExpected }) nextId value
 
   -- Move the annotation onto a binding's result while preserving its TCO
   -- annotation, tail position and effect context.
@@ -78,7 +87,12 @@ coerceResult { metadata, codegenStateRef, modNameStr, mbExpectedGoType } express
   inferredResult = case result.exprType of
     TypeStructPointer _ -> result
     _ ->
-      if expected == result.exprType || isClosureNode metadata expression then result
+      -- A typed callback/application may already produce the canonical boxed
+      -- composite. Preserve it here instead of rebuilding records, arrays and
+      -- ADTs solely to satisfy an annotation and boxing them at the next use.
+      -- Explicit consumer representations still take the branch above.
+      if expected == result.exprType || isClosureNode metadata expression
+        || (result.exprType == TypeValue && isCompositeGoType expected) then result
       else result
         { expr = coerceGoExpr codegenStateRef modNameStr result.expr result.exprType expected
         , exprType = expected

@@ -58,7 +58,7 @@ func main() {
     calls := 0
     consumer := gopurs_runtime.Func(func(value gopurs_runtime.Value) gopurs_runtime.Value {
         calls++
-        fields := (*gopurs_runtime.RecordData2)(value.UnsafePtr)
+        fields, _, _ := gopurs_runtime.RecordFields2(value)
         fmt.Printf("%t %s|%s %d:%s\\n", value.UnsafePtr == original.UnsafePtr,
             fields.K0, fields.K1, gopurs_runtime.RecordGet(value, "count").IntVal,
             gopurs_runtime.RecordGet(value, "label").StrVal())

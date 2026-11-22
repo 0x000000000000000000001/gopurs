@@ -6,6 +6,21 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Construct annotated Tuple results directly in the native representation
+  required by their consumer, avoiding boxing and reconversion of composite
+  fields while preserving the TAST and the existing public representation.
+  Preserve constructor payloads and sum tags when converting native values
+  to worker return values.
+- Preserve boxed composite producers across annotations and local bindings
+  until a consumer requires a native representation. Keep instantiated array
+  and ADT-pointer payloads in native Tuple worker results; public wrappers
+  retain the canonical boxed representation.
+- Share literal record keys across allocations for records with one to five
+  fields. Store two-Int records compactly while preserving immutable updates,
+  field lookup and foreign conversion behavior.
+
 ## [0.1.1]
 
 First final release, prepared from the RC20 compiler and pinned libraries.

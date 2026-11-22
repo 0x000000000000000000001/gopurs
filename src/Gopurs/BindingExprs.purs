@@ -19,7 +19,7 @@ import Gopurs.ExprAnalysis (extractExprFuncType, functionResultAfter, getExprTyp
 import Gopurs.ExprContext (ExprContext, ExprResult, LocalEnv, TranslateExpr, StmtTree(..), bindParameters, childContext)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
 import Gopurs.GoConversions (coerceGoExpr)
-import Gopurs.GoTypes (exprTypeToGoType, printExprType)
+import Gopurs.GoTypes (exprTypeToGoType, isCompositeGoType, printExprType)
 import Gopurs.GoFunctions (loopParameters)
 import Gopurs.LocalWorkers as LocalWorkers
 import Gopurs.Printer (printGoExpr)
@@ -58,7 +58,14 @@ nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, m
       _ ->
         let
           resBinding = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) (nextId + 1) binding
-          actualGoType = if expectedGoTypeFromAst == TypeValue then resBinding.exprType else expectedGoTypeFromAst
+          -- Keep a composite producer's boxed representation across the let.
+          -- Native consumers adapt their own arguments; generic consumers and
+          -- captured callbacks can reuse the immutable value directly.
+          actualGoType =
+            if expectedGoTypeFromAst == TypeValue
+              || (resBinding.exprType == TypeValue && isCompositeGoType expectedGoTypeFromAst)
+            then resBinding.exprType
+            else expectedGoTypeFromAst
           newBound = Map.insert originalName { name, goType: actualGoType } bound
           resBody = translate (context { depth = (depth + 1), bound = newBound, tcoIdent = Nothing }) resBinding.nextId body
           letStmt =

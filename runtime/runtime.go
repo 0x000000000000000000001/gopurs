@@ -826,49 +826,130 @@ type RecordData0 struct{}
 
 func RecordDict0() Value { return Value{Type: TypeRecord0, UnsafePtr: unsafe.Pointer(&RecordData0{})} }
 
-type RecordData1 struct {
+// RecordKeys1 is shape metadata. Callers must not mutate it after use.
+type RecordKeys1 struct {
 	K0 string
+}
+
+type RecordData1 struct {
+	*RecordKeys1
 	V0 Value
 }
 
+func RecordShape1(keys *RecordKeys1, v0 Value) Value {
+	return Value{Type: TypeRecord1, UnsafePtr: unsafe.Pointer(&RecordData1{keys, v0})}
+}
+
 func RecordDict1(k0 string, v0 Value) Value {
-	return Value{Type: TypeRecord1, UnsafePtr: unsafe.Pointer(&RecordData1{k0, v0})}
+	return RecordShape1(&RecordKeys1{k0}, v0)
+}
+
+// RecordKeys2 is shape metadata. Callers must not mutate it after use.
+type RecordKeys2 struct {
+	K0, K1 string
 }
 
 type RecordData2 struct {
-	K0, K1 string
+	*RecordKeys2
 	V0, V1 Value
 }
 
+// TypeRecord2 uses IntVal only as a representation discriminator:
+// zero is RecordData2, one is RecordData2Int. The public record type is unchanged.
+// Every payload access must go through RecordFields2; keys remain immutable.
+const record2IntLayout int64 = 1
+
+type RecordData2Int struct {
+	*RecordKeys2
+	V0, V1 int64
+}
+
+func RecordShape2(keys *RecordKeys2, v0, v1 Value) Value {
+	if v0.Type == TypeInt && v1.Type == TypeInt {
+		return Value{Type: TypeRecord2, IntVal: record2IntLayout, UnsafePtr: unsafe.Pointer(&RecordData2Int{keys, v0.IntVal, v1.IntVal})}
+	}
+	return Value{Type: TypeRecord2, UnsafePtr: unsafe.Pointer(&RecordData2{keys, v0, v1})}
+}
+
+// RecordFields2 reads either two-field payload layout without exposing a cast.
+func RecordFields2(record Value) (*RecordKeys2, Value, Value) {
+	if record.IntVal == record2IntLayout {
+		r := (*RecordData2Int)(record.UnsafePtr)
+		return r.RecordKeys2, Int(r.V0), Int(r.V1)
+	}
+	r := (*RecordData2)(record.UnsafePtr)
+	return r.RecordKeys2, r.V0, r.V1
+}
+
+// RecordAt2 is the indexed access used when the compiler proves field order.
+func RecordAt2(record Value, index int) Value {
+	_, v0, v1 := RecordFields2(record)
+	switch index {
+	case 0:
+		return v0
+	case 1:
+		return v1
+	default:
+		panic("two-field record index out of range")
+	}
+}
+
 func RecordDict2(k0, k1 string, v0, v1 Value) Value {
-	return Value{Type: TypeRecord2, UnsafePtr: unsafe.Pointer(&RecordData2{k0, k1, v0, v1})}
+	return RecordShape2(&RecordKeys2{k0, k1}, v0, v1)
+}
+
+// RecordKeys3 is shape metadata. Callers must not mutate it after use.
+type RecordKeys3 struct {
+	K0, K1, K2 string
 }
 
 type RecordData3 struct {
-	K0, K1, K2 string
+	*RecordKeys3
 	V0, V1, V2 Value
 }
 
+func RecordShape3(keys *RecordKeys3, v0, v1, v2 Value) Value {
+	return Value{Type: TypeRecord3, UnsafePtr: unsafe.Pointer(&RecordData3{keys, v0, v1, v2})}
+}
+
 func RecordDict3(k0, k1, k2 string, v0, v1, v2 Value) Value {
-	return Value{Type: TypeRecord3, UnsafePtr: unsafe.Pointer(&RecordData3{k0, k1, k2, v0, v1, v2})}
+	return RecordShape3(&RecordKeys3{k0, k1, k2}, v0, v1, v2)
+}
+
+// RecordKeys4 is shape metadata. Callers must not mutate it after use.
+type RecordKeys4 struct {
+	K0, K1, K2, K3 string
 }
 
 type RecordData4 struct {
-	K0, K1, K2, K3 string
+	*RecordKeys4
 	V0, V1, V2, V3 Value
 }
 
+func RecordShape4(keys *RecordKeys4, v0, v1, v2, v3 Value) Value {
+	return Value{Type: TypeRecord4, UnsafePtr: unsafe.Pointer(&RecordData4{keys, v0, v1, v2, v3})}
+}
+
 func RecordDict4(k0, k1, k2, k3 string, v0, v1, v2, v3 Value) Value {
-	return Value{Type: TypeRecord4, UnsafePtr: unsafe.Pointer(&RecordData4{k0, k1, k2, k3, v0, v1, v2, v3})}
+	return RecordShape4(&RecordKeys4{k0, k1, k2, k3}, v0, v1, v2, v3)
+}
+
+// RecordKeys5 is shape metadata. Callers must not mutate it after use.
+type RecordKeys5 struct {
+	K0, K1, K2, K3, K4 string
 }
 
 type RecordData5 struct {
-	K0, K1, K2, K3, K4 string
+	*RecordKeys5
 	V0, V1, V2, V3, V4 Value
 }
 
+func RecordShape5(keys *RecordKeys5, v0, v1, v2, v3, v4 Value) Value {
+	return Value{Type: TypeRecord5, UnsafePtr: unsafe.Pointer(&RecordData5{keys, v0, v1, v2, v3, v4})}
+}
+
 func RecordDict5(k0, k1, k2, k3, k4 string, v0, v1, v2, v3, v4 Value) Value {
-	return Value{Type: TypeRecord5, UnsafePtr: unsafe.Pointer(&RecordData5{k0, k1, k2, k3, k4, v0, v1, v2, v3, v4})}
+	return RecordShape5(&RecordKeys5{k0, k1, k2, k3, k4}, v0, v1, v2, v3, v4)
 }
 
 func UnboxObject(v Value) map[string]any {
@@ -931,9 +1012,9 @@ func RecordToMap(obj Value) map[string]Value {
 		r := (*RecordData1)(obj.UnsafePtr)
 		res[r.K0] = r.V0
 	case TypeRecord2:
-		r := (*RecordData2)(obj.UnsafePtr)
-		res[r.K0] = r.V0
-		res[r.K1] = r.V1
+		keys, v0, v1 := RecordFields2(obj)
+		res[keys.K0] = v0
+		res[keys.K1] = v1
 	case TypeRecord3:
 		r := (*RecordData3)(obj.UnsafePtr)
 		res[r.K0] = r.V0
@@ -1020,12 +1101,12 @@ func RecordGet(obj Value, key string) Value {
 			return r.V0
 		}
 	case TypeRecord2:
-		r := (*RecordData2)(obj.UnsafePtr)
-		if r.K0 == key {
-			return r.V0
+		keys, v0, v1 := RecordFields2(obj)
+		if keys.K0 == key {
+			return v0
 		}
-		if r.K1 == key {
-			return r.V1
+		if keys.K1 == key {
+			return v1
 		}
 	case TypeRecord3:
 		r := (*RecordData3)(obj.UnsafePtr)
@@ -1097,55 +1178,55 @@ func RecordSet(orig Value, key string, value Value) Value {
 	case TypeRecord1:
 		r := (*RecordData1)(orig.UnsafePtr)
 		if key == r.K0 {
-			return RecordDict1(r.K0, value)
+			return RecordShape1(r.RecordKeys1, value)
 		}
 		return RecordDict2(r.K0, key, r.V0, value)
 	case TypeRecord2:
-		r := (*RecordData2)(orig.UnsafePtr)
+		keys, v0, v1 := RecordFields2(orig)
 		switch key {
-		case r.K0:
-			return RecordDict2(r.K0, r.K1, value, r.V1)
-		case r.K1:
-			return RecordDict2(r.K0, r.K1, r.V0, value)
+		case keys.K0:
+			return RecordShape2(keys, value, v1)
+		case keys.K1:
+			return RecordShape2(keys, v0, value)
 		}
-		return RecordDict3(r.K0, r.K1, key, r.V0, r.V1, value)
+		return RecordDict3(keys.K0, keys.K1, key, v0, v1, value)
 	case TypeRecord3:
 		r := (*RecordData3)(orig.UnsafePtr)
 		switch key {
 		case r.K0:
-			return RecordDict3(r.K0, r.K1, r.K2, value, r.V1, r.V2)
+			return RecordShape3(r.RecordKeys3, value, r.V1, r.V2)
 		case r.K1:
-			return RecordDict3(r.K0, r.K1, r.K2, r.V0, value, r.V2)
+			return RecordShape3(r.RecordKeys3, r.V0, value, r.V2)
 		case r.K2:
-			return RecordDict3(r.K0, r.K1, r.K2, r.V0, r.V1, value)
+			return RecordShape3(r.RecordKeys3, r.V0, r.V1, value)
 		}
 		return RecordDict4(r.K0, r.K1, r.K2, key, r.V0, r.V1, r.V2, value)
 	case TypeRecord4:
 		r := (*RecordData4)(orig.UnsafePtr)
 		switch key {
 		case r.K0:
-			return RecordDict4(r.K0, r.K1, r.K2, r.K3, value, r.V1, r.V2, r.V3)
+			return RecordShape4(r.RecordKeys4, value, r.V1, r.V2, r.V3)
 		case r.K1:
-			return RecordDict4(r.K0, r.K1, r.K2, r.K3, r.V0, value, r.V2, r.V3)
+			return RecordShape4(r.RecordKeys4, r.V0, value, r.V2, r.V3)
 		case r.K2:
-			return RecordDict4(r.K0, r.K1, r.K2, r.K3, r.V0, r.V1, value, r.V3)
+			return RecordShape4(r.RecordKeys4, r.V0, r.V1, value, r.V3)
 		case r.K3:
-			return RecordDict4(r.K0, r.K1, r.K2, r.K3, r.V0, r.V1, r.V2, value)
+			return RecordShape4(r.RecordKeys4, r.V0, r.V1, r.V2, value)
 		}
 		return RecordDict5(r.K0, r.K1, r.K2, r.K3, key, r.V0, r.V1, r.V2, r.V3, value)
 	case TypeRecord5:
 		r := (*RecordData5)(orig.UnsafePtr)
 		switch key {
 		case r.K0:
-			return RecordDict5(r.K0, r.K1, r.K2, r.K3, r.K4, value, r.V1, r.V2, r.V3, r.V4)
+			return RecordShape5(r.RecordKeys5, value, r.V1, r.V2, r.V3, r.V4)
 		case r.K1:
-			return RecordDict5(r.K0, r.K1, r.K2, r.K3, r.K4, r.V0, value, r.V2, r.V3, r.V4)
+			return RecordShape5(r.RecordKeys5, r.V0, value, r.V2, r.V3, r.V4)
 		case r.K2:
-			return RecordDict5(r.K0, r.K1, r.K2, r.K3, r.K4, r.V0, r.V1, value, r.V3, r.V4)
+			return RecordShape5(r.RecordKeys5, r.V0, r.V1, value, r.V3, r.V4)
 		case r.K3:
-			return RecordDict5(r.K0, r.K1, r.K2, r.K3, r.K4, r.V0, r.V1, r.V2, value, r.V4)
+			return RecordShape5(r.RecordKeys5, r.V0, r.V1, r.V2, value, r.V4)
 		case r.K4:
-			return RecordDict5(r.K0, r.K1, r.K2, r.K3, r.K4, r.V0, r.V1, r.V2, r.V3, value)
+			return RecordShape5(r.RecordKeys5, r.V0, r.V1, r.V2, r.V3, value)
 		}
 		return RecordDict([]string{r.K0, r.K1, r.K2, r.K3, r.K4, key}, []Value{r.V0, r.V1, r.V2, r.V3, r.V4, value})
 	case TypeRecordData:
@@ -1202,15 +1283,15 @@ func RecordUpdateDict(orig Value, keys []string, vals []Value) Value {
 		}
 		return Value{Type: TypeRecord1, UnsafePtr: unsafe.Pointer(&clone)}
 	case TypeRecord2:
-		clone := *(*RecordData2)(orig.UnsafePtr)
+		shape, v0, v1 := RecordFields2(orig)
 		for i, k := range keys {
-			if clone.K0 == k {
-				clone.V0 = vals[i]
-			} else if clone.K1 == k {
-				clone.V1 = vals[i]
+			if shape.K0 == k {
+				v0 = vals[i]
+			} else if shape.K1 == k {
+				v1 = vals[i]
 			}
 		}
-		return Value{Type: TypeRecord2, UnsafePtr: unsafe.Pointer(&clone)}
+		return RecordShape2(shape, v0, v1)
 	case TypeRecord3:
 		clone := *(*RecordData3)(orig.UnsafePtr)
 		for i, k := range keys {
@@ -2061,23 +2142,23 @@ func ExtractVariant(variant interface{}) (string, interface{}, bool) {
 				}
 			}
 		} else if val.Type == TypeRecord2 {
-			rec := (*RecordData2)(val.UnsafePtr)
+			keys, v0, v1 := RecordFields2(val)
 			var str string
 			var valVal interface{}
 			hasVal := false
-			if rec.K0 == "type" && rec.V0.Type == TypeString {
-				str = StrValue(rec.V0)
-			} else if rec.K1 == "type" && rec.V1.Type == TypeString {
-				str = StrValue(rec.V1)
+			if keys.K0 == "type" && v0.Type == TypeString {
+				str = StrValue(v0)
+			} else if keys.K1 == "type" && v1.Type == TypeString {
+				str = StrValue(v1)
 			} else {
 				return "", nil, false
 			}
 
-			if rec.K0 == "value" {
-				valVal = rec.V0
+			if keys.K0 == "value" {
+				valVal = v0
 				hasVal = true
-			} else if rec.K1 == "value" {
-				valVal = rec.V1
+			} else if keys.K1 == "value" {
+				valVal = v1
 				hasVal = true
 			}
 

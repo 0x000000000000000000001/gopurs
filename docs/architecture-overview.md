@@ -109,6 +109,12 @@ constructors, arrays and the event loop. Where the type information permits it,
 values use native Go representations; the tagged `Value` path remains the
 general fallback.
 
+Composite annotations do not force an allocation: an already boxed immutable
+producer can retain that representation through local bindings until a native
+consumer requires conversion. Literal record keys are shared before output
+layout and cache planning. Small record storage is private to the runtime;
+generated accessors also handle the compact representation of two-Int records.
+
 The foreign function interface (FFI) bridge reads Go declarations and generates
 wrappers that adapt Go signatures to PureScript calls. The JavaScript host runs the parser as
 WebAssembly; native hosts call the same parser directly.

@@ -87,8 +87,9 @@ exprImports expression imports = case expression of
       TypeStructPointer _ -> base
       _ -> runtime base
   GoRecordUpdateDict obj props -> imports # runtime # exprImports obj # fieldExprs props
-  GoRecordUpdateStatic obj _ updates fallback -> imports # runtime # add "unsafe" # exprImports obj
-    # fieldExprs updates # fieldExprs fallback
+  GoRecordUpdateStatic obj size updates fallback ->
+    let base = imports # runtime # exprImports obj # fieldExprs updates # fieldExprs fallback
+    in if size == 2 then base else add "unsafe" base
   GoRecordUpdateNative ty obj props -> imports # typeImports ty # exprImports obj # fieldExprs props
   GoIIFE _ value body -> imports # runtime # bindingImports value # exprImports body
   GoLetRec bindings body -> imports # runtime # fieldExprs bindings # exprImports body

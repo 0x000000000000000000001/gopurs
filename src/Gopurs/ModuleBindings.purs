@@ -96,15 +96,33 @@ bindingSignature metadata modNameStr (Tuple (Ident name) value) =
             Nothing -> Array.replicate (Array.length args) TypeValue
           result = case annotation of
             Just { fArgs, fRet } | Array.length args >= Array.length fArgs ->
-              case getUnboxedADT fRet of
-                Just (Tuple adtName adt) -> TypeStructValue adtName (adt.signature (adtPayloadTypes toGoType fRet))
-                Nothing -> toGoType fRet
+              workerResultType toGoType fRet
             _ -> TypeValue
         in
           fallback { fArgs = parameters, fRet = result, arity = Array.length args }
       Nothing -> fallback
   in
     Tuple (sanitizeName name) signature
+
+-- The ordinary native sum ABI intentionally boxes non-record payloads. For a
+-- Tuple containing an array or an ADT pointer this would copy those payloads
+-- merely to return them to a concrete caller, which immediately unboxes them.
+-- The instantiated pointer layout is already established by the TAST and ADT
+-- metadata. Publish that same layout to callers and retain the canonical box
+-- only in the public getter. No body-specific or consumer-name rule is needed.
+workerResultType :: (ExprType -> GoType) -> ExprType -> GoType
+workerResultType toGoType result =
+  let native = toGoType result
+  in case native, getUnboxedADT result of
+    TypeStructPointer pointer, Just (Tuple "Data.Tuple.Tuple" _)
+      | Array.any erasedCompositeSlot pointer.typeArgs -> native
+    _, Just (Tuple adtName adt) -> TypeStructValue adtName (adt.signature (adtPayloadTypes toGoType result))
+    _, Nothing -> native
+  where
+  erasedCompositeSlot = case _ of
+    TypeNativeArray _ -> true
+    TypeStructPointer _ -> true
+    _ -> false
 
 -- Declarations and loop bodies share the same child translator as local
 -- bindings. Each recursive group publishes its function declarations together.

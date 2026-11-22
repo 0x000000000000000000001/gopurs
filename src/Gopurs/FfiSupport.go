@@ -45,3 +45,11 @@ func PackageGoFilesImpl(content string, _ any) string {
 	}
 	return result
 }
+
+func ShareRecordShapesImpl(prefix string, content string, _ any) string {
+	result, err := gopurs_ffi_parser.ShareRecordShapes(prefix, content)
+	if err != nil {
+		panic(fmt.Errorf("Go record shape emission failed: %w", err))
+	}
+	return result
+}

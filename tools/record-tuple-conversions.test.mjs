@@ -15,7 +15,8 @@ import * as Ref from '../output/Effect.Ref/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { boxGoExpr, coerceGoExpr, generateReboxFunctions, unboxGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { exprTypeToGoType, exprTypeToGenericGoType } from '../output/Gopurs.GoTypes/index.js';
-import { printGoDecl, printGoExpr } from '../output/Gopurs.Printer/index.js';
+import { printGoDecl, printGoExpr, printGoFile } from '../output/Gopurs.Printer/index.js';
+import { collectImports } from '../output/Gopurs.GoImports/index.js';
 import { coerceLiteralField, getProp, prepareLiteral, update } from '../output/Gopurs.RecordExprs/index.js';
 import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import * as Core from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
@@ -33,6 +34,50 @@ const genericGoType = exprTypeToGenericGoType(emptyMap)(emptySet)(emptySet)([])(
 const record = tail => new Core.Record(new Core.Row([
     new Tuple('size', Core.Int.value), new Tuple('newSeed', Core.Int.value),
 ], tail));
+
+test('static two-field accesses and updates support both payloads without changing evaluation order', t => {
+    const updates = [new Tuple(1, Go.rawGo('mark("B", gopurs_runtime.Str("changed"))')),
+        new Tuple(0, Go.rawGo('mark("A", gopurs_runtime.Int(9))'))];
+    const expression = new Go.GoRecordUpdateStatic(Go.rawGo('once(input)'), 2, updates,
+        [new Tuple('a', updates[0].value1), new Tuple('z', updates[1].value1)]);
+    const declarationGroups = [[new Go.GoFunctionDecl({
+        name: { owner: 'generated/Records', name: 'change' },
+        params: [new Tuple('input', Go.TypeValue.value)], result: Go.TypeValue.value,
+        body: new Go.GoReturn(expression),
+    })]];
+    const imports = collectImports(declarationGroups);
+    assert.deepEqual(imports, ['gopurs/output/gopurs_runtime']);
+    const access = (variable, index) => printGoExpr(new Go.GoRecordAccessStatic(new Go.GoVar(variable), 2, index));
+    const toCompact = printGoExpr(new Go.GoRecordUpdateStatic(new Go.GoVar('updated'), 2,
+        [new Tuple(1, Go.rawGo('gopurs_runtime.Int(8)'))], [new Tuple('a', Go.rawGo('gopurs_runtime.Int(8)'))]));
+    const source = printGoFile({ packageName: 'main', imports: [...imports, 'fmt'], declarationGroups }) + `
+var trace string
+func once(input gopurs_runtime.Value) gopurs_runtime.Value { trace += "O"; return input }
+func mark(s string, v gopurs_runtime.Value) gopurs_runtime.Value { trace += s; return v }
+func main() {
+ for _, second := range []gopurs_runtime.Value{gopurs_runtime.Int(2), gopurs_runtime.Str("old")} {
+  input := gopurs_runtime.RecordDict2("z", "a", gopurs_runtime.Int(1), second)
+  trace = ""
+  updated := change(input)
+  compact := ${toCompact}
+  if trace != "OBA" || ${access('input', 0)}.IntVal != 1 || gopurs_runtime.RecordGet(input, "a") != second { panic("evaluation or mutation") }
+  if ${access('updated', 0)}.IntVal != 9 || ${access('updated', 1)}.StrVal() != "changed" || ${access('compact', 1)}.IntVal != 8 { panic("payload transition") }
+ }
+ fmt.Println("static record payloads passed")
+}
+`;
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-static-records-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'gopurs_runtime'));
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), runtimeGoCode);
+    writeFileSync(join(directory, 'main.go'), source);
+    const result = spawnSync('go', ['run', '.'], { cwd: directory, encoding: 'utf8', timeout: 30_000,
+        env: { ...process.env, GOWORK: 'off' } });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, 'static record payloads passed\n');
+});
 
 for (const [name, convert] of [['ordinary', goType], ['generic', genericGoType]]) {
     test(`${name} records with unknown or polymorphic tails retain their full payload`, () => {

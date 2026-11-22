@@ -26,7 +26,10 @@ func GopursParseFFI(content *C.uchar, contentLen C.size_t, prefix *C.uchar, pref
 	source := string(unsafe.Slice((*byte)(unsafe.Pointer(content)), int(contentLen)))
 	var output string
 	var err error
-	if prepare == 4 {
+	if prepare == 5 {
+		name := string(unsafe.Slice((*byte)(unsafe.Pointer(prefix)), int(prefixLen)))
+		output, err = ShareRecordShapes(name, source)
+	} else if prepare == 4 {
 		output, err = PackageFiles(source)
 	} else if prepare == 3 {
 		output, err = Packages(source)

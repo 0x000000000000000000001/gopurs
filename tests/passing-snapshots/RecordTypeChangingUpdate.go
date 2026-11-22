@@ -31,8 +31,8 @@ var once_Main_typeIsSymbol sync.Once
 
 func Get_Main_typeIsSymbol() gopurs_runtime.Value {
 	once_Main_typeIsSymbol.Do(func() {
-		cache_Main_typeIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str("type")
+		cache_Main_typeIsSymbol = gopurs_runtime.RecordShape1(&GopursRecordKeys_4d61696e_0, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.StrWithCodeUnits("type", 4)
 		}))
 	})
 	return cache_Main_typeIsSymbol
@@ -43,8 +43,8 @@ var once_Main_limitIsSymbol sync.Once
 
 func Get_Main_limitIsSymbol() gopurs_runtime.Value {
 	once_Main_limitIsSymbol.Do(func() {
-		cache_Main_limitIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str("limit")
+		cache_Main_limitIsSymbol = gopurs_runtime.RecordShape1(&GopursRecordKeys_4d61696e_0, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.StrWithCodeUnits("limit", 5)
 		}))
 	})
 	return cache_Main_limitIsSymbol
@@ -55,8 +55,8 @@ var once_Main_closeIsSymbol sync.Once
 
 func Get_Main_closeIsSymbol() gopurs_runtime.Value {
 	once_Main_closeIsSymbol.Do(func() {
-		cache_Main_closeIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str("close")
+		cache_Main_closeIsSymbol = gopurs_runtime.RecordShape1(&GopursRecordKeys_4d61696e_0, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.StrWithCodeUnits("close", 5)
 		}))
 	})
 	return cache_Main_closeIsSymbol
@@ -67,8 +67,8 @@ var once_Main_afterIsSymbol sync.Once
 
 func Get_Main_afterIsSymbol() gopurs_runtime.Value {
 	once_Main_afterIsSymbol.Do(func() {
-		cache_Main_afterIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str("after")
+		cache_Main_afterIsSymbol = gopurs_runtime.RecordShape1(&GopursRecordKeys_4d61696e_0, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.StrWithCodeUnits("after", 5)
 		}))
 	})
 	return cache_Main_afterIsSymbol
@@ -79,8 +79,8 @@ var once_Main_identifierIsSymbol sync.Once
 
 func Get_Main_identifierIsSymbol() gopurs_runtime.Value {
 	once_Main_identifierIsSymbol.Do(func() {
-		cache_Main_identifierIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str("identifier")
+		cache_Main_identifierIsSymbol = gopurs_runtime.RecordShape1(&GopursRecordKeys_4d61696e_0, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.StrWithCodeUnits("identifier", 10)
 		}))
 	})
 	return cache_Main_identifierIsSymbol
@@ -91,7 +91,7 @@ var once_Main_eqRec1 sync.Once
 
 func Get_Main_eqRec1() gopurs_runtime.Value {
 	once_Main_eqRec1.Do(func() {
-		cache_Main_eqRec1 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_3039522309_3790796878(Rebox_Main_3790796878_3039522309(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_typeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}), gopurs_runtime.Value{}, Get_Main_limitIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), gopurs_runtime.Value{}, Get_Main_closeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqBoolean()))))}), gopurs_runtime.Value{}, Get_Main_afterIsSymbol(), Call_Data_Maybe_eqMaybe(Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_identifierIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))})))))))))}
+		cache_Main_eqRec1 = Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_typeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}), gopurs_runtime.Value{}, Get_Main_limitIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), gopurs_runtime.Value{}, Get_Main_closeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqBoolean()))))}), gopurs_runtime.Value{}, Get_Main_afterIsSymbol(), Call_Data_Maybe_eqMaybe(Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_identifierIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))})))))
 	})
 	return cache_Main_eqRec1
 }
@@ -111,7 +111,7 @@ var once_Main_showRecord1 sync.Once
 
 func Get_Main_showRecord1() gopurs_runtime.Value {
 	once_Main_showRecord1.Do(func() {
-		cache_Main_showRecord1 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2664792997_1386611502(Rebox_Main_1386611502_2664792997(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_afterIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_closeIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_limitIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_typeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))))}), Call_Data_Maybe_showMaybe(Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsConsNil(Get_Main_identifierIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))})))))))))}
+		cache_Main_showRecord1 = Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_afterIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_closeIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_limitIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_typeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))))}), Call_Data_Maybe_showMaybe(Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsConsNil(Get_Main_identifierIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))})))))
 	})
 	return cache_Main_showRecord1
 }
@@ -146,7 +146,7 @@ func Get_Main_convert() gopurs_runtime.Value {
 					return clone
 				}())
 				_ = orig
-				return gopurs_runtime.RecordDict4("after", "close", "limit", "type", gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(Rebox_Main_3543310304_3094389156(orig.after))}, gopurs_runtime.Bool(orig.go__close), gopurs_runtime.Int(orig.limit), gopurs_runtime.Str(orig.go__type))
+				return gopurs_runtime.RecordShape4(&GopursRecordKeys_4d61696e_1, gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(Rebox_Main_3543310304_3094389156(orig.after))}, gopurs_runtime.Bool(orig.go__close), gopurs_runtime.Int(orig.limit), gopurs_runtime.Str(orig.go__type))
 			}()
 		})
 	})
@@ -171,19 +171,19 @@ func Get_Main_main() gopurs_runtime.Value {
 					_v := struct {
 						V0 gopurs_runtime.Value
 						V1 bool
-					}{gopurs_runtime.Str("book-42"), true}
+					}{gopurs_runtime.StrWithCodeUnits("book-42", 7), true}
 					if _v.V1 {
 						return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
 					}
 					return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
 				}())), true, int64(10), "book"}
 				_ = orig
-				return gopurs_runtime.RecordDict4("after", "close", "limit", "type", gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(Rebox_Main_742090555_3094389156(orig.after))}, gopurs_runtime.Bool(orig.go__close), gopurs_runtime.Int(orig.limit), gopurs_runtime.Str(orig.go__type))
+				return gopurs_runtime.RecordShape4(&GopursRecordKeys_4d61696e_1, gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(Rebox_Main_742090555_3094389156(orig.after))}, gopurs_runtime.Bool(orig.go__close), gopurs_runtime.Int(orig.limit), gopurs_runtime.Str(orig.go__type))
 			}())
 			_ = __local_var_0_0
 			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = __local_var_1_1
-			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_1_1), gopurs_runtime.Value{})
+			__local_var_2_2 := gopurs_runtime.Apply2(Get_Effect_Ref_read(), __local_var_1_1, gopurs_runtime.Value{})
 			_ = __local_var_2_2
 			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2810209087("", struct {
 				actual struct {
@@ -252,13 +252,13 @@ func Get_Main_main() gopurs_runtime.Value {
 					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: func() gopurs_runtime.Value {
 						orig := _v.V0
 						_ = orig
-						return gopurs_runtime.RecordDict1("identifier", gopurs_runtime.Str(orig.identifier))
+						return gopurs_runtime.RecordShape1(&GopursRecordKeys_4d61696e_2, gopurs_runtime.Str(orig.identifier))
 					}()})}
 				}
 				return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
 			}())), true, int64(10), "book"}}), gopurs_runtime.Value{})
 			_ = __local_var_3_3
-			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+			return gopurs_runtime.Apply2(Get_Effect_Console_log(), gopurs_runtime.StrWithCodeUnits("Done", 4), gopurs_runtime.Value{})
 		})
 	})
 	return cache_Main_main
@@ -297,7 +297,7 @@ func Call_Main_convert(options_0_loop struct {
 				_v := struct {
 					V0 gopurs_runtime.Value
 					V1 bool
-				}{gopurs_runtime.RecordDict1("identifier", gopurs_runtime.Str((options_0.after).V0)), true}
+				}{gopurs_runtime.RecordShape1(&GopursRecordKeys_4d61696e_2, gopurs_runtime.Str((options_0.after).V0)), true}
 				if _v.V1 {
 					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
 				}
@@ -380,31 +380,6 @@ func Rebox_Main_1386611502_1636311157(in *Constructor_Data_Show_Show[gopurs_runt
 	return (*Constructor_Data_Show_Show[int64])(unsafe.Pointer(in))
 }
 
-func Rebox_Main_1386611502_2664792997(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[struct {
-	after *Constructor_Data_Maybe_Just[struct {
-		identifier string
-		/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
-	}]
-	go__close bool
-	limit     int64
-	go__type  string
-	/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
-}] {
-	if in == nil {
-		return nil
-	}
-	return (*Constructor_Data_Show_Show[struct {
-		after *Constructor_Data_Maybe_Just[struct {
-			identifier string
-			/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
-		}]
-		go__close bool
-		limit     int64
-		go__type  string
-		/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
-	}])(unsafe.Pointer(in))
-}
-
 func Rebox_Main_1386611502_2735895690(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[bool] {
 	if in == nil {
 		return nil
@@ -426,22 +401,6 @@ func Rebox_Main_1636311157_1386611502(in *Constructor_Data_Show_Show[int64]) *Co
 	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
-func Rebox_Main_2664792997_1386611502(in *Constructor_Data_Show_Show[struct {
-	after *Constructor_Data_Maybe_Just[struct {
-		identifier string
-		/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
-	}]
-	go__close bool
-	limit     int64
-	go__type  string
-	/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
-}]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
-}
-
 func Rebox_Main_2735895690_1386611502(in *Constructor_Data_Show_Show[bool]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -450,22 +409,6 @@ func Rebox_Main_2735895690_1386611502(in *Constructor_Data_Show_Show[bool]) *Con
 }
 
 func Rebox_Main_2737952170_3790796878(in *Constructor_Data_Eq_Eq[bool]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
-}
-
-func Rebox_Main_3039522309_3790796878(in *Constructor_Data_Eq_Eq[struct {
-	after *Constructor_Data_Maybe_Just[struct {
-		identifier string
-		/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
-	}]
-	go__close bool
-	limit     int64
-	go__type  string
-	/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
-}]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
@@ -519,7 +462,7 @@ func Rebox_Main_3543310304_3094389156(in *Constructor_Data_Maybe_Just[struct {
 	out.V0 = func() gopurs_runtime.Value {
 		orig := in.V0
 		_ = orig
-		return gopurs_runtime.RecordDict1("identifier", gopurs_runtime.Str(orig.identifier))
+		return gopurs_runtime.RecordShape1(&GopursRecordKeys_4d61696e_2, gopurs_runtime.Str(orig.identifier))
 	}()
 	return out
 }
@@ -545,31 +488,6 @@ func Rebox_Main_3790796878_2737952170(in *Constructor_Data_Eq_Eq[gopurs_runtime.
 	return (*Constructor_Data_Eq_Eq[bool])(unsafe.Pointer(in))
 }
 
-func Rebox_Main_3790796878_3039522309(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[struct {
-	after *Constructor_Data_Maybe_Just[struct {
-		identifier string
-		/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
-	}]
-	go__close bool
-	limit     int64
-	go__type  string
-	/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
-}] {
-	if in == nil {
-		return nil
-	}
-	return (*Constructor_Data_Eq_Eq[struct {
-		after *Constructor_Data_Maybe_Just[struct {
-			identifier string
-			/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
-		}]
-		go__close bool
-		limit     int64
-		go__type  string
-		/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
-	}])(unsafe.Pointer(in))
-}
-
 func Rebox_Main_742090555_3094389156(in *Constructor_Data_Maybe_Just[string]) *Constructor_Data_Maybe_Just[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -578,3 +496,9 @@ func Rebox_Main_742090555_3094389156(in *Constructor_Data_Maybe_Just[string]) *C
 	out.V0 = gopurs_runtime.Str(in.V0)
 	return out
 }
+
+var GopursRecordKeys_4d61696e_0 = gopurs_runtime.RecordKeys1{K0: "reflectSymbol"}
+
+var GopursRecordKeys_4d61696e_1 = gopurs_runtime.RecordKeys4{K0: "after", K1: "close", K2: "limit", K3: "type"}
+
+var GopursRecordKeys_4d61696e_2 = gopurs_runtime.RecordKeys1{K0: "identifier"}

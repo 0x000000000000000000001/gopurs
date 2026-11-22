@@ -19,14 +19,15 @@ function resolveFfiRunner() {
     return runner;
 }
 
-function runFfiParser(content, prefix) {
+function runFfiParser(content, prefix, sourcePrefix) {
     let directory, descriptor;
     try {
         const args = [resolveFfiRunner()];
         if (prefix !== undefined) args.push(prefix);
+        if (sourcePrefix !== undefined) args.push(sourcePrefix);
         // Complete-program results can exceed the per-FFI pipe limit. Spool
         // those bytes directly, then decode once, without a second pipe copy.
-        if (prefix === '--package-source' || prefix === '--bind-source') {
+        if (prefix === '--package-source' || prefix === '--bind-source' || prefix === '--share-record-shapes') {
             directory = mkdtempSync(join(tmpdir(), 'gopurs-source-'));
             descriptor = openSync(join(directory, 'response.json'), 'wx+', 0o600);
         }
@@ -76,3 +77,5 @@ export const packageGoFilesImpl = content => () => {
         }
     }
 };
+
+export const shareRecordShapesImpl = prefix => content => () => runFfiParser(content, '--share-record-shapes', prefix);

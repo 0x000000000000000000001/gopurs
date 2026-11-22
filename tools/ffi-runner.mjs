@@ -11,7 +11,9 @@ async function run() {
   const content = readFileSync(0, "utf8");
   const prefix = process.argv[2];
   const response =
-    prefix === "--package-source"
+    prefix === "--share-record-shapes"
+      ? globalThis.shareRecordShapes(process.argv[3], content)
+      : prefix === "--package-source"
       ? globalThis.packageGoSource(content)
       : prefix === "--bind-source"
         ? globalThis.bindGoSource(content)
@@ -24,7 +26,7 @@ async function run() {
   if (response.error) {
     throw new Error(`Go FFI parse failed: ${response.error}`);
   }
-  process.stdout.write(response.json + "\n", () => process.exit(0));
+  process.stdout.write(response.json + (prefix === "--share-record-shapes" ? "" : "\n"), () => process.exit(0));
 }
 
 function fail(error) {

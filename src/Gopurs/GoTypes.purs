@@ -1,5 +1,6 @@
 module Gopurs.GoTypes
   ( isClosedRowTail
+  , isCompositeGoType
   , visibleRecordFields
   , printExprType
   , AppliedAdt
@@ -56,6 +57,17 @@ printExprType = case _ of
 isClosedRowTail :: Maybe ExprType -> Boolean
 isClosedRowTail Nothing = true
 isClosedRowTail _ = false
+
+-- Composite annotations describe a value's shape, not a requirement to copy
+-- it into a native representation. A boxed producer can remain boxed until a
+-- consumer explicitly requests fields, elements or a concrete worker ABI.
+-- In particular this does not authorize mutating or reinterpreting its storage.
+isCompositeGoType :: GoType -> Boolean
+isCompositeGoType = case _ of
+  TypeRecord _ -> true
+  TypeNativeArray _ -> true
+  TypeStructPointer _ -> true
+  _ -> false
 
 -- Row.Union can retain duplicate labels in the TAST. Only the first
 -- occurrence is visible in the runtime record, including its field type.

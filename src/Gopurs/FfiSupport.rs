@@ -43,3 +43,7 @@ pub fn Gopurs_FfiSupport_packageGoSourceImpl(content: String) -> Value {
 pub fn Gopurs_FfiSupport_packageGoFilesImpl(content: String) -> Value {
     Value::Func1(Func1::Shared(std::rc::Rc::new(move |_| gopurs_parse_ffi(&content, "", 4))))
 }
+
+pub fn Gopurs_FfiSupport_shareRecordShapesImpl(prefix: String, content: String) -> Value {
+    Value::Func1(Func1::Shared(std::rc::Rc::new(move |_| gopurs_parse_ffi(&content, &prefix, 5))))
+}

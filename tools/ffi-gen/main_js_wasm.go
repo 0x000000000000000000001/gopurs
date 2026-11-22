@@ -3,6 +3,14 @@ package main
 import "syscall/js"
 
 func main() {
+	js.Global().Set("shareRecordShapes", js.FuncOf(func(this js.Value, args []js.Value) any {
+		result, err := ShareRecordShapes(args[0].String(), args[1].String())
+		diagnostic := ""
+		if err != nil {
+			diagnostic = err.Error()
+		}
+		return map[string]any{"json": result, "error": diagnostic}
+	}))
 	js.Global().Set("packageGoSource", js.FuncOf(func(this js.Value, args []js.Value) any {
 		result, err := Packages(args[0].String())
 		diagnostic := ""

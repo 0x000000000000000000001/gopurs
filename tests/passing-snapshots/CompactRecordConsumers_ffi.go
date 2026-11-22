@@ -10,20 +10,20 @@ import (
 var Main_CompactEntry = gopurs_runtime.Func(func(reverse gopurs_runtime.Value) gopurs_runtime.Value {
 	return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 		if reverse.BoolVal() {
-			return gopurs_runtime.RecordDict2("label", "count", gopurs_runtime.Str("alpha"), gopurs_runtime.Int(5))
+			return gopurs_runtime.RecordShape2(&GopursRecordKeys_4d61696e5f666669_0, gopurs_runtime.Str("alpha"), gopurs_runtime.Int(5))
 		}
-		return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(5), gopurs_runtime.Str("alpha"))
+		return gopurs_runtime.RecordShape2(&GopursRecordKeys_4d61696e5f666669_1, gopurs_runtime.Int(5), gopurs_runtime.Str("alpha"))
 	})
 })
 
 var Main_CompactPayload = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-	child := gopurs_runtime.RecordDict2("label", "count", gopurs_runtime.Str("nested"), gopurs_runtime.Int(2))
+	child := gopurs_runtime.RecordShape2(&GopursRecordKeys_4d61696e5f666669_0, gopurs_runtime.Str("nested"), gopurs_runtime.Int(2))
 	values := gopurs_runtime.Array([]gopurs_runtime.Value{gopurs_runtime.Int(-3), gopurs_runtime.Int(0), gopurs_runtime.Int(7)})
-	return gopurs_runtime.RecordDict2("values", "child", values, child)
+	return gopurs_runtime.RecordShape2(&GopursRecordKeys_4d61696e5f666669_2, values, child)
 })
 
 var Main_CompactScalars = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-	return gopurs_runtime.RecordDict2("number", "flag", gopurs_runtime.Float(-1.25), gopurs_runtime.Bool(true))
+	return gopurs_runtime.RecordShape2(&GopursRecordKeys_4d61696e5f666669_3, gopurs_runtime.Float(-1.25), gopurs_runtime.Bool(true))
 })
 
 func Main_CompactKeys(record gopurs_runtime.Value) string {
@@ -110,3 +110,10 @@ gopurs_runtime.Func(func(arg0 gopurs_runtime.Value) gopurs_runtime.Value {
 	go_res := Main_DescribeScalarsMap(go_arg0)
 	return gopurs_runtime.Box(go_res)
 })
+var GopursRecordKeys_4d61696e5f666669_0 = gopurs_runtime.RecordKeys2{K0: "label", K1: "count"}
+
+var GopursRecordKeys_4d61696e5f666669_1 = gopurs_runtime.RecordKeys2{K0: "count", K1: "label"}
+
+var GopursRecordKeys_4d61696e5f666669_2 = gopurs_runtime.RecordKeys2{K0: "values", K1: "child"}
+
+var GopursRecordKeys_4d61696e5f666669_3 = gopurs_runtime.RecordKeys2{K0: "number", K1: "flag"}

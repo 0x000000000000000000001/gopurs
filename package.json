@@ -69,6 +69,7 @@
     "tools/ffi-gen/main_js_wasm.go",
     "tools/ffi-gen/main_workspace.go",
     "tools/ffi-gen/native_api.go",
+    "tools/ffi-gen/record_shapes.go",
     "tools/ffi-gen/packages.go",
     "tools/ffi-gen/parser.go",
     "tools/ffi-gen/types.go",

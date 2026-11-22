@@ -1310,7 +1310,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_local_Main_f__467072791_8_43_32(int64(0), int64(100)), int64(200)}), gopurs_runtime.Value{})
 			_ = __local_var_8_42
-			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+			return gopurs_runtime.Apply2(Get_Effect_Console_log(), gopurs_runtime.StrWithCodeUnits("Done", 4), gopurs_runtime.Value{})
 		})
 	})
 	return cache_Main_main

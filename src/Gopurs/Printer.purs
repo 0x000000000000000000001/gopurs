@@ -7,9 +7,8 @@ import Data.String as String
 import Data.Tuple (Tuple(..))
 import Gopurs.GoAst (GoExpr(..), GoDecl(..), GoBinding, GoFile, GoType(..), goTypeToStr, recordFieldName, recordLabelUnits)
 import Gopurs.Printer.Builder (Out, emit, emitMany, withOut)
-import Gopurs.GoSymbol (referenceName)
 import Gopurs.GoCode (BoundGoCode, renderBoundCode)
-import Gopurs.GoSymbol (GoSymbol, RenderContext)
+import Gopurs.GoSymbol (GoSymbol, RenderContext, referenceName)
 import Data.Either (Either)
 
 foreign import escapeGoStringImpl :: String -> String
@@ -208,6 +207,18 @@ writeGoExpr out goExpr = case goExpr of
           out7 = emitMany out6 [ "newR := gopurs_runtime.RecordData{Keys: r.Keys, Vals: newVals}\nreturn gopurs_runtime.Value{Type: ", typeVal, ", UnsafePtr: unsafe.Pointer(&newR)}\n}()" ]
         in
           out7
+      else if size == 2 then
+        let
+          out1 = emit out "func() gopurs_runtime.Value {\norigVal := "
+          out2 = writeGoExpr out1 orig
+          out3 = emitMany out2 [ "\nif origVal.Type != ", typeVal, " {\nreturn " ]
+          out4 = writeFallback out3
+          out5 = emit out4 "\n}\nkeys, v0, v1 := gopurs_runtime.RecordFields2(origVal)\n"
+          out6 = writeJoined "\n"
+            (\o (Tuple idx value) -> writeGoExpr (emitMany o [ "v", show idx, " = " ]) value)
+            out5 updates
+        in
+          emit out6 "\nreturn gopurs_runtime.RecordShape2(keys, v0, v1)\n}()"
       else
         let
           out1 = emit out "func() gopurs_runtime.Value {\norigVal := "
@@ -254,6 +265,8 @@ writeGoExpr out goExpr = case goExpr of
   GoRecordAccessStatic obj size idx ->
     if size >= 6 then
       emitMany (writeGoExpr (emit out "((*gopurs_runtime.RecordData)(") obj) [ ".UnsafePtr)).Vals[", show idx, "]" ]
+    else if size == 2 then
+      emitMany (writeGoExpr (emit out "gopurs_runtime.RecordAt2(") obj) [ ", ", show idx, ")" ]
     else
       emitMany (writeGoExpr (emitMany out [ "((*gopurs_runtime.RecordData", show size, ")(" ]) obj) [ ".UnsafePtr)).V", show idx ]
   GoConstructor _ structName typeArgs args ->
@@ -294,6 +307,11 @@ writeGoExpr out goExpr = case goExpr of
       out1 = emitMany (writeGoExpr (emit out "(") left) [ ") ", op, " (" ]
     in
       emit (writeGoExpr out1 right) ")"
+  -- Keep a dereferenced slice usable as a postfix operand as well as a full
+  -- expression: *(pointer)[0] indexes the pointer, while (*(pointer))[0]
+  -- indexes the slice. Some native array consumers append indexing/slicing.
+  GoPrefixOp "*" expr ->
+    emit (writeGoExpr (emit out "(*(") expr) "))"
   GoPrefixOp op expr ->
     emit (writeGoExpr (emitMany out [ op, "(" ]) expr) ")"
   GoTypeAssertion expr t ->

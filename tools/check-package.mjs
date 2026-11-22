@@ -34,6 +34,7 @@ const required = [
   "tools/ffi-gen/types.go",
   "tools/ffi-gen/parser.go",
   "tools/ffi-gen/native_api.go",
+  "tools/ffi-gen/record_shapes.go",
   "tools/wasm_exec.js",
 ];
 const forbidden = [

@@ -26,7 +26,7 @@ import Gopurs.CodegenState (CodegenMetadata)
 import Gopurs.ExprContext (ModuleFunctions)
 import Gopurs.Driver.Cache (FrozenFFI)
 import Gopurs.FfiBridge as FfiBridge
-import Gopurs.FfiSupport (prepareFfi)
+import Gopurs.FfiSupport (prepareFfi, shareRecordShapesImpl)
 import Gopurs.FfiTypes (FfiDecl)
 import Gopurs.GoSource (PackageRequest, PackageResult, PackageFilesResult, packageSources, packageFiles)
 import Gopurs.GoSymbol (GoSymbol, generated)
@@ -92,11 +92,19 @@ emitPreparedModule output frozen metadata (Module coreFnModule) backendMod prepa
       Nothing -> Map.empty
     translated = translatePreparedWithFunctions (metadata { ffiFunctions = ffiFunctions }) preparedModule
 
-  FS.writeTextFile UTF8 (output <> "/purescript/" <> goName <> ".go") translated.code
-  when hasForeigns $
-    FS.writeTextFile UTF8 (output <> "/purescript/" <> goName <> "_ffi.go")
+  -- Share literal key metadata before either layout's package/cache planning.
+  code <- shareRecordShapes goName translated.code
+  FS.writeTextFile UTF8 (output <> "/purescript/" <> goName <> ".go") code
+  when hasForeigns do
+    ffiCode <- shareRecordShapes (goName <> "_ffi")
       (renderFfiModule { moduleName, path: ffiPath } goName backendMod foreigns ffi)
+    FS.writeTextFile UTF8 (output <> "/purescript/" <> goName <> "_ffi.go") ffiCode
   pure translated.functions
+
+shareRecordShapes :: String -> String -> Aff String
+shareRecordShapes prefix source = do
+  result <- liftEffect $ try $ shareRecordShapesImpl prefix source
+  either throwError pure result
 
 renderFfiModule
   :: { moduleName :: String, path :: String }

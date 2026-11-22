@@ -11,7 +11,7 @@ var once_Main_eqArray sync.Once
 
 func Get_Main_eqArray() gopurs_runtime.Value {
 	once_Main_eqArray.Do(func() {
-		cache_Main_eqArray = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_131790935_3790796878(Rebox_Main_3790796878_131790935(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))})))))}
+		cache_Main_eqArray = Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))})
 	})
 	return cache_Main_eqArray
 }
@@ -21,7 +21,7 @@ var once_Main_showArray sync.Once
 
 func Get_Main_showArray() gopurs_runtime.Value {
 	once_Main_showArray.Do(func() {
-		cache_Main_showArray = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1953100407_1386611502(Rebox_Main_1386611502_1953100407(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))})))))}
+		cache_Main_showArray = Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))})
 	})
 	return cache_Main_showArray
 }
@@ -31,7 +31,7 @@ var once_Main_showArray1 sync.Once
 
 func Get_Main_showArray1() gopurs_runtime.Value {
 	once_Main_showArray1.Do(func() {
-		cache_Main_showArray1 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))})))))}
+		cache_Main_showArray1 = Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))})
 	})
 	return cache_Main_showArray1
 }
@@ -45,7 +45,7 @@ func Get_Main_makeEntry() gopurs_runtime.Value {
 			return func() gopurs_runtime.Value {
 				orig := Call_Main_makeEntry(count_0_box.IntVal, label_1_box.StrVal())
 				_ = orig
-				return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
+				return gopurs_runtime.RecordShape2(&GopursRecordKeys_4d61696e_0, gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 			}()
 		})
 	})
@@ -166,7 +166,7 @@ func Get_Main_checkEffects() gopurs_runtime.Value {
 			_ = __local_var_0_0
 			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = __local_var_1_1
-			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Func(func(entry_2 gopurs_runtime.Value) gopurs_runtime.Value {
+			__local_var_2_2 := gopurs_runtime.Apply2(Get_Effect_Ref__new(), gopurs_runtime.Func(func(entry_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_3 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_3, func() gopurs_runtime.Value {
 						arr := []string{gopurs_runtime.ConcatString("consume:", gopurs_runtime.Apply(Get_Main_describeEntryMap(), entry_2).StrVal())}
@@ -177,11 +177,11 @@ func Get_Main_checkEffects() gopurs_runtime.Value {
 						return gopurs_runtime.Array(boxed)
 					}())
 				}), __local_var_1_1)
-			})), gopurs_runtime.Value{})
+			}), gopurs_runtime.Value{})
 			_ = __local_var_2_2
-			__local_var_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_2_2), gopurs_runtime.Value{})
+			__local_var_3_3 := gopurs_runtime.Apply2(Get_Effect_Ref_read(), __local_var_2_2, gopurs_runtime.Value{})
 			_ = __local_var_3_3
-			__local_var_4_4 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_4 gopurs_runtime.Value) gopurs_runtime.Value {
+			__local_var_4_4 := gopurs_runtime.Apply3(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_4 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_4, func() gopurs_runtime.Value {
 					arr := []string{"before"}
 					boxed := make([]gopurs_runtime.Value, len(arr))
@@ -190,13 +190,13 @@ func Get_Main_checkEffects() gopurs_runtime.Value {
 					}
 					return gopurs_runtime.Array(boxed)
 				}())
-			}), __local_var_1_1), gopurs_runtime.Value{})
+			}), __local_var_1_1, gopurs_runtime.Value{})
 			_ = __local_var_4_4
 			__local_var_5_5 := gopurs_runtime.Apply(Call_Main_produceEntry(__local_var_1_1), gopurs_runtime.Value{})
 			_ = __local_var_5_5
-			__local_var_6_6 := gopurs_runtime.Apply(gopurs_runtime.Apply(__local_var_3_3, __local_var_5_5), gopurs_runtime.Value{})
+			__local_var_6_6 := gopurs_runtime.Apply2(__local_var_3_3, __local_var_5_5, gopurs_runtime.Value{})
 			_ = __local_var_6_6
-			__local_var_7_7 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_7 gopurs_runtime.Value) gopurs_runtime.Value {
+			__local_var_7_7 := gopurs_runtime.Apply3(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_7 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_7, func() gopurs_runtime.Value {
 					arr := []string{"after"}
 					boxed := make([]gopurs_runtime.Value, len(arr))
@@ -205,9 +205,9 @@ func Get_Main_checkEffects() gopurs_runtime.Value {
 					}
 					return gopurs_runtime.Array(boxed)
 				}())
-			}), __local_var_1_1), gopurs_runtime.Value{})
+			}), __local_var_1_1, gopurs_runtime.Value{})
 			_ = __local_var_7_7
-			__local_var_8_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_1_1), gopurs_runtime.Value{})
+			__local_var_8_8 := gopurs_runtime.Apply2(Get_Effect_Ref_read(), __local_var_1_1, gopurs_runtime.Value{})
 			_ = __local_var_8_8
 			__local_var_9_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4294120134("", struct {
 				actual   []string
@@ -222,7 +222,7 @@ func Get_Main_checkEffects() gopurs_runtime.Value {
 				return unboxed
 			}(), []string{"before", "produce", "consume:9:created", "after"}}), gopurs_runtime.Value{})
 			_ = __local_var_9_9
-			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.ConcatString("effect order: ", gopurs_runtime.Apply(Rebox_Main_1386611502_1953100407(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, __local_var_8_8).StrVal()))), gopurs_runtime.Value{})
+			return gopurs_runtime.Apply2(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.ConcatString("effect order: ", gopurs_runtime.Apply(Rebox_Main_1386611502_1953100407(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, __local_var_8_8).StrVal())), gopurs_runtime.Value{})
 		})
 	})
 	return cache_Main_checkEffects
@@ -260,7 +260,7 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 		cache_Main_checkPayload = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Main_compactPayload(), gopurs_runtime.Value{})
 			_ = __local_var_0_0
-			__local_var_1_1 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), __local_var_0_0), gopurs_runtime.Value{})
+			__local_var_1_1 := gopurs_runtime.Apply2(Get_Effect_Ref__new(), __local_var_0_0, gopurs_runtime.Value{})
 			_ = __local_var_1_1
 			__local_var_2_2 := gopurs_runtime.Apply(Get_Main_compactPayload(), gopurs_runtime.Value{})
 			_ = __local_var_2_2
@@ -282,229 +282,30 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 			_ = __local_var_10_10
 			__local_var_11_11 := gopurs_runtime.Apply(Call_Main_check("compact payload FFI map", "2:nested:[-3 0 7]", __local_var_10_10.StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_11_11
-			__local_var_12_12 := gopurs_runtime.Apply(Call_Main_check("empty array update", "2:nested:[]", gopurs_runtime.Apply(Get_Main_describePayloadMap(), func() gopurs_runtime.Value {
-				orig := func() struct {
-					child struct {
-						count int64
-						label string
-						/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-					}
-					values []int64
-					/*gopurs:record-v1:2:006300680069006c0064,00760061006c007500650073*/
-				} {
-					orig := gopurs_runtime.RecordUpdate1(__local_var_0_0, "values", func() gopurs_runtime.Value {
-						arr := []int64{}
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Int(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}())
-					_ = orig
-					clone := struct {
-						child struct {
-							count int64
-							label string
-							/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-						}
-						values []int64
-						/*gopurs:record-v1:2:006300680069006c0064,00760061006c007500650073*/
-					}{}
-					clone.child = func() struct {
-						count int64
-						label string
-						/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-					} {
-						orig := gopurs_runtime.RecordGet(orig, "child")
-						_ = orig
-						clone := struct {
-							count int64
-							label string
-							/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-						}{}
-						clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
-						clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-						return clone
-					}()
-					clone.values = func() []int64 {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
-						unboxed := make([]int64, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v.IntVal
-						}
-						return unboxed
-					}()
-					return clone
-				}()
-				_ = orig
-				return gopurs_runtime.RecordDict2("child", "values", func() gopurs_runtime.Value {
-					orig := orig.child
-					_ = orig
-					return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
-				}(), func() gopurs_runtime.Value {
-					arr := orig.values
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Int(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}())
-			}()).StrVal()), gopurs_runtime.Value{})
+			__local_var_12_12 := gopurs_runtime.Apply(Call_Main_check("empty array update", "2:nested:[]", gopurs_runtime.Apply(Get_Main_describePayloadMap(), gopurs_runtime.RecordUpdate1(__local_var_0_0, "values", func() gopurs_runtime.Value {
+				arr := []int64{}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Int(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}())).StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_12_12
-			__local_var_13_13 := gopurs_runtime.Apply(Call_Main_check("child update", "9:replacement:[-3 0 7]", gopurs_runtime.Apply(Get_Main_describePayloadMap(), func() gopurs_runtime.Value {
-				orig := func() struct {
-					child struct {
-						count int64
-						label string
-						/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-					}
-					values []int64
-					/*gopurs:record-v1:2:006300680069006c0064,00760061006c007500650073*/
-				} {
-					orig := gopurs_runtime.RecordUpdate1(__local_var_0_0, "child", func() gopurs_runtime.Value {
-						orig := struct {
-							count int64
-							label string
-							/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-						}{int64(9), "replacement"}
-						_ = orig
-						return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
-					}())
-					_ = orig
-					clone := struct {
-						child struct {
-							count int64
-							label string
-							/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-						}
-						values []int64
-						/*gopurs:record-v1:2:006300680069006c0064,00760061006c007500650073*/
-					}{}
-					clone.child = func() struct {
-						count int64
-						label string
-						/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-					} {
-						orig := gopurs_runtime.RecordGet(orig, "child")
-						_ = orig
-						clone := struct {
-							count int64
-							label string
-							/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-						}{}
-						clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
-						clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-						return clone
-					}()
-					clone.values = func() []int64 {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
-						unboxed := make([]int64, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v.IntVal
-						}
-						return unboxed
-					}()
-					return clone
-				}()
+			__local_var_13_13 := gopurs_runtime.Apply(Call_Main_check("child update", "9:replacement:[-3 0 7]", gopurs_runtime.Apply(Get_Main_describePayloadMap(), gopurs_runtime.RecordUpdate1(__local_var_0_0, "child", func() gopurs_runtime.Value {
+				orig := struct {
+					count int64
+					label string
+					/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
+				}{int64(9), "replacement"}
 				_ = orig
-				return gopurs_runtime.RecordDict2("child", "values", func() gopurs_runtime.Value {
-					orig := orig.child
-					_ = orig
-					return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
-				}(), func() gopurs_runtime.Value {
-					arr := orig.values
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Int(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}())
-			}()).StrVal()), gopurs_runtime.Value{})
+				return gopurs_runtime.RecordShape2(&GopursRecordKeys_4d61696e_0, gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
+			}())).StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_13_13
-			__local_var_14_14 := gopurs_runtime.Apply(Call_Main_check("nested field update", "2:updated:[-3 0 7]", gopurs_runtime.Apply(Get_Main_describePayloadMap(), func() gopurs_runtime.Value {
-				orig := func() struct {
-					child struct {
-						count int64
-						label string
-						/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-					}
-					values []int64
-					/*gopurs:record-v1:2:006300680069006c0064,00760061006c007500650073*/
-				} {
-					orig := gopurs_runtime.RecordUpdate1(__local_var_0_0, "child", func() gopurs_runtime.Value {
-						orig := func() struct {
-							count int64
-							label string
-							/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-						} {
-							orig := gopurs_runtime.RecordUpdate1(gopurs_runtime.RecordGet(__local_var_0_0, "child"), "label", gopurs_runtime.Str("updated"))
-							_ = orig
-							clone := struct {
-								count int64
-								label string
-								/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-							}{}
-							clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
-							clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-							return clone
-						}()
-						_ = orig
-						return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
-					}())
-					_ = orig
-					clone := struct {
-						child struct {
-							count int64
-							label string
-							/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-						}
-						values []int64
-						/*gopurs:record-v1:2:006300680069006c0064,00760061006c007500650073*/
-					}{}
-					clone.child = func() struct {
-						count int64
-						label string
-						/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-					} {
-						orig := gopurs_runtime.RecordGet(orig, "child")
-						_ = orig
-						clone := struct {
-							count int64
-							label string
-							/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-						}{}
-						clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
-						clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-						return clone
-					}()
-					clone.values = func() []int64 {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
-						unboxed := make([]int64, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v.IntVal
-						}
-						return unboxed
-					}()
-					return clone
-				}()
-				_ = orig
-				return gopurs_runtime.RecordDict2("child", "values", func() gopurs_runtime.Value {
-					orig := orig.child
-					_ = orig
-					return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
-				}(), func() gopurs_runtime.Value {
-					arr := orig.values
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Int(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}())
-			}()).StrVal()), gopurs_runtime.Value{})
+			__local_var_14_14 := gopurs_runtime.Apply(Call_Main_check("nested field update", "2:updated:[-3 0 7]", gopurs_runtime.Apply(Get_Main_describePayloadMap(), gopurs_runtime.RecordUpdate1(__local_var_0_0, "child", gopurs_runtime.RecordUpdate1(gopurs_runtime.RecordGet(__local_var_0_0, "child"), "label", gopurs_runtime.StrWithCodeUnits("updated", 7)))).StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_14_14
 			__local_var_15_15 := gopurs_runtime.Apply(Call_Main_check("payload after updates", "2:nested:[-3 0 7]", gopurs_runtime.Apply(Get_Main_describePayloadMap(), __local_var_0_0).StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_15_15
-			__local_var_16_16 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_1_1), gopurs_runtime.Value{})
+			__local_var_16_16 := gopurs_runtime.Apply2(Get_Effect_Ref_read(), __local_var_1_1, gopurs_runtime.Value{})
 			_ = __local_var_16_16
 			return gopurs_runtime.Apply(Call_Main_check("retained payload", "2:nested:[-3 0 7]", gopurs_runtime.Apply(Get_Main_describePayloadMap(), __local_var_16_16).StrVal()), gopurs_runtime.Value{})
 		})
@@ -551,26 +352,7 @@ func Get_Main_checkScalars() gopurs_runtime.Value {
 			_ = __local_var_8_9
 			__local_var_9_10 := gopurs_runtime.Apply(Call_Main_check("compact scalar FFI map", "true:-1.25", __local_var_8_9.StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_9_10
-			__local_var_10_11 := gopurs_runtime.Apply(Call_Main_check("scalar updates", "false:2.5", gopurs_runtime.Apply(Get_Main_describeScalarsMap(), func() gopurs_runtime.Value {
-				orig := func() struct {
-					flag   bool
-					number float64
-					/*gopurs:record-v1:2:0066006c00610067,006e0075006d006200650072*/
-				} {
-					orig := gopurs_runtime.RecordUpdate2(__local_var_0_0, "flag", gopurs_runtime.Bool(false), "number", gopurs_runtime.Float(2.5))
-					_ = orig
-					clone := struct {
-						flag   bool
-						number float64
-						/*gopurs:record-v1:2:0066006c00610067,006e0075006d006200650072*/
-					}{}
-					clone.flag = (gopurs_runtime.RecordGet(orig, "flag").IntVal) != (0)
-					clone.number = gopurs_runtime.RecordGet(orig, "number").FloatVal()
-					return clone
-				}()
-				_ = orig
-				return gopurs_runtime.RecordDict2("flag", "number", gopurs_runtime.Bool(orig.flag), gopurs_runtime.Float(orig.number))
-			}()).StrVal()), gopurs_runtime.Value{})
+			__local_var_10_11 := gopurs_runtime.Apply(Call_Main_check("scalar updates", "false:2.5", gopurs_runtime.Apply(Get_Main_describeScalarsMap(), gopurs_runtime.RecordUpdate2(__local_var_0_0, "flag", gopurs_runtime.Bool(false), "number", gopurs_runtime.Float(2.5))).StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_10_11
 			return gopurs_runtime.Apply(Call_Main_check("retained scalars", "true:-1.25", gopurs_runtime.Apply(Get_Main_describeScalarsMap(), __local_var_0_0).StrVal()), gopurs_runtime.Value{})
 		})
@@ -597,7 +379,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_4_4
 			__local_var_5_5 := gopurs_runtime.Apply(Get_Main_checkEffects(), gopurs_runtime.Value{})
 			_ = __local_var_5_5
-			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+			return gopurs_runtime.Apply2(Get_Effect_Console_log(), gopurs_runtime.StrWithCodeUnits("Done", 4), gopurs_runtime.Value{})
 		})
 	})
 	return cache_Main_main
@@ -640,7 +422,7 @@ func Call_Main_produceEntry(trace_0_loop gopurs_runtime.Value) gopurs_runtime.Va
 		return func() gopurs_runtime.Value {
 			orig := Call_Main_makeEntry(int64(9), "created")
 			_ = orig
-			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
+			return gopurs_runtime.RecordShape2(&GopursRecordKeys_4d61696e_0, gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()
 	})
 }
@@ -653,7 +435,7 @@ func Call_Main_inspectProduced(inspect_0_loop gopurs_runtime.Value, produce_1_lo
 	return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 		value_2_0 := gopurs_runtime.Apply(produce_1, gopurs_runtime.Value{})
 		_ = value_2_0
-		return gopurs_runtime.Str(gopurs_runtime.Apply(inspect_0, value_2_0).StrVal())
+		return gopurs_runtime.NormalizeStringValue(gopurs_runtime.Apply(inspect_0, value_2_0))
 	})
 }
 
@@ -782,7 +564,7 @@ func Call_Main_check(label_0_loop string, expected_1_loop string, actual_2_loop 
 		_ = __local_var_3_0
 		__local_var_4_1 := gopurs_runtime.Apply(__local_var_3_0, gopurs_runtime.Value{})
 		_ = __local_var_4_1
-		return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(label_0, ": "), actual_2))), gopurs_runtime.Value{})
+		return gopurs_runtime.Apply2(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(label_0, ": "), actual_2)), gopurs_runtime.Value{})
 	})
 }
 
@@ -795,7 +577,7 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 		_ = __local_var_1_0
 		__local_var_2_1 := gopurs_runtime.Apply(__local_var_1_0, gopurs_runtime.Value{})
 		_ = __local_var_2_1
-		__local_var_3_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), __local_var_2_1), gopurs_runtime.Value{})
+		__local_var_3_2 := gopurs_runtime.Apply2(Get_Effect_Ref__new(), __local_var_2_1, gopurs_runtime.Value{})
 		_ = __local_var_3_2
 		var __t4 string
 		{
@@ -813,7 +595,7 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 		// TAST (Let): prefix_4_3 shape=Branch(LitString, def=LitString) bindingType=Any
 		prefix_4_3 := __t4
 		_ = prefix_4_3
-		__local_var_5_6 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Main_compactEntry(), gopurs_runtime.Bool(reverse_0)), gopurs_runtime.Value{})
+		__local_var_5_6 := gopurs_runtime.Apply2(Get_Main_compactEntry(), gopurs_runtime.Bool(reverse_0), gopurs_runtime.Value{})
 		_ = __local_var_5_6
 		__local_var_5_5 := gopurs_runtime.Apply(Get_Main_compactKeys(), __local_var_5_6)
 		_ = __local_var_5_5
@@ -838,89 +620,28 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 		_ = __local_var_8_10
 		__local_var_9_11 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "FFI map"), "5:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), __local_var_2_1).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_9_11
-		__local_var_10_13 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Main_compactEntry(), gopurs_runtime.Bool(reverse_0)), gopurs_runtime.Value{})
+		__local_var_10_13 := gopurs_runtime.Apply2(Get_Main_compactEntry(), gopurs_runtime.Bool(reverse_0), gopurs_runtime.Value{})
 		_ = __local_var_10_13
 		__local_var_10_12 := gopurs_runtime.Apply(Get_Main_describeEntryMap(), __local_var_10_13)
 		_ = __local_var_10_12
 		__local_var_11_14 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "compact FFI map"), "5:alpha", __local_var_10_12.StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_11_14
 		// TAST (Let): changedCount_12_15 shape=Other bindingType=(Record (Row [count: Int, label: String] Empty))
-		changedCount_12_15 := func() struct {
-			count int64
-			label string
-			/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-		} {
-			orig := gopurs_runtime.RecordUpdate1(__local_var_2_1, "count", gopurs_runtime.Int(int64(-7)))
-			_ = orig
-			clone := struct {
-				count int64
-				label string
-				/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-			}{}
-			clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
-			clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-			return clone
-		}()
+		changedCount_12_15 := gopurs_runtime.RecordUpdate1(__local_var_2_1, "count", gopurs_runtime.Int(int64(-7)))
 		_ = changedCount_12_15
-		__local_var_13_16 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), func() gopurs_runtime.Value {
-			orig := changedCount_12_15
-			_ = orig
-			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
-		}()), gopurs_runtime.Value{})
+		__local_var_13_16 := gopurs_runtime.Apply2(Get_Effect_Ref__new(), changedCount_12_15, gopurs_runtime.Value{})
 		_ = __local_var_13_16
-		__local_var_14_17 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "count update"), "-7:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
-			orig := changedCount_12_15
-			_ = orig
-			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
-		}()).StrVal()), gopurs_runtime.Value{})
+		__local_var_14_17 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "count update"), "-7:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), changedCount_12_15).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_14_17
-		__local_var_15_18 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "label update"), "5:beta", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
-			orig := func() struct {
-				count int64
-				label string
-				/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-			} {
-				orig := gopurs_runtime.RecordUpdate1(__local_var_2_1, "label", gopurs_runtime.Str("beta"))
-				_ = orig
-				clone := struct {
-					count int64
-					label string
-					/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-				}{}
-				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
-				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-				return clone
-			}()
-			_ = orig
-			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
-		}()).StrVal()), gopurs_runtime.Value{})
+		__local_var_15_18 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "label update"), "5:beta", gopurs_runtime.Apply(Get_Main_describeEntryMap(), gopurs_runtime.RecordUpdate1(__local_var_2_1, "label", gopurs_runtime.StrWithCodeUnits("beta", 4))).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_15_18
-		__local_var_16_19 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "both updates"), "0:", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
-			orig := func() struct {
-				count int64
-				label string
-				/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-			} {
-				orig := gopurs_runtime.RecordUpdate2(__local_var_2_1, "label", gopurs_runtime.Str(""), "count", gopurs_runtime.Int(int64(0)))
-				_ = orig
-				clone := struct {
-					count int64
-					label string
-					/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
-				}{}
-				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
-				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-				return clone
-			}()
-			_ = orig
-			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
-		}()).StrVal()), gopurs_runtime.Value{})
+		__local_var_16_19 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "both updates"), "0:", gopurs_runtime.Apply(Get_Main_describeEntryMap(), gopurs_runtime.RecordUpdate2(__local_var_2_1, "label", gopurs_runtime.StrWithCodeUnits("", 0), "count", gopurs_runtime.Int(int64(0)))).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_16_19
 		__local_var_17_20 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "original after updates"), "5:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), __local_var_2_1).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_17_20
-		__local_var_18_21 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_3_2), gopurs_runtime.Value{})
+		__local_var_18_21 := gopurs_runtime.Apply2(Get_Effect_Ref_read(), __local_var_3_2, gopurs_runtime.Value{})
 		_ = __local_var_18_21
-		__local_var_19_22 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_13_16), gopurs_runtime.Value{})
+		__local_var_19_22 := gopurs_runtime.Apply2(Get_Effect_Ref_read(), __local_var_13_16, gopurs_runtime.Value{})
 		_ = __local_var_19_22
 		__local_var_20_23 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "retained original"), "5:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), __local_var_18_21).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_20_23
@@ -929,13 +650,6 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 }
 
 func Rebox_Main_1140313009_3790796878(in *Constructor_Data_Eq_Eq[string]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
-}
-
-func Rebox_Main_131790935_3790796878(in *Constructor_Data_Eq_Eq[[]string]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
@@ -970,13 +684,6 @@ func Rebox_Main_1386611502_1953100407(in *Constructor_Data_Show_Show[gopurs_runt
 	return (*Constructor_Data_Show_Show[[]string])(unsafe.Pointer(in))
 }
 
-func Rebox_Main_1469227923_1386611502(in *Constructor_Data_Show_Show[[]int64]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
-}
-
 func Rebox_Main_1514099793_1386611502(in *Constructor_Data_Show_Show[string]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -991,25 +698,11 @@ func Rebox_Main_1636311157_1386611502(in *Constructor_Data_Show_Show[int64]) *Co
 	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
-func Rebox_Main_1953100407_1386611502(in *Constructor_Data_Show_Show[[]string]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
-}
-
 func Rebox_Main_3790796878_1140313009(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[string] {
 	if in == nil {
 		return nil
 	}
 	return (*Constructor_Data_Eq_Eq[string])(unsafe.Pointer(in))
-}
-
-func Rebox_Main_3790796878_131790935(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[[]string] {
-	if in == nil {
-		return nil
-	}
-	return (*Constructor_Data_Eq_Eq[[]string])(unsafe.Pointer(in))
 }
 
 func Get_Main_compactEntry() gopurs_runtime.Value {
@@ -1039,3 +732,5 @@ func Get_Main_describePayloadMap() gopurs_runtime.Value {
 func Get_Main_describeScalarsMap() gopurs_runtime.Value {
 	return _Gopurs_Main_DescribeScalarsMap
 }
+
+var GopursRecordKeys_4d61696e_0 = gopurs_runtime.RecordKeys2{K0: "count", K1: "label"}

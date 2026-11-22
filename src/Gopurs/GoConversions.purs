@@ -14,13 +14,14 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Data.String.CodeUnits as CodeUnits
 import Data.String.Pattern (Pattern(..))
+import Data.Traversable (sequence)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Ref (Ref)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoDecl, GoType(..), StructPointer, goTypeToStr, structPointer, recordFieldName)
 import Gopurs.GoConversions.NativeAdts (UnboxedADT, unboxableADTs, getUnboxedADT, adtPayloadTypes) as NativeAdts
-import Gopurs.GoConversions.NativeAdts (slotType, zeroGoExpr)
+import Gopurs.GoConversions.NativeAdts (slotType)
 import Gopurs.GoConversions.Rebox as Rebox
 import Gopurs.Printer (printGoExpr)
 import PureScript.Backend.Optimizer.FfiSupport (hashString)
@@ -32,8 +33,8 @@ coerceGoExpr _ _ expr from to | from == to = expr
 coerceGoExpr stateRef moduleName expr (TypeRecord sourceFields) (TypeRecord targetFields)
   | canProjectRecord sourceFields targetFields =
       projectRecord (coerceGoExpr stateRef moduleName) expr sourceFields targetFields
-coerceGoExpr stateRef moduleName expr source target@(TypeStructValue adtName fields) = case expr of
-  GoConstructor _ structName typeArgs args ->
+coerceGoExpr stateRef moduleName expr source target@(TypeStructValue adtName fields) = case expr, source of
+  GoConstructor _ structName typeArgs args, TypeStructPointer pointer | pointer.fullName == adtName ->
     let
       parts = String.split (Pattern "_") structName.name
       ctorName = fromMaybe "" (Array.last parts)
@@ -41,15 +42,19 @@ coerceGoExpr stateRef moduleName expr source target@(TypeStructValue adtName fie
       case Map.lookup adtName NativeAdts.unboxableADTs of
         Just adt ->
           let
-            provided = Array.mapWithIndex (\i arg -> Tuple (adt.fieldIndex ctorName i) arg) args
-            slotExpr slot = case Array.find (\(Tuple mbSlot _) -> mbSlot == Just slot) provided of
-              Just (Tuple _ arg) ->
-                coerceGoExpr stateRef moduleName arg (slotType typeArgs slot) (slotType fields slot)
-              Nothing -> zeroGoExpr (slotType fields slot)
+            -- fieldIndex uses the canonical constructor identity; the short
+            -- name belongs to mapConstructor, which also preserves sum tags.
+            converted = sequence (Array.mapWithIndex (\i arg -> do
+              slot <- adt.fieldIndex pointer.baseStructName i
+              pure (coerceGoExpr stateRef moduleName arg (slotType typeArgs slot) (slotType fields slot))) args)
           in
-            GoStructValue adtName fields (Array.mapWithIndex (\i _ -> slotExpr i) fields)
-        Nothing -> expr
-  _ -> unboxGoExpr stateRef moduleName (boxGoExpr stateRef moduleName expr source) TypeValue target
+            case converted of
+              Just constructorFields -> GoStructValue adtName fields (adt.mapConstructor fields ctorName constructorFields)
+              Nothing -> fallback unit
+        Nothing -> fallback unit
+  _, _ -> fallback unit
+  where
+  fallback _ = unboxGoExpr stateRef moduleName (boxGoExpr stateRef moduleName expr source) TypeValue target
 -- Pointer identity ignores the PureScript fullName when the instantiated Go
 -- layout and runtime tag are already identical.
 coerceGoExpr _ _ expr (TypeStructPointer source) (TypeStructPointer target)
