@@ -6,7 +6,7 @@ module. The phase groups organize responsibilities; they are not execution
 order or a proposed directory layout. The [architecture guide](architecture.md)
 explains execution order; the [naming guide](naming.md) defines the terminology.
 
-The map covers **114 modules**. `node tools/check-docs.mjs` verifies source
+The map covers **116 modules**. `node tools/check-docs.mjs` verifies source
 paths, duplicate rows and complete coverage against `src/`. Import lists below
 are sorted and deduplicated from the module source.
 
@@ -27,9 +27,9 @@ are sorted and deduplicated from the module source.
 | --- | --- | --- | --- |
 | `Gopurs.AdtMetadata`<br>`src/Gopurs/AdtMetadata.purs` | Prepare | Derives ADT pointer and enum representations from TAST. | `GoAst` |
 | `Gopurs.ClassMetadata`<br>`src/Gopurs/ClassMetadata.purs` | Prepare | Indexes classes, superclasses and methods by label. | — |
-| `Gopurs.ConstructorLayout`<br>`src/Gopurs/ConstructorLayout.purs` | Prepare | Resolves constructor identity, fields and generic arguments. | `CodegenState`, `ConstructorMetadata`, `GoAst`, `GoSymbol`, `GoTypes` |
+| `Gopurs.ConstructorLayout`<br>`src/Gopurs/ConstructorLayout.purs` | Prepare | Resolves constructor identity, fields and generic arguments. | `CodegenState`, `ConstructorMetadata`, `GoAst`, `GoSymbol`, `GoTypes`, `SharedContainerLayout` |
 | `Gopurs.ConstructorMetadata`<br>`src/Gopurs/ConstructorMetadata.purs` | Prepare | Describes constructors, fields and identities. | `GoAst` |
-| `Gopurs.Driver.Prepare`<br>`src/Gopurs/Driver/Prepare.purs` | Prepare | Loads TAST, assembles metadata and prepares specialized modules. | `AdtMetadata`, `Cache.LookupTable`, `Cache.Wire`, `ClassMetadata`, `CodegenState`, `ConstructorMetadata`, `Driver.Cache`, `Driver.Prepare.Projection`, `Driver.Prepare.Proof`, `GlobalTypes`, `Host.Metrics`, `Monomorphization`, `Preparation`, `ReboxMetadata` |
+| `Gopurs.Driver.Prepare`<br>`src/Gopurs/Driver/Prepare.purs` | Prepare | Loads TAST, assembles metadata and prepares specialized modules. | `AdtMetadata`, `Cache.LookupTable`, `Cache.Wire`, `ClassMetadata`, `CodegenState`, `ConstructorMetadata`, `Driver.Cache`, `Driver.Prepare.Projection`, `Driver.Prepare.Proof`, `GlobalTypes`, `Host.Metrics`, `Monomorphization`, `Preparation`, `ReboxMetadata`, `SharedContainerUsage` |
 | `Gopurs.Driver.Prepare.Persistent`<br>`src/Gopurs/Driver/Prepare/Persistent.purs` | Prepare | Preloads, projects and publishes persistent preparation artifacts. | `Cache.LookupTable`, `Cache.Wire`, `ClassMetadata`, `Driver.Cache`, `Driver.Manifest`, `Driver.Prepare`, `Driver.Prepare.Projection`, `Driver.Prepare.ProjectionCapsule`, `Driver.Prepare.Proof`, `Host.Metrics`, `Monomorphization`, `Preparation` |
 | `Gopurs.Driver.Prepare.Projection`<br>`src/Gopurs/Driver/Prepare/Projection.purs` | Prepare | Splits and merges prepared-module projections. | `Cache.LookupTable`, `CodegenState` |
 | `Gopurs.Driver.Prepare.ProjectionCapsule`<br>`src/Gopurs/Driver/Prepare/ProjectionCapsule.purs` | Prepare | Packs and reopens projections as verified fragments. | `Cache.LookupTable`, `CodegenState`, `Driver.Prepare.Projection` |
@@ -39,6 +39,7 @@ are sorted and deduplicated from the module source.
 | `Gopurs.Monomorphization.ForeignForwarders`<br>`src/Gopurs/Monomorphization/ForeignForwarders.purs` | Prepare | Recognizes FFI wrappers excluded from specialized copies. | — |
 | `Gopurs.Preparation`<br>`src/Gopurs/Preparation.purs` | Prepare | Runs one ordered, bounded round of preparation jobs in `Aff`. | — |
 | `Gopurs.ReboxMetadata`<br>`src/Gopurs/ReboxMetadata.purs` | Prepare | Indexes fields converted between native and boxed representations. | `ClassMetadata`, `ConstructorMetadata`, `GoAst` |
+| `Gopurs.SharedContainerUsage`<br>`src/Gopurs/SharedContainerUsage.purs` | Prepare | Selects concrete container families observed in source function-value types. | — |
 
 ## Rewrite — backend IR passes
 
@@ -112,7 +113,8 @@ are sorted and deduplicated from the module source.
 | `Gopurs.GoImports`<br>`src/Gopurs/GoImports.purs` | Emit | Collects and renders Go module imports. | `GoAst`, `GoCode`, `GoSymbol` |
 | `Gopurs.GoSource`<br>`src/Gopurs/GoSource.purs` | Emit | Binds Go sources to symbols and assembles package files. | `FfiSupport`, `GoCode`, `GoSymbol` |
 | `Gopurs.GoSymbol`<br>`src/Gopurs/GoSymbol.purs` | Emit | Defines and compares Go symbols. | — |
-| `Gopurs.GoTypes`<br>`src/Gopurs/GoTypes.purs` | Emit | Translates PureScript annotations into Go types. | `AdtMetadata`, `GoAst`, `GoSymbol` |
+| `Gopurs.GoTypes`<br>`src/Gopurs/GoTypes.purs` | Emit | Translates PureScript annotations into Go types. | `AdtMetadata`, `GoAst`, `GoSymbol`, `SharedContainerLayout` |
+| `Gopurs.SharedContainerLayout`<br>`src/Gopurs/SharedContainerLayout.purs` | Emit | Shares selected product/list payload layouts across higher-order boundaries. | `AdtMetadata`, `GoAst` |
 | `Gopurs.Int32Loops`<br>`src/Gopurs/Int32Loops.purs` | Emit | Proves and versions scalar loops with signed 32-bit state. | `GoAst`, `GoFunctions` |
 | `Gopurs.LiteralExprs`<br>`src/Gopurs/LiteralExprs.purs` | Emit | Translates array and record literals with their conversions. | `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoTypes`, `Printer`, `RecordExprs` |
 | `Gopurs.LocalWorkers`<br>`src/Gopurs/LocalWorkers.purs` | Emit | Emits local workers, parameters and signatures. | `CodegenState`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoFunctions`, `GoSymbol`, `GoTypes`, `Int32Loops` |

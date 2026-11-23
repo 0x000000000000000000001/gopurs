@@ -74,6 +74,7 @@ For work on a specific optimization:
   [record construction](json-record-plans.md) and
   [JSON traversals](json-traversals.md).
 - [Native record workers](native-record-workers.md),
+  [shared container representations](shared-container-layouts.md),
   [packed strings](packed-strings.md) and [Rust PGO](pgo.md).
 
 ## Historical records

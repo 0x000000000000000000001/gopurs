@@ -34,6 +34,7 @@ import Node.Process as Process
 import Gopurs.Monomorphization (MonoCache, monomorphizeModulesWithCache)
 import Gopurs.Preparation (runPreparationJobs)
 import Gopurs.ReboxMetadata (buildReboxFieldIndex)
+import Gopurs.SharedContainerUsage (collectSharedContainerPairs)
 import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Ident(..), Module(..))
 import PureScript.Backend.Optimizer.CoreFn.Usage (invalidateSourceUsageModule)
@@ -146,8 +147,8 @@ prepareLoadedModulesForProfile devMode input jobs mainModule directives sortedMo
           }
     pure { prepared, devMode, sourceHashes, sourceModules: sortedModules, sourceInterfaces: Map.empty, compactSourceDelta: Nothing, mono, reusable: Set.empty, proof: Nothing, metadataDemandKeys: Nothing, metadataCoverage: Nothing, metadataProjection: Nothing, materialize: Nothing }
 
--- Metadata always comes from source declarations, independently of the compact
--- specialization proof. Rebuilding these tables does not traverse mono bodies.
+-- Metadata comes from source declarations and typed higher-order uses,
+-- independently of specialization. It never depends on transformed mono bodies.
 sourceMetadata :: Array (Module Ann) -> List (Module Ann) -> CodegenMetadata
 sourceMetadata sourceModules modulesWithClasses =
   let
@@ -156,12 +157,16 @@ sourceMetadata sourceModules modulesWithClasses =
     globalTypes = LookupTable.fromMap (buildGlobalTypes sourceModules)
     classDeclsFields = buildClassFields sourceModules
     reboxFields = buildReboxFieldIndex ctorTypes classDeclsFields
-    { pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves } = buildPointerAdtMetadata (Array.fromFoldable modulesWithClasses)
+    pointerMetadata = buildPointerAdtMetadata (Array.fromFoldable modulesWithClasses)
+    sharedPairs = Set.toUnfoldable (collectSharedContainerPairs sourceModules)
+    pointerAdtPaths = Map.update (\info -> Just (info { sharedPairs = sharedPairs }))
+      "Data.Tuple.Tuple" pointerMetadata.pointerAdtPaths
     { enumAdts, enumCtors } = buildEnumAdtMetadata sourceModules
   in
     { elidedCtors, ctorTypes, globalTypes, globalFunctions: Map.empty
     , ffiFunctions: Map.empty, classDeclsFields, reboxFields
-    , pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves, enumAdts, enumCtors
+    , pointerAdtPaths, pointerAdtNodes: pointerMetadata.pointerAdtNodes
+    , pointerAdtLeaves: pointerMetadata.pointerAdtLeaves, enumAdts, enumCtors
     }
 
 prepareModulesDelta :: String -> Int -> Int -> Maybe String -> InlineDirectiveMap -> PreparedCache -> Aff PreparedCache

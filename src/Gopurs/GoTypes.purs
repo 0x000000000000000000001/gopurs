@@ -23,6 +23,7 @@ import Data.Tuple (Tuple(..))
 import Gopurs.AdtMetadata (PointerAdtPaths)
 import Gopurs.GoAst (GoType(..), constructorNames, structPointer)
 import Gopurs.GoSymbol (GoSymbol)
+import Gopurs.SharedContainerLayout (canonicalContainerArguments)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 
 -- Diagnostic rendering of TAST annotations, shared by codegen and FFI comments.
@@ -110,7 +111,8 @@ exprTypeToGoType ptrPaths enumAdts elided modNameStr ty = case appliedAdt ty of
         Just info ->
           let names = adtConstructorNames path info.ctorName
           in structPointer { baseStructName: names.baseStructName, fullName, structName: names.structName, symbol: names.symbol }
-            (valueTypeArguments info.arity (map toGoType args))
+            (canonicalContainerArguments ptrPaths enumAdts elided fullName args
+              (valueTypeArguments info.arity (map toGoType args)))
         Nothing -> TypeValue
   Nothing -> TypeValue
 
@@ -131,7 +133,8 @@ exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr ty = case a
         in
           if Set.member names.structName elided then TypeValue
           else structPointer { baseStructName: names.baseStructName, fullName, structName: names.structName, symbol: names.symbol }
-            (genericTypeArguments toGoType typeVars info.arity args)
+            (canonicalContainerArguments ptrPaths enumAdts elided fullName args
+              (genericTypeArguments toGoType typeVars info.arity args))
       Nothing -> TypeValue
   -- Arrays and other annotations retain the ordinary value representation.
   Nothing -> exprTypeToGoType ptrPaths enumAdts elided modNameStr ty
@@ -141,7 +144,7 @@ recordGoType toGoType fields =
   TypeRecord (map (\(Tuple name ty) -> Tuple name (toGoType ty))
     (Array.sortBy (comparing \(Tuple name _) -> name) (visibleRecordFields fields)))
 
-lookupPointerAdt :: String -> PointerAdtPaths -> Maybe { ctorName :: String, arity :: Int }
+lookupPointerAdt :: String -> PointerAdtPaths -> Maybe { ctorName :: String, arity :: Int, sharedPairs :: Array (Array ExprType) }
 lookupPointerAdt fullName paths = case Map.lookup fullName paths of
   Just info -> Just info
   Nothing -> Map.lookup (fullName <> "$Dict") paths

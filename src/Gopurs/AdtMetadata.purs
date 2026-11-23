@@ -20,11 +20,17 @@ import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.GoAst (constructorNames)
-import PureScript.Backend.Optimizer.CoreFn (Ann, DataConstructor, DataDecl, Module(..))
+import PureScript.Backend.Optimizer.CoreFn (Ann, DataConstructor, DataDecl, ExprType, Module(..))
 
 -- Keys are fully qualified PureScript type names. Arity comes from the
 -- declaration, including synthetic class dictionaries.
-type PointerAdtPaths = Map String { ctorName :: String, arity :: Int }
+type PointerAdtPaths = Map String
+  { ctorName :: String
+  , arity :: Int
+  -- Concrete products observed at higher-order boundaries in this program.
+  -- Source preparation populates the Tuple entry; other entries remain empty.
+  , sharedPairs :: Array (Array ExprType)
+  }
 
 -- The leaf table is keyed by Data_<module>_<nullary constructor> runtime tags.
 type PointerAdtLeaf = { nodeBaseStruct :: String, nodeCtor :: String }
@@ -59,7 +65,7 @@ buildPointerAdtMetadata modules =
   let
     declarations = Array.concatMap modulePointerAdts modules
   in
-    { pointerAdtPaths: Map.fromFoldable (map (\info -> Tuple info.adtPath { ctorName: info.nodeCtor, arity: info.arity }) declarations)
+    { pointerAdtPaths: Map.fromFoldable (map (\info -> Tuple info.adtPath { ctorName: info.nodeCtor, arity: info.arity, sharedPairs: [] }) declarations)
     , pointerAdtNodes: Set.fromFoldable (map _.nodeBaseStruct declarations)
     , pointerAdtLeaves: Map.fromFoldable (Array.mapMaybe pointerLeafEntry declarations)
     }

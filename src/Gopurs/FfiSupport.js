@@ -20,30 +20,41 @@ function resolveFfiRunner() {
 }
 
 function runFfiParser(content, prefix, sourcePrefix) {
-    let directory, descriptor;
+    let directory, inputDescriptor, outputDescriptor;
     try {
         const args = [resolveFfiRunner()];
         if (prefix !== undefined) args.push(prefix);
         if (sourcePrefix !== undefined) args.push(sourcePrefix);
-        // Complete-program results can exceed the per-FFI pipe limit. Spool
-        // those bytes directly, then decode once, without a second pipe copy.
+        // Complete programs use files in both directions. Besides avoiding the
+        // response pipe limit, a completed request gives readFileSync(0) an
+        // immediate EOF without waiting on Node's synchronous input pipe.
         if (prefix === '--package-source' || prefix === '--bind-source' || prefix === '--share-record-shapes') {
             directory = mkdtempSync(join(tmpdir(), 'gopurs-source-'));
-            descriptor = openSync(join(directory, 'response.json'), 'wx+', 0o600);
+            const request = join(directory, 'request.txt');
+            writeFileSync(request, content, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
+            inputDescriptor = openSync(request, 'r');
+            outputDescriptor = openSync(join(directory, 'response.json'), 'wx+', 0o600);
         }
         const response = execFileSync(process.execPath, args, {
-            input: content,
+            ...(inputDescriptor === undefined ? { input: content } : {}),
             encoding: 'utf-8',
             maxBuffer: 10 * 1024 * 1024,
-            stdio: ['pipe', descriptor ?? 'pipe', 'pipe'],
+            stdio: [inputDescriptor ?? 'pipe', outputDescriptor ?? 'pipe', 'pipe'],
         });
         return directory ? readFileSync(join(directory, 'response.json'), 'utf8') : response;
     } catch (error) {
         const detail = error.stderr?.trim() || error.message;
         throw new Error(`FFI runner failed: ${detail}`);
     } finally {
-        if (descriptor !== undefined) closeSync(descriptor);
-        if (directory) rmSync(directory, { recursive: true, force: true });
+        try {
+            if (inputDescriptor !== undefined) closeSync(inputDescriptor);
+        } finally {
+            try {
+                if (outputDescriptor !== undefined) closeSync(outputDescriptor);
+            } finally {
+                if (directory) rmSync(directory, { recursive: true, force: true });
+            }
+        }
     }
 }
 

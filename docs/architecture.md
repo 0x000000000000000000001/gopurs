@@ -216,6 +216,13 @@ post-PBO worker ABI. Only read-only field access admits projection; whole-record
 uses and delayed captures keep the ordinary argument. Boxed wrappers preserve
 dynamic and partial calls. See [native-record-workers.md](native-record-workers.md).
 
+`SharedContainerUsage` records concrete record/enum products observed in
+function-value types in the source TAST. `SharedContainerLayout` can give those
+products and their lists a common generic payload representation, avoiding
+recursive copies at higher-order boundaries. Direct monomorphic uses alone
+retain native payloads. The policy is shared by type and constructor selection;
+see [shared-container-layouts.md](shared-container-layouts.md).
+
 ## Rewrite and intrinsic contracts
 
 | Area | Contract and reference |

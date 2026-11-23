@@ -22,6 +22,7 @@ import Gopurs.ConstructorMetadata as ConstructorMetadata
 import Gopurs.GoAst (GoType(..), constructorNames, structPointer)
 import Gopurs.GoSymbol (GoSymbol)
 import Gopurs.GoTypes (appliedAdt, exprTypeToGoType, exprTypeToGenericGoType, instantiateGenericGoType)
+import Gopurs.SharedContainerLayout (canonicalContainerArguments)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 
 type ConstructorIdentity =
@@ -81,7 +82,8 @@ typeArguments :: CodegenMetadata -> String -> Maybe Int -> Array String -> ExprT
 typeArguments metadata modNameStr layoutArity vars = case _ of
   ADT name _ args ->
     let
-      mapped = map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) args
+      mapped = canonicalContainerArguments metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors name args
+        (map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) args)
       arity = fromMaybe
         (case Map.lookup name metadata.pointerAdtPaths of
           Just info -> info.arity
@@ -102,7 +104,8 @@ constructionTypeArguments form metadata modNameStr fields ctorType = case form, 
   -- Saturated TypeApps use the ordinary erased fallback in typeArguments.
   Definition, TypeApp _ _ -> case appliedAdt ctorType of
     Just adt -> Array.take (Array.length fields.vars)
-      (map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) adt.args)
+      (canonicalContainerArguments metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors adt.fullName adt.args
+        (map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) adt.args))
     Nothing -> map (const TypeValue) fields.vars
   _, _ -> typeArguments metadata modNameStr (Just (Array.length fields.vars)) fields.vars ctorType
 
