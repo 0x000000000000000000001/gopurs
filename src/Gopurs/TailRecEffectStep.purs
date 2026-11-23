@@ -42,7 +42,7 @@ recognize { metadata, modNameStr } callback = case unwrapTcoExpr callback of
     plan <- analyze true body
     functionType <- extractFuncType callback
     state <- Array.head functionType.fArgs
-    let stateType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr state
+    let stateType = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr state
     pure { parameter: localId ident level, stateType, body: plan }
   _ -> Nothing
 

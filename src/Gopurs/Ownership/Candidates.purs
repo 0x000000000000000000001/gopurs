@@ -60,7 +60,7 @@ abstractions expr = case strip expr of
 
 scalarType :: CodegenMetadata -> ModuleName -> ExprType -> Maybe GoType
 scalarType metadata current ty = do
-  let goType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors (modulePrefix current) ty
+  let goType = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors (modulePrefix current) ty
   guard case goType of
     TypeInt64 -> true
     TypeFloat64 -> true
@@ -82,7 +82,7 @@ treeSpecs metadata mod = Array.mapMaybe make mod.dataDecls
     node <- case nodes of
       [ node ] | Array.length nullary <= 1 -> Just node
       _ -> Nothing
-    pointer <- case exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors (modulePrefix mod.name) ty of
+    pointer <- case exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors (modulePrefix mod.name) ty of
       result@(TypeStructPointer _) -> Just result
       _ -> Nothing
     fields <- traverse (\field -> if field == ty then Just pointer else scalarType metadata mod.name field) node.fields

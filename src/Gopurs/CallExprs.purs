@@ -88,7 +88,7 @@ curriedCall :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array TcoExpr -
 curriedCall translate context@{ codegenStateRef, metadata, modNameStr } nextId fn args =
   let
     resFn = translate (childContext context Nothing) nextId fn
-    argumentTypes = map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr <<< getExprType) args
+    argumentTypes = map (exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr <<< getExprType) args
   in
     case resFn.exprType of
       TypeFunc fArgs fRet | Array.length args >= Array.length fArgs ->
@@ -224,7 +224,7 @@ tailCall translate context@{ metadata, codegenStateRef, modNameStr, mbExpectedEx
         (fromMaybe TypeValue (Array.index translated.exprTypes index))
         (fromMaybe TypeValue (Array.index target.goTypes index))))
       target.loopParams
-    expectedGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
+    expectedGoType = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
       (case getExprType expression of
         Any -> fromMaybe Any mbExpectedExprType
         ty -> ty)

@@ -35,7 +35,8 @@ type FunctionInfo =
 -- Driver.Output adds the current module's FFI signatures before translation.
 type SharedMetadataRow :: Row Type
 type SharedMetadataRow =
-  ( elidedCtors :: Set.Set String
+  ( sharedRecords :: Set String
+  , elidedCtors :: Set.Set String
   , ctorTypes :: ConstructorTypes
   , pointerAdtPaths :: PointerAdtPaths
   , pointerAdtNodes :: Set String

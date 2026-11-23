@@ -13,7 +13,7 @@ import { NeutralExpr } from '../output/PureScript.Backend.Optimizer.Semantics/in
 import { analyze } from '../output/PureScript.Backend.Optimizer.Codegen.Tco/index.js';
 
 const int = C.Int.value;
-const toGoType = exprTypeToGoType(emptyMap)(emptySet)(emptySet)('Probe');
+const toGoType = exprTypeToGoType(emptySet)(emptyMap)(emptySet)(emptySet)('Probe');
 const record = (fields, tail = new Just(new C.TypeVar('r'))) => new C.Record(new C.Row(
   fields.map(([name, type]) => new Tuple(name, type)), tail));
 const open = record([['id', int]]);

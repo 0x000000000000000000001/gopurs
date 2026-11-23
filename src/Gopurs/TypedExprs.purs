@@ -21,7 +21,7 @@ import PureScript.Backend.Optimizer.Syntax (BackendSyntax(CtorSaturated, Let, Le
 annotated :: TranslateExpr -> ExprContext -> Int -> ExprType -> TcoExpr -> ExprResult
 annotated translate context@{ metadata, modNameStr, mbExpectedExprType, mbExpectedGoType } nextId type_ expression =
   let
-    annotatedGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr type_
+    annotatedGoType = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr type_
     expectedGoType = fromMaybe annotatedGoType mbExpectedGoType
   in
     case unwrapTcoExpr expression, annotatedGoType of
@@ -102,7 +102,7 @@ classDictionary :: TranslateExpr -> ExprContext -> Int -> ExprType -> StructPoin
 classDictionary translate context@{ metadata, codegenStateRef, modNameStr, bound } nextId type_ pointer props = do
   classInfo <- Map.lookup pointer.fullName metadata.classDeclsFields
   let
-    toGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
+    toGoType = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
     typeArgs = case type_ of
       ADT className _ args ->
         let
@@ -118,7 +118,7 @@ classDictionary translate context@{ metadata, codegenStateRef, modNameStr, bound
     fields = Array.mapMaybe (\field -> map (\value -> { field, value }) (Map.lookup field.name properties)) classInfo.fields
     translateField acc { field, value } =
       let
-        genericType = exprTypeToGenericGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors classInfo.vars modNameStr field."type"
+        genericType = exprTypeToGenericGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors classInfo.vars modNameStr field."type"
         expectedType = instantiateGenericGoType instantiations genericType
         fieldContext = (childContext context Nothing)
           { bound = bindFieldFunctionParameters toGoType bound field."type" value }

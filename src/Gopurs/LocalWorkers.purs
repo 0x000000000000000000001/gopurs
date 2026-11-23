@@ -27,7 +27,7 @@ parameters :: ExprContext -> Array String -> TcoExpr -> Parameters
 parameters { metadata, modNameStr } names value =
   let
     types = case extractExprFuncType (getExprType value) of
-      Just { fArgs } -> map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) fArgs
+      Just { fArgs } -> map (exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) fArgs
       Nothing -> []
   in
     namedParameters names types

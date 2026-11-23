@@ -17,12 +17,12 @@ import PureScript.Backend.Optimizer.FfiSupport (hashString)
 
 -- Constructor structs and class getter registration share their source order.
 constructors :: CodegenMetadata -> String -> BackendModule -> Array GoDecl
-constructors { pointerAdtPaths, enumAdts, elidedCtors, classDeclsFields } modNameStr mod =
+constructors { sharedRecords, pointerAdtPaths, enumAdts, elidedCtors, classDeclsFields } modNameStr mod =
   Array.concatMap
     (\decl -> Array.concatMap
       (\ctor ->
         let
-          goFieldTypes = map (structFieldGoType pointerAdtPaths enumAdts elidedCtors decl.vars modNameStr) ctor.fields
+          goFieldTypes = map (structFieldGoType sharedRecords pointerAdtPaths enumAdts elidedCtors decl.vars modNameStr) ctor.fields
           structName = (constructorNames modNameStr ctor.name).structName
           structDecl = GoStructDecl
             { name: (constructorNames modNameStr ctor.name).symbol

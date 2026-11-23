@@ -211,7 +211,7 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
                   modStr = unwrap mn
                 in
                   case LookupTable.lookup (modStr <> "." <> i) metadata.globalTypes of
-                    Just ty -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ty
+                    Just ty -> exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ty
                     Nothing -> TypeValue
               Nothing -> TypeValue
           in
@@ -314,7 +314,7 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
               )
               { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId: resObj.nextId }
               props
-            resultType = map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) mbExpectedExprType
+            resultType = map (exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) mbExpectedExprType
             result = RecordExprs.update codegenStateRef modNameStr resultType { expr: resObj.expr, exprType: resObj.exprType } accProps.exprs
           in
             { stmts: resObj.stmts <> accProps.stmts, expr: result.expr, exprType: result.exprType, nextId: accProps.nextId }
@@ -347,7 +347,7 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
             translateOperand expected operand@(TcoExpr _ syntax) =
               case syntax of
                 Typed type_ inner
-                  | TypeStructPointer _ <- exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr type_ ->
+                  | TypeStructPointer _ <- exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr type_ ->
                       translateOperand (Just type_) inner
                 _ ->
                   translateExpr (child { mbExpectedExprType = expected }) nextId operand

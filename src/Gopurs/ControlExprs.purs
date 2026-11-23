@@ -24,7 +24,7 @@ failure :: ExprContext -> Int -> TcoExpr -> String -> ExprResult
 failure { metadata, modNameStr, mbExpectedExprType, mbExpectedGoType } nextId tcoExpr msg =
   let
     expectedGoType = fromMaybe inferredGoType mbExpectedGoType
-    inferredGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
+    inferredGoType = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
       ( case getExprType tcoExpr of
           Any -> fromMaybe Any mbExpectedExprType
           ty -> ty

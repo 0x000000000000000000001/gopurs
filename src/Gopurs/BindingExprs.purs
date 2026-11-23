@@ -33,7 +33,7 @@ nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, m
   let
     originalName = localId mbIdent lvl
     name = originalName <> "_" <> show nextId
-    expectedGoTypeFromAst = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr (getExprType binding)
+    expectedGoTypeFromAst = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr (getExprType binding)
 
     mbFunc = extractUncurriedAbs binding
   in
@@ -114,7 +114,7 @@ recursive translate context@{ metadata, depth, modNameStr, recVars, moduleFuncti
                   -- a recursive lookup may return a function still to apply.
                   expectedReturn = map (functionResultAfter (Array.length fn.args)) (extractExprFuncType (getExprType fn.val))
                   resultType = case expectedReturn of
-                    Just ty -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ty
+                    Just ty -> exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ty
                     Nothing -> TypeValue
                 in
                   { oldName, newName, params, expectedReturn, resultType, body: fn.body }
@@ -175,7 +175,7 @@ allocateRecursive { metadata, codegenStateRef, modNameStr, bound } nextId lvl =
           Ref.modify_ (\current -> current { globalId = current.globalId + 1 }) codegenStateRef
           pure state.globalId
         newName = oldName <> "_" <> show acc.nextId <> "_" <> show globalId
-        goType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr (getExprType value)
+        goType = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr (getExprType value)
       in
         { newBound: Map.insert oldName { name: newName, goType } acc.newBound
         , newNames: Array.snoc acc.newNames { oldName, newName }

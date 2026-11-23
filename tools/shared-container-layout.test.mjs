@@ -46,8 +46,8 @@ const baseMetadata = withReboxFields({
     ...buildPointerAdtMetadata(modules), ...buildEnumAdtMetadata(modules),
     classDeclsFields: emptyMap, globalTypes: emptyMap, globalFunctions: emptyMap,
 });
-const valueType = (type, meta = metadata) => exprTypeToGoType(meta.pointerAdtPaths)(meta.enumAdts)(meta.elidedCtors)('Consumer')(type);
-const genericType = (type, variables = [], meta = metadata) => exprTypeToGenericGoType(meta.pointerAdtPaths)(meta.enumAdts)(meta.elidedCtors)(variables)('Consumer')(type);
+const valueType = (type, meta = metadata) => exprTypeToGoType(meta.sharedRecords)(meta.pointerAdtPaths)(meta.enumAdts)(meta.elidedCtors)('Consumer')(type);
+const genericType = (type, variables = [], meta = metadata) => exprTypeToGenericGoType(meta.sharedRecords)(meta.pointerAdtPaths)(meta.enumAdts)(meta.elidedCtors)(variables)('Consumer')(type);
 const prepare = (form, name, type, meta = metadata) => Layout.prepare(form)(meta)('Consumer')('Fallback')(name)(type);
 const argsOf = type => type.value0.typeArgs;
 const canonical = (name, source, mapped, meta = metadata) => canonicalContainerArguments(meta.pointerAdtPaths)(meta.enumAdts)(meta.elidedCtors)(name)(source)(mapped);

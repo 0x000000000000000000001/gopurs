@@ -75,7 +75,7 @@ abstraction translate context@{ codegenStateRef, metadata, modNameStr, mbExpecte
     -- box, and escaping uses receive ordinary immutable values as usual.
     nativeTypes = case mbFuncTy of
       Just signature | consumed <= Array.length signature.fArgs ->
-        map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr)
+        map (exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr)
           (Array.take consumed signature.fArgs)
       _ -> []
   in

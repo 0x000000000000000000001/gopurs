@@ -83,7 +83,7 @@ bindingSignature :: CodegenMetadata -> String -> Tuple Ident TcoExpr -> Tuple St
 bindingSignature metadata modNameStr (Tuple (Ident name) value) =
   let
     fallback = boxedSignature modNameStr name
-    toGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
+    toGoType = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
     signature = case extractUncurriedAbs value of
       Just { args, body } ->
         let

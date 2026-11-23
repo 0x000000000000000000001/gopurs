@@ -69,7 +69,7 @@ convertFields coerceField metadata moduleName info sourceArgs targetArgs =
       (\index fieldType ->
         let
           fieldName = "V" <> show index
-          genericType = GoTypes.structFieldGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors info.vars moduleName fieldType
+          genericType = GoTypes.structFieldGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors info.vars moduleName fieldType
           sourceType = GoTypes.instantiateGenericGoType sourceEnv genericType
           targetType = GoTypes.instantiateGenericGoType targetEnv genericType
         in

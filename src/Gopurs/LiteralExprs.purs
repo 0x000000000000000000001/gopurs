@@ -68,7 +68,7 @@ nativeElementType { metadata, modNameStr, mbExpectedExprType } elementTypes =
     first = Array.head elementTypes
     uniform = Array.all (\ty -> Just ty == first) elementTypes
     expected = case mbExpectedExprType of
-      Just ty -> case exprTypeToGenericGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors [] modNameStr ty of
+      Just ty -> case exprTypeToGenericGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors [] modNameStr ty of
         TypeNativeArray elementType -> Just elementType
         _ -> Nothing
       Nothing -> Nothing
@@ -87,7 +87,7 @@ record :: TranslateExpr -> ExprContext -> Int -> ExprType -> Array (Prop TcoExpr
 record translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, mbExpectedExprType, mbExpectedGoType } nextId baseType props =
   let
     child = childContext context Nothing
-    toGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
+    toGoType = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
     sourceInfo = RecordExprs.prepareLiteral metadata modNameStr baseType mbExpectedExprType
     recordType = case mbExpectedGoType of
       Just TypeValue -> TypeValue

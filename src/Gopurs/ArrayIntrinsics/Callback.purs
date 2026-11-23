@@ -31,7 +31,7 @@ nativeLambda translate context@{ metadata, modNameStr } nextId arity expression 
     signature <- extractFuncType expression
     guard (NEA.length grouped.args == arity && Array.length signature.fArgs == arity)
     let
-      types = map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) signature.fArgs
+      types = map (exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) signature.fArgs
       names = map (\(Tuple ident level) -> localId ident level) (NEA.toArray grouped.args)
       params = Array.zip names types
       result = translate

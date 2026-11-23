@@ -43,8 +43,8 @@ const metadata = withReboxFields({
 });
 const get = (map, key) => lookup(ordString)(key)(map);
 const adt = (name, args = []) => new C.ADT(`Fixture.Model.${name}`, ['Fixture', 'Model', name], args);
-const valueType = (type, meta = metadata) => exprTypeToGoType(meta.pointerAdtPaths)(meta.enumAdts)(meta.elidedCtors)('Consumer')(type);
-const genericType = (type, vars, meta = metadata) => exprTypeToGenericGoType(meta.pointerAdtPaths)(meta.enumAdts)(meta.elidedCtors)(vars)('Consumer')(type);
+const valueType = (type, meta = metadata) => exprTypeToGoType(meta.sharedRecords)(meta.pointerAdtPaths)(meta.enumAdts)(meta.elidedCtors)('Consumer')(type);
+const genericType = (type, vars, meta = metadata) => exprTypeToGenericGoType(meta.sharedRecords)(meta.pointerAdtPaths)(meta.enumAdts)(meta.elidedCtors)(vars)('Consumer')(type);
 const prepare = (form, name, type) => Layout.prepare(form)(metadata)('Consumer')('Fallback')(name)(type);
 const argsOf = type => type.value0.typeArgs.map(Go.goTypeToStr);
 const preparedArgs = prepared => prepared.typeArgs.map(Go.goTypeToStr);

@@ -29,8 +29,8 @@ const emptyMetadata = withReboxFields({
 });
 const newState = () => Ref.new({ declarations: [], globalId: 0, reboxPairs: emptySet })();
 
-const goType = exprTypeToGoType(emptyMap)(emptySet)(emptySet)('Test');
-const genericGoType = exprTypeToGenericGoType(emptyMap)(emptySet)(emptySet)([])('Test');
+const goType = exprTypeToGoType(emptySet)(emptyMap)(emptySet)(emptySet)('Test');
+const genericGoType = exprTypeToGenericGoType(emptySet)(emptyMap)(emptySet)(emptySet)([])('Test');
 const record = tail => new Core.Record(new Core.Row([
     new Tuple('size', Core.Int.value), new Tuple('newSeed', Core.Int.value),
 ], tail));

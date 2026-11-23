@@ -1,6 +1,7 @@
 import { Leaf, Node } from "../output/Data.Map.Internal/index.js";
 import { fromMap } from "../output/Gopurs.Cache.LookupTable/index.js";
 import { empty as emptyMap } from "../output/Data.Map/index.js";
+import { empty as emptySet } from "../output/Data.Set/index.js";
 import { buildReboxFieldIndex } from "../output/Gopurs.ReboxMetadata/index.js";
 
 export const withGlobalTypes = (metadata) => ({
@@ -15,6 +16,7 @@ export const withGlobalTypes = (metadata) => ({
 // after applying their constructor/class overrides.
 export const withReboxFields = (metadata) => ({
   ffiFunctions: emptyMap,
+  sharedRecords: emptySet,
   ...withGlobalTypes(metadata),
   reboxFields: buildReboxFieldIndex(metadata.ctorTypes)(metadata.classDeclsFields),
 });

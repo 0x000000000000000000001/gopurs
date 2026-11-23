@@ -35,6 +35,7 @@ import Gopurs.Monomorphization (MonoCache, monomorphizeModulesWithCache)
 import Gopurs.Preparation (runPreparationJobs)
 import Gopurs.ReboxMetadata (buildReboxFieldIndex)
 import Gopurs.SharedContainerUsage (collectSharedContainerPairs)
+import Gopurs.SharedRecordLayout (collectSharedRecordShapes)
 import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Ident(..), Module(..))
 import PureScript.Backend.Optimizer.CoreFn.Usage (invalidateSourceUsageModule)
@@ -162,11 +163,12 @@ sourceMetadata sourceModules modulesWithClasses =
     pointerAdtPaths = Map.update (\info -> Just (info { sharedPairs = sharedPairs }))
       "Data.Tuple.Tuple" pointerMetadata.pointerAdtPaths
     { enumAdts, enumCtors } = buildEnumAdtMetadata sourceModules
+    sharedRecords = collectSharedRecordShapes pointerAdtPaths enumAdts sourceModules
   in
     { elidedCtors, ctorTypes, globalTypes, globalFunctions: Map.empty
     , ffiFunctions: Map.empty, classDeclsFields, reboxFields
     , pointerAdtPaths, pointerAdtNodes: pointerMetadata.pointerAdtNodes
-    , pointerAdtLeaves: pointerMetadata.pointerAdtLeaves, enumAdts, enumCtors
+    , pointerAdtLeaves: pointerMetadata.pointerAdtLeaves, enumAdts, enumCtors, sharedRecords
     }
 
 prepareModulesDelta :: String -> Int -> Int -> Maybe String -> InlineDirectiveMap -> PreparedCache -> Aff PreparedCache

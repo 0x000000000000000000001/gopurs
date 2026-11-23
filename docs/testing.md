@@ -38,6 +38,7 @@ execute Go programs, so they require Go even when invoked through Node.
 | Native records and sums | `node --test tools/native-record-args.test.mjs tools/native-record-workers.test.mjs tools/boxed-record-arguments.test.mjs tools/native-sum-results.test.mjs` |
 | Native callback arguments and branch results | `node --test tools/native-record-callback.test.mjs tools/native-branch-results.test.mjs`; `./bin/test NativeCallbackRecords`; `./bin/test -d NativeCallbackRecords` |
 | Shared container representations | `node --test tools/shared-container-layout.test.mjs tools/shared-container-usage.test.mjs`; `./bin/test SharedListPayloads SharedListNative`; `./bin/test -d SharedListPayloads SharedListNative` |
+| Shared nested records | `node --test tools/shared-record-layout.test.mjs`; `./bin/test SharedNestedRecords SharedNestedRecordsNative SharedNestedRecordsMixed`; repeat with `-d` for Dev |
 | Rebox conversions | `node --test tools/rebox-generation.test.mjs tools/rebox-metadata.test.mjs tools/struct-pointer-boxing.test.mjs tools/value-array-unboxing.test.mjs` |
 | Composite literals and constructors | `node --test tools/composite-expressions.test.mjs tools/nullary-constructor-bindings.test.mjs`; `./bin/test ConstructorReuse NativeArrayReboxing` |
 | Bindings, closures and recursion | `node --test tools/binding-contracts.test.mjs tools/recursive-initialization.test.mjs tools/local-native-returns.test.mjs tools/zero-arity-functions.test.mjs`; `./bin/test TCO TCOMutRec CurriedLambdas` |

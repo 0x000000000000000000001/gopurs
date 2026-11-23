@@ -69,7 +69,8 @@ splitMaps projection = map fragment (Array.range 0 (count - 1))
         , interfaces: table ordinal projection.interfaces
         , mainModules: slice ordinal projection.mainModules
         , metadata:
-            { elidedCtors: keys ordinal projection.metadata.elidedCtors
+            { sharedRecords: keys ordinal projection.metadata.sharedRecords
+            , elidedCtors: keys ordinal projection.metadata.elidedCtors
             , ctorTypes: table ordinal projection.metadata.ctorTypes
             , pointerAdtPaths: table ordinal projection.metadata.pointerAdtPaths
             , pointerAdtNodes: keys ordinal projection.metadata.pointerAdtNodes
@@ -97,6 +98,7 @@ mergeKeys left right =
 
 mergeMetadata :: CodegenMetadataWith (Map String ExprType) -> CodegenMetadataWith (Map String ExprType) -> Maybe (CodegenMetadataWith (Map String ExprType))
 mergeMetadata left right = do
+  sharedRecords <- mergeKeys left.sharedRecords right.sharedRecords
   elidedCtors <- mergeKeys left.elidedCtors right.elidedCtors
   ctorTypes <- mergeTable left.ctorTypes right.ctorTypes
   pointerAdtPaths <- mergeTable left.pointerAdtPaths right.pointerAdtPaths
@@ -109,7 +111,7 @@ mergeMetadata left right = do
   ffiFunctions <- mergeTable left.ffiFunctions right.ffiFunctions
   classDeclsFields <- mergeTable left.classDeclsFields right.classDeclsFields
   reboxFields <- mergeTable left.reboxFields right.reboxFields
-  pure { elidedCtors, ctorTypes, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves
+  pure { sharedRecords, elidedCtors, ctorTypes, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves
        , enumAdts, enumCtors, globalTypes, globalFunctions, ffiFunctions, classDeclsFields, reboxFields }
 
 mergeMaps :: Array MapFragment -> Maybe MapProjection

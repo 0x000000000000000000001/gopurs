@@ -100,5 +100,5 @@ withoutArrayAnnotation arg = arg
 
 selectedType :: ExprContext -> TcoExpr -> GoType -> GoType
 selectedType { metadata, modNameStr } arrayArg fallback = case getExprType arrayArg of
-  Array inner -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr inner
+  Array inner -> exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr inner
   _ -> fallback

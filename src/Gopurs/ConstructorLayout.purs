@@ -83,7 +83,7 @@ typeArguments metadata modNameStr layoutArity vars = case _ of
   ADT name _ args ->
     let
       mapped = canonicalContainerArguments metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors name args
-        (map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) args)
+        (map (exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) args)
       arity = fromMaybe
         (case Map.lookup name metadata.pointerAdtPaths of
           Just info -> info.arity
@@ -105,7 +105,7 @@ constructionTypeArguments form metadata modNameStr fields ctorType = case form, 
   Definition, TypeApp _ _ -> case appliedAdt ctorType of
     Just adt -> Array.take (Array.length fields.vars)
       (canonicalContainerArguments metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors adt.fullName adt.args
-        (map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) adt.args))
+        (map (exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) adt.args))
     Nothing -> map (const TypeValue) fields.vars
   _, _ -> typeArguments metadata modNameStr (Just (Array.length fields.vars)) fields.vars ctorType
 
@@ -121,7 +121,7 @@ type PreparedConstructor =
 prepare :: ConstructionForm -> CodegenMetadata -> String -> String -> String -> ExprType -> PreparedConstructor
 prepare form metadata modNameStr fallbackModule name ctorType =
   let
-    expectedType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ctorType
+    expectedType = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ctorType
     ctorLayout = layout metadata fallbackModule name (Just expectedType)
     { identity, fields } = ctorLayout
     typeArgs = constructionTypeArguments form metadata modNameStr fields ctorType
@@ -179,7 +179,7 @@ fieldType :: CodegenMetadata -> String -> ConstructorFields -> Array GoType -> I
 fieldType metadata modNameStr info args index = case Array.index info.fields index of
   Just ty ->
     let
-      genericType = exprTypeToGenericGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors info.vars modNameStr ty
+      genericType = exprTypeToGenericGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors info.vars modNameStr ty
       env = Map.fromFoldable (Array.zip info.vars args)
     in
       instantiateGenericGoType env genericType

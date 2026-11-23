@@ -77,7 +77,7 @@ test('safe indexing preserves bounds, argument order, typed elements and constan
             const syntax = expression.value1;
             if (syntax instanceof Syntax.Typed) {
                 const inner = translate(child)(nextId)(syntax.value1);
-                const type = exprTypeToGoType(emptyMap)(emptySet)(emptySet)('Probe')(syntax.value0);
+                const type = exprTypeToGoType(emptySet)(emptyMap)(emptySet)(emptySet)('Probe')(syntax.value0);
                 return { ...inner, expr: coerceGoExpr(ctx.codegenStateRef)('Probe')(inner.expr)(inner.exprType)(type), exprType: type };
             }
             assert.ok(syntax instanceof Syntax.Var);

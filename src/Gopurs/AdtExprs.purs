@@ -197,7 +197,7 @@ getField metadata codegenStateRef modNameStr { moduleName: mbMod, ctorName, inde
         monoStructName = ctorLayout.identity.symbol
 
         expectedType = case Array.index fields idx of
-          Just ty -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ty
+          Just ty -> exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ty
           Nothing -> TypeValue
 
         typeArgs = case object.exprType of
@@ -215,7 +215,7 @@ getField metadata codegenStateRef modNameStr { moduleName: mbMod, ctorName, inde
               Just ctorInfo ->
                 let
                   env = Map.fromFoldable (Array.zip ctorInfo.vars tArgs)
-                  genericTy = structFieldGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors ctorInfo.vars modNameStr (fromMaybe (TypeVar "") (Array.index fields idx))
+                  genericTy = structFieldGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors ctorInfo.vars modNameStr (fromMaybe (TypeVar "") (Array.index fields idx))
                 in
                   instantiateGenericGoType env genericTy
               Nothing -> expectedType

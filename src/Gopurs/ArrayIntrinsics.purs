@@ -278,7 +278,7 @@ emitUncurried translate context@{ codegenStateRef, modNameStr, depth } nextId ar
 scalarArrayElement :: ExprContext -> TcoExpr -> Maybe GoType
 scalarArrayElement { metadata, modNameStr } expression = case getExprType expression of
   Array element ->
-    let scalar = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr element
+    let scalar = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr element
     in case scalar of
       TypeInt64 -> Just scalar
       TypeFloat64 -> Just scalar

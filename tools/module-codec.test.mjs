@@ -263,11 +263,11 @@ func TestIdentity(t *testing.T) {
   key := func() gopurs_runtime.Value {
     return gopurs_runtime.Value{Type: gopurs_runtime.TypeConstructor, IntVal: 42, UnsafePtr: unsafe.Pointer(&payload{1, 123})}
   }
-  m, a, b := Create(nil), key(), key()
+  m, a, b := Create[gopurs_runtime.Value](), key(), key()
   if Lookup(m, a, nil) != -1 { t.Fatal("unexpected entry") }
   Insert(m, a, 7, nil)
   if Lookup(m, a, nil) != 7 || Lookup(m, b, nil) != -1 { t.Fatal("identity conflated") }
-  if Lookup(Create(nil), a, nil) != -1 { t.Fatal("artifact leaked") }
+  if Lookup(Create[gopurs_runtime.Value](), a, nil) != -1 { t.Fatal("artifact leaked") }
   for tag := int64(1); tag <= 2; tag++ {
     v := gopurs_runtime.Value{Type: gopurs_runtime.TypeConstructor, IntVal: tag}
     Insert(m, v, tag, nil)
@@ -276,7 +276,7 @@ func TestIdentity(t *testing.T) {
   a = gopurs_runtime.Value{}
   runtime.GC()
   retained := false
-  for v, index := range m.AnyVal().(memo) {
+  for v, index := range m.indices.(map[gopurs_runtime.Value]int64) {
     if index == 7 {
       retained = (*payload)(v.UnsafePtr).value == 123
       if Lookup(m, v, nil) != 7 { t.Fatal("entry lost after GC") }

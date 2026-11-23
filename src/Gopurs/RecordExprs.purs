@@ -35,7 +35,7 @@ prepareLiteral metadata modNameStr baseExprType mbExpectedExprType =
     mbRecordType = case exprType of
       Record (Row fields _) -> Just fields
       _ -> Nothing
-    recordType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr exprType
+    recordType = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr exprType
     recordFields = case mbRecordType of
       Just fields -> Map.fromFoldable (visibleRecordFields fields)
       Nothing -> Map.empty
@@ -71,7 +71,7 @@ getProp metadata codegenStateRef modNameStr prop obj = case obj.exprType of
           Just (Tuple idx field) ->
             let
               typeEnv = Map.fromFoldable (Array.zip info.vars typeArgs)
-              genericFieldType = structFieldGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors info.vars modNameStr field."type"
+              genericFieldType = structFieldGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors info.vars modNameStr field."type"
               fieldGoType = instantiateGenericGoType typeEnv genericFieldType
               unboxedObj = unboxGoExpr codegenStateRef modNameStr obj.expr obj.exprType obj.exprType
               fieldExpr = GoStructAccess unboxedObj ("V" <> show idx)

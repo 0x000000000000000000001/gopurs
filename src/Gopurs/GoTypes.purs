@@ -24,6 +24,7 @@ import Gopurs.AdtMetadata (PointerAdtPaths)
 import Gopurs.GoAst (GoType(..), constructorNames, structPointer)
 import Gopurs.GoSymbol (GoSymbol)
 import Gopurs.SharedContainerLayout (canonicalContainerArguments)
+import Gopurs.SharedRecordLayout (isSharedRecord)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 
 -- Diagnostic rendering of TAST annotations, shared by codegen and FFI comments.
@@ -88,22 +89,22 @@ appliedAdt ty = go ty []
 
 -- TAST annotations and ADT metadata select the internal Go representation.
 -- FFI wrappers separately reconcile it with the declared foreign Go signature.
-exprTypeToGoType :: PointerAdtPaths -> Set.Set String -> Set.Set String -> String -> ExprType -> GoType
-exprTypeToGoType _ _ _ _ Int = TypeInt64
-exprTypeToGoType _ _ _ _ Number = TypeFloat64
-exprTypeToGoType _ _ _ _ String = TypeString
-exprTypeToGoType _ _ _ _ Char = TypeString
-exprTypeToGoType _ _ _ _ Boolean = TypeBool
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (Array ty) = TypeNativeArray (exprTypeToGoType ptrPaths enumAdts elided modNameStr ty)
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record (Row fields tail)) | isClosedRowTail tail =
-  recordGoType (exprTypeToGoType ptrPaths enumAdts elided modNameStr) fields
-exprTypeToGoType ptrPaths enumAdts elided modNameStr ty = case appliedAdt ty of
+exprTypeToGoType :: Set.Set String -> PointerAdtPaths -> Set.Set String -> Set.Set String -> String -> ExprType -> GoType
+exprTypeToGoType _ _ _ _ _ Int = TypeInt64
+exprTypeToGoType _ _ _ _ _ Number = TypeFloat64
+exprTypeToGoType _ _ _ _ _ String = TypeString
+exprTypeToGoType _ _ _ _ _ Char = TypeString
+exprTypeToGoType _ _ _ _ _ Boolean = TypeBool
+exprTypeToGoType sharedRecords ptrPaths enumAdts elided modNameStr (Array ty) = TypeNativeArray (exprTypeToGoType sharedRecords ptrPaths enumAdts elided modNameStr ty)
+exprTypeToGoType sharedRecords ptrPaths enumAdts elided modNameStr (Record (Row fields tail)) | isClosedRowTail tail =
+  recordGoType sharedRecords (exprTypeToGoType sharedRecords ptrPaths enumAdts elided modNameStr) fields
+exprTypeToGoType sharedRecords ptrPaths enumAdts elided modNameStr ty = case appliedAdt ty of
   Just { fullName, path, args } ->
     let
       -- Value annotations test elision using the ADT path, before looking up
       -- its payload constructor. Generic fields below use that constructor.
       annotationNames = adtConstructorNames path (fromMaybe "" (Array.last path))
-      toGoType = exprTypeToGoType ptrPaths enumAdts elided modNameStr
+      toGoType = exprTypeToGoType sharedRecords ptrPaths enumAdts elided modNameStr
     in
       if Set.member annotationNames.structName elided then TypeValue
       else if Set.member fullName enumAdts then TypeUint32
@@ -118,18 +119,18 @@ exprTypeToGoType ptrPaths enumAdts elided modNameStr ty = case appliedAdt ty of
 
 -- Ordinary type variables fall back to Value. In a generic declaration,
 -- variables listed in typeVars can instead become Go type parameters.
-exprTypeToGenericGoType :: PointerAdtPaths -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
-exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr (Record (Row fields tail)) | isClosedRowTail tail =
-  recordGoType (exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr) fields
-exprTypeToGenericGoType _ _ _ typeVars _ (TypeVar v) | Array.elem v typeVars = TypeGenericParam v
-exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr ty = case appliedAdt ty of
+exprTypeToGenericGoType :: Set.Set String -> PointerAdtPaths -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
+exprTypeToGenericGoType sharedRecords ptrPaths enumAdts elided typeVars modNameStr (Record (Row fields tail)) | isClosedRowTail tail =
+  recordGoType sharedRecords (exprTypeToGenericGoType sharedRecords ptrPaths enumAdts elided typeVars modNameStr) fields
+exprTypeToGenericGoType _ _ _ _ typeVars _ (TypeVar v) | Array.elem v typeVars = TypeGenericParam v
+exprTypeToGenericGoType sharedRecords ptrPaths enumAdts elided typeVars modNameStr ty = case appliedAdt ty of
   Just { fullName, path, args } ->
     if Set.member fullName enumAdts then TypeUint32
     else case lookupPointerAdt fullName ptrPaths of
       Just info ->
         let
           names = adtConstructorNames path info.ctorName
-          toGoType = exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr
+          toGoType = exprTypeToGenericGoType sharedRecords ptrPaths enumAdts elided typeVars modNameStr
         in
           if Set.member names.structName elided then TypeValue
           else structPointer { baseStructName: names.baseStructName, fullName, structName: names.structName, symbol: names.symbol }
@@ -137,11 +138,12 @@ exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr ty = case a
               (genericTypeArguments toGoType typeVars info.arity args))
       Nothing -> TypeValue
   -- Arrays and other annotations retain the ordinary value representation.
-  Nothing -> exprTypeToGoType ptrPaths enumAdts elided modNameStr ty
+  Nothing -> exprTypeToGoType sharedRecords ptrPaths enumAdts elided modNameStr ty
 
-recordGoType :: (ExprType -> GoType) -> Array (Tuple String ExprType) -> GoType
-recordGoType toGoType fields =
-  TypeRecord (map (\(Tuple name ty) -> Tuple name (toGoType ty))
+recordGoType :: Set.Set String -> (ExprType -> GoType) -> Array (Tuple String ExprType) -> GoType
+recordGoType sharedRecords toGoType fields
+  | isSharedRecord sharedRecords fields = TypeValue
+  | otherwise = TypeRecord (map (\(Tuple name ty) -> Tuple name (toGoType ty))
     (Array.sortBy (comparing \(Tuple name _) -> name) (visibleRecordFields fields)))
 
 lookupPointerAdt :: String -> PointerAdtPaths -> Maybe { ctorName :: String, arity :: Int, sharedPairs :: Array (Array ExprType) }
@@ -173,9 +175,9 @@ genericTypeArguments toGoType vars arity args
   | Array.length vars == arity = map TypeGenericParam vars
   | otherwise = Array.replicate arity TypeValue
 
-structFieldGoType :: PointerAdtPaths -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
-structFieldGoType ptrPaths enumAdts elidedCtors typeVars modStr ty =
-  case exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modStr ty of
+structFieldGoType :: Set.Set String -> PointerAdtPaths -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
+structFieldGoType sharedRecords ptrPaths enumAdts elidedCtors typeVars modStr ty =
+  case exprTypeToGenericGoType sharedRecords ptrPaths enumAdts elidedCtors typeVars modStr ty of
     TypeInterface _ -> TypeValue
     other -> other
 

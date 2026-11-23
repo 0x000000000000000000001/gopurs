@@ -514,7 +514,7 @@ test('projection splitting preserves order and every metadata entry, rejecting o
   for (let i = 0; i < 6; i++) sources[`Extra${i}`] = `module Extra${i} (label) where\nlabel :: String\nlabel = "${i}"\n`;
   const f = setup(t, sources); f.compile({});
   const initial = await f.full();
-  const value = { modules: initial.prepared.modules, metadata: initial.prepared.metadata, interfaces: initial.sourceInterfaces, mainModules: ['Main', 'Extra0'] };
+  const value = { modules: initial.prepared.modules, metadata: { ...initial.prepared.metadata, sharedRecords: keysOf(['nested-product-a', 'nested-product-b']) }, interfaces: initial.sourceInterfaces, mainModules: ['Main', 'Extra0'] };
   const fragments = Projection.split(value);
   assert.equal(fragments.length, 8);
   const merged = Projection.merge(fragments);
@@ -623,10 +623,10 @@ test('projection capsules are proof-anchored, retain exact metadata and survive 
   assert.deepEqual(Set.toUnfoldable(unfoldableArray)(expanded.metadataCoverage.value0), ['Known.absent', 'Leaf.value', 'New.absent', 'Poly.ignore']);
 });
 
-test('a capsule remains lazy for covered answers and preserves disjoint fragments and all eleven full tables', async t => {
+test('a capsule remains lazy for covered answers and preserves disjoint fragments and every metadata table', async t => {
   const f = setup(t, { Poly: poly, Leaf: leaf('first'), Main: main });
   f.compile({}); const full = await f.full();
-  const projection = { modules: full.prepared.modules, metadata: full.prepared.metadata, interfaces: Map.empty, mainModules: ['Main'] };
+  const projection = { modules: full.prepared.modules, metadata: { ...full.prepared.metadata, sharedRecords: keysOf(['nested-product-a', 'nested-product-b']) }, interfaces: Map.empty, mainModules: ['Main'] };
   const coverage = keysOf(['Leaf.value', 'Known.absent']);
   const fragments = Capsule.create(coverage)(projection);
   let forced = 0;

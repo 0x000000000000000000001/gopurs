@@ -1,4 +1,4 @@
-module Gopurs.SharedContainerUsage (collectSharedContainerPairs) where
+module Gopurs.SharedContainerUsage (collectSharedContainerPairs, foldFunctionValueTypes, foldFunctionTypes) where
 
 import Prelude
 
@@ -18,77 +18,93 @@ type Pairs = Set.Set (Array ExprType)
 -- representation heuristic: it proves neither escape nor exclusive ownership.
 -- Codegen still validates the enum, pointer declarations and complete layout.
 collectSharedContainerPairs :: Array (Module Ann) -> Pairs
-collectSharedContainerPairs = foldl collectModule Set.empty
+collectSharedContainerPairs = foldFunctionValueTypes collectPairs Set.empty
+
+-- Visit each annotation observed in a function-value context. Consumers decide
+-- which nested type families matter to their own representation policy.
+foldFunctionValueTypes :: forall a. (ExprType -> a -> a) -> a -> Array (Module Ann) -> a
+foldFunctionValueTypes collect = foldFunctionTypes { value: collect, recursive: \_ result -> result }
+
+-- The same walk also exposes recursive binding signatures, including local
+-- groups. Consumers can combine positive boundary evidence with loop guards
+-- without walking expressions a second time or reinterpreting usage counts.
+foldFunctionTypes
+  :: forall a
+   . { value :: ExprType -> a -> a, recursive :: ExprType -> a -> a }
+  -> a
+  -> Array (Module Ann)
+  -> a
+foldFunctionTypes visitors initial = foldl collectModule initial
   where
-  collectModule pairs (Module mod) =
+  collectModule result (Module mod) =
     foldl (\acc ty -> case ty of
       Just value -> collectType false value acc
       Nothing -> acc)
-      (foldl collectBind pairs mod.decls)
+      (foldl collectBind result mod.decls)
       (Map.values mod.foreign)
 
-collectBind :: Pairs -> Bind Ann -> Pairs
-collectBind pairs = case _ of
-  NonRec binding -> collectBinding pairs binding
-  Rec bindings -> foldl collectBinding pairs bindings
+  collectBind result = case _ of
+    NonRec binding -> collectBinding result binding
+    Rec bindings -> foldl collectRecursiveBinding result bindings
 
-collectBinding :: Pairs -> Binding Ann -> Pairs
-collectBinding pairs (Binding ann _ body) =
-  let value = not (leadingLambda body)
-  in collectExpr value body (collectAnn value ann pairs)
+  collectRecursiveBinding result binding@(Binding (Ann ann) _ _) =
+    let
+      withSignature = case ann.type of
+        Just ty -> visitors.recursive ty result
+        Nothing -> result
+    in collectBinding withSignature binding
 
-leadingLambda :: Expr Ann -> Boolean
-leadingLambda (ExprAbs _ _ _) = true
-leadingLambda (ExprTypeApp _ body _) = leadingLambda body
-leadingLambda _ = false
+  collectBinding result (Binding ann _ body) =
+    let value = not (leadingLambda body)
+    in collectExpr value body (collectAnn value ann result)
 
-collectAnn :: Boolean -> Ann -> Pairs -> Pairs
-collectAnn value (Ann ann) pairs = case ann.type of
-  Just ty -> collectType value ty pairs
-  Nothing -> pairs
+  leadingLambda (ExprAbs _ _ _) = true
+  leadingLambda (ExprTypeApp _ body _) = leadingLambda body
+  leadingLambda _ = false
 
-collectExpr :: Boolean -> Expr Ann -> Pairs -> Pairs
-collectExpr value expression pairs =
-  let withType = collectAnn value (exprAnn expression) pairs
-  in case expression of
-    ExprLit _ literal -> foldl (flip (collectExpr true)) withType literal
-    ExprApp _ fn argument -> collectExpr true argument (collectExpr false fn withType)
-    ExprAbs _ _ body -> collectExpr (not (leadingLambda body)) body withType
-    ExprLet _ bindings body -> collectExpr value body (foldl collectBind withType bindings)
-    ExprTypeApp _ body _ -> collectExpr value body withType
-    ExprCase _ scrutinees alternatives -> foldl (collectAlternative value)
-      (foldl (flip (collectExpr true)) withType scrutinees) alternatives
-    ExprAccessor _ record _ -> collectExpr true record withType
-    ExprUpdate _ record props -> foldl (\acc (Prop _ field) -> collectExpr true field acc)
-      (collectExpr true record withType) props
-    ExprVar _ _ -> withType
-    ExprConstructor _ _ _ _ -> withType
+  collectAnn value (Ann ann) result = case ann.type of
+    Just ty -> collectType value ty result
+    Nothing -> result
 
-collectAlternative :: Boolean -> Pairs -> CaseAlternative Ann -> Pairs
-collectAlternative value pairs (CaseAlternative _ result) = case result of
-  Unconditional body -> collectExpr value body pairs
-  Guarded guards -> foldl (\acc (Guard condition body) -> collectExpr value body (collectExpr true condition acc)) pairs guards
+  collectExpr value expression result =
+    let withType = collectAnn value (exprAnn expression) result
+    in case expression of
+      ExprLit _ literal -> foldl (flip (collectExpr true)) withType literal
+      ExprApp _ fn argument -> collectExpr true argument (collectExpr false fn withType)
+      ExprAbs _ _ body -> collectExpr (not (leadingLambda body)) body withType
+      ExprLet _ bindings body -> collectExpr value body (foldl collectBind withType bindings)
+      ExprTypeApp _ body _ -> collectExpr value body withType
+      ExprCase _ scrutinees alternatives -> foldl (collectAlternative value)
+        (foldl (flip (collectExpr true)) withType scrutinees) alternatives
+      ExprAccessor _ record _ -> collectExpr true record withType
+      ExprUpdate _ record props -> foldl (\acc (Prop _ field) -> collectExpr true field acc)
+        (collectExpr true record withType) props
+      ExprVar _ _ -> withType
+      ExprConstructor _ _ _ _ -> withType
 
--- The arrows of an ordinary curried signature are one direct function, not
--- returned callbacks. A function in one of its argument/container slots is a
--- value. Actual returned functions are also observed in their expression use.
-collectType :: Boolean -> ExprType -> Pairs -> Pairs
-collectType value ty pairs = case ty of
-  ForAll _ body -> collectType value body pairs
-  ConstrainedType _ body -> collectType value body pairs
-  Func _ _ | value -> collectPairs ty pairs
-  Func args result -> collectDirectResult result (foldl (flip (collectType true)) pairs args)
-  Array element -> collectType true element pairs
-  Record row -> collectType true row pairs
-  Row fields _ -> foldl (\acc (Tuple _ field) -> collectType true field acc) pairs fields
-  _ -> case applied ty [] of
-    Just adt -> foldl (flip (collectType true)) pairs adt.args
-    Nothing -> pairs
-  where
-  collectDirectResult (Func args result) acc = collectDirectResult result (foldl (flip (collectType true)) acc args)
-  collectDirectResult (ForAll _ body) acc = collectDirectResult body acc
-  collectDirectResult (ConstrainedType _ body) acc = collectDirectResult body acc
-  collectDirectResult result acc = collectType true result acc
+  collectAlternative value result (CaseAlternative _ alternative) = case alternative of
+    Unconditional body -> collectExpr value body result
+    Guarded guards -> foldl (\acc (Guard condition body) -> collectExpr value body (collectExpr true condition acc)) result guards
+
+  -- Ordinary curried arrows describe one direct function. A function in an
+  -- argument/container slot is a value; returned functions are also observed
+  -- at their expression uses.
+  collectType value ty result = case ty of
+    ForAll _ body -> collectType value body result
+    ConstrainedType _ body -> collectType value body result
+    Func _ _ | value -> visitors.value ty result
+    Func args output -> collectDirectResult output (foldl (flip (collectType true)) result args)
+    Array element -> collectType true element result
+    Record row -> collectType true row result
+    Row fields _ -> foldl (\acc (Tuple _ field) -> collectType true field acc) result fields
+    _ -> case applied ty [] of
+      Just adt -> foldl (flip (collectType true)) result adt.args
+      Nothing -> result
+
+  collectDirectResult (Func args output) result = collectDirectResult output (foldl (flip (collectType true)) result args)
+  collectDirectResult (ForAll _ body) result = collectDirectResult body result
+  collectDirectResult (ConstrainedType _ body) result = collectDirectResult body result
+  collectDirectResult output result = collectType true output result
 
 -- Once a function value is observed, retain concrete product arguments nested
 -- in its inputs/results. Unknown, open or polymorphic products are excluded.

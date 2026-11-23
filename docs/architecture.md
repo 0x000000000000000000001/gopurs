@@ -223,6 +223,12 @@ recursive copies at higher-order boundaries. Direct monomorphic uses alone
 retain native payloads. The policy is shared by type and constructor selection;
 see [shared-container-layouts.md](shared-container-layouts.md).
 
+`SharedRecordLayout` selects closed, shallow nested records around boxed ADT
+payloads at those boundaries. Structural keys travel in `sharedRecords` before
+signatures are published. Direct-only families and record arguments of recursive
+functions with scalar parameters keep native layouts, protecting accumulator
+loops from conversion costs introduced by a rare callback.
+
 ## Rewrite and intrinsic contracts
 
 | Area | Contract and reference |

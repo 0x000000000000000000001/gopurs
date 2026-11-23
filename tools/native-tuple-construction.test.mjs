@@ -37,7 +37,7 @@ const metadata = withReboxFields({
     enumCtors: emptySet, elidedCtors: emptySet, classDeclsFields: emptyMap,
     globalTypes: emptyMap, globalFunctions: emptyMap,
 });
-const goType = exprTypeToGoType(metadata.pointerAdtPaths)(emptySet)(emptySet)('NativeTuples');
+const goType = exprTypeToGoType(metadata.sharedRecords)(metadata.pointerAdtPaths)(emptySet)(emptySet)('NativeTuples');
 const state = () => Ref.new({ declarations: [], globalId: 0, reboxPairs: emptySet })();
 const prepare = (type, expected) => Adt.prepareSaturatedAs(metadata)('NativeTuples')(
     new Just('Data.Tuple'))('Tuple')(type)(expected);

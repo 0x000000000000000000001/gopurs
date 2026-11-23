@@ -50,6 +50,7 @@ create coverage projection = map fragment parts
         , pointerAdtNodes: part.value.metadata.pointerAdtNodes
         , pointerAdtPaths: part.value.metadata.pointerAdtPaths
         , reboxFields: part.value.metadata.reboxFields
+        , sharedRecords: part.value.metadata.sharedRecords
         }
     , values: part.value.metadata.globalTypes
     , coverage: Set.fromFoldable (Array.slice
@@ -90,6 +91,7 @@ open fragments delayed = do
             , pointerAdtNodes: fragment.metadata.pointerAdtNodes
             , pointerAdtPaths: fragment.metadata.pointerAdtPaths
             , reboxFields: fragment.metadata.reboxFields
+            , sharedRecords: fragment.metadata.sharedRecords
             , globalTypes: fragment.values
             }
         }

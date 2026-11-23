@@ -37,7 +37,7 @@ saturated translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, 
     ctorType = saturatedResultType (getExprType node) mbExpectedExprType
     prepared = AdtExprs.prepareSaturatedAs metadata modNameStr moduleName name ctorType mbExpectedGoType
     child = childContext context Nothing
-    toGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
+    toGoType = exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
     fields = Array.foldl
       (\acc (Tuple _ value) ->
         let

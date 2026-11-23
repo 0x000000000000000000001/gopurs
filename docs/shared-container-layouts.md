@@ -1,4 +1,4 @@
-# Shared representations for higher-order containers
+# Shared representations for higher-order records and containers
 
 A native list can become expensive when it crosses the generic function ABI:
 converting its element representation reconstructs the list, its tuples and
@@ -31,6 +31,28 @@ for every program. It authorizes neither mutation nor object reuse. No new
 runtime tag, conversion cache or allocation arena is introduced, and the
 existing record and FFI conversion contracts remain in force.
 
+## Nested records
+
+`SharedRecordLayout` applies the same source analysis to closed records that
+contain flat closed records around already boxed ADT payloads. Fields must be
+primitive scalars, known enums or boxed ADTs, or one level of such nested
+records. At least one nested record must contain a boxed ADT. Arrays, native
+ADT pointers, unknown fields and deeper record nesting are excluded.
+
+Only the outer record shares the generic record representation. Its nested
+records retain their normal representation when used separately. A direct
+monomorphic use alone does not select a family. A record used directly as an
+argument of a recursive function with scalar parameters is also excluded:
+a rare callback must not force an otherwise native accumulator loop to
+allocate records on every iteration. This guard is conservative and does not
+constitute a general cost model for all mixed uses.
+
+The `sharedRecords` metadata set carries structural keys through preparation,
+projections and cache identity. Keys preserve labels, scalar types, ADT names
+and arities. Parameters of proven boxed/enum leaves do not affect their
+representation, so polymorphic and concrete instantiations share the decision.
+No application name or field label receives special treatment.
+
 ## Validation
 
 The `shared-container-layout` and `shared-container-usage` tool tests cover
@@ -38,6 +60,11 @@ selection, rejection, type applications and agreement between type and
 constructor selection. `SharedListPayloads` exercises callbacks, retained
 functions, list versions and FFI boundaries. `SharedListNative` controls the
 direct monomorphic case, which must retain its native layout.
+
+`shared-record-layout` covers the record policy and recursive-use guard.
+`SharedNestedRecords` exercises retained callbacks, intermodule calls, updates
+and FFI round trips with shared references. `SharedNestedRecordsNative` and
+`SharedNestedRecordsMixed` protect direct and mostly native accumulator loops.
 
 Performance comparisons use the application benchmark in
 `bench-candidates/cst-bench`, alongside the published `altbak.pub` README.
