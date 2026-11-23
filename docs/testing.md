@@ -36,6 +36,7 @@ execute Go programs, so they require Go even when invoked through Node.
 | TAST/PBO boundary and specialization | `node --test tools/monomorphization.test.mjs tools/global-types.test.mjs tools/preparation.test.mjs tools/foreign-forwarders.test.mjs` |
 | Layouts and instantiated types | `node --test tools/representation-contract.test.mjs tools/mixed-constructor-tags.test.mjs tools/elided-constructor-payloads.test.mjs tools/record-tuple-conversions.test.mjs` |
 | Native records and sums | `node --test tools/native-record-args.test.mjs tools/native-record-workers.test.mjs tools/boxed-record-arguments.test.mjs tools/native-sum-results.test.mjs` |
+| Native callback arguments and branch results | `node --test tools/native-record-callback.test.mjs tools/native-branch-results.test.mjs`; `./bin/test NativeCallbackRecords`; `./bin/test -d NativeCallbackRecords` |
 | Rebox conversions | `node --test tools/rebox-generation.test.mjs tools/rebox-metadata.test.mjs tools/struct-pointer-boxing.test.mjs tools/value-array-unboxing.test.mjs` |
 | Composite literals and constructors | `node --test tools/composite-expressions.test.mjs tools/nullary-constructor-bindings.test.mjs`; `./bin/test ConstructorReuse NativeArrayReboxing` |
 | Bindings, closures and recursion | `node --test tools/binding-contracts.test.mjs tools/recursive-initialization.test.mjs tools/local-native-returns.test.mjs tools/zero-arity-functions.test.mjs`; `./bin/test TCO TCOMutRec CurriedLambdas` |

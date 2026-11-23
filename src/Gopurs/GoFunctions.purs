@@ -4,10 +4,13 @@ module Gopurs.GoFunctions
   , loopParameters
   , iterationBindings
   , curriedFunction
+  , hasNativeRecordArgument
+  , nativeCallbackCall
   ) where
 
 import Prelude
 import Data.Array as Array
+import Data.Foldable (any)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, rawGo)
@@ -48,3 +51,26 @@ curriedFunction params result body = case Array.uncons params of
         _ -> [ GoReturn inner ]
     in
       GoCall (GoSelector (GoVar "gopurs_runtime") name) [ GoFuncBlock args stmts result ]
+
+-- Record arguments are the allocating boundary this entry point avoids. Keep
+-- scalar-only callbacks on their existing representation.
+hasNativeRecordArgument :: Array GoType -> Boolean
+hasNativeRecordArgument = any case _ of
+  TypeRecord _ -> true
+  _ -> false
+
+-- The metadata describes one complete call. A different instantiation, arity,
+-- or a partially applied callback uses the ordinary runtime entry point.
+-- Function and arguments have already been captured by the caller; boxing is
+-- confined to the fallback branch and neither branch repeats their evaluation.
+nativeCallbackCall :: GoExpr -> Array GoType -> Array GoExpr -> GoExpr -> GoExpr
+nativeCallbackCall fn types args fallback =
+  GoCall (GoFuncLit
+    [ Tuple "__native_callback" (TypeFunc types TypeValue)
+    , Tuple "__native_callback_ok" TypeBool
+    ]
+    [ GoIfElse (GoVar "__native_callback_ok")
+        [ GoReturn (GoCall (GoVar "__native_callback") args) ] []
+    ] fallback TypeValue)
+    [ GoCall (GoTypeApply (GoSelector (GoVar "gopurs_runtime") "FunctionData")
+        [ TypeFunc types TypeValue ]) [ fn ] ]

@@ -21,9 +21,10 @@ import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Fail), Pair(..))
 
 failure :: ExprContext -> Int -> TcoExpr -> String -> ExprResult
-failure { metadata, modNameStr, mbExpectedExprType } nextId tcoExpr msg =
+failure { metadata, modNameStr, mbExpectedExprType, mbExpectedGoType } nextId tcoExpr msg =
   let
-    expectedGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
+    expectedGoType = fromMaybe inferredGoType mbExpectedGoType
+    inferredGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
       ( case getExprType tcoExpr of
           Any -> fromMaybe Any mbExpectedExprType
           ty -> ty
@@ -33,7 +34,7 @@ failure { metadata, modNameStr, mbExpectedExprType } nextId tcoExpr msg =
     { stmts: StmtEmpty, expr: rawGo ("func() " <> expectedGoTypeStr <> " { panic(" <> printGoExpr (GoString msg) <> ") }()"), exprType: expectedGoType, nextId }
 
 branch :: TranslateExpr -> ExprContext -> Int -> NonEmptyArray (Pair TcoExpr) -> TcoExpr -> ExprResult
-branch translate context@{ codegenStateRef, depth, modNameStr, options: { isTail } } nextId branches def =
+branch translate context@{ codegenStateRef, depth, modNameStr, mbExpectedGoType, options: { isTail } } nextId branches def =
   let
     resDef = translate (context { depth = (depth + 1), tcoIdent = Nothing, options = { isTail, inEffectBlock: false } }) nextId def
 
@@ -61,7 +62,12 @@ branch translate context@{ codegenStateRef, depth, modNameStr, options: { isTail
       )
       allTypes
 
-    expectedGoType =
+    -- The consumer fixes the join representation when its ABI is known.
+    -- Generic branches adapt at their exit; native branches then avoid a
+    -- structural box/unbox round trip through the shared result slot.
+    expectedGoType = fromMaybe inferredGoType mbExpectedGoType
+
+    inferredGoType =
       if hasTypeValue then TypeValue
       else
         let

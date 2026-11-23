@@ -48,6 +48,7 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
         , loopCtx = loop
         , options = { isTail: isSelfRecursive, inEffectBlock: false }
         , mbExpectedExprType = expectedBodyType
+        , mbExpectedGoType = if Array.null fn.args || resultType == TypeValue then Nothing else Just resultType
         }) 0 fn.body
     resultType = case info of
       Just signature | Array.length fn.args < Array.length signature.fArgs -> TypeValue

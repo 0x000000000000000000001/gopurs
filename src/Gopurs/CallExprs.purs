@@ -28,6 +28,7 @@ import Gopurs.ExprAnalysis (getExprType, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, LoopTarget, TranslateExpr, StmtTree(..), childContext)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
+import Gopurs.GoFunctions (hasNativeRecordArgument, nativeCallbackCall)
 import Gopurs.GoTypes (exprTypeToGoType)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Qualified(..))
@@ -84,25 +85,54 @@ directFunction { metadata, modNameStr, moduleFunctions } target count = do
   if count >= info.arity && info.arity >= 1 then Just info else Nothing
 
 curriedCall :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array TcoExpr -> ExprResult
-curriedCall translate context@{ codegenStateRef, modNameStr } nextId fn args =
+curriedCall translate context@{ codegenStateRef, metadata, modNameStr } nextId fn args =
   let
     resFn = translate (childContext context Nothing) nextId fn
-    -- Dynamic calls consume boxed records. A native function instead supplies
-    -- its expected argument types when the translated values are coerced.
-    expected = case resFn.exprType of
-      TypeFunc _ _ -> Nothing
-      _ -> Just Any
-    translated = CallArguments.translate translate context expected { stmts: resFn.stmts, nextId: resFn.nextId } args
+    argumentTypes = map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr <<< getExprType) args
   in
     case resFn.exprType of
       TypeFunc fArgs fRet | Array.length args >= Array.length fArgs ->
-        nativeCall context resFn.expr fArgs fRet (Array.length fArgs) translated
+        let translated = CallArguments.translate translate context Nothing { stmts: resFn.stmts, nextId: resFn.nextId } args
+        in nativeCall context resFn.expr fArgs fRet (Array.length fArgs) translated
+      _ | Array.length args <= 5 && hasNativeRecordArgument argumentTypes ->
+        recordCallbackCall translate context resFn args
       _ ->
         let
+          translated = CallArguments.translate translate context (Just Any) { stmts: resFn.stmts, nextId: resFn.nextId } args
           boxedArgs = CallArguments.boxRemaining context 0 translated
           expr = applyBoxed (boxGoExpr codegenStateRef modNameStr resFn.expr resFn.exprType) boxedArgs
         in
           { stmts: translated.stmts, expr, exprType: TypeValue, nextId: translated.nextId }
+
+recordCallbackCall :: TranslateExpr -> ExprContext -> ExprResult -> Array TcoExpr -> ExprResult
+recordCallbackCall translate context@{ codegenStateRef, modNameStr } fn args =
+  let
+    fnName = "__callback_fn_" <> show fn.nextId
+    captured = CallArguments.capture { prefix: "__callback_arg_", markUsed: false }
+      (\_ nextId arg ->
+        let result = translate (childContext context Nothing) nextId arg
+        -- A Go short declaration would default an untyped numeric literal to
+        -- int/float64. Preserve its declared native ABI before capturing it.
+        in result { expr = case result.exprType of
+          TypeInt64 -> GoCall (GoVar "int64") [ result.expr ]
+          TypeFloat64 -> GoCall (GoVar "float64") [ result.expr ]
+          TypeUint32 -> GoCall (GoVar "uint32") [ result.expr ]
+          _ -> result.expr
+        })
+      (fn.nextId + 1) args
+    fnExpr = GoVar fnName
+    fallback = applyBoxed fnExpr (CallArguments.boxRemaining context 0 captured)
+    expr = if hasNativeRecordArgument captured.exprTypes then
+      nativeCallbackCall fnExpr captured.exprTypes captured.exprs fallback
+      else fallback
+  in
+    { stmts: fn.stmts
+        <> StmtLeaf (GoAssign fnName (boxGoExpr codegenStateRef modNameStr fn.expr fn.exprType))
+        <> captured.stmts
+    , expr
+    , exprType: TypeValue
+    , nextId: captured.nextId
+    }
 
 -- Coerce the native prefix and apply any surplus arguments to its boxed
 -- result. Boxing surplus arguments stays before prefix coercion, as before.

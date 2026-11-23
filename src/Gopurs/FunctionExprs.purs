@@ -18,14 +18,15 @@ import Gopurs.ExprAnalysis (FunctionType, extractExprFuncType, extractFuncType, 
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), bindParameters, childContext, flattenStmts)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoDecl(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr)
-import Gopurs.GoFunctions (Parameters, curriedFunction)
+import Gopurs.GoFunctions (Parameters, curriedFunction, hasNativeRecordArgument)
+import Gopurs.GoTypes (exprTypeToGoType)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 import PureScript.Backend.Optimizer.CoreFn (ExprType, Ident)
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (Level)
 
 abstraction :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> NonEmptyArray (Tuple (Maybe Ident) Level) -> TcoExpr -> ExprResult
-abstraction translate context@{ codegenStateRef, modNameStr, mbExpectedExprType } nextId tcoExpr args body =
+abstraction translate context@{ codegenStateRef, metadata, modNameStr, mbExpectedExprType } nextId tcoExpr args body =
   let
     grouped = collectCurriedAbs args body
     consumed = NonEmptyArray.length grouped.args
@@ -67,8 +68,28 @@ abstraction translate context@{ codegenStateRef, modNameStr, mbExpectedExprType 
             buildFunc chunk (buildFunc rest innerExpr)
 
     funcExpr = buildFunc params (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ]))
+
+    -- A second entry point uses the exact TAST argument representation. Its
+    -- result stays Value so consumers polymorphic in that result can use it.
+    -- Generate the body with native bindings: projections need no whole-record
+    -- box, and escaping uses receive ordinary immutable values as usual.
+    nativeTypes = case mbFuncTy of
+      Just signature | consumed <= Array.length signature.fArgs ->
+        map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr)
+          (Array.take consumed signature.fArgs)
+      _ -> []
   in
-    { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
+    if consumed <= 5 && hasNativeRecordArgument nativeTypes then
+      let
+        nativeParams = Array.zipWith Tuple params nativeTypes
+        nativeBody = translate (closureContext context nativeParams mbBodyType) resBody.nextId grouped.body
+        nativeFunction = GoFuncLit nativeParams (flattenStmts nativeBody.stmts)
+          (boxGoExpr codegenStateRef modNameStr nativeBody.expr nativeBody.exprType) TypeValue
+        expr = GoCall (GoSelector (GoVar "gopurs_runtime") "WithFunctionData") [ funcExpr, nativeFunction ]
+      in
+        { stmts: StmtEmpty, expr, exprType: TypeValue, nextId: nativeBody.nextId }
+    else
+      { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
 
 uncurriedAbstraction :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array (Tuple (Maybe Ident) Level) -> TcoExpr -> ExprResult
 uncurriedAbstraction translate context@{ codegenStateRef, modNameStr, tcoIdent, mbExpectedExprType } nextId tcoExpr args body =

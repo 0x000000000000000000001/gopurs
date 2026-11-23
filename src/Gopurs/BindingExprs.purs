@@ -15,7 +15,7 @@ import Data.Tuple (Tuple(..), fst, snd)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CallAnalysis (extractUncurriedAbs)
-import Gopurs.ExprAnalysis (extractExprFuncType, functionResultAfter, getExprType, printTcoExprShape)
+import Gopurs.ExprAnalysis (extractExprFuncType, functionResultAfter, getExprType, printTcoExprShape, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, LocalEnv, TranslateExpr, StmtTree(..), bindParameters, childContext)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
 import Gopurs.GoConversions (coerceGoExpr)
@@ -26,7 +26,7 @@ import Gopurs.Printer (printGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (Ident(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
-import PureScript.Backend.Optimizer.Syntax (Level)
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Local), Level)
 
 nonRecursive :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> TcoExpr -> TcoExpr -> ExprResult
 nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, moduleFunctions, bound } nextId mbIdent lvl binding body =
@@ -57,15 +57,23 @@ nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, m
 
       _ ->
         let
-          resBinding = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) (nextId + 1) binding
+          -- An identity continuation consumes this binding as the enclosing
+          -- result. Propagate only that concrete ABI, never an unrelated
+          -- parent's expectation into arbitrary let-bound computations.
+          bindingExpected = case unwrapTcoExpr body of
+            Local bodyIdent bodyLevel | bodyIdent == mbIdent && bodyLevel == lvl -> context.mbExpectedGoType
+            _ -> Nothing
+          resBinding = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = bindingExpected }) (nextId + 1) binding
           -- Keep a composite producer's boxed representation across the let.
           -- Native consumers adapt their own arguments; generic consumers and
           -- captured callbacks can reuse the immutable value directly.
-          actualGoType =
-            if expectedGoTypeFromAst == TypeValue
-              || (resBinding.exprType == TypeValue && isCompositeGoType expectedGoTypeFromAst)
-            then resBinding.exprType
-            else expectedGoTypeFromAst
+          actualGoType = fromMaybe
+            ( if expectedGoTypeFromAst == TypeValue
+                || (resBinding.exprType == TypeValue && isCompositeGoType expectedGoTypeFromAst)
+              then resBinding.exprType
+              else expectedGoTypeFromAst
+            )
+            bindingExpected
           newBound = Map.insert originalName { name, goType: actualGoType } bound
           resBody = translate (context { depth = (depth + 1), bound = newBound, tcoIdent = Nothing }) resBinding.nextId body
           letStmt =

@@ -109,6 +109,17 @@ constructors, arrays and the event loop. Where the type information permits it,
 values use native Go representations; the tagged `Value` path remains the
 general fallback.
 
+Pure callbacks with closed record parameters can carry an additional native
+entry alongside their ordinary curried entry. Indirect calls use it only when
+the complete Go parameter signature matches; the result remains a `Value` so
+polymorphic consumers share the same callback contract. Partial applications
+and unmatched signatures use the ordinary entry. Native entries use ordinary
+Go closure captures, without a mutable boxing cache.
+
+Branch results retain the native type required by their consumer. A branch
+that produces a generic value converts it at the join; branches already using
+the required representation pass it through directly.
+
 Canonical `Data.Array.snoc` workers, including specialized copies, use a fresh
 native slice and a shallow copy. Admission checks the TAST-derived worker
 signature and the complete thaw/push/freeze body before replacing it. Elements
