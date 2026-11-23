@@ -38,6 +38,7 @@ import PureScript.Backend.Optimizer.FreeVars (localId)
 import Gopurs.ThunkFusion (optimizeThunkProducers)
 import Gopurs.FunctionFusion (optimizeFunctionProducers)
 import Gopurs.ImmediateApplications (optimizeImmediateApplications)
+import Gopurs.RegexMatchProjection as RegexMatchProjection
 import Gopurs.Ownership as Ownership
 import Gopurs.GoTypes (exprTypeToGoType)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
@@ -82,7 +83,8 @@ type PreparedModule =
 prepareModule :: CodegenMetadata -> BackendModule -> PreparedModule
 prepareModule metadata inputMod =
   let
-    schemas = specializeDecoderSchemas metadata (borrowReadOnlyObjects metadata (cacheClosedDictionaries metadata (optimizeImmediateApplications (optimizeFunctionProducers (optimizeThunkProducers inputMod)))))
+    projected = RegexMatchProjection.optimize metadata inputMod
+    schemas = specializeDecoderSchemas metadata (borrowReadOnlyObjects metadata (cacheClosedDictionaries metadata (optimizeImmediateApplications (optimizeFunctionProducers (optimizeThunkProducers projected)))))
     owned = Ownership.prepare metadata schemas.module
   in
     { module: owned.module
@@ -115,6 +117,8 @@ globalTypeDemands mod = foldl
     [ "Data.Argonaut.Decode.Internal.Record.schemaDecoderABI1"
     , "Data.Argonaut.Decode.Parser.textDecoderABI1"
     , "Data.Argonaut.Decode.Internal.Record.borrowObject"
+    , RegexMatchProjection.helperName
+    , RegexMatchProjection.adapterName
     ]) mod.bindings
   where
   visit acc (NeutralExpr syntax) = case syntax of

@@ -26,7 +26,10 @@ func GopursParseFFI(content *C.uchar, contentLen C.size_t, prefix *C.uchar, pref
 	source := string(unsafe.Slice((*byte)(unsafe.Pointer(content)), int(contentLen)))
 	var output string
 	var err error
-	if prepare == 5 {
+	if prepare == 6 {
+		name := string(unsafe.Slice((*byte)(unsafe.Pointer(prefix)), int(prefixLen)))
+		output, err = OptimizeGeneratedSource(name, source)
+	} else if prepare == 5 {
 		name := string(unsafe.Slice((*byte)(unsafe.Pointer(prefix)), int(prefixLen)))
 		output, err = ShareRecordShapes(name, source)
 	} else if prepare == 4 {

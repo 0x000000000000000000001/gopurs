@@ -116,6 +116,22 @@ polymorphic consumers share the same callback contract. Partial applications
 and unmatched signatures use the ordinary entry. Native entries use ordinary
 Go closure captures, without a mutable boxing cache.
 
+Before package planning, the Go frontend resolves lexical bindings in generated
+modules. It specializes workers whose callback parameter is used only through
+the complete native-entry dispatcher, when the caller supplies a matching
+literal callback. It also removes local function wrappers whose complete use
+set consists of immutable aliases, discarded values and saturated calls.
+Reassignment, escaping values and unsupported uses retain the original code.
+These passes do not rewrite user FFI or change the runtime's closure lifetime
+rules.
+
+`RegexMatchProjection` recognizes a complete `Regex.match` consumer that only
+checks success and reads the first match. A compatible strings port supplies
+`matchWholeImpl`, returning the text and a success flag without constructing
+unused capture containers. Global matching still evaluates the complete
+operation, including errors in later matches. Other observations and older
+ports keep the ordinary match implementation.
+
 Branch results retain the native type required by their consumer. A branch
 that produces a generic value converts it at the join; branches already using
 the required representation pass it through directly.
@@ -128,6 +144,16 @@ the ordinary wrappers. Unrecognized bodies use the normal translation path.
 In the current Dev profile, the `ST.run (withArray (push x) xs)` body remains
 unexpanded and uses that fallback; the native worker optimization applies to
 the recognized Release form.
+
+Private `ST.run` regions can use Go locals and loops. Before emitting them,
+`PrivateSTRegions` checks every reference and mutable-array use by lexical
+identity. Only recognized reads, writes, pushes, freezes and synchronous loops
+may receive those handles; aliases, captures and unknown consumers keep the
+ordinary translation. Scalar cells retain native types, and mutable arrays
+store `Value` elements directly. Freezing copies the slice, preserving a
+snapshot even when the region subsequently mutates the array. Loop admission
+also preserves when action arguments are prepared. This analysis uses the
+final backend IR, independently of optional TAST usage annotations.
 
 Equality and inequality between canonical `Data.String.CodeUnits.length`
 calls compare identical string views directly. Other views retain the UTF-16

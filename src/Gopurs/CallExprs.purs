@@ -20,6 +20,7 @@ import Gopurs.ScalarArrayFold as ScalarArrayFold
 import Gopurs.ArraySort as ArraySort
 import Gopurs.ObjectTraverse as ObjectTraverse
 import Gopurs.TailRecEffect as TailRecEffect
+import Gopurs.PrivateSTRegions as PrivateSTRegions
 import Gopurs.CallAnalysis (CallTarget, collectGoSpine, getGoSpineArgs, curriedTarget, qualifiedTarget)
 import Gopurs.CallArguments (Arguments, applyBoxed)
 import Gopurs.CallArguments as CallArguments
@@ -48,7 +49,9 @@ application translate context nextId expression =
         Just result -> result
         Nothing -> case TailRecEffect.emit translate context nextId fn args of
           Just result -> result
-          Nothing -> regularApplication fn args
+          Nothing -> case PrivateSTRegions.emit translate context nextId fn args of
+            Just result -> result
+            Nothing -> regularApplication fn args
   where
   regularApplication fn args = case ArraySort.emit translate context nextId fn args of
     Just result -> result

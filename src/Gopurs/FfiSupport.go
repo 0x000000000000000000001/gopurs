@@ -53,3 +53,11 @@ func ShareRecordShapesImpl(prefix string, content string, _ any) string {
 	}
 	return result
 }
+
+func OptimizeGeneratedSourceImpl(prefix string, content string, _ any) string {
+	result, err := gopurs_ffi_parser.OptimizeGeneratedSource(prefix, content)
+	if err != nil {
+		panic(fmt.Errorf("Go generated source optimization failed: %w", err))
+	}
+	return result
+}

@@ -32,7 +32,7 @@ const groups = [
     packageName: "gopurs_ffi_parser",
     destination: "gopurs_ffi_parser",
     sourcePackage: "main",
-    files: ["parser.go", "types.go", "native_api.go", "record_shapes.go", "bindings.go", "packages.go", "workspace.go"],
+    files: ["parser.go", "types.go", "native_api.go", "record_shapes.go", "native_local_functions.go", "native_callback_workers.go", "bindings.go", "packages.go", "workspace.go"],
   },
   {
     directory: "build-cache",

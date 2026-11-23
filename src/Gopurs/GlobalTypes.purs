@@ -8,13 +8,15 @@ import Data.Array as Array
 import Data.Foldable (foldl)
 import Data.Map (Map)
 import Data.Map as Map
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..))
 import PureScript.Backend.Optimizer.CoreFn (Ann(..), Bind(..), Binding(..), Expr(..), ExprType(..), Ident(..), Module(..))
 import PureScript.Backend.Optimizer.Monomorphize (getExprAnn)
 
--- Index TAST types by qualified name, including foreign declarations.
+-- Index every original name, including declarations without a usable type and
+-- foreign declarations. Unknown entries carry Any: absence then proves that a
+-- name was not declared in the source, rather than merely lacking annotation.
 -- This is the original-program table: specialization eligibility consults it
 -- after transitive collection, and codegen keeps it for original global names.
 buildGlobalTypes :: Array (Module Ann) -> Map String ExprType
@@ -36,9 +38,7 @@ addBindTypes moduleName types = case _ of
 
 addBindingType :: String -> Map String ExprType -> Binding Ann -> Map String ExprType
 addBindingType moduleName types binding@(Binding _ (Ident name) _) =
-  case bindingType binding of
-    Just ty -> Map.insert (moduleName <> "." <> name) ty types
-    Nothing -> types
+  Map.insert (moduleName <> "." <> name) (fromMaybe Any (bindingType binding)) types
 
 -- Prefer the binding annotation, then the expression annotation, then the
 -- existing fallback for application results. An explicit Any is preserved.
@@ -52,7 +52,8 @@ bindingType (Binding (Ann annotation) _ expr) = case annotation.type of
 addForeignType :: String -> Map String ExprType -> Tuple Ident (Maybe ExprType) -> Map String ExprType
 addForeignType moduleName types (Tuple (Ident name) mbType) = case mbType of
   Just ty -> Map.insert (moduleName <> "." <> name) ty types
-  Nothing -> types
+  Nothing -> let key = moduleName <> "." <> name
+    in if Map.member key types then types else Map.insert key Any types
 
 inferExprType :: Expr Ann -> Maybe ExprType
 inferExprType (ExprApp _ fn _) = case getExprAnn fn of

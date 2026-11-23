@@ -28,7 +28,7 @@ function runFfiParser(content, prefix, sourcePrefix) {
         // Complete programs use files in both directions. Besides avoiding the
         // response pipe limit, a completed request gives readFileSync(0) an
         // immediate EOF without waiting on Node's synchronous input pipe.
-        if (prefix === '--package-source' || prefix === '--bind-source' || prefix === '--share-record-shapes') {
+        if (prefix === '--package-source' || prefix === '--bind-source' || prefix === '--share-record-shapes' || prefix === '--optimize-generated-source') {
             directory = mkdtempSync(join(tmpdir(), 'gopurs-source-'));
             const request = join(directory, 'request.txt');
             writeFileSync(request, content, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
@@ -90,3 +90,5 @@ export const packageGoFilesImpl = content => () => {
 };
 
 export const shareRecordShapesImpl = prefix => content => () => runFfiParser(content, '--share-record-shapes', prefix);
+
+export const optimizeGeneratedSourceImpl = prefix => content => () => runFfiParser(content, '--optimize-generated-source', prefix);

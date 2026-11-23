@@ -17,6 +17,7 @@ import Data.Tuple (Tuple(..))
 import Gopurs.CodegenState (CodegenMetadata)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (ExprType, Ident(..), ModuleName(..), Qualified(..))
+import PureScript.Backend.Optimizer.CoreFn as CoreFn
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
 import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendOperator(..), BackendOperator1(..), BackendSyntax(..), Level)
 
@@ -40,6 +41,7 @@ type BorrowScope = { result :: Level, objects :: Set.Set Level }
 borrowReadOnlyObjects :: CodegenMetadata -> BackendModule -> BackendModule
 borrowReadOnlyObjects metadata mod = case LookupTable.lookup "Data.Argonaut.Decode.Internal.Record.borrowObject" metadata.globalTypes of
   Nothing -> mod
+  Just CoreFn.Any -> mod
   Just helperType ->
     let context =
           { moduleName: mod.name, helperType

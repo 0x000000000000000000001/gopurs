@@ -36,6 +36,14 @@ function run(dict,extra=[],recursive=false,meta=metadata){
  assert.equal(JSON.stringify(mod),snapshot);
  return {...result,code:result.declarations.map(printGoDecl).join('\n')};
 }
+test('unannotated ABI helpers reserve names without enabling decoder specializations',()=>{
+ const dict=record(field('value',int));
+ const unknownSchema={globalTypes:Map.insert(ordString)('Data.Argonaut.Decode.Internal.Record.schemaDecoderABI1')(C.Any.value)(Map.empty)};
+ assert.equal(run(dict,[],false,unknownSchema).declarations.length,0);
+ const unknownText={globalTypes:Map.insert(ordString)('Data.Argonaut.Decode.Parser.textDecoderABI1')(C.Any.value)(metadata.globalTypes)};
+ assert.doesNotMatch(run(dict,[],false,unknownText).code,/argonautCompileTextSchema|argonautTextCursor/);
+ assert.match(run(dict,[],false,unknownText).code,/argonautCompileSchema/);
+});
 test('resolved standard dictionaries emit direct workers and one original source getter',()=>{
  const dict=record(field('x',int,field('y',app(cls('decodeArray'),str))));
  const result=run(dict);

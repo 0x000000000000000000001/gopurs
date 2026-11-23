@@ -35,7 +35,7 @@ type RewriteState =
 -- the ABI gate, traversal, family-name reservation and final source publication.
 specializeDecoderSchemas :: CodegenMetadata -> BackendModule -> { module :: BackendModule, declarations :: Array GoDecl }
 specializeDecoderSchemas metadata mod
-  | not (LookupTable.member "Data.Argonaut.Decode.Internal.Record.schemaDecoderABI1" metadata.globalTypes) = { module: mod, declarations: [] }
+  | not (knownHelper metadata "Data.Argonaut.Decode.Internal.Record.schemaDecoderABI1") = { module: mod, declarations: [] }
   | otherwise =
       let
         context :: DictionaryContext
@@ -51,7 +51,7 @@ specializeDecoderSchemas metadata mod
       in { module: mod { bindings = bindings <> sources }, declarations: result.declarations }
   where
   prefix = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
-  textEnabled = LookupTable.member "Data.Argonaut.Decode.Parser.textDecoderABI1" metadata.globalTypes
+  textEnabled = knownHelper metadata "Data.Argonaut.Decode.Parser.textDecoderABI1"
 
   rewriteGroup context group
     | group.recursive = pure group
@@ -84,3 +84,11 @@ specializeDecoderSchemas metadata mod
         , declarations = state.declarations <> generated.declarations
         }
       pure (replace original (NeutralExpr (Var (Qualified (Just mod.name) (Ident name)))))
+
+-- The source-name index also contains declarations without usable types.
+-- Those entries preserve the same conservative behavior as an absent helper.
+knownHelper :: CodegenMetadata -> String -> Boolean
+knownHelper metadata name = case LookupTable.lookup name metadata.globalTypes of
+  Nothing -> false
+  Just CoreFn.Any -> false
+  Just _ -> true

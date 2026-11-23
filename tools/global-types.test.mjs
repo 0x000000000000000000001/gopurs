@@ -27,7 +27,7 @@ test('binding annotations precede expression annotations, preserving explicit An
  for(const [name,type] of [['binding',int],['dynamicBinding',C.Any.value],['expression',str],['dynamicExpression',C.Any.value]]){
   assert.deepEqual(get(types,`Types.${name}`),new Just(type));
  }
- assert.deepEqual(get(types,'Types.unknown'),Nothing.value);
+ assert.deepEqual(get(types,'Types.unknown'),new Just(C.Any.value));
 });
 
 test('recursive and dotted module names keep exact source identity; annotated foreign declarations win',()=>{
@@ -58,6 +58,15 @@ test('application fallback does not infer arbitrary expressions or recover throu
  const typedApp=new C.ExprApp(ann(new Just(C.Any.value)),ref(new Just(new C.Func([int],str))),ref(Nothing.value));
  const types=buildGlobalTypes([moduleOf('Fallback',[...['blocked','unknown','access'].map((name,i)=>new C.NonRec(binding(name,Nothing.value,[blocked,unknown,access][i]))),
   new C.NonRec(binding('explicit',Nothing.value,typedApp))])]);
- for(const name of ['blocked','unknown','access'])assert.deepEqual(get(types,`Fallback.${name}`),Nothing.value);
+ for(const name of ['blocked','unknown','access'])assert.deepEqual(get(types,`Fallback.${name}`),new Just(C.Any.value));
  assert.deepEqual(get(types,'Fallback.explicit'),new Just(C.Any.value));
+});
+
+test('names without binding or foreign annotations remain present as Any',()=>{
+ const types=buildGlobalTypes([moduleOf('Data.Array.NonEmpty',[
+  new C.NonRec(binding('adaptMaybe__123',Nothing.value,ref(Nothing.value))),
+ ],insert(ordString)('foreignUnknown')(Nothing.value)(empty))]);
+ assert.deepEqual(get(types,'Data.Array.NonEmpty.adaptMaybe__123'),new Just(C.Any.value));
+ assert.deepEqual(get(types,'Data.Array.NonEmpty.foreignUnknown'),new Just(C.Any.value));
+ assert.deepEqual(get(types,'Data.Array.NonEmpty.absent'),Nothing.value);
 });

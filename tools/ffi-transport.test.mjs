@@ -55,15 +55,17 @@ async function runTransport(t, body, failingRunner = false) {
     assert.equal(stdout, 'ok');
 }
 
-test('record shape sharing preserves programs larger than the response pipe limit', async t => {
+test('generated optimization and record shape sharing preserve programs larger than the response pipe limit', async t => {
     await runTransport(t, `
         const comment = '// ' + 'x'.repeat(12 * 1024 * 1024) + ' é λ 😀\\n';
         const source = 'package p\\nimport r "gopurs/output/gopurs_runtime"\\n' + comment
             + 'var value = r.RecordDict2("line", "column", r.Int(1), r.Int(2))\\n';
-        const result = api.shareRecordShapesImpl('transport')(source)();
-        assert.ok(result.includes(comment), 'source bytes were truncated or altered');
-        assert.match(result, /r\\.RecordShape2\\(&GopursRecordKeys_/);
-        assert.doesNotMatch(result, /r\\.RecordDict2/);
+        for (const operation of [api.shareRecordShapesImpl, api.optimizeGeneratedSourceImpl]) {
+            const result = operation('transport')(source)();
+            assert.ok(result.includes(comment), 'source bytes were truncated or altered');
+            assert.match(result, /r\\.RecordShape2\\(&GopursRecordKeys_/);
+            assert.doesNotMatch(result, /r\\.RecordDict2/);
+        }
     `);
 });
 
@@ -84,7 +86,7 @@ test('binding and packaging preserve large requests and responses', async t => {
 
 test('complete-program runner failures preserve diagnostics and remove temporary files', async t => {
     await runTransport(t, `
-        for (const call of [api.bindGoSourceImpl, api.packageGoSourceImpl, api.shareRecordShapesImpl('transport')]) {
+        for (const call of [api.bindGoSourceImpl, api.packageGoSourceImpl, api.shareRecordShapesImpl('transport'), api.optimizeGeneratedSourceImpl('transport')]) {
             assert.throws(() => call('x'.repeat(2 * 1024 * 1024))(), /FFI runner failed: transport failure/);
             assert.deepEqual(readdirSync(tmpdir()), [], 'failed request left temporary files');
         }

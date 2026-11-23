@@ -6,7 +6,7 @@ module. The phase groups organize responsibilities; they are not execution
 order or a proposed directory layout. The [architecture guide](architecture.md)
 explains execution order; the [naming guide](naming.md) defines the terminology.
 
-The map covers **117 modules**. `node tools/check-docs.mjs` verifies source
+The map covers **119 modules**. `node tools/check-docs.mjs` verifies source
 paths, duplicate rows and complete coverage against `src/`. Import lists below
 are sorted and deduplicated from the module source.
 
@@ -67,6 +67,7 @@ are sorted and deduplicated from the module source.
 | `Gopurs.Ownership.Candidates`<br>`src/Gopurs/Ownership/Candidates.purs` | Rewrite | Admits layouts/signatures and reserves worker/helper names. | `CodegenState`, `GoAst`, `GoTypes`, `Ownership.Analysis`, `Ownership.Types` |
 | `Gopurs.Ownership.Types`<br>`src/Gopurs/Ownership/Types.purs` | Rewrite | Defines ownership-analysis types. | `CodegenState`, `GoAst` |
 | `Gopurs.Ownership.Workers`<br>`src/Gopurs/Ownership/Workers.purs` | Rewrite | Emits captures, reusable cells and consuming declarations. | `CodegenState`, `GoAst`, `GoSymbol`, `Ownership.Analysis`, `Ownership.Types` |
+| `Gopurs.RegexMatchProjection`<br>`src/Gopurs/RegexMatchProjection.purs` | Rewrite | Projects whole-match regex consumers when the compatible port contract and complete uses are proven. | `Cache.LookupTable`, `CodegenState` |
 | `Gopurs.ThunkFusion`<br>`src/Gopurs/ThunkFusion.purs` | Rewrite | Admits and rewrites thunk producers into counted workers. | `WorkerNames` |
 | `Gopurs.WorkerNames`<br>`src/Gopurs/WorkerNames.purs` | Rewrite | Reserves worker names for fusion passes. | `GoAst` |
 
@@ -87,8 +88,8 @@ are sorted and deduplicated from the module source.
 | `Gopurs.BindingExprs`<br>`src/Gopurs/BindingExprs.purs` | Emit | Emits local bindings, recursion and initialization. | `CallAnalysis`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoFunctions`, `GoTypes`, `LocalWorkers`, `Printer` |
 | `Gopurs.CallAnalysis`<br>`src/Gopurs/CallAnalysis.purs` | Emit | Analyzes call targets, application spines and closures. | `Cache.LookupTable`, `ExprAnalysis`, `ExprContext`, `GoAst` |
 | `Gopurs.CallArguments`<br>`src/Gopurs/CallArguments.purs` | Emit | Translates, captures and adapts call arguments. | `ExprContext`, `GoAst`, `GoConversions` |
-| `Gopurs.CallExprs`<br>`src/Gopurs/CallExprs.purs` | Emit | Selects calls, overapplication and tail jumps. | `ArrayIntrinsics`, `ArrayTraverse`, `CallAnalysis`, `CallArguments`, `CodegenState`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoTypes`, `ObjectTraverse` |
-| `Gopurs.CodeGen`<br>`src/Gopurs/CodeGen.purs` | Emit | Dispatches expression translation and assembles a module's Go file. | `AdtExprs`, `ArrayIntrinsics`, `BindingExprs`, `BorrowedObjects`, `Cache.LookupTable`, `CallExprs`, `ClosedDictionaries`, `CodegenState`, `ConstructorExprs`, `ControlExprs`, `DecoderSchemas`, `EffectExprs`, `ExprAnalysis`, `ExprContext`, `FunctionExprs`, `FunctionFusion`, `GoAst`, `GoConversions`, `GoImports`, `GoSymbol`, `GoTypes`, `ImmediateApplications`, `LiteralExprs`, `ModuleBindings`, `ModuleDeclarations`, `Ownership`, `PrimitiveExprs`, `Printer`, `RecordExprs`, `ThunkFusion`, `TypedExprs` |
+| `Gopurs.CallExprs`<br>`src/Gopurs/CallExprs.purs` | Emit | Selects calls, overapplication and tail jumps. | `ArrayEquality`, `ArrayIntrinsics`, `ArraySort`, `ArrayTraverse`, `CallAnalysis`, `CallArguments`, `CodegenState`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoFunctions`, `GoTypes`, `ObjectTraverse`, `PrivateSTRegions`, `ScalarArrayFold`, `TailRecEffect` |
+| `Gopurs.CodeGen`<br>`src/Gopurs/CodeGen.purs` | Emit | Dispatches expression translation and assembles a module's Go file. | `AdtExprs`, `ArrayIntrinsics`, `BindingExprs`, `BorrowedObjects`, `Cache.LookupTable`, `CallExprs`, `ClosedDictionaries`, `CodegenState`, `ConstructorExprs`, `ControlExprs`, `DecoderSchemas`, `EffectExprs`, `ExprAnalysis`, `ExprContext`, `FunctionExprs`, `FunctionFusion`, `GoAst`, `GoConversions`, `GoImports`, `GoSymbol`, `GoTypes`, `ImmediateApplications`, `LiteralExprs`, `ModuleBindings`, `ModuleDeclarations`, `Ownership`, `PrimitiveExprs`, `Printer`, `RecordExprs`, `RegexMatchProjection`, `ThunkFusion`, `TypedExprs` |
 | `Gopurs.CodegenState`<br>`src/Gopurs/CodegenState.purs` | Emit | Defines immutable emission metadata and mutable translation state. | `AdtMetadata`, `Cache.LookupTable`, `ClassMetadata`, `ConstructorMetadata`, `GoAst`, `GoSymbol`, `ReboxMetadata` |
 | `Gopurs.ConstructorExprs`<br>`src/Gopurs/ConstructorExprs.purs` | Emit | Translates constructor definitions and saturated construction. | `AdtExprs`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoTypes` |
 | `Gopurs.ControlExprs`<br>`src/Gopurs/ControlExprs.purs` | Emit | Translates branches, alternatives and control flow. | `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoTypes`, `Printer` |
@@ -126,6 +127,7 @@ are sorted and deduplicated from the module source.
 | `Gopurs.PrimitiveExprs`<br>`src/Gopurs/PrimitiveExprs.purs` | Emit | Translates primitives and their conversions. | `CodegenState`, `GoAst`, `GoConversions` |
 | `Gopurs.Printer`<br>`src/Gopurs/Printer.purs` | Emit | Renders Go declarations as text. | `GoAst`, `GoCode`, `GoSymbol`, `Printer.Builder` |
 | `Gopurs.Printer.Builder`<br>`src/Gopurs/Printer/Builder.purs` | Emit | Owns the private mutable buffer for one rendering operation. | — |
+| `Gopurs.PrivateSTRegions`<br>`src/Gopurs/PrivateSTRegions.purs` | Emit | Proves private ST regions and emits native locals, arrays and loops. | `CallAnalysis`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions` |
 | `Gopurs.RecordExprs`<br>`src/Gopurs/RecordExprs.purs` | Emit | Translates records and selects their representations. | `CodegenState`, `GoAst`, `GoConversions`, `GoTypes` |
 | `Gopurs.ScalarArrayFold`<br>`src/Gopurs/ScalarArrayFold.purs` | Emit | Emits read-only scalar array folds for canonical Int addition and string concatenation. | `ArrayIntrinsics.Source`, `CallAnalysis`, `CallArguments`, `ExprContext`, `GoAst`, `GoConversions` |
 | `Gopurs.TailRecEffect`<br>`src/Gopurs/TailRecEffect.purs` | Emit | Emits sequential tail-recursive effect loops for the standard instances. | `AdtExprs`, `CallAnalysis`, `CallArguments`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `TailRecEffectStep` |

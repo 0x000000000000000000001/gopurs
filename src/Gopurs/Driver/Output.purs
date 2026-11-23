@@ -26,7 +26,7 @@ import Gopurs.CodegenState (CodegenMetadata)
 import Gopurs.ExprContext (ModuleFunctions)
 import Gopurs.Driver.Cache (FrozenFFI)
 import Gopurs.FfiBridge as FfiBridge
-import Gopurs.FfiSupport (prepareFfi, shareRecordShapesImpl)
+import Gopurs.FfiSupport (prepareFfi, shareRecordShapesImpl, optimizeGeneratedSourceImpl)
 import Gopurs.FfiTypes (FfiDecl)
 import Gopurs.GoSource (PackageRequest, PackageResult, PackageFilesResult, packageSources, packageFiles)
 import Gopurs.GoSymbol (GoSymbol, generated)
@@ -92,8 +92,10 @@ emitPreparedModule output frozen metadata (Module coreFnModule) backendMod prepa
       Nothing -> Map.empty
     translated = translatePreparedWithFunctions (metadata { ffiFunctions = ffiFunctions }) preparedModule
 
-  -- Share literal key metadata before either layout's package/cache planning.
-  code <- shareRecordShapes goName translated.code
+  -- Resolve local function uses and share literal keys before either layout's
+  -- package/cache planning. User FFI only shares immutable key metadata below.
+  optimized <- liftEffect $ try $ optimizeGeneratedSourceImpl goName translated.code
+  code <- either throwError pure optimized
   FS.writeTextFile UTF8 (output <> "/purescript/" <> goName <> ".go") code
   when hasForeigns do
     ffiCode <- shareRecordShapes (goName <> "_ffi")

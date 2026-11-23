@@ -69,6 +69,8 @@ test('custom/ambiguous dictionaries, absent helper and recursive groups do not m
   }
   const mod=fixture(letIn(2,field('Right',local(1)),read));
   assert.equal(borrows(mod,{globalTypes:Map.empty}),false);
+  assert.equal(borrows(mod,{globalTypes:Map.insert(ordString)(helper)(C.Any.value)(Map.empty)}),false,
+    'an unannotated helper reserves its source name without enabling borrowing');
   assert.equal(borrows(fixture(letIn(2,field('Right',local(1)),read),identity,true)),false);
 });
 

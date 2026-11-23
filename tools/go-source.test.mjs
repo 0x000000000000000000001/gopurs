@@ -9,7 +9,7 @@ import * as Map from '../output/Data.Map/index.js';
 import { Left, Right } from '../output/Data.Either/index.js';
 import * as Symbols from '../output/Gopurs.GoSymbol/index.js';
 import { bindSources, packageSources } from '../output/Gopurs.GoSource/index.js';
-import { bindGoSourceImpl, packageGoSourceImpl, packageGoFilesImpl, shareRecordShapesImpl } from '../output/Gopurs.FfiSupport/index.js';
+import { bindGoSourceImpl, packageGoSourceImpl, packageGoFilesImpl, shareRecordShapesImpl, optimizeGeneratedSourceImpl } from '../output/Gopurs.FfiSupport/index.js';
 import { resolveGoPackagesHelper } from './go-packages.mjs';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { Tuple } from '../output/Data.Tuple/index.js';
@@ -121,12 +121,12 @@ test('typed source binding qualifies types, map keys and callbacks while preserv
 
 test('WASM, native and the Rust C bridge return identical complete binding bytes', t => {
     const directory = workspace(t);
-    for (const name of ['parser.go', 'types.go', 'native_api.go', 'record_shapes.go', 'bindings.go', 'packages.go', 'workspace.go'])
+    for (const name of ['parser.go', 'types.go', 'native_api.go', 'record_shapes.go', 'native_local_functions.go', 'native_callback_workers.go', 'bindings.go', 'packages.go', 'workspace.go'])
         copyFileSync(new URL(`./ffi-gen/${name}`, import.meta.url), join(directory, name));
     writeFileSync(join(directory, 'go.mod'), 'module probe\n\ngo 1.27.0\n');
     writeFileSync(join(directory, 'main.go'), `package main
 import("fmt"; "io"; "os")
-func main(){ input, err := io.ReadAll(os.Stdin); if err != nil {panic(err)}; operation := Bind; if len(os.Args)>1 {switch os.Args[1] {case "packages": operation=Packages; case "files": operation=PackageFiles; case "shapes": operation=func(source string)(string,error){return ShareRecordShapes("probe",source)}}}; output, err := operation(string(input)); if err != nil {fmt.Fprint(os.Stderr,err); os.Exit(1)}; fmt.Print(output) }
+func main(){ input, err := io.ReadAll(os.Stdin); if err != nil {panic(err)}; operation := Bind; if len(os.Args)>1 {switch os.Args[1] {case "packages": operation=Packages; case "files": operation=PackageFiles; case "shapes": operation=func(source string)(string,error){return ShareRecordShapes("probe",source)}; case "optimize": operation=func(source string)(string,error){return OptimizeGeneratedSource("probe",source)}}}; output, err := operation(string(input)); if err != nil {fmt.Fprint(os.Stderr,err); os.Exit(1)}; fmt.Print(output) }
 `);
     const compiled = run(directory, 'go', ['build', '-o', join(directory, 'bind'), '.']);
     assert.equal(compiled.status, 0, compiled.stderr);
@@ -140,7 +140,7 @@ func main(){ input, err := io.ReadAll(os.Stdin); if err != nil {panic(err)}; ope
     writeFileSync(join(directory, 'wasm.json'), wasm);
     const archive = join(directory, 'archive');
     mkdirSync(archive);
-    for (const name of ['parser.go', 'types.go', 'native_api.go', 'record_shapes.go', 'bindings.go', 'packages.go', 'workspace.go', 'main_carchive.go', 'go.mod'])
+    for (const name of ['parser.go', 'types.go', 'native_api.go', 'record_shapes.go', 'native_local_functions.go', 'native_callback_workers.go', 'bindings.go', 'packages.go', 'workspace.go', 'main_carchive.go', 'go.mod'])
         copyFileSync(new URL(`./ffi-gen/${name}`, import.meta.url), join(archive, name));
     const library = run(archive, 'go', ['build', '-tags=carchive', '-buildmode=c-archive', '-o', 'libgopurs_ffi.a', '.']);
     assert.equal(library.status, 0, library.stderr);
@@ -163,6 +163,7 @@ fn main() {
     Some("packages") => Gopurs_FfiSupport_packageGoSourceImpl(input),
     Some("files") => Gopurs_FfiSupport_packageGoFilesImpl(input),
     Some("shapes") => Gopurs_FfiSupport_shareRecordShapesImpl("probe".to_owned(), input),
+    Some("optimize") => Gopurs_FfiSupport_optimizeGeneratedSourceImpl("probe".to_owned(), input),
     _ => Gopurs_FfiSupport_bindGoSourceImpl(input)
   };
   let Value::Func1(Func1::Shared(effect)) = operation else { panic!("missing effect") };
@@ -193,6 +194,25 @@ func Position() r.Value {return r.RecordDict2("line", "column", r.Int(1), r.Int(
         assert.notEqual(invalid.status, 0, executable + ': invalid record source accepted');
     }
     assert.throws(() => shareRecordShapesImpl('probe')('not Go')(), /Go FFI parse failed/);
+
+    const localFunctionSource = `package purescript
+import r "gopurs/output/gopurs_runtime"
+func Local() r.Value {f:=r.Func(func(v r.Value)r.Value{return v}); g:=f; return r.Apply(g,r.Int(42))}
+`;
+    const optimized = optimizeGeneratedSourceImpl('probe')(localFunctionSource)();
+    assert.doesNotMatch(optimized, /r\.Func\(|r\.Apply\(/);
+    assert.match(optimized, /return g\(r\.Int\(42\)\)/);
+    assert.equal(shareRecordShapesImpl('probe')(localFunctionSource)(), localFunctionSource,
+        'the FFI preparation path must retain user function wrappers');
+    for (const executable of ['bind', 'bind-rust']) {
+        const result = run(directory, join(directory, executable), ['optimize'], localFunctionSource);
+        assert.equal(result.status, 0, result.stderr);
+        assert.equal(result.stdout, optimized, executable + ': native local function bytes');
+        const invalid = run(directory, join(directory, executable), ['optimize'], 'not Go');
+        assert.notEqual(invalid.status, 0, executable + ': invalid generated source accepted');
+    }
+    assert.throws(() => optimizeGeneratedSourceImpl('probe')('not Go')(), /Go FFI parse failed/);
+
 
     const dependency = join(directory, 'dependency');
     mkdirSync(dependency);

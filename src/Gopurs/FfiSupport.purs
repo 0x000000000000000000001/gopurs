@@ -5,6 +5,7 @@ module Gopurs.FfiSupport
   , bindGoSourceImpl
   , packageGoSourceImpl
   , shareRecordShapesImpl
+  , optimizeGeneratedSourceImpl
   , packageGoFilesImpl
   ) where
 
@@ -26,6 +27,7 @@ foreign import prepareFfiAstImpl :: String -> String -> Effect String
 foreign import bindGoSourceImpl :: String -> Effect String
 foreign import packageGoSourceImpl :: String -> Effect String
 foreign import shareRecordShapesImpl :: String -> String -> Effect String
+foreign import optimizeGeneratedSourceImpl :: String -> String -> Effect String
 foreign import packageGoFilesImpl :: String -> Effect String
 
 decodeFfiDecls :: String -> Either String (Array FfiDecl)

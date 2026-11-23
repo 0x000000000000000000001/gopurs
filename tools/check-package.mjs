@@ -35,6 +35,8 @@ const required = [
   "tools/ffi-gen/parser.go",
   "tools/ffi-gen/native_api.go",
   "tools/ffi-gen/record_shapes.go",
+  "tools/ffi-gen/native_local_functions.go",
+  "tools/ffi-gen/native_callback_workers.go",
   "tools/wasm_exec.js",
 ];
 const forbidden = [
@@ -61,8 +63,8 @@ if (excluded.length) {
   for (const path of excluded) console.error(`  ${path}`);
   process.exit(1);
 }
-if (manifest.entryCount > 64) {
-  console.error(`Package contains ${manifest.entryCount} files; the limit is 64.`);
+if (manifest.entryCount > 65) {
+  console.error(`Package contains ${manifest.entryCount} files; the limit is 65.`);
   process.exit(1);
 }
 if (manifest.unpackedSize > 25 * 1024 * 1024) {
