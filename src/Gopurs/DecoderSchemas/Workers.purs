@@ -11,6 +11,7 @@ import Data.Set as Set
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
+import Gopurs.DecoderSchemas.Stream as Stream
 import Gopurs.DecoderSchemas.Types (Program(..), Schema(..), textComplete)
 import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), rawGo, sanitizeName)
 import Gopurs.GoSymbol as Symbol
@@ -25,25 +26,29 @@ import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), Level)
 -- cached entry. Both modes call the same ordinary constructor source getters.
 -- The facade supplies the untouched original decoder through the source getter.
 build
-  :: { prefix :: String, name :: String, source :: String, textEnabled :: Boolean }
+  :: { prefix :: String, name :: String, source :: String, textEnabled :: Boolean, streamEnabled :: Boolean }
   -> Schema
   -> { sources :: Array (Tuple Ident NeutralExpr), declarations :: Array GoDecl }
-build { prefix, name, source, textEnabled } schema =
+build { prefix, name, source, textEnabled, streamEnabled } schema =
   let
     qualified = prefix <> "_" <> sanitizeName name
     worker = qualified <> "_decode"
     withText = textEnabled && textComplete schema
+    withStream = withText && streamEnabled && Stream.supported schema
     generated = emit prefix { direct: false, text: false } worker schema
-      <> if withText then emit prefix { direct: false, text: true } worker schema else []
+      <> (if withText then emit prefix { direct: false, text: true } worker schema else [])
+      <> (if withStream then Stream.build { owner: prefix, recordValue, constructValue } worker schema else [])
     ref = GoRef <<< SymbolReference <<< Symbol.generated prefix
     compiled = GoCall (GoRef (SymbolReference (Symbol.foreignSymbol "Data_Argonaut_Decode_Internal_Record" "argonautCompileSchema")))
       [ GoCall (ref ("Get_" <> prefix <> "_" <> sanitizeName source)) []
       , ref worker, ref (worker <> "_accepts")
       ]
+    textCompiled = if withText then GoCall (GoRef (SymbolReference (Symbol.foreignSymbol "Data_Argonaut_Decode_Parser" "argonautCompileTextSchema")))
+      [ compiled, ref (worker <> "_text"), ref (worker <> "_text_accepts") ] else compiled
     getter = GoCachedValue
       { identifier: Symbol.generated prefix qualified, goType: TypeValue
-      , expression: if withText then GoCall (GoRef (SymbolReference (Symbol.foreignSymbol "Data_Argonaut_Decode_Parser" "argonautCompileTextSchema")))
-          [ compiled, ref (worker <> "_text"), ref (worker <> "_text_accepts") ] else compiled
+      , expression: if withStream then GoCall (GoRef (SymbolReference (Symbol.foreignSymbol "Data_Argonaut_Decode_Parser" "argonautCompileStreamSchema")))
+          [ textCompiled, ref (worker <> "_stream") ] else textCompiled
       }
   in { sources: programSources prefix worker schema, declarations: generated <> [ getter ] }
 
@@ -108,16 +113,21 @@ programCode text lookup name = case _ of
   Choices branches other -> String.joinWith "\n" (Array.mapWithIndex (\i (Tuple (Tuple level key) branch) ->
     "if " <> local level <> ".StrVal() == " <> quote key <> " {\n" <> programCode text lookup (name <> "_case" <> show i) branch <> "\n}") branches)
     <> "\n" <> programCode text lookup (name <> "_else") other
-  ReturnValue value ->
-    let levels = valueLevels value
-        getter = "Get_" <> name <> "_construct()"
-        result = if Array.null levels then getter
-          else if Array.length levels <= 10 then "gopurs_runtime.Apply" <> (if Array.length levels == 1 then "" else show (Array.length levels)) <> "(" <> getter <> ", " <> String.joinWith ", " (map local levels) <> ")"
-          else foldl (\fn level -> "gopurs_runtime.Apply(" <> fn <> ", " <> local level <> ")") getter levels
-    in "return argonautSchemaResult{value:" <> result <> ", ok:true}"
+  ReturnValue value -> "return argonautSchemaResult{value:" <> constructValue name value <> ", ok:true}"
   TypeMismatch message -> "return argonautSchemaResult{err:plan.mkTypeMismatch(" <> quote message <> ")}"
   where
   local level = "field_" <> show (unwrap level)
+
+-- Shared by the text and streaming paths, so parameter order and native ADT
+-- construction stay identical to the proved source program.
+constructValue :: String -> NeutralExpr -> String
+constructValue name value =
+  let levels = valueLevels value
+      getter = "Get_" <> name <> "_construct()"
+      local level = "field_" <> show (unwrap level)
+  in if Array.null levels then getter
+    else if Array.length levels <= 10 then "gopurs_runtime.Apply" <> (if Array.length levels == 1 then "" else show (Array.length levels)) <> "(" <> getter <> ", " <> String.joinWith ", " (map local levels) <> ")"
+    else foldl (\fn level -> "gopurs_runtime.Apply(" <> fn <> ", " <> local level <> ")") getter levels
 
 -- Ordinary compositions consult the runtime plan and retain opaque callbacks.
 -- Reads in a proven program are complete and dispatch directly with no child tag.

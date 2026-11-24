@@ -188,4 +188,5 @@ instantiateGenericGoType env (TypeNativeArray ty) = TypeNativeArray (instantiate
 instantiateGenericGoType env (TypeStructPointer pointer) =
   structPointer pointer (map (instantiateGenericGoType env) pointer.typeArgs)
 instantiateGenericGoType env (TypeFunc args ret) = TypeFunc (map (instantiateGenericGoType env) args) (instantiateGenericGoType env ret)
+instantiateGenericGoType env (TypeResults results) = TypeResults (map (instantiateGenericGoType env) results)
 instantiateGenericGoType _ t = t

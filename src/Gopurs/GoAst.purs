@@ -140,6 +140,8 @@ data GoType
   | TypeNativeArray GoType
   | TypeGenericParam String
   | TypeFunc (Array GoType) GoType
+  -- Valid only in a function result position; Go has no first-class tuples.
+  | TypeResults (Array GoType)
   | TypeStructValue String (Array GoType)
 
 derive instance eqGoType :: Eq GoType
@@ -159,6 +161,7 @@ goTypeToStr (TypePointer ty) = "*" <> goTypeToStr ty
 goTypeToStr (TypeNativeArray inner) = "[]" <> goTypeToStr inner
 goTypeToStr (TypeGenericParam name) = "T_" <> sanitizeName name
 goTypeToStr (TypeFunc args ret) = "func(" <> String.joinWith ", " (map goTypeToStr args) <> ") " <> goTypeToStr ret
+goTypeToStr (TypeResults results) = "(" <> String.joinWith ", " (map goTypeToStr results) <> ")"
 goTypeToStr (TypeStructValue _ fields) = "struct{" <> String.joinWith "; " (Array.mapWithIndex (\i t -> "V" <> show i <> " " <> goTypeToStr t) fields) <> "}"
 goTypeToStr (TypeRecord fields) = goRecordStructName fields
 goTypeToStr _ = "gopurs_runtime.Value"
@@ -173,6 +176,7 @@ goTypeIdentity (TypeStructPointer { structName, typeArgs }) = "*" <> structTypeI
 goTypeIdentity (TypePointer ty) = "*" <> goTypeIdentity ty
 goTypeIdentity (TypeNativeArray inner) = "[]" <> goTypeIdentity inner
 goTypeIdentity (TypeFunc args ret) = "func(" <> String.joinWith ", " (map goTypeIdentity args) <> ") " <> goTypeIdentity ret
+goTypeIdentity (TypeResults results) = "(" <> String.joinWith ", " (map goTypeIdentity results) <> ")"
 goTypeIdentity (TypeStructValue _ fields) = "struct{" <> String.joinWith "; " (Array.mapWithIndex (\i t -> "V" <> show i <> " " <> goTypeIdentity t) fields) <> "}"
 goTypeIdentity (TypeRecord fields) =
   "struct{\n" <> String.joinWith "\n" (map (\(Tuple k v) -> "\t" <> recordFieldName k <> " " <> goTypeIdentity v) fields) <> "\n}"

@@ -13,6 +13,7 @@ import Gopurs.ExprContext (LocalEnv)
 import Gopurs.FilteredSumLoops as FilteredSumLoops
 import Gopurs.GoAst (GoExpr(..), GoType(..), sanitizeName)
 import Gopurs.GoFunctions (Parameters)
+import Gopurs.RecordAffineLoops as RecordAffineLoops
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), Qualified(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
@@ -40,7 +41,8 @@ wrap self params result body original = case recognize self params body of
       total = GoBinOp "+" accumulator (GoBinOp "*" counter (integer recurrence.increment))
       value = cast "int64" (cast "int32" total)
     in GoBlock [ GoIfElse admitted [ GoReturn value ] [], original ]
-  _ -> FilteredSumLoops.wrap self params result body original
+  _ -> RecordAffineLoops.wrap self params result body
+    (FilteredSumLoops.wrap self params result body original)
 
 recognize :: (TcoExpr -> Boolean) -> Parameters -> TcoExpr -> Maybe Recurrence
 recognize self params body = do

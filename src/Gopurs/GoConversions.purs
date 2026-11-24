@@ -130,6 +130,8 @@ boxNativeExpr stateRef moduleName expr (TypeNativeArray inner) = boxArray (boxGo
 boxNativeExpr _ _ expr TypeUint32 = rawGo ("gopurs_runtime.Value{Type: 9, IntVal: int64(" <> printGoExpr expr <> "), UnsafePtr: nil}")
 boxNativeExpr _ _ expr (TypeGenericParam _) = expr
 boxNativeExpr _ _ expr (TypeFunc _ _) = expr
+-- Multiple results describe declarations, never a boxed PureScript value.
+boxNativeExpr _ _ _ (TypeResults _) = rawGo "func() gopurs_runtime.Value { panic(\"cannot box multiple Go results\") }()"
 boxNativeExpr stateRef moduleName expr (TypeStructValue adtName fields) =
   case Map.lookup adtName NativeAdts.unboxableADTs of
     Just adt -> adt.boxExpr (boxGoExpr stateRef moduleName) fields expr
@@ -187,6 +189,7 @@ unboxValue stateRef moduleName expr desiredType = case desiredType of
           (GoInt 0)) TypeBool)
       (TypeFunc [ TypeInt64 ] TypeBool)) [ expr ]
   TypeFunc _ _ -> expr
+  TypeResults _ -> rawGo ("func() " <> goTypeToStr desiredType <> " { panic(\"cannot unbox multiple Go results\") }()")
   TypeStructValue adtName fields ->
     case Map.lookup adtName NativeAdts.unboxableADTs of
       Just adt -> adt.unboxExpr (\value fieldType -> unboxGoExpr stateRef moduleName value TypeValue fieldType) fields expr

@@ -17,6 +17,7 @@ import Gopurs.Int32Loops as Int32Loops
 import Gopurs.AffineLoops as AffineLoops
 import Gopurs.ArraySnoc as ArraySnoc
 import Gopurs.ListFilter as ListFilter
+import Gopurs.TailAddLoops as TailAddLoops
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 
 type Worker =
@@ -40,41 +41,50 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
     loop = if isSelfRecursive then
       [ { ident: fn.ident, loopParams: map fst (loopParameters params), goTypes: map snd params } ]
       else []
-    native = case ListFilter.worker context.metadata params resultType fn.val of
-      Just filtered -> Just filtered
-      Nothing -> ArraySnoc.worker modNameStr fn.ident params resultType fn.body
-    result = case native of
-      Just lowered -> lowered
-      Nothing -> translate (context
-        { depth = 0
-        , bound = bindParameters params Map.empty
-        , tcoIdent = Just fn.ident
-        , loopCtx = loop
-        , options = { isTail: isSelfRecursive, inEffectBlock: false }
-        , mbExpectedExprType = expectedBodyType
-        , mbExpectedGoType = if Array.null fn.args || resultType == TypeValue then Nothing else Just resultType
-        }) 0 fn.body
+    workerContext = context
+      { depth = 0
+      , bound = bindParameters params Map.empty
+      , tcoIdent = Just fn.ident
+      , loopCtx = loop
+      , options = { isTail: isSelfRecursive, inEffectBlock: false }
+      , mbExpectedExprType = expectedBodyType
+      , mbExpectedGoType = if Array.null fn.args || resultType == TypeValue then Nothing else Just resultType
+      }
     resultType = case info of
       Just signature | Array.length fn.args < Array.length signature.fArgs -> TypeValue
       Just signature -> signature.fRet
       Nothing -> TypeValue
-    body returning =
-      let statements = flattenStmts result.stmts <> [ GoReturn returning ]
-      in if isSelfRecursive then
-        AffineLoops.wrap (AffineLoops.globalTarget modNameStr fn.ident) params resultType fn.body
-          (Int32Loops.loop fn.ident params resultType statements)
-        else GoBlock (iterationBindings params <> statements)
+    tailAdd = if isSelfRecursive then
+      TailAddLoops.worker translate workerContext fn.ident params resultType fn.body
+      else Nothing
+    body boxed = case tailAdd of
+      Just loopBody -> loopBody
+      Nothing ->
+        let
+          native = case ListFilter.worker context.metadata params resultType fn.val of
+            Just filtered -> Just filtered
+            Nothing -> ArraySnoc.worker modNameStr fn.ident params resultType fn.body
+          result = case native of
+            Just lowered -> lowered
+            Nothing -> translate workerContext 0 fn.body
+          returning = if boxed then boxGoExpr codegenStateRef modNameStr result.expr result.exprType
+            else coerceGoExpr codegenStateRef modNameStr result.expr result.exprType resultType
+          statements = flattenStmts result.stmts <> [ GoReturn returning ]
+        in if isSelfRecursive then
+          AffineLoops.wrap (AffineLoops.globalTarget modNameStr fn.ident) params resultType fn.body
+            (Int32Loops.loop fn.ident params resultType statements)
+          else GoBlock (iterationBindings params <> statements)
     value = if Array.null fn.args then
       -- A zero-argument abstraction still defers its whole body until called.
       curriedFunction [ Tuple "_" TypeValue ] TypeValue
-        (body (boxGoExpr codegenStateRef modNameStr result.expr result.exprType))
+        (body true)
       else
         let
           worker = GoFunctionDecl
             { name: generated modNameStr ("Call_" <> modNameStr <> "_" <> fn.ident)
             , params: loopParameters params
             , result: resultType
-            , body: body (coerceGoExpr codegenStateRef modNameStr result.expr result.exprType resultType)
+            , body: body false
             }
         in
           unsafePerformEffect do

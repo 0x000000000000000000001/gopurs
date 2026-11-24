@@ -52,6 +52,7 @@ specializeDecoderSchemas metadata mod
   where
   prefix = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
   textEnabled = knownHelper metadata "Data.Argonaut.Decode.Parser.textDecoderABI1"
+  streamEnabled = knownHelper metadata "Data.Argonaut.Decode.Parser.streamDecoderABI1"
 
   rewriteGroup context group
     | group.recursive = pure group
@@ -77,7 +78,7 @@ specializeDecoderSchemas metadata mod
     -- workers and constructor getters. Failed names still advance the counter.
     if Array.any (\existing -> existing == name || isJust (String.stripPrefix (Pattern (name <> "_")) existing)) (Set.toUnfoldable state.names) then put next *> allocate schema original
     else do
-      let generated = Workers.build { prefix, name, source, textEnabled } schema
+      let generated = Workers.build { prefix, name, source, textEnabled, streamEnabled } schema
       put next
         { names = Set.insert source (Set.insert name state.names)
         , sources = state.sources <> [ Tuple (Ident source) (NeutralExpr (Typed CoreFn.Any original)) ] <> generated.sources

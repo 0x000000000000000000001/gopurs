@@ -1,6 +1,6 @@
 module Gopurs.GoImports (collectImports, boundImports) where
 
-import Prelude
+import Prelude hiding (add)
 import Data.Array as Array
 import Data.Either (Either)
 import Data.Set (Set)
@@ -61,6 +61,7 @@ typeImports ty imports = case ty of
   TypePointer inner -> typeImports inner imports
   TypeNativeArray element -> typeImports element imports
   TypeFunc args ret -> imports # many typeImports args # typeImports ret
+  TypeResults results -> many typeImports results imports
   TypeStructValue _ fields -> many typeImports fields imports
   _ -> imports
 

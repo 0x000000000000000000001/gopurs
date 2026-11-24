@@ -13,6 +13,7 @@ import Data.Array as Array
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.String as String
 import Data.Tuple (Tuple(..))
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr)
 import Gopurs.Printer (printGoExpr)
@@ -59,6 +60,8 @@ zeroGoExpr t = case t of
   TypePointer _ -> rawGo "nil"
   TypeNamed _ -> rawGo ("func() " <> goTypeToStr t <> " { var zero " <> goTypeToStr t <> "; return zero }()")
   TypeFunc _ _ -> rawGo "nil"
+  TypeResults results -> rawGo ("func() " <> goTypeToStr t <> " { return "
+    <> String.joinWith ", " (map (printGoExpr <<< zeroGoExpr) results) <> " }()")
   TypeGenericParam _ -> rawGo "gopurs_runtime.Value{}"
 
 -- Payload argument types of a known Maybe/Either/Tuple instantiation.
