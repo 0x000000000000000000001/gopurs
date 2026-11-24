@@ -4,13 +4,8 @@ gopurs turns typed PureScript compiler output into Go source. It uses the
 preserved types to choose native representations, optimize calls and generate
 adapters for foreign functions. The Go toolchain then builds the application.
 
-Start here to understand that flow and the roles of the compiler, its hosts and
-the generated runtime. For implementation work, use the detailed
-[architecture guide](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md),
-the [module map](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/module-map.md)
-for source locations, and the
-[naming guide](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/naming.md)
-for the terms used in the code.
+Read this for the overall flow. When changing the compiler, use the
+[architecture reference](architecture.md) and [module map](module-map.md).
 
 ## Terminology
 
@@ -104,79 +99,23 @@ separate.
 
 ## Runtime and FFI
 
-Generated code uses the `gopurs_runtime` package for values, closures, records,
-constructors, arrays and the event loop. Where the type information permits it,
-values use native Go representations; the tagged `Value` path remains the
-general fallback.
+Generated Go uses `gopurs_runtime` for values, closures, records, arrays and the
+event loop. Known types use native Go representations where possible; the
+runtime's tagged `Value` is the general fallback.
 
-Pure callbacks with closed record parameters can carry an additional native
-entry alongside their ordinary curried entry. Indirect calls use it only when
-the complete Go parameter signature matches; the result remains a `Value` so
-polymorphic consumers share the same callback contract. Partial applications
-and unmatched signatures use the ordinary entry. Native entries use ordinary
-Go closure captures, without a mutable boxing cache.
+The FFI bridge adapts ordinary Go declarations to PureScript imports. The JS
+host runs the Go parser as WebAssembly; native hosts use the same parser
+core directly. See [Writing Go FFI](ffi-idiomatic.md) for supported signatures,
+effects and ownership.
 
-Before package planning, the Go frontend resolves lexical bindings in generated
-modules. It specializes workers whose callback parameter is used only through
-the complete native-entry dispatcher, when the caller supplies a matching
-literal callback. It also removes local function wrappers whose complete use
-set consists of immutable aliases, discarded values and saturated calls.
-Reassignment, escaping values and unsupported uses retain the original code.
-These passes do not rewrite user FFI or change the runtime's closure lifetime
-rules.
+With `--main`, gopurs rejects missing Go implementations reachable from that
+entry point before publishing output. Batch generation without `--main` and
+dynamic calls inside Go FFI can still reach runtime stubs. Foreign functions
+need a Go implementation: there is no JavaScript fallback.
 
-`RegexMatchProjection` recognizes a complete `Regex.match` consumer that only
-checks success and reads the first match. A compatible strings port supplies
-`matchWholeImpl`, returning the text and a success flag without constructing
-unused capture containers. Global matching still evaluates the complete
-operation, including errors in later matches. Other observations and older
-ports keep the ordinary match implementation.
-
-Branch results retain the native type required by their consumer. A branch
-that produces a generic value converts it at the join; branches already using
-the required representation pass it through directly.
-
-Canonical `Data.Array.snoc` workers, including specialized copies, use a fresh
-native slice and a shallow copy. Admission checks the TAST-derived worker
-signature and the complete thaw/push/freeze body before replacing it. Elements
-keep their existing representation and references; partial applications retain
-the ordinary wrappers. Unrecognized bodies use the normal translation path.
-In the current Dev profile, the `ST.run (withArray (push x) xs)` body remains
-unexpanded and uses that fallback; the native worker optimization applies to
-the recognized Release form.
-
-Private `ST.run` regions can use Go locals and loops. Before emitting them,
-`PrivateSTRegions` checks every reference and mutable-array use by lexical
-identity. Only recognized reads, writes, pushes, freezes and synchronous loops
-may receive those handles; aliases, captures and unknown consumers keep the
-ordinary translation. Scalar cells retain native types, and mutable arrays
-store `Value` elements directly. Freezing copies the slice, preserving a
-snapshot even when the region subsequently mutates the array. Loop admission
-also preserves when action arguments are prepared. This analysis uses the
-final backend IR, independently of optional TAST usage annotations.
-
-Equality and inequality between canonical `Data.String.CodeUnits.length`
-calls compare identical string views directly. Other views retain the UTF-16
-length comparison and any cached lengths. The generated call evaluates each
-string argument once, in source order; ordered comparisons keep their normal
-translation.
-
-Composite annotations do not force an allocation: an already boxed immutable
-producer can retain that representation through local bindings until a native
-consumer requires conversion. Literal record keys are shared before output
-layout and cache planning. Small record storage is private to the runtime;
-generated accessors also handle the compact representation of two-Int records.
-
-The foreign function interface (FFI) bridge reads Go declarations and generates
-wrappers that adapt Go signatures to PureScript calls. The JavaScript host runs the parser as
-WebAssembly; native hosts call the same parser directly.
-
-With `--main`, gopurs checks for missing Go implementations reachable from the
-selected entry point and rejects the build before publishing output. Batch
-generation without `--main` and dynamic calls inside native Go FFI can still
-reach stubs that fail at runtime. There is no fallback to JavaScript: foreign
-functions need Go implementations, supplied by the separate Go library ports
-or the application.
+For a particular optimization, use the [module map](module-map.md) and
+[optimization references](README.md#compiler-internals). Those pages describe
+admission rules and fallbacks; this overview covers the compilation flow.
 
 ## Caches
 

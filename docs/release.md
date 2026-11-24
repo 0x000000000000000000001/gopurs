@@ -1,12 +1,14 @@
 # Release procedure
 
+**Technical reference for release maintainers.** For the normal command sequence,
+follow the [release quickstart](release-quickstart.md). Expand the sections below
+for gate requirements, unusual cases and recovery.
+
 The release consists of one npm archive and native executables for
 `linux-amd64`, `linux-arm64`, and `darwin-arm64`. The archive supplies the
 JavaScript compiler, launcher and runtime helpers; the matching native
 executable can be installed alongside it. Rust is outside this release gate.
 
-For the normal sequence of commands, use the [release quickstart](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-quickstart.md).
-This page supplies the detailed requirements and recovery procedures.
 **Qualification** means the checks and retained evidence for the exact source,
 compiler bytes and packages being released.
 
@@ -26,6 +28,11 @@ Record actual results in the repository's
 and the release notes. Apply the gates below to each new candidate.
 
 ## Build and validate a candidate
+
+Validate the exact source and artifacts intended for publication.
+
+<details>
+<summary>Full candidate qualification procedure</summary>
 
 Set `package.json` and `package-lock.json` to the same release version:
 
@@ -144,7 +151,14 @@ a complete b8x build against the installed candidate and verify the public
 README with a new application. These are additional release gates; the small
 application smoke below does not replace them.
 
+</details>
+
 ## Prepare reviewable local artifacts
+
+Prepare the npm archive and native executables before publication review.
+
+<details>
+<summary>Artifact preparation commands and checks</summary>
 
 After building the JavaScript and native hosts from the same source tree:
 
@@ -200,7 +214,14 @@ host and the installed native host. The FFI covers `String`, `Int` through Go
 packages nor sibling repositories. All temporary Go/npm caches are deleted on
 success; failed workspaces are retained with their paths printed.
 
+</details>
+
 ## Signed tag and CI artifacts
+
+A signed release tag starts CI qualification and creates draft artifacts.
+
+<details>
+<summary>CI gates, retries and bounded qualification</summary>
 
 Commit the reviewed source, version and notes, then create a signed annotated
 tag using the maintainer's configured Git signing key:
@@ -401,7 +422,14 @@ use it without rebuilding the development environment; see
 The four shards each mix Release and Dev batches while preserving the complete
 inventory and existing concurrency limits.
 
+</details>
+
 ## Publish the reviewed candidate
+
+Publish only the reviewed artifacts that passed the required gates.
+
+<details>
+<summary>Publication commands and consumer verification</summary>
 
 Before the first dispatch, integrate the reviewed release workflow into the
 default branch (`main`) through the normal review/merge process. GitHub only
@@ -526,7 +554,14 @@ version, finish the b8x check using the published artifacts, archive the proof,
 and announce the version/platforms/support channel. Keep the candidate and
 final release versions immutable.
 
+</details>
+
 ## Rollback and recovery
+
+Use the recovery procedure matching the failed publication stage.
+
+<details>
+<summary>Rollback commands, retained evidence and CI lifetime</summary>
 
 Before each final publication, retain the previous version's npm tarball,
 platform executables, checksums and signatures, plus the current npm dist-tags.
@@ -613,3 +648,5 @@ Spago, frontend and language tools have an explicit Nix garbage-collection
 root. An `ENOENT` diagnostic records the command search paths and working
 directory; investigate it before a costly retry. The signed candidate tag is
 immutable, including when its CI fails.
+
+</details>

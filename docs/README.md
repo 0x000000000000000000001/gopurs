@@ -1,99 +1,66 @@
 # Documentation
 
-Start with the guide for your task, then use the reference pages as needed.
-These pages describe the current source tree. When installing a published
-release, use the documentation at its tag, as explained in the
-[project README](../README.md).
+Choose a guide for your task. These pages describe this checkout; for a published
+release, use the documentation at its tag.
 
 ## Using gopurs
 
-For a first application, follow the [quickstart](quickstart.md) through to a
-running executable. For an existing JavaScript project, follow the
-[migration walkthrough](migration.md#from-a-javascript-project). To implement a
-foreign import, start with the [Go FFI guide](ffi-idiomatic.md).
-
-The [task list API](../examples/task-list-api/README.md) is a complete HTTP, JSON
-and SQLite example. Its README explains the development checkouts it needs.
-
-For everyday reference:
-
-| Guide | Purpose |
+| Task | Guide |
 | --- | --- |
-| [CLI reference](cli.md) | Options, environment variables and exit status |
-| [Limitations](limitations.md) | Unsupported features and compatibility gaps |
-| [Troubleshooting](troubleshooting.md) | Diagnose build and runtime errors |
-| [Publication scope](publication-scope.md) | Supported platforms and compatibility policy |
+| Build a first application | [Quickstart](quickstart.md) |
+| Move an existing JS project to Go | [Migration](migration.md#from-a-javascript-project) |
+| Write a Go foreign function | [Go FFI](ffi-idiomatic.md) |
+| Follow a complete HTTP/JSON/SQLite example | [Task list API](../examples/task-list-api/README.md) |
+| Find a command or setting | [CLI reference](cli.md) |
+| Fix an error or check support | [Troubleshooting](troubleshooting.md), [limitations](limitations.md) |
+| Install with Nix | [Nix guide](nix.md) |
 
 ## Development and releases
 
-Use these guides when changing the compiler or its library ports.
+For contributors changing the compiler or its library ports:
 
-| Guide | Purpose |
+| Task | Guide |
 | --- | --- |
-| [Bootstrap](bootstrap.md) | Build the compiler hosts from pinned inputs |
-| [Nix](nix.md) | Install the toolchain and use the development shell |
-| [Development](development.md) | Work on library ports, Go FFI and the runtime |
-| [Testing](testing.md) | Choose checks, run fixtures and inspect reports |
-| [Benchmark protocol](benchmark-protocol.md) | Measure compiler and application performance |
-| [Release benchmark runner](release-benchmark.md) | Compare compiler hosts on a fixed set of inputs |
+| Build a compiler host | [Bootstrap](bootstrap.md) |
+| Develop a library, FFI or runtime change | [Development](development.md) |
+| Choose and run checks | [Testing](testing.md) |
+| Measure a change | [Benchmark protocol](benchmark-protocol.md), [release benchmark runner](release-benchmark.md) |
+| Publish a version | [Release quickstart](release-quickstart.md) |
+| Check publication requirements or recover a release | [Detailed release reference](release.md) |
+| Review supported interfaces and source pins | [Publication scope](publication-scope.md), [library source review](library-source-audit.md) |
 
-For maintainers preparing a release:
-
-| Guide | Purpose |
-| --- | --- |
-| [Release quickstart](release-quickstart.md) | Prepare, qualify and publish a new version |
-| [Release procedure](release.md) | Qualify, package and publish a candidate |
-| [Release qualification](quality-0.1.0.md) | Evidence for the published release and earlier candidates |
-| [Release checklist](release-checklist.md) | Track qualification and publication gates |
-| [Library source review](library-source-audit.md) | Review source pins and attribution |
+The [release checklist](release-checklist.md) and [quality record](quality-0.1.0.md)
+contain dated qualification evidence, not a guarantee about an untested checkout.
 
 ## Compiler internals
 
-Read the [architecture overview](architecture-overview.md) first. Use the
-[module map](module-map.md) to find the code for a particular responsibility;
-the remaining pages explain individual parts of the compiler.
+These are **technical references for compiler maintainers**. Start with the
+[architecture overview](architecture-overview.md); open a contract page when
+changing that part of the implementation.
 
-| Guide | Purpose |
+| Area | Reference |
 | --- | --- |
-| [Architecture overview](architecture-overview.md) | Follow the compilation pipeline |
-| [Architecture](architecture.md) | Pass order, metadata and module boundaries |
-| [Module map](module-map.md) | Locate implementations and their dependencies |
-| [Naming](naming.md) | Understand compiler terminology |
-| [Build cache](build-cache.md) | Cache keys, storage, publication and reuse |
-| [Go AST and printer](go-ast-printer.md) | Separate code generation from formatting |
-| [Runtime and FFI contracts](runtime-ffi-contracts.md) | Distinguish compiler hosts from generated programs |
-| [Parallel preparation](parallel-preparation.md) | Schedule preparation jobs |
-| [Parallel emission](parallel-emission.md) | Schedule optimization and emission |
-| [Runtime closures](runtime-closures.md) | Understand closure lifetime and heap escape |
-
-For work on a specific optimization:
-
-- [ADT reuse](adt-reuse.md), [array round-trips](array-roundtrip.md),
-  [function fusion](function-fusion.md) and [Int32 loops](int32-loops.md).
-- [JSON decoders](json-decoder-optimizations.md),
-  [record construction](json-record-plans.md) and
-  [JSON traversals](json-traversals.md).
-- [Native record workers](native-record-workers.md),
-  [shared container representations](shared-container-layouts.md),
-  [packed strings](packed-strings.md) and [Rust PGO](pgo.md).
+| Pipeline and code locations | [Architecture](architecture.md), [module map](module-map.md), [naming](naming.md) |
+| Caching and scheduling | [Build cache](build-cache.md), [parallel preparation](parallel-preparation.md), [parallel emission](parallel-emission.md) |
+| Go output and runtime boundary | [Go AST/printer](go-ast-printer.md), [runtime/FFI contracts](runtime-ffi-contracts.md), [closure lifetime](runtime-closures.md) |
+| Loops and allocation | [ADT reuse](adt-reuse.md), [array round-trips](array-roundtrip.md), [function fusion](function-fusion.md), [Int32 loops](int32-loops.md) |
+| JSON | [Decoders](json-decoder-optimizations.md), [record plans](json-record-plans.md), [traversals](json-traversals.md) |
+| Representations | [Record workers](native-record-workers.md), [shared containers](shared-container-layouts.md), [packed strings](packed-strings.md) |
+| Experimental Rust host | [PGO](pgo.md) |
 
 ## Historical records
 
-The [FFI baseline](ffi-baseline.md) and [FFI validation report](ffi-validation.md)
-record the work done on 12 November 2026. Their measurements and intermediate
-limits belong to that work. Use the [Go FFI guide](ffi-idiomatic.md) for the
-current interface and the [quality record](quality-0.1.0.md) for dated release
-results.
+[FFI baseline](ffi-baseline.md) and [FFI validation](ffi-validation.md) describe
+the work of 12 November 2026. Use [Go FFI](ffi-idiomatic.md) for the current
+interface. Older designs and campaign logs remain in
+[Git history](https://github.com/0x000000000000000000001/gopurs/tree/7589ec34aed08ec3b7dfc52014a4253b007b2fdc/docs).
 
 ## Keeping these guides current
 
-Write documentation in English, describe implemented behavior and link to the
-source or tests that enforce a contract. Keep campaign logs, abandoned designs
-and completed development plans in Git history. The
-[documentation before this cleanup](https://github.com/0x000000000000000000001/gopurs/tree/7589ec34aed08ec3b7dfc52014a4253b007b2fdc/docs)
-retains those records, including their raw measurements and probe scripts.
+Keep user guides short and task-oriented. Name the audience of technical
+references; keep dated evidence distinct from current instructions. Preserve
+commands, contracts and proof data when simplifying prose.
 
-Link new guides from this index. Run `npm run check:docs` after editing: it
-checks relative links and anchors, packaged files and module-map coverage.
-Use the [altbak README](https://github.com/0x000000000000000000001/altbak.pub#go)
+Link new pages here and run `npm run check:docs` to check links, anchors, packaged
+files and module-map coverage. Use the [altbak README](https://github.com/0x000000000000000000001/altbak.pub#go)
 as the official performance baseline.

@@ -1,216 +1,138 @@
 # Development guide
 
-Use the [quickstart](quickstart.md) to build an application, or the
-[bootstrap guide](bootstrap.md) to build the compiler itself. This guide covers
-changes to library ports, Go FFI and the embedded runtime.
+For application work, use the [quickstart](quickstart.md). To build the compiler,
+use [bootstrap](bootstrap.md). This page covers library ports, FFI tooling and
+the runtime embedded in generated programs.
 
-| Your change | Start here |
+| Change | Start here |
 | --- | --- |
-| Port or maintain a library | [Libraries](#libraries) |
-| Call Go from PureScript | [Go FFI author guide](ffi-idiomatic.md), then [bridge implementation notes](#go-ffi) |
-| Change how Go declarations are parsed | [FFI parser](#ffi-parser) |
-| Change the runtime included in generated programs | [Embedded runtime](#embedded-runtime) |
+| Library port | [Libraries](#libraries) |
+| Application Go binding | [Writing Go FFI](ffi-idiomatic.md) |
+| FFI bridge/parser | [Go FFI](#go-ffi), [parser](#ffi-parser) |
+| Generated application's runtime | [Embedded runtime](#embedded-runtime) |
 
 ## Libraries
 
-Each library keeps its own Spago configuration and repository. The
-[repository map](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md#repositories-and-consumers) describes
-the source families and their consumers. `./bin/modtest --all --list` gives the
-current executable library suite. The Go development sections in the library READMEs link to this procedure.
+Each port has its own repository and Spago configuration. From the compiler
+checkout:
 
-1. Build gopurs with the [bootstrap guide](bootstrap.md#clean-source-installation).
-   From the gopurs checkout, run `./bin/setup --core` for the 22 core libraries,
-   their supporting dependencies and the Argonaut codec support checkout, or
-   `./bin/setup --all` for the complete family, including the adapted QuickCheck
-   prerequisite.
-2. Put the pinned TAST compiler and application Spago on `PATH` (see the
-   [toolchain guide](nix.md#typed-frontend-and-development-shell)). Check both with
-   `command -v purs spago` and `purs --version; spago --version`. The interactive
-   shell, npm and altbak can select different tools. A stock compiler's version
-   number alone does not prove that it emits TAST.
-3. From the library root, inspect the resolved packages, compile PureScript,
-   generate Go, then run the test program:
+1. Build gopurs using [bootstrap](bootstrap.md#clean-source-installation).
+2. Run `./bin/setup --core` for the 22 core ports and supporting dependencies,
+   or `./bin/setup --all` for the whole family, including adapted QuickCheck.
+3. Put the [typed frontend and Spago](nix.md#typed-frontend-and-development-shell)
+   on `PATH`. Check `command -v purs spago`: a version number alone does not
+   prove that `purs` emits TAST.
+4. Run the selected ports in isolated workspaces:
 
-   If the port declares external Go imports in `go-dependencies.json`, prepare
-   those [Go dependencies](ffi-idiomatic.md#external-go-modules) after `spago build`
-   and before invoking gopurs. The library's own `bin/test` is the place to check
-   for any additional setup.
+```sh
+./bin/modtest --all --list
+./bin/modtest prelude strings --keep-going
+./bin/modtest -d prelude strings --keep-going
+```
 
-   ```bash
-   spago ls deps --transitive --json
-   spago build
-   ../gopurs/bin/gopurs --main Test.Main
-   (cd output && go mod tidy && go run ./main)
-   ```
+For a manual run from a library checkout:
 
-   Add `--offline` to the Spago commands when all dependencies are cached.
-   Remove stale frontend TAST when validating a removed or renamed module, or
-   compile the frontend into a fresh output. gopurs removes obsolete Go files
-   owned by its journal; module discovery follows the TAST that remain present.
-   Library `bin/test` scripts
-   clean only their own build directories. For an isolated campaign, run
-   `./bin/modtest prelude strings --keep-going` from gopurs: each target gets a
-   fresh copy of the library family and private Spago temporaries.
-   See the [test guide](testing.md#library-tests) for selection and reports.
+```sh
+spago ls deps --transitive --json
+spago build
+# Prepare any external Go dependencies before the next command.
+../gopurs/bin/gopurs --main Test.Main
+(cd output && go mod tidy && go run ./main)
+```
 
-Both `bin/test` and `bin/modtest` print a `Results:` JSON report path. Reports
-and per-target logs are retained; `--keep-workspace` also retains successful
-builds. Resume unsuccessful or unattempted targets with
-`./bin/modtest --resume-failed /path/to/results.json --keep-going` (or `bin/test`
-for fixtures). The retry creates a new report linked to the original campaign.
-See [isolation and reports](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md#isolation-reports-and-resume).
+Ports declaring `go-dependencies.json` need [Go dependency preparation](ffi-idiomatic.md#external-go-modules)
+after `spago build` and before gopurs. Check the port's `bin/test` for additional
+setup. Use Spago's `--offline` only when dependencies are cached.
 
-`assert` has no executable test suite: use `spago build`, then
-`../gopurs/bin/gopurs`, then `(cd output && go mod tidy && go build ./...)`.
-QuickCheck has a standalone deterministic `Test.Go` suite: use
-`./bin/modtest quickcheck` from gopurs, or `./bin/test` from its checkout. The
-runner builds and executes JavaScript and Go, then compares their transcripts.
-`node-net` has a `test/Test/Main.purs` entrypoint that
-the current Spago command compiles despite the absent `package.test` stanza;
-its runner executes that Go program.
+After removing or renaming a module, rebuild frontend output cleanly: gopurs
+still discovers any old TAST left there. Its ownership journal removes obsolete
+Go output, not stale frontend modules.
+
+Both runners print a `Results:` JSON path and retain logs. `--keep-workspace`
+also keeps successful generated workspaces. Resume failures with:
+
+```sh
+./bin/modtest --resume-failed /path/to/results.json --keep-going
+```
+
+See [testing](testing.md#library-tests) for selection, reports and isolation.
+Special cases: `assert` is build-only (`spago build`, gopurs without `--main`,
+then `go build ./...` under `output/`); QuickCheck runs deterministic `Test.Go`
+and compares JS/Go transcripts; `node-net` uses `test/Test/Main.purs` despite
+having no `package.test` stanza.
 
 ### Configuration and lockfiles
 
-The Go configuration is `spago.yaml`. Where it is a tracked link to
-`spago.go.yaml`, edit the target file. Setup preserves these links. Library `workspace.extraPackages`
-lists only overrides used by that workspace's resolved graph, including its
-test dependencies. A dependency's own `workspace` does not supply overrides to
-the consuming application: add the necessary Go overrides to that application's
-configuration as well. Keep required transitive overrides; retaining only the
-direct imports can silently select registry JavaScript implementations.
-
-Use each library's checked-in package set and package name. Some ports use
-a `gopurs-` prefix in their package declaration; preserve the resolution aliases
-used by their consumers.
-
-Spago lockfiles record registry versions and local **paths**, not commits of
-sibling repositories. Keep related checkouts at the intended revisions when
-reproducing a build. Update a tracked lockfile with the same Spago version as
-the workspace after changing its configuration. Some libraries ignore their
-local Spago lockfile; follow the checkout's existing tracking policy.
-
-The backend's `package-lock.json` is the source for `npm ci`; its npm `prepare`
-hook builds the bundle. Library npm manifests, Bower files and Dhall
-configurations can also serve JavaScript or upstream workflows.
-In particular, Spago 0.20/0.21 reads Dhall while Spago 0.93/1.x reads YAML.
-Follow a library's existing npm/CI commands for those workflows; `npm test`
-does not universally run Go. Preserve npm lockfiles used by those commands.
-Go helper modules live in `tools/ffi-gen`, `tools/build-cache` and `tools/c1c`.
-The backend creates each application's Go module under `output`.
-Ports with external Go imports declare exact versions in `go-dependencies.json`.
-Run the [Go dependency preparation](ffi-idiomatic.md#external-go-modules)
-after output cleanup and before generation; the repository fixture harness
-does this for local overrides. Keep the resulting `go.mod` and `go.sum` for
-subsequent builds.
+- Edit `spago.go.yaml` when `spago.yaml` is a tracked link to it.
+- Keep the package set, package names and resolution aliases used by the port.
+  A consuming application's `extraPackages` must include its required Go
+  overrides, including transitive ones; dependency workspaces do not supply them.
+- Spago locks record local paths, not sibling Git commits. Reproduce both the
+  lock and checkout revisions. Update tracked locks with the workspace's Spago
+  version; preserve its policy for ignored locks.
+- npm/Bower/Dhall files may support upstream JS workflows. `npm test` does not
+  universally mean Go tests. Spago 0.20/0.21 uses Dhall; 0.93/1.x uses YAML.
+- The compiler uses `npm ci` and its tracked npm lock; `prepare` builds the bundle.
+  Ports with external Go imports pin them in `go-dependencies.json`. Keep the
+  prepared application's `output/go.mod` and `go.sum` between builds.
 
 ## Go FFI
 
-For a new binding, start with the [Go FFI author guide](ffi-idiomatic.md).
-The notes here explain where the compiler finds bindings and how to maintain
-the bridge.
+Implement `returnInt64` as `ReturnInt64` in a `.go` companion, or supply an FFI
+lookup directory with `--ffi`. The bridge prefixes copied declarations and
+adapts parsed Go signatures using TAST types. It supports both generated package
+layouts selected by `GOPURS_GO_PACKAGES`.
 
-Place a `.go` file beside the corresponding `.purs` file, or provide a lookup
-directory with `--ffi`. For a foreign import named `returnInt64`, export a Go
-function named `ReturnInt64`. The backend prefixes package-level declarations
-and their references and creates bridge functions using the parsed signatures
-and TAST types. Generated modules use either the single `purescript` package or
-the partitioned package layout selected by `GOPURS_GO_PACKAGES`.
+Use the [FFI guide](ffi-idiomatic.md) for signatures, effects and ownership.
+Implementation starts in [FfiBridge](../src/Gopurs/FfiBridge.purs);
+[FFIIntegerReturns](../tests/passing/FFIIntegerReturns.purs) and its
+[Go companion](../tests/passing/FFIIntegerReturns.go) provide executable examples.
 
-Supported bridges handle primitive values, slices, selected records and ADTs,
-and callbacks. Their conversion rules are implemented in
-[FfiBridge](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/FfiBridge.purs); see the executable
-[integer FFI fixture](https://github.com/0x000000000000000000001/gopurs/blob/main/tests/passing/FFIIntegerReturns.purs) and its
-[Go implementation](https://github.com/0x000000000000000000001/gopurs/blob/main/tests/passing/FFIIntegerReturns.go) for native `int`, `int64`,
-slice, and dynamic return examples. New effect bindings use ordinary Go
-functions: `Effect String` can be implemented by `func Label() string`,
-and `Effect Unit` by `func Fire()`. The adapter defers execution until the
-effect runs. Legacy explicit-thunk implementations remain supported; see the
-[Go FFI guide](ffi-idiomatic.md) for effect, callback and resource contracts.
-
-The Go parser is not a general binding generator for every Go API. Confirm that
-an imported signature is supported before using it. Source builds after RC14
-check bindings reachable from an explicit `--main` before publishing output.
-Batch generation without `--main`, RC14 and dynamic calls inside native Go FFI
-can still reach missing-binding panic stubs; exercise the application's FFI in
-tests. Parser and decoding failures report the PureScript module and FFI path
-and stop generation.
+An explicit `--main` checks reachable missing bindings before output publication.
+Batch generation without it, older RC14 builds and dynamic calls inside Go FFI
+can still reach panic stubs. Exercise application FFI in tests. The parser is
+not a universal Go binding generator; unsupported signatures must be adapted.
 
 ## FFI parser
 
-After a parser change, run the native contract tests, rebuild the WASM/parser
-runtime pair, rebuild the backend, then run the Node integration tests below.
+The parser lives in `tools/ffi-gen`: `parser.go` reads declarations, `types.go`
+defines the JSON contract and `main_js_wasm.go` exposes it to JS. The runner
+`tools/ffi-runner.mjs` accepts Go on stdin and returns JSON on stdout. Empty
+valid input yields `[]`; parsing, transport and JSON failures report diagnostics.
 
-The Go parser lives in `tools/ffi-gen`. `parser.go` analyzes declarations and
-returns the JSON contract; `types.go` defines that contract, and
-`main_js_wasm.go` exposes it to JavaScript. `tools/ffi-runner.mjs` reads Go source
-from stdin and writes the declarations as JSON to stdout. Valid input with no
-retained declarations returns `[]`. Invalid Go or a runner failure writes a
-diagnostic to stderr and exits unsuccessfully. The backend also rejects invalid
-JSON responses, reporting the PureScript module and the FFI file path.
+After changing it, use the pinned **Go 1.27.0** and run, from the compiler root:
 
-The generator's `go.mod` pins **Go 1.27.0**. With that version on `PATH`, run:
-
-```bash
+```sh
+go -C tools/ffi-gen test ./...
 npm run build:ffi
-```
-
-This explicitly rebuilds `tools/ffi_gen.wasm` for `js/wasm` and copies
-`tools/wasm_exec.js` from the same Go installation. The command checks the exact
-Go version, disables automatic toolchain switching, and uses `-trimpath`,
-`-buildvcs=false` and an empty build ID. Both artifacts are prepared before
-replacement, so a compilation failure preserves the existing pair. Commit the
-WASM and its matching JavaScript runtime together when regenerating them.
-
-The parser's contract tests run natively, without WASM:
-
-```bash
-cd tools/ffi-gen
-go test ./...
-```
-
-After rebuilding the WASM and the backend with `npm run build:ffi` and
-`npm run build`, run the Node integration tests from the repository root:
-
-```bash
+npm run build
 npm run test:ffi
 ```
 
-These exercise the typed `FfiSupport` API, syntax and JSON errors, and missing
-or corrupt runner/WASM files in temporary directories. `Main` receives decoded
-declarations; extraction and decoding failures propagate as exceptions. A build
-can have written some output files before failing.
+`build:ffi` rebuilds `tools/ffi_gen.wasm` and copies `tools/wasm_exec.js` from the
+same Go installation. Commit the pair together. It checks the exact toolchain,
+disables automatic switching and prepares both artifacts before replacing them.
+The ordinary build/install uses the checked-in pair; it does not rebuild the parser.
 
-The checked-in WASM and runtime are shipped with `tools/ffi-runner.mjs` in the
-npm package. `npm run build` and the installation `prepare` hook build the
-PureScript backend using those artifacts; rebuilding the parser is a separate
-maintainer command. After editing `FfiSupport.js`, run `npm run build` to update
-the backend bundle. Runner paths are resolved relative to the source, Spago
-output or installed bundle, independently of the current directory.
-
-The pinned Node.js and Go versions are listed in [bootstrap](bootstrap.md).
-See [testing](testing.md) for the available regression suites.
+After editing `FfiSupport.js`, rebuild the backend bundle too. Integration tests
+cover typed decoding, invalid input and absent/corrupt runner files. Failures can
+occur after some output files have been written. See [testing](testing.md).
 
 ## Embedded runtime
 
-The canonical runtime source is [`runtime/runtime.go`](https://github.com/0x000000000000000000001/gopurs/blob/main/runtime/runtime.go).
-Edit that file, then rebuild the compiler hosts you use:
+Edit the canonical [runtime/runtime.go](../runtime/runtime.go), then rebuild
+each compiler host you use:
 
-```bash
-npm run build          # JavaScript host
-npm run build:native   # native Go host
-npm run build:rust     # native Rust host
+```sh
+npm run build          # JavaScript
+npm run build:native   # Go
+npm run build:rust     # experimental Rust
 ```
 
-The build first runs `tools/build/embed-runtime.mjs`, which writes the ignored
-`src/Gopurs/Runtime/Source.js`, `Source.go` and `Source.rs` FFI companions.
-`Gopurs.Runtime.Source.runtimeGoCode` remains a PureScript `String`; all three compiler
-hosts embed the same constant. The installed
-backend does not read the Go source at execution time, and the generated
-`output/gopurs_runtime/runtime.go` contains its exact text.
+Each build embeds the same Go source through generated `Runtime/Source` FFI
+companions. Installed compilers do not read `runtime.go` at execution time.
+`npm run build:runtime` regenerates only those companions; run it before a direct
+`spago build` after changing the runtime or starting fresh. Unchanged source
+preserves timestamps for incremental builds.
 
-`npm run build:runtime` regenerates only the FFI companions. Run it before a direct
-`spago build` after changing the Go source or starting from a fresh checkout.
-When the source is unchanged, regeneration preserves the FFI file's timestamp
-so Spago can reuse its compiled output. The npm `prepare` hook runs the JS
-build and includes this step automatically. Generated FFI and bundle files are
-build artifacts; commit the Go source and build tooling.
+Commit the Go source and build tools, not generated FFI or bundles.

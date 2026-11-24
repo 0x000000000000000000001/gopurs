@@ -6,9 +6,7 @@ implementation. A cache hit does not replace frontend compilation or Go's own
 dependency and build checks.
 
 For application development, start with [everyday use](#everyday-use) and
-[recovery](#recovery-and-maintenance). The sections from
-[implementation boundaries](#implementation-boundaries) onward describe the
-protocol for maintainers changing reuse, invalidation or publication.
+[recovery](#recovery-and-maintenance). The expandable reference below is for maintainers changing the cache protocol.
 
 ## Everyday use
 
@@ -38,6 +36,9 @@ Go code generation and tail-call handling remain active. Older recognized dev
 policy versions share the profile namespace but have distinct semantic keys.
 The profiles share the publication lock and public-output ownership journal;
 switching profiles restores the selected profile's outputs.
+
+<details>
+<summary>Advanced use: package layout, preparation reuse and daemon</summary>
 
 ### Go packages and persistent preparation
 
@@ -76,6 +77,8 @@ process when the compiler, arguments or tracked settings change.
 `GOPURS_DAEMON=0` bypasses the daemon. Resident state is profile-sensitive;
 source equality alone never authorizes reuse across profiles.
 
+</details>
+
 ### Diagnostics
 
 A global hit finishes before TAST decoding and reports zero optimized/emitted
@@ -86,6 +89,36 @@ a conflicting external output produces an error.
 Pipeline pass times may overlap. Backend timing excludes Spago, startup and
 `go build`; measure the complete workflow separately when assessing iteration
 time. Follow the [benchmark protocol](benchmark-protocol.md).
+
+## Recovery and maintenance
+
+Missing or invalid cache objects, unknown versions, changed inputs and changed
+outputs cause a miss. A missing journal may be recovered from a verified prior
+manifest; a corrupt journal is an explicit error. Interrupted writes require
+the journal. Preserve it when removing reusable cache state.
+
+Adopting legacy generated output requires a fresh generation with matching paths
+and bytes. Unknown or different files are not guessed to be owned. If no trusted
+inventory can be recovered, build into a fresh frontend output directory.
+
+Use `--force` for routine recomputation. If manually resetting reusable cache
+objects, stop project builds and hold the existing publication lock; preserve
+its file and the ownership journal. The journal belongs to its physical output
+root and must not be transplanted elsewhere.
+
+Multipackage maintenance removes only unreferenced hash-named regular objects
+after rereading a consistent committed manifest and ownership journal under the
+lock. It preserves referenced artifacts and leaves private stages/control files
+alone. Interrupted publication suspends maintenance; maintenance failure does
+not invalidate an otherwise successful build.
+
+Allocation profiling and semantic diagnostic markers force computation rather
+than replaying pass timings. In particular, `Rebox missing` marks the manifest
+to reproduce the diagnostic on the next build. Cache misses remain observable
+through their reasons and reuse counters.
+
+<details>
+<summary>Maintainer reference: cache keys, formats, publication and validation</summary>
 
 ## Implementation boundaries
 
@@ -261,33 +294,6 @@ pointer for recovery. Publication is coherent for protocol clients, but is not
 an atomic rename of the entire output tree: external readers must coordinate
 with the build workflow.
 
-## Recovery and maintenance
-
-Missing or invalid cache objects, unknown versions, changed inputs and changed
-outputs cause a miss. A missing journal may be recovered from a verified prior
-manifest; a corrupt journal is an explicit error. Interrupted writes require
-the journal. Preserve it when removing reusable cache state.
-
-Adopting legacy generated output requires a fresh generation with matching paths
-and bytes. Unknown or different files are not guessed to be owned. If no trusted
-inventory can be recovered, build into a fresh frontend output directory.
-
-Use `--force` for routine recomputation. If manually resetting reusable cache
-objects, stop project builds and hold the existing publication lock; preserve
-its file and the ownership journal. The journal belongs to its physical output
-root and must not be transplanted elsewhere.
-
-Multipackage maintenance removes only unreferenced hash-named regular objects
-after rereading a consistent committed manifest and ownership journal under the
-lock. It preserves referenced artifacts and leaves private stages/control files
-alone. Interrupted publication suspends maintenance; maintenance failure does
-not invalidate an otherwise successful build.
-
-Allocation profiling and semantic diagnostic markers force computation rather
-than replaying pass timings. In particular, `Rebox missing` marks the manifest
-to reproduce the diagnostic on the next build. Cache misses remain observable
-through their reasons and reuse counters.
-
 ## Validation
 
 After building the required compiler hosts:
@@ -312,3 +318,5 @@ preparation tests enforce proof invalidation and full-preparation fallbacks.
 `GOPURS_TEST_RUST=1` adds Rust where supported;
 `GOPURS_TEST_KEEP_WORKSPACE=1` retains diagnostic workspaces. See
 [testing](testing.md) for selecting a suitable validation scope.
+
+</details>

@@ -23,6 +23,20 @@ JavaScript modules also require an up-to-date `output/` from `npm run build`.
 
 ## Choose a targeted check
 
+For a small compiler change, select a fixture and run both profiles:
+
+```sh
+./bin/test FixtureName
+./bin/test -d FixtureName
+```
+
+For docs use `npm run check:docs`; for a port use `./bin/modtest library-name`.
+Rebuild the compiler host after source changes. The detailed table below maps
+compiler areas to their regression suites; many of these also compile Go.
+
+<details>
+<summary>Regression suites by compiler area</summary>
+
 The commands below select regression suites; they do not assert that a campaign
 has already passed on your checkout. Many code-generation suites compile and
 execute Go programs, so they require Go even when invoked through Node.
@@ -64,6 +78,11 @@ its WASM artifact and JavaScript runtime paired as described in
 [development](development.md). Cache integration and CLI suites require the
 compiler artifacts specified by those tests; `GOPURS_TEST_RUST=1` adds Rust
 coverage where supported.
+
+</details>
+
+<details>
+<summary>Maintainer reference: compiler contracts, native bootstrap and TAST checks</summary>
 
 ## Compiler contracts
 
@@ -153,6 +172,8 @@ The PBO suites `monomorphize-transitive`, `transitive-parallel`,
 `node ../../purescript-backend-optimizer-gopurs/test/<suite>.mjs output` pattern.
 After editing PBO's `Json.go`, run `python3 bin/json-text/generate.py`, then the
 same command with `--check`, from that repository.
+
+</details>
 
 ## Selection and snapshots
 

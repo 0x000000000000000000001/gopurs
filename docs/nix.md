@@ -134,6 +134,9 @@ The complete compiler fixture suite and the release benchmark gates are
 separate checks described in [testing.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md) and
 [benchmark-protocol.md](benchmark-protocol.md).
 
+<details>
+<summary>CI maintainer reference: frontend cache and fixture environment</summary>
+
 ## CI frontend cache
 
 In Nix, a **runtime closure** contains a tool's store path and the dependencies
@@ -190,6 +193,8 @@ retries. The final quality report records actual attempts and requires matching
 compiler and toolchain identities across the selected build and fixture jobs.
 This transfer does not replace the fresh build or Nix application checks on
 each platform, nor does it claim a measured CI speedup before a real campaign.
+
+</details>
 
 ## Native bootstrap
 
