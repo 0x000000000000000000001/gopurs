@@ -175,6 +175,17 @@ unboxValue stateRef moduleName expr desiredType = case desiredType of
     _ -> GoUnboxIntArray expr
   TypeNativeArray inner -> unboxArray (coerceGoExpr stateRef moduleName) expr inner
   TypeGenericParam _ -> expr
+  -- Structurally admitted Int-list filters request this one callback ABI.
+  -- Capture an opaque boxed producer once, even for empty input; each element
+  -- still invokes the original callback through its ordinary runtime entry.
+  TypeFunc [ TypeInt64 ] TypeBool ->
+    GoCall (GoFuncLit [ Tuple "boxedPredicate" TypeValue ] []
+      (GoFuncLit [ Tuple "predicateInput" TypeInt64 ] []
+        (GoBinOp "!="
+          (GoSelector (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply")
+            [ GoVar "boxedPredicate", GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoVar "predicateInput" ] ]) "IntVal")
+          (GoInt 0)) TypeBool)
+      (TypeFunc [ TypeInt64 ] TypeBool)) [ expr ]
   TypeFunc _ _ -> expr
   TypeStructValue adtName fields ->
     case Map.lookup adtName NativeAdts.unboxableADTs of

@@ -341,6 +341,32 @@ var stringUnitSequenceWidth = [256]byte{
 
 func stringASCIIUnitPrefix(s string) int {
 	i := 0
+	// Keep short ASCII runs on the small scan. Reading a wide block before
+	// proving a long run adds work to strings alternating ASCII and Unicode.
+	for i < 128 && i+32 <= len(s) {
+		b := []byte(s[i : i+32])
+		word := binary.LittleEndian.Uint64(b) | binary.LittleEndian.Uint64(b[8:]) |
+			binary.LittleEndian.Uint64(b[16:]) | binary.LittleEndian.Uint64(b[24:])
+		if word&0x8080808080808080 != 0 {
+			goto tail
+		}
+		i += 32
+	}
+	for i+128 <= len(s) {
+		b := []byte(s[i : i+128])
+		first := binary.LittleEndian.Uint64(b) | binary.LittleEndian.Uint64(b[8:]) |
+			binary.LittleEndian.Uint64(b[16:]) | binary.LittleEndian.Uint64(b[24:])
+		second := binary.LittleEndian.Uint64(b[32:]) | binary.LittleEndian.Uint64(b[40:]) |
+			binary.LittleEndian.Uint64(b[48:]) | binary.LittleEndian.Uint64(b[56:])
+		third := binary.LittleEndian.Uint64(b[64:]) | binary.LittleEndian.Uint64(b[72:]) |
+			binary.LittleEndian.Uint64(b[80:]) | binary.LittleEndian.Uint64(b[88:])
+		fourth := binary.LittleEndian.Uint64(b[96:]) | binary.LittleEndian.Uint64(b[104:]) |
+			binary.LittleEndian.Uint64(b[112:]) | binary.LittleEndian.Uint64(b[120:])
+		if (first|second|third|fourth)&0x8080808080808080 != 0 {
+			break
+		}
+		i += 128
+	}
 	for i+32 <= len(s) {
 		b := []byte(s[i : i+32])
 		word := binary.LittleEndian.Uint64(b) | binary.LittleEndian.Uint64(b[8:]) |
@@ -350,6 +376,7 @@ func stringASCIIUnitPrefix(s string) int {
 		}
 		i += 32
 	}
+tail:
 	for i+8 <= len(s) {
 		if binary.LittleEndian.Uint64([]byte(s[i:i+8]))&0x8080808080808080 != 0 {
 			break

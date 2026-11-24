@@ -16,6 +16,7 @@ import Gopurs.GoFunctions (Parameters, curriedFunction, iterationBindings, loopP
 import Gopurs.Int32Loops as Int32Loops
 import Gopurs.AffineLoops as AffineLoops
 import Gopurs.ArraySnoc as ArraySnoc
+import Gopurs.ListFilter as ListFilter
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 
 type Worker =
@@ -39,8 +40,11 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
     loop = if isSelfRecursive then
       [ { ident: fn.ident, loopParams: map fst (loopParameters params), goTypes: map snd params } ]
       else []
-    result = case ArraySnoc.worker modNameStr fn.ident params resultType fn.body of
-      Just native -> native
+    native = case ListFilter.worker context.metadata params resultType fn.val of
+      Just filtered -> Just filtered
+      Nothing -> ArraySnoc.worker modNameStr fn.ident params resultType fn.body
+    result = case native of
+      Just lowered -> lowered
       Nothing -> translate (context
         { depth = 0
         , bound = bindParameters params Map.empty

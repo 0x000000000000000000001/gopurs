@@ -10,6 +10,7 @@ import Data.Newtype (unwrap)
 import Data.String as String
 import Data.Tuple (Tuple(..))
 import Gopurs.ExprContext (LocalEnv)
+import Gopurs.FilteredSumLoops as FilteredSumLoops
 import Gopurs.GoAst (GoExpr(..), GoType(..), sanitizeName)
 import Gopurs.GoFunctions (Parameters)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
@@ -39,7 +40,7 @@ wrap self params result body original = case recognize self params body of
       total = GoBinOp "+" accumulator (GoBinOp "*" counter (integer recurrence.increment))
       value = cast "int64" (cast "int32" total)
     in GoBlock [ GoIfElse admitted [ GoReturn value ] [], original ]
-  _ -> original
+  _ -> FilteredSumLoops.wrap self params result body original
 
 recognize :: (TcoExpr -> Boolean) -> Parameters -> TcoExpr -> Maybe Recurrence
 recognize self params body = do

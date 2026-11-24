@@ -37,6 +37,8 @@ import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import Gopurs.ThunkFusion (optimizeThunkProducers)
 import Gopurs.FunctionFusion (optimizeFunctionProducers)
+import Gopurs.ListFusion as ListFusion
+import Gopurs.ListProgressionFold as ListProgressionFold
 import Gopurs.ImmediateApplications (optimizeImmediateApplications)
 import Gopurs.RegexMatchProjection as RegexMatchProjection
 import Gopurs.Ownership as Ownership
@@ -50,6 +52,7 @@ import Gopurs.ConstructorExprs as ConstructorExprs
 import Gopurs.LiteralExprs as LiteralExprs
 import Gopurs.ArrayIntrinsics as ArrayIntrinsics
 import Gopurs.ClosedDictionaries (cacheClosedDictionaries)
+import Gopurs.ClosedScalar as ClosedScalar
 import Gopurs.BorrowedObjects (borrowReadOnlyObjects)
 import Gopurs.DecoderSchemas (specializeDecoderSchemas)
 import Gopurs.CallExprs as CallExprs
@@ -83,13 +86,15 @@ type PreparedModule =
 prepareModule :: CodegenMetadata -> BackendModule -> PreparedModule
 prepareModule metadata inputMod =
   let
-    projected = RegexMatchProjection.optimize metadata inputMod
-    schemas = specializeDecoderSchemas metadata (borrowReadOnlyObjects metadata (cacheClosedDictionaries metadata (optimizeImmediateApplications (optimizeFunctionProducers (optimizeThunkProducers projected)))))
+    projected = ListFusion.optimize (RegexMatchProjection.optimize metadata inputMod)
+    progressions = ListProgressionFold.prepare projected
+    constants = ClosedScalar.optimize progressions.module
+    schemas = specializeDecoderSchemas metadata (borrowReadOnlyObjects metadata (cacheClosedDictionaries metadata (optimizeImmediateApplications (optimizeFunctionProducers (optimizeThunkProducers constants)))))
     owned = Ownership.prepare metadata schemas.module
   in
     { module: owned.module
-    , declarations: owned.declarations <> schemas.declarations
-    , functions: owned.functions
+    , declarations: owned.declarations <> schemas.declarations <> progressions.declarations
+    , functions: Map.union owned.functions progressions.functions
     , workers: workerInputs metadata.globalFunctions owned.module
     }
 

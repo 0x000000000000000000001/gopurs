@@ -9,7 +9,7 @@ import Data.Array as Array
 import Data.Array.NonEmpty (fromArray)
 import Data.Foldable (foldl)
 import Data.Map as Map
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import Effect.Ref (Ref)
@@ -22,6 +22,7 @@ import Gopurs.GoSymbol (GoReference(..), generated)
 import Gopurs.GoConversions (adtPayloadTypes, boxGoExpr, getUnboxedADT)
 import Gopurs.GoTypes (exprTypeToGoType)
 import Gopurs.ModuleWorkers as ModuleWorkers
+import Gopurs.ListFilter as ListFilter
 import Gopurs.NativeRecordArgs (workerArguments)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.Codegen.Tco as Tco
@@ -99,7 +100,9 @@ bindingSignature metadata modNameStr (Tuple (Ident name) value) =
               workerResultType toGoType fRet
             _ -> TypeValue
         in
-          fallback { fArgs = parameters, fRet = result, arity = Array.length args }
+          fallback
+            { fArgs = fromMaybe parameters (ListFilter.workerArguments metadata (Array.zip args parameters) result value)
+            , fRet = result, arity = Array.length args }
       Nothing -> fallback
   in
     Tuple (sanitizeName name) signature

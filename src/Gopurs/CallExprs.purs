@@ -14,9 +14,11 @@ import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.ArrayIntrinsics as ArrayIntrinsics
+import Gopurs.ArrayIntrinsics.Callback as Callback
 import Gopurs.ArrayTraverse as ArrayTraverse
 import Gopurs.ArrayEquality as ArrayEquality
 import Gopurs.ScalarArrayFold as ScalarArrayFold
+import Gopurs.ArrayRangeFold as ArrayRangeFold
 import Gopurs.ArraySort as ArraySort
 import Gopurs.ObjectTraverse as ObjectTraverse
 import Gopurs.TailRecEffect as TailRecEffect
@@ -57,7 +59,7 @@ application translate context nextId expression =
     Just result -> result
     Nothing -> scalarApplication fn args
 
-  scalarApplication fn args = case ScalarArrayFold.emit translate context nextId fn args of
+  scalarApplication fn args = case scalarFold translate context nextId fn args of
     Just result -> result
     Nothing -> arrayApplication fn args
 
@@ -72,9 +74,39 @@ application translate context nextId expression =
               ArrayIntrinsics.emitCurried translate context nextId fn args intrinsic
             Nothing -> case directFunction context target (Array.length args) of
               Just info ->
-                let translated = CallArguments.translate translate context Nothing { stmts: StmtEmpty, nextId } args
+                let translated = directArguments translate context nextId info.fArgs args
                 in nativeCall context (GoRef info.reference) info.fArgs info.fRet info.arity translated
               Nothing -> curriedCall translate context nextId fn args
+
+scalarFold :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array TcoExpr -> Maybe ExprResult
+scalarFold translate context nextId fn args = case ArrayRangeFold.emit translate context nextId fn args of
+  Just fused -> Just fused
+  Nothing -> ScalarArrayFold.emit translate context nextId fn args
+
+-- Only a published native predicate slot enables lambda lowering here. Other
+-- calls retain their current translation. Capture every argument in source
+-- order before entering the worker, including boxed callback factories.
+directArguments :: TranslateExpr -> ExprContext -> Int -> Array GoType -> Array TcoExpr -> Arguments
+directArguments translate context@{ codegenStateRef, modNameStr } nextId expected args =
+  let predicateType = TypeFunc [ TypeInt64 ] TypeBool
+  in if Array.elem predicateType expected then
+    CallArguments.capture { prefix: "nativePredicate_arg_", markUsed: false }
+      (\index argumentId arg ->
+        let
+          native = if Array.index expected index == Just predicateType && getExprType arg == Func [ Int ] Boolean then
+            Callback.nativeLambda translate context argumentId 1 arg
+            else Nothing
+          result = case native of
+            Just callback@{ expr: GoFuncLit params statements returned resultType } ->
+              callback
+                { expr = GoFuncLit params statements (coerceGoExpr codegenStateRef modNameStr returned resultType TypeBool) TypeBool
+                , exprType = predicateType }
+            _ -> translate (childContext context Nothing) argumentId arg
+        in if Array.index expected index == Just predicateType then
+          result { expr = coerceGoExpr codegenStateRef modNameStr result.expr result.exprType predicateType, exprType = predicateType }
+          else result)
+      nextId args
+    else CallArguments.translate translate context Nothing { stmts: StmtEmpty, nextId } args
 
 -- A direct worker must be saturated; partial calls retain the boxed path.
 directFunction :: ExprContext -> Maybe CallTarget -> Int -> Maybe FunctionInfo
@@ -159,7 +191,7 @@ uncurriedApplication translate context nextId expression fn args =
 
 uncurriedScalarApplication :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> Array TcoExpr -> ExprResult
 uncurriedScalarApplication translate context nextId expression fn args =
-  case ScalarArrayFold.emit translate context nextId fn args of
+  case scalarFold translate context nextId fn args of
     Just result -> result
     Nothing -> uncurriedArrayApplication translate context nextId expression fn args
 
