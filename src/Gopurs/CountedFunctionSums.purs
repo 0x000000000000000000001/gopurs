@@ -125,7 +125,9 @@ evaluate context env (NeutralExpr syntax) = do
       lift $ guard (functionAnnotation ty)
       go inner
     Syn.TypeApp inner _ -> go inner
-    Lit (LitInt value) -> pure (Integer (Constant value))
+    Lit (LitInt value) -> do
+      lift $ guard (value >= (-2147483647 - 1) && value <= 2147483647)
+      pure (Integer (Constant value))
     Local ident level -> lift (Map.lookup (Tuple ident level) env)
     Var (Qualified owner name) -> do
       lift $ guard (owner == Nothing || owner == Just context.owner)
@@ -248,7 +250,10 @@ emitScalar = case _ of
       first = Tuple (Just (Ident "countedFactor")) (Level next)
       second = Tuple (Just (Ident "countedIncrement")) (Level (next + 1))
       x = reference first
-      y = reference second
+      -- Inputs have signed Int32 guards, constants are checked during the
+      -- proof, and sums/products narrow. Expose that fact to scalar emission
+      -- without changing the arithmetic or relying on local binding names.
+      y = binary Int Syn.OpIntBitOr (reference second) (integer 0)
       low = binary Int (Syn.OpIntNum Syn.OpMultiply) (binary Int Syn.OpIntBitAnd x (integer 65535)) y
       high = binary Int Syn.OpIntBitShiftLeft
         (binary Int (Syn.OpIntNum Syn.OpMultiply) (binary Int Syn.OpIntBitShiftRight x (integer 16)) y) (integer 16)

@@ -121,6 +121,22 @@ test('negative counts keep the original divergent producer behind the runtime gu
     assert.deepEqual(condition.value2, lit(0));
 });
 
+test('wide constants retain the original computation, including ignored strict arguments', () => {
+    for (const [count, offset, seed] of [[4294967296, 1, 0], [2, 4294967296, 0], [2, 1, 4294967296]]) {
+        const source = fixture();
+        const value = call(int, repeat(lit(count)), lambda(unary, [2], plus(local(int, 2), lit(offset))), lit(seed));
+        addBinding(source, 'wide', value);
+        assert.deepEqual(find(translate(source), 'wide'), value);
+    }
+    const source = fixture();
+    const unused = lambda(unary, [9], call(int, repeat(lit(2)),
+        lambda(unary, [2], plus(local(int, 2), lit(3))), lit(0)));
+    addBinding(source, 'strictWide', call(int, unused, lit(4294967296)));
+    const rewritten = find(translate(source), 'strictWide');
+    assert.ok(rewritten.value1 instanceof S.App, 'strict application is retained');
+    assert.deepEqual(rewritten.value1.value1, [lit(4294967296)]);
+});
+
 function runtimeModule() {
     const source = fixture();
     addBinding(source, 'sum', consumer());

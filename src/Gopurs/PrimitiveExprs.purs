@@ -3,6 +3,7 @@ module Gopurs.PrimitiveExprs
   , literal
   , unary
   , binary
+  , boundedIntProduct
   , stringLengthComparison
   ) where
 
@@ -12,6 +13,7 @@ import Control.Alternative (guard)
 import Data.Array.NonEmpty as NEA
 import Data.Maybe (Maybe(..))
 import Data.String.CodeUnits as SCU
+import Data.Tuple (Tuple(..))
 import Effect.Ref (Ref)
 import Gopurs.Cache.LookupTable as LookupTable
 import Gopurs.CallAnalysis (qualifiedTarget)
@@ -20,15 +22,82 @@ import Gopurs.ExprAnalysis (getExprType, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, childContext, wrapInStmts)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr, unboxGoExpr)
-import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
+import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Literal(..), ModuleName(..))
-import PureScript.Backend.Optimizer.Syntax (BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..))
+import PureScript.Backend.Optimizer.Syntax (BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..))
 import PureScript.Backend.Optimizer.Syntax as Syn
 
 type PrimitiveExpr =
   { expr :: GoExpr
   , exprType :: GoType
   }
+
+-- IntMul follows JS Number multiplication before narrowing. A native integer
+-- product is equivalent only when the syntax bounds its magnitude by 2^53.
+-- TAST Int alone is insufficient: public Int values can lie outside Int32.
+boundedIntProduct :: TranslateExpr -> ExprContext -> Int -> BackendOperator2 -> TcoExpr -> TcoExpr -> Maybe ExprResult
+boundedIntProduct translate context nextId operator lhs rhs = do
+  guard (operator == OpIntNum OpMultiply)
+  leftBits <- integerMagnitude lhs
+  rightBits <- integerMagnitude rhs
+  guard (leftBits + rightBits <= 53)
+  let
+    child = childContext context (Just Int)
+    left = translate child nextId lhs
+    right = translate child left.nextId rhs
+    operand result = wrapInStmts context.recVars result.stmts TypeInt64
+      (unboxGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType TypeInt64)
+    cast name value = GoCall (GoVar name) [ value ]
+    product = GoBinOp "*" (GoVar "boundedLeft") (GoVar "boundedRight")
+    -- Function parameters avoid Go's overflowing constant conversions. The
+    -- small IIFE is inlinable; its arguments retain strict left-to-right work.
+    function = GoFuncBlock [ Tuple "boundedLeft" TypeInt64, Tuple "boundedRight" TypeInt64 ]
+      [ GoReturn (cast "int64" (cast "int32" product)) ] TypeInt64
+  pure { stmts: StmtEmpty, expr: GoCall function [ operand left, operand right ]
+    , exprType: TypeInt64, nextId: right.nextId }
+
+-- Return b only when |value| <= 2^b. These operations normalize their results;
+-- division, unsigned shifts, arbitrary calls and plain locals are not proofs.
+integerMagnitude :: TcoExpr -> Maybe Int
+integerMagnitude (TcoExpr _ syntax) = case syntax of
+  Typed Int inner -> integerMagnitude inner
+  Typed Any inner -> integerMagnitude inner
+  Syn.TypeApp inner _ -> integerMagnitude inner
+  Lit (LitInt value) -> literalMagnitude value
+  PrimOp (Syn.Op2 operation left right) -> case operation of
+    OpIntBitAnd -> case integerLiteral left, integerLiteral right of
+      Just mask, _ | mask >= 0 -> literalMagnitude mask
+      _, Just mask | mask >= 0 -> literalMagnitude mask
+      _, _ -> Just 31
+    OpIntBitShiftRight -> case integerLiteral right of
+      Just shift | shift >= 0 && shift <= 31 -> Just (31 - shift)
+      _ -> Just 31
+    OpIntBitOr -> Just 31
+    OpIntBitXor -> Just 31
+    OpIntBitShiftLeft -> Just 31
+    OpIntNum OpAdd -> Just 31
+    OpIntNum OpSubtract -> Just 31
+    OpIntNum OpMultiply -> Just 31
+    _ -> Nothing
+  _ -> Nothing
+
+integerLiteral :: TcoExpr -> Maybe Int
+integerLiteral (TcoExpr _ syntax) = case syntax of
+  Typed Int inner -> integerLiteral inner
+  Typed Any inner -> integerLiteral inner
+  Syn.TypeApp inner _ -> integerLiteral inner
+  Lit (LitInt value) -> Just value
+  _ -> Nothing
+
+literalMagnitude :: Int -> Maybe Int
+literalMagnitude value
+  | value < (-2147483647 - 1) || value > 2147483647 = Nothing
+  | value == (-2147483647 - 1) = Just 31
+  | otherwise = Just (bits (if value < 0 then negate value else value) 0)
+  where
+  bits remaining count
+    | remaining <= 1 = count
+    | otherwise = bits (div remaining 2 + mod remaining 2) (count + 1)
 
 -- Length equality needs neither complete scan when both immutable strings are
 -- the same view. Admit the canonical, typed operation before lowering its

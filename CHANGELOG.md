@@ -8,6 +8,9 @@ All notable changes to gopurs are recorded here. The format follows
 
 ### Changed
 
+- Emit native integer multiplication when operand bounds prove an exact
+  product within the JavaScript Number integer range. Expose those bounds for
+  counted translations while retaining ordinary IntMul semantics elsewhere.
 - Reduce proven closed integer countdowns after thunk fusion, allowing existing
   affine loop optimization to eliminate repeated calls. Preserve strict reads,
   exact Int32 addition semantics and runtime input boundaries.

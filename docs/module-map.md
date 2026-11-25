@@ -52,7 +52,7 @@ are sorted and deduplicated from the module source.
 | `Gopurs.ClosedDictionaries`<br>`src/Gopurs/ClosedDictionaries.purs` | Rewrite | Rewrites and caches closed dictionaries. | `ClosedDictionaries.Admission`, `CodegenState` |
 | `Gopurs.ClosedScalar`<br>`src/Gopurs/ClosedScalar.purs` | Rewrite | Evaluates bounded closed Int computations and proven affine countdowns, retaining strict global reads and unknown work. | `ImmediateApplications.Scope` |
 | `Gopurs.ConstructorFold`<br>`src/Gopurs/ConstructorFold.purs` | Rewrite | Fuses fresh constructor producers with complete ordered Int folds. | `ImmediateApplications.Scope`, `WorkerNames` |
-| `Gopurs.CountedFunctionSums`<br>`src/Gopurs/CountedFunctionSums.purs` | Rewrite | Reduces proved compositions of counted Int translations with guarded modular arithmetic and the original fallback. | `ImmediateApplications.Scope` |
+| `Gopurs.CountedFunctionSums`<br>`src/Gopurs/CountedFunctionSums.purs` | Rewrite | Reduces proved compositions of counted Int translations with guarded modular arithmetic, explicit signed bounds and the original fallback. | `ImmediateApplications.Scope` |
 | `Gopurs.DecoderSchemas.Admission`<br>`src/Gopurs/DecoderSchemas/Admission.purs` | Rewrite | Admits decoder schemas and their programs. | `DecoderSchemas.Programs`, `DecoderSchemas.Source`, `DecoderSchemas.Types` |
 | `Gopurs.DecoderSchemas.Programs`<br>`src/Gopurs/DecoderSchemas/Programs.purs` | Rewrite | Derives dictionary programs from schemas. | `DecoderSchemas.Source`, `DecoderSchemas.Types` |
 | `Gopurs.DecoderSchemas.Source`<br>`src/Gopurs/DecoderSchemas/Source.purs` | Rewrite | Resolves source dictionaries and schema symbols. | — |
@@ -135,7 +135,7 @@ are sorted and deduplicated from the module source.
 | `Gopurs.ModuleDeclarations`<br>`src/Gopurs/ModuleDeclarations.purs` | Emit | Emits ADT structs and class-getter registration. | `CodegenState`, `GoAst`, `GoSymbol`, `GoTypes` |
 | `Gopurs.ModuleWorkers`<br>`src/Gopurs/ModuleWorkers.purs` | Emit | Emits module workers and wrappers. | `AffineLoops`, `ArraySnoc`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoFunctions`, `GoSymbol`, `Int32Loops`, `ListFilter`, `TailAddLoops` |
 | `Gopurs.ObjectTraverse`<br>`src/Gopurs/ObjectTraverse.purs` | Emit | Emits Either traversal loops over objects. | `AdtExprs`, `CallAnalysis`, `CallArguments`, `ExprContext`, `GoAst`, `GoConversions` |
-| `Gopurs.PrimitiveExprs`<br>`src/Gopurs/PrimitiveExprs.purs` | Emit | Translates primitives and their conversions. | `Cache.LookupTable`, `CallAnalysis`, `CodegenState`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions` |
+| `Gopurs.PrimitiveExprs`<br>`src/Gopurs/PrimitiveExprs.purs` | Emit | Translates primitives and their conversions, using native integer products where operand bounds prove exactness. | `Cache.LookupTable`, `CallAnalysis`, `CodegenState`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions` |
 | `Gopurs.Printer.Builder`<br>`src/Gopurs/Printer/Builder.purs` | Emit | Owns the private mutable buffer for one rendering operation. | — |
 | `Gopurs.Printer`<br>`src/Gopurs/Printer.purs` | Emit | Renders Go declarations as text. | `GoAst`, `GoCode`, `GoSymbol`, `Printer.Builder` |
 | `Gopurs.PrivateSTRegions`<br>`src/Gopurs/PrivateSTRegions.purs` | Emit | Proves private ST regions and emits native locals, arrays and loops. | `CallAnalysis`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions` |
