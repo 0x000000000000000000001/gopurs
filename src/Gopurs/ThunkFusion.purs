@@ -11,6 +11,7 @@ import Data.Maybe (Maybe(..))
 import Data.Set as Set
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..), snd)
+import Gopurs.ClosedScalar as ClosedScalar
 import Gopurs.WorkerNames as WorkerNames
 import PureScript.Backend.Optimizer.Convert (BackendBindingGroup, BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), ModuleName(..), Qualified(..))
@@ -86,7 +87,10 @@ rewriteModule producers mod =
           original = group { bindings = map (\(Tuple ident result) ->
             Tuple ident result.expr) group.bindings }
         in workers <> [ original ]) rewritten
-  in mod { bindings = bindings }
+    rewrittenModule = mod { bindings = bindings }
+  -- Strict workers expose closed integer recurrences that did not exist during
+  -- the earlier scalar pass. Revisit only modules that actually consume one.
+  in if Set.isEmpty used then rewrittenModule else ClosedScalar.optimize rewrittenModule
 
 collectProducer
   :: ModuleName

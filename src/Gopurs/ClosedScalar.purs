@@ -5,13 +5,14 @@ module Gopurs.ClosedScalar (optimize) where
 
 import Prelude
 
-import Control.Alternative (guard)
+import Control.Alternative (guard, (<|>))
 import Control.Monad.Rec.Class (Step(..), tailRecM)
 import Control.Monad.State (State, StateT, evalState, get, put, runStateT)
 import Control.Monad.Trans.Class (lift)
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
 import Data.Foldable (foldr)
+import Data.Int.Bits as Bits
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Set as Set
@@ -19,7 +20,7 @@ import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import Gopurs.ImmediateApplications.Scope (maximumLevel)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
-import PureScript.Backend.Optimizer.CoreFn (ExprType(Int), Ident, Literal(..), ModuleName, Prop(..), Qualified(..))
+import PureScript.Backend.Optimizer.CoreFn (ExprType(Int, Func), Ident, Literal(..), ModuleName, Prop(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
 import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendOperator(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Level(..), Pair(..))
 
@@ -147,7 +148,9 @@ evaluateStep { context, env, expression: NeutralExpr syntax } = do
     App fn args -> do
       callable <- go fn
       arguments <- traverse go (NEA.toArray args)
-      applyKnown child callable arguments
+      case closedAffineCall context fn arguments of
+        Just result -> done (Integer result)
+        Nothing -> applyKnown child callable arguments
     Branch branches otherwise -> chooseBranch child env (NEA.toArray branches) otherwise
     Accessor source (GetProp name) -> do
       value <- go source
@@ -197,3 +200,96 @@ applyKnown context value arguments = case value of
       result <- evaluate (context { active = Set.empty, stackDepth = context.stackDepth + 1 }) env body
       applyKnown (context { depth = context.depth + 1 }) result supplied
   _ -> lift Nothing
+
+-- A structurally proven countdown does not need to spend evaluation fuel for
+-- each iteration. The callee and all arguments have already been evaluated
+-- strictly before this shortcut. Only a two-Int closure with no other work is
+-- admitted; unknown calls, branches and initializers keep the bounded fallback.
+closedAffineCall :: Context -> NeutralExpr -> Array Value -> Maybe Int
+closedAffineCall context function arguments = do
+  Qualified owner name <- variable function
+  guard (owner == Nothing || owner == Just context.moduleName)
+  binding <- Map.lookup name context.globals
+  Tuple parameters body <- case binding, bare binding of
+    NeutralExpr (Typed (Func [ Int, Int ] Int) _), Just (Abs parameters body) ->
+      Just (Tuple (NEA.toArray parameters) body)
+    _, _ -> Nothing
+  Tuple first second <- two parameters
+  guard (first /= second)
+  Tuple a b <- two =<< traverse (\value -> case value of
+    Integer integer -> Just integer
+    _ -> Nothing) arguments
+  Tuple (Pair condition result) next <- case bare body of
+    Just (Branch branches next) -> case NEA.toArray branches of
+      [ branch ] -> Just (Tuple branch next)
+      _ -> Nothing
+    _ -> Nothing
+  let prove counter accumulator count seed = do
+        guard (isLocal accumulator result)
+        Pair left right <- binary (OpIntOrd OpEq) condition
+        guard ((isLocal counter left && isInteger 0 right) ||
+          (isInteger 0 left && isLocal counter right))
+        Tuple self supplied <- case bare next of
+          Just (App self supplied) -> Just (Tuple self (NEA.toArray supplied))
+          _ -> Nothing
+        Qualified target recursive <- variable self
+        guard (recursive == name && (target == Nothing || target == Just context.moduleName))
+        Tuple x y <- two supplied
+        let counterStep = if counter == first then x else y
+            accumulatorStep = if counter == first then y else x
+        Pair previous decrement <- binary (OpIntNum OpSubtract) counterStep
+        guard (isLocal counter previous && isInteger 1 decrement)
+        Pair lhs rhs <- binary (OpIntNum OpAdd) accumulatorStep
+        delta <- (guard (isLocal accumulator lhs) *> integerValue rhs) <|>
+          (guard (isLocal accumulator rhs) *> integerValue lhs)
+        guard (int32 delta)
+        if count == 0 then pure seed
+        else do
+          guard (count > 0 && int32 count && int32 seed)
+          -- Each partial product is at most 2^47, hence exactly representable
+          -- even in the JS host. Ordinary Int multiplication can round a full
+          -- product beyond 2^53 before narrowing; repeated addition cannot.
+          let low = Bits.and count 65535 * delta
+              high = Bits.shl (Bits.shr count 16 * delta) 16
+          pure (seed + low + high)
+  prove first second a b <|> prove second first b a
+
+two :: forall a. Array a -> Maybe (Tuple a a)
+two [ a, b ] = Just (Tuple a b)
+two _ = Nothing
+
+variable :: NeutralExpr -> Maybe (Qualified Ident)
+variable expression = case bare expression of
+  Just (Var name) -> Just name
+  _ -> Nothing
+
+binary :: BackendOperator2 -> NeutralExpr -> Maybe (Pair NeutralExpr)
+binary operator expression = case bare expression of
+  Just (PrimOp (Op2 actual left right)) | actual == operator -> Just (Pair left right)
+  _ -> Nothing
+
+bare :: NeutralExpr -> Maybe (BackendSyntax NeutralExpr)
+bare expression = tailRecM step { expression, remaining: 64 }
+  where
+  step { expression: NeutralExpr syntax, remaining } = do
+    guard (remaining > 0)
+    pure case syntax of
+      Typed _ inner -> Loop { expression: inner, remaining: remaining - 1 }
+      TypeApp inner _ -> Loop { expression: inner, remaining: remaining - 1 }
+      _ -> Done syntax
+
+isLocal :: Ref -> NeutralExpr -> Boolean
+isLocal reference expression = case bare expression of
+  Just (Local name level) -> reference == Tuple name level
+  _ -> false
+
+integerValue :: NeutralExpr -> Maybe Int
+integerValue expression = case bare expression of
+  Just (Lit (LitInt value)) -> Just value
+  _ -> Nothing
+
+isInteger :: Int -> NeutralExpr -> Boolean
+isInteger value expression = integerValue expression == Just value
+
+int32 :: Int -> Boolean
+int32 value = value >= (-2147483647 - 1) && value <= 2147483647

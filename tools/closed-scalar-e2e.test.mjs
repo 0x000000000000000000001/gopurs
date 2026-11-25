@@ -15,11 +15,12 @@ const modes = [
 ].filter(mode => !process.env.GOPURS_TEST_MODES || process.env.GOPURS_TEST_MODES.split(",").includes(mode.name));
 const expected = [
   [0, 1, 2, 4], [16, 16, 12, 15, 33], [-2147483648, 2147483647],
+  [-5000, -5003, -69997, 2147483647, -17, -5019],
   41, 7, 19, 5, [1, 2, 10, 20, 30],
 ];
 const parse = stdout => stdout.trim().split("\n").map(line => JSON.parse(line));
 
-test("closed scalar folding preserves dictionaries, lexical capture and sequenced effects", async t => {
+test("closed scalar folding preserves dictionaries, exact affine sums, lexical capture and sequenced effects", async t => {
   assert.ok(modes.length > 0);
   const workspace = createWorkspace();
   let completed = 0;

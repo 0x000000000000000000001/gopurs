@@ -132,3 +132,24 @@ for (const collision of ['binding', 'sanitized binding', 'foreign']) {
         if (collision !== 'foreign') assert.deepEqual(result.bindings.at(-1), source.bindings.at(-1));
     });
 }
+
+test('new strict workers expose closed affine calls while runtime inputs remain opaque', () => {
+    const options = {
+        update: lambda(thunk, [2], add(force(), integer(1))),
+        seed: lambda(thunk, [2], integer(0)),
+        depth: integer(1000),
+    };
+    const source = fixture(options);
+    const result = optimize(source);
+    assert.equal(workerNames(source, result).length, 1);
+    assert.deepEqual(allBindings(result).find(pair => pair.value0 === 'consume').value1, integer(1000));
+    const opaque = fixture({...options, depth: local(9)});
+    const optimizedOpaque = optimize(opaque);
+    const consume = allBindings(optimizedOpaque).find(pair => pair.value0 === 'consume').value1;
+    assert.ok(consume.value1 instanceof S.App, 'runtime count still reaches the strict worker');
+    assert.deepEqual(consume.value1.value1[0], local(9));
+    const nested = fixture({...options, consumer: built => lambda(new C.Func([int], int), [9],
+        add(local(9), apply(int, built, unitValue)))});
+    const rewritten = allBindings(optimize(nested)).find(pair => pair.value0 === 'consume').value1;
+    assert.deepEqual(rewritten, lambda(new C.Func([int], int), [9], add(local(9), integer(1000))));
+});

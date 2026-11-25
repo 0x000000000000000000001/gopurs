@@ -2,6 +2,7 @@
 -- @inline Main.projectKept never
 -- @inline Main.observeValue never
 -- @inline Main.invoke never
+-- @inline Main.accumulateWide never
 module Main where
 
 -- @dependencies: prelude effect console refs arrays typelevel-prelude
@@ -59,6 +60,13 @@ moduleBase = 23
 addModuleBase :: Int -> Int
 addModuleBase value = moduleBase + value
 
+-- A closed recurrence exceeds the scalar interpreter's ordinary fuel. Its
+-- repeated Int additions must keep wrapping exactly, including negative seeds.
+accumulateWide :: Int -> Int -> Int
+accumulateWide remaining total
+  | remaining == 0 = total
+  | otherwise = accumulateWide (remaining - 1) (total + 2147483647)
+
 main :: Effect Unit
 main = do
   events <- Ref.new []
@@ -76,6 +84,16 @@ main = do
   maximum <- Ref.new 2147483647
   maxInt <- Ref.read maximum
   logShow [ invoke (\value -> value + 1) maxInt, invoke (\value -> value + (-1)) (-2147483648) ]
+  repetitions <- Ref.new 5000
+  runtimeCount <- Ref.read repetitions
+  logShow
+    [ accumulateWide 5000 0
+    , accumulateWide 5000 (-3)
+    , accumulateWide 70000 3
+    , accumulateWide 0 2147483647
+    , accumulateWide 0 (-17)
+    , accumulateWide runtimeCount (-19)
+    ]
   ignored <- observeValue events 10 99
   logShow (keepFirst 41 ignored)
   discarded <- observeValue events 20 99

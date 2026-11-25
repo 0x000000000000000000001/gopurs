@@ -258,3 +258,56 @@ test('integer primitive operands supply missing annotations without assigning ty
   assert.deepEqual(folded.value1.value3, scalar(lit(60)));
   unchanged(scalar(add(local('opaqueAccumulator', 9), unknown)));
 });
+
+function affineFixture(count, seed, delta, options = {}) {
+  const name = options.name ?? 'advanceBy';
+  const counter = local('remaining', 0), accumulator = local('total', 1);
+  const ordered = values => options.swapped ? values.toReversed() : values;
+  const update = options.update ?? (options.commuted ? add(lit(delta), accumulator) : add(accumulator, lit(delta)));
+  const recursion = app(global(options.target ?? name, options.owner ?? 'Renamed'),
+    ...ordered([subtract(counter, lit(options.decrement ?? 1)), update]));
+  const condition = options.condition ?? (options.commuted ? equals(lit(0), counter) : equals(counter, lit(0)));
+  const expression = branch(condition, options.base ?? accumulator, options.next ?? recursion);
+  const fn = typed(options.type ?? new C.Func([int, int], int),
+    expr(new S.Abs(ordered([ref('remaining', 0), ref('total', 1)]), expression)));
+  const argument = value => typeof value === 'number' ? lit(value) : value;
+  return { name, fn, value: scalar(app(global(name), ...ordered([argument(count), argument(seed)]))) };
+}
+
+test('proven closed affine recurrences fold without enumerating iterations and preserve exact Int32 products', () => {
+  const counts = [0, 1, 2, 1000, 65535, 65536, 2147483647];
+  const values = [-2147483648, -2147483647, -3, 0, 1, 2147483647];
+  for (const count of counts) for (const seed of values) for (const delta of values) {
+    const {name, fn, value} = affineFixture(count, seed, delta,
+      {swapped: delta < 0, commuted: seed < 0, name: 'renamedLoop'});
+    const expected = Number(BigInt.asIntN(32, BigInt(seed) + BigInt(count) * BigInt(delta)));
+    assert.deepEqual(run(value, [[name, fn]]), scalar(lit(expected)), `${count}, ${seed}, ${delta}`);
+  }
+  const {name, fn, value} = affineFixture(0, 4294967299, 1);
+  assert.deepEqual(run(value, [[name, fn]]), scalar(lit(4294967299)), 'zero iterations return the seed without narrowing');
+  for (const [count, seed, expected] of [[-2147483648, 0, -2147483648], [5000, 4294967296, 5000]]) {
+    const {name, fn, value} = affineFixture(count, seed, 1);
+    assert.deepEqual(run(value, [[name, fn]]), scalar(lit(expected)),
+      'the bounded interpreter may first take an exact wrapping step into the proven domain');
+  }
+});
+
+test('affine summaries retain strict argument reads and reject unknown work and unsupported recurrence shapes', () => {
+  const count = app(lambda(lit(2147483647)), imported('first'));
+  const seed = app(lambda(lit(0)), imported('second'));
+  const fixture = affineFixture(count, seed, 2147483647);
+  assert.deepEqual(run(fixture.value, [[fixture.name, fixture.fn]]), retained(['first', 'second'], 1, 1));
+  for (const [count, seed, options] of [
+    [local('opaqueCount', 8), 0, {}], [-1, 0, {}],
+    [4294967296, 0, {}], [5000, 0, {decrement: 2}],
+    [5000, 0, {target: 'other'}], [5000, 0, {owner: 'Imported'}],
+    [5000, 0, {base: add(local('total', 1), lit(1))}],
+    [5000, 0, {type: new C.Func([C.Number.value, int], int)}],
+    [5000, 0, {update: add(local('total', 1), unknown)}],
+    [5000, 0, {next: letIn('ignored', unknown, lit(1), 4)}],
+    [expr(new S.Fail('strict count must fail')), 0, {}], [5000, unknown, {}],
+  ]) {
+    const {name, fn, value} = affineFixture(count, seed, 1, options);
+    unchanged(value, [[name, fn]]);
+  }
+});

@@ -8,6 +8,9 @@ All notable changes to gopurs are recorded here. The format follows
 
 ### Changed
 
+- Reduce proven closed integer countdowns after thunk fusion, allowing existing
+  affine loop optimization to eliminate repeated calls. Preserve strict reads,
+  exact Int32 addition semantics and runtime input boundaries.
 - Reduce fully consumed compositions of counted integer translations to guarded
   arithmetic. Preserve opaque runtime inputs, exact repeated-addition Int32
   semantics, and the original computation outside the proved input domain.

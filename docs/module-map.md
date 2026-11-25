@@ -50,7 +50,7 @@ are sorted and deduplicated from the module source.
 | `Gopurs.ClosedDictionaries.Admission`<br>`src/Gopurs/ClosedDictionaries/Admission.purs` | Rewrite | Separates existing-binding reuse from new cache admission. | `Cache.LookupTable`, `ClosedDictionaries.Scope`, `CodegenState` |
 | `Gopurs.ClosedDictionaries.Scope`<br>`src/Gopurs/ClosedDictionaries/Scope.purs` | Rewrite | Checks lexical closure and absence of effects or recursion. | — |
 | `Gopurs.ClosedDictionaries`<br>`src/Gopurs/ClosedDictionaries.purs` | Rewrite | Rewrites and caches closed dictionaries. | `ClosedDictionaries.Admission`, `CodegenState` |
-| `Gopurs.ClosedScalar`<br>`src/Gopurs/ClosedScalar.purs` | Rewrite | Evaluates bounded closed Int computations, including recursive record projections, while retaining strict global reads and unknown work. | `ImmediateApplications.Scope` |
+| `Gopurs.ClosedScalar`<br>`src/Gopurs/ClosedScalar.purs` | Rewrite | Evaluates bounded closed Int computations and proven affine countdowns, retaining strict global reads and unknown work. | `ImmediateApplications.Scope` |
 | `Gopurs.ConstructorFold`<br>`src/Gopurs/ConstructorFold.purs` | Rewrite | Fuses fresh constructor producers with complete ordered Int folds. | `ImmediateApplications.Scope`, `WorkerNames` |
 | `Gopurs.CountedFunctionSums`<br>`src/Gopurs/CountedFunctionSums.purs` | Rewrite | Reduces proved compositions of counted Int translations with guarded modular arithmetic and the original fallback. | `ImmediateApplications.Scope` |
 | `Gopurs.DecoderSchemas.Admission`<br>`src/Gopurs/DecoderSchemas/Admission.purs` | Rewrite | Admits decoder schemas and their programs. | `DecoderSchemas.Programs`, `DecoderSchemas.Source`, `DecoderSchemas.Types` |
@@ -74,7 +74,7 @@ are sorted and deduplicated from the module source.
 | `Gopurs.Ownership.Workers`<br>`src/Gopurs/Ownership/Workers.purs` | Rewrite | Emits captures, reusable cells and consuming declarations. | `CodegenState`, `GoAst`, `GoSymbol`, `Ownership.Analysis`, `Ownership.Types` |
 | `Gopurs.Ownership`<br>`src/Gopurs/Ownership.purs` | Rewrite | Computes consuming-worker fixed points and selects fresh calls. | `CodegenState`, `GoAst`, `GoSymbol`, `Ownership.Analysis`, `Ownership.Candidates`, `Ownership.Types`, `Ownership.Workers` |
 | `Gopurs.RegexMatchProjection`<br>`src/Gopurs/RegexMatchProjection.purs` | Rewrite | Projects whole-match regex consumers when the compatible port contract and complete uses are proven. | `Cache.LookupTable`, `CodegenState` |
-| `Gopurs.ThunkFusion`<br>`src/Gopurs/ThunkFusion.purs` | Rewrite | Admits and rewrites thunk producers into counted workers. | `WorkerNames` |
+| `Gopurs.ThunkFusion`<br>`src/Gopurs/ThunkFusion.purs` | Rewrite | Admits and rewrites thunk producers into counted workers, then simplifies their closed scalar calls. | `ClosedScalar`, `WorkerNames` |
 | `Gopurs.WorkerNames`<br>`src/Gopurs/WorkerNames.purs` | Rewrite | Reserves worker names for fusion passes. | `GoAst` |
 
 ## Emit — Go translation and rendering
