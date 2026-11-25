@@ -17,6 +17,7 @@ import Data.String as String
 import Data.Tuple (Tuple(..))
 import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.FfiBridge.Effects as Effects
+import Gopurs.FfiBridge.ImmediateEffects as ImmediateEffects
 import Gopurs.FfiBridge.Render as Render
 import Gopurs.FfiBridge.Signatures (NativeCandidate)
 import Gopurs.FfiBridge.Signatures as Signatures
@@ -59,8 +60,14 @@ unitConstant _ _ _ = false
 
 -- Only publish signatures whose arguments and result can cross a direct call.
 ffiFunctionInfos :: String -> Array (Tuple Ident (Maybe ExprType)) -> Array FfiDecl -> Map String FunctionInfo
-ffiFunctionInfos modNameStr foreigns decls = Map.fromFoldable (Array.mapMaybe signature foreigns)
+ffiFunctionInfos modNameStr foreigns decls = Map.fromFoldable (Array.mapMaybe signature foreigns <> Array.mapMaybe effectSignature foreigns)
   where
+  effectSignature (Tuple (Ident name) mbTast) = do
+    tast <- mbTast
+    declaration <- Signatures.matchDeclaration modNameStr decls name
+    info <- ImmediateEffects.signature modNameStr declaration tast
+    pure (Tuple (ImmediateEffects.key name) info)
+
   signature foreignBinding@(Tuple (Ident name) _) = do
     candidate <- nativeForeign modNameStr decls foreignBinding
     info <- Signatures.functionInfo modNameStr candidate
@@ -69,8 +76,13 @@ ffiFunctionInfos modNameStr foreigns decls = Map.fromFoldable (Array.mapMaybe si
 -- Worker emission uses candidate eligibility, before the stricter signature
 -- check above. Some generated workers therefore remain unused by direct calls.
 ffiValueWorkers :: String -> Array DataDecl -> Array (Tuple Ident (Maybe ExprType)) -> Array FfiDecl -> String
-ffiValueWorkers modNameStr dataDecls foreigns decls = String.joinWith "\n" (Array.mapMaybe worker foreigns)
+ffiValueWorkers modNameStr dataDecls foreigns decls = String.joinWith "\n" (Array.mapMaybe worker foreigns <> Array.mapMaybe effectWorker foreigns)
   where
+  effectWorker (Tuple (Ident name) mbTast) = do
+    tast <- mbTast
+    declaration <- Signatures.matchDeclaration modNameStr decls name
+    ImmediateEffects.worker dataDecls declaration (resolveNewtype dataDecls tast)
+
   worker foreignBinding = do
     candidate <- nativeForeign modNameStr decls foreignBinding
     if candidate.requiresWorker then Just (Render.valueWorker dataDecls candidate) else Nothing

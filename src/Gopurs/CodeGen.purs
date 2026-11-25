@@ -61,6 +61,7 @@ import Gopurs.FunctionExprs as FunctionExprs
 import Gopurs.BindingExprs as BindingExprs
 import Gopurs.ControlExprs as ControlExprs
 import Gopurs.EffectExprs as EffectExprs
+import Gopurs.FfiBridge.ImmediateEffects as ImmediateEffects
 import Gopurs.TypedExprs as TypedExprs
 import Gopurs.ModuleBindings as ModuleBindings
 import Gopurs.ModuleDeclarations as ModuleDeclarations
@@ -100,13 +101,15 @@ prepareModule metadata inputMod =
     , workers: workerInputs metadata.globalFunctions owned.module
     }
 
--- CallExprs.directFunction is the only consumer of imported worker signatures.
--- Its external targets are qualified Var nodes; local targets use the module's
+-- Imported ordinary and immediate-effect workers use qualified Var targets;
+-- local targets use the module's
 -- own signatures. Include every such Var, even if it is not called, and record
 -- absences in the exact batch snapshot. TCO preserves these qualifications.
 workerInputs :: ModuleFunctions -> BackendModule -> Map.Map String (Maybe FunctionInfo)
 workerInputs available = foldWorkerReferences
-  (\owner name acc -> let key = unwrap owner <> "." <> name in Map.insert key (Map.lookup key available) acc)
+  (\owner name acc -> foldl
+    (\entries ident -> let key = unwrap owner <> "." <> ident in Map.insert key (Map.lookup key available) entries)
+    acc [ name, ImmediateEffects.key name ])
   Map.empty
 
 -- The emitter can resolve immutable owner contributions without decoding every
@@ -161,7 +164,11 @@ translatePreparedWithFunctions sourceMetadata prepared =
     preparedBindings = ModuleBindings.prepare metadata modNameStr mod
     -- The module's FFI functions are keyed by raw identifier; local functions
     -- take precedence when names collide.
-    ffiLocalFunctions = Map.fromFoldable (map (\(Tuple k v) -> Tuple (sanitizeName k) v) (Map.toUnfoldable metadata.ffiFunctions :: Array (Tuple String FunctionInfo)))
+    -- Reserved immediate-effect signatures must never become ordinary local
+    -- calls after sanitizing their otherwise impossible PureScript names.
+    ffiLocalFunctions = Map.fromFoldable $ Array.mapMaybe
+      (\(Tuple (Ident name) _) -> map (Tuple (sanitizeName name)) (Map.lookup name metadata.ffiFunctions))
+      (Map.toUnfoldable mod.foreign)
     moduleFunctions = Map.union (Map.union prepared.functions preparedBindings.functions) ffiLocalFunctions
     normalFunctions = Map.fromFoldable $ Array.concatMap
       (\group -> Array.mapMaybe
@@ -172,9 +179,9 @@ translatePreparedWithFunctions sourceMetadata prepared =
         group.bindings)
       preparedBindings.bindings
     -- Export FFI functions as `<Module>.<ident>` for callers in other modules.
-    ffiGlobalFunctions = Map.fromFoldable $ Array.mapMaybe
-      (\(Tuple (Ident name) _) -> map (Tuple (unwrap mod.name <> "." <> name)) (Map.lookup name metadata.ffiFunctions))
-      (Map.toUnfoldable mod.foreign)
+    ffiGlobalFunctions = Map.fromFoldable $ map
+      (\(Tuple name info) -> Tuple (unwrap mod.name <> "." <> name) info)
+      (Map.toUnfoldable metadata.ffiFunctions :: Array (Tuple String FunctionInfo))
 
     Tuple allDeclsAst helpers = unsafePerformEffect do
       let

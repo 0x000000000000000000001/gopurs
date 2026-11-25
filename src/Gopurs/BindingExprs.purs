@@ -22,6 +22,7 @@ import Gopurs.GoConversions (coerceGoExpr)
 import Gopurs.GoTypes (exprTypeToGoType, isCompositeGoType, printExprType)
 import Gopurs.GoFunctions (loopParameters)
 import Gopurs.LocalWorkers as LocalWorkers
+import Gopurs.ImmediateFfiEffects as ImmediateFfiEffects
 import Gopurs.Printer (printGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (Ident(..))
@@ -29,7 +30,13 @@ import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Local), Level)
 
 nonRecursive :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> TcoExpr -> TcoExpr -> ExprResult
-nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, moduleFunctions, bound } nextId mbIdent lvl binding body =
+nonRecursive translate context nextId mbIdent lvl binding body =
+  case ImmediateFfiEffects.translate translate context nextId mbIdent lvl binding body of
+    Just result -> result
+    Nothing -> nonRecursiveBinding translate context nextId mbIdent lvl binding body
+
+nonRecursiveBinding :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> TcoExpr -> TcoExpr -> ExprResult
+nonRecursiveBinding translate context@{ metadata, codegenStateRef, depth, modNameStr, moduleFunctions, bound } nextId mbIdent lvl binding body =
   let
     originalName = localId mbIdent lvl
     name = originalName <> "_" <> show nextId
@@ -48,7 +55,8 @@ nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, m
           -- crosses the Value boundary, which can otherwise copy whole lists.
           trueFRet = resBodyMut.exprType
           localModuleFunctions = Map.insert name (LocalWorkers.signature context name params trueFRet) moduleFunctions
-          worker = LocalWorkers.emit context name params Nothing resBodyMut
+          keepWrapper = LocalWorkers.needsWrapper originalName (Array.length params) body
+          worker = LocalWorkers.emit context name params keepWrapper Nothing resBodyMut
 
           newBound = Map.insert originalName { name, goType: TypeValue } bound
           resBodyOuter = translate (context { depth = (depth + 1), moduleFunctions = localModuleFunctions, bound = newBound, tcoIdent = Nothing, mbExpectedExprType = Nothing }) resBodyMut.nextId body
@@ -123,7 +131,9 @@ recursive translate context@{ metadata, depth, modNameStr, recVars, moduleFuncti
           published = foldl
             (\acc worker ->
               { functions: Map.insert worker.newName (LocalWorkers.signature context worker.newName worker.params worker.resultType) acc.functions
-              , bound: Map.insert worker.oldName { name: worker.newName, goType: TypeFunc (map snd worker.params) worker.resultType } acc.bound
+              -- The local value is the boxed curried wrapper. Saturated calls
+              -- obtain the native ABI from the separate function table.
+              , bound: Map.insert worker.oldName { name: worker.newName, goType: TypeValue } acc.bound
               })
             { functions: moduleFunctions, bound: allocated.newBound }
             workers
@@ -138,9 +148,11 @@ recursive translate context@{ metadata, depth, modNameStr, recVars, moduleFuncti
                   loopBound = bindParameters params published.bound
                   resBodyMut = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = acc.moduleFunctions, bound = loopBound, tcoIdent = (Just newName), loopCtx = currentLoopCtx, options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = worker.expectedReturn, mbExpectedGoType = Just worker.resultType }) acc.nextId worker.body
                   trueFRet = resBodyMut.exprType
-                  emitted = LocalWorkers.emit (context { bound = published.bound }) newName params (Just worker.body) resBodyMut
+                  keepWrapper = LocalWorkers.needsWrapper oldName (Array.length params) body
+                    || Array.any (\(Tuple _ binding) -> LocalWorkers.needsWrapper oldName (Array.length params) binding) (toArray bindings)
+                  emitted = LocalWorkers.emit (context { bound = published.bound }) newName params keepWrapper (Just worker.body) resBodyMut
                   newFunctions = Map.insert newName (LocalWorkers.signature context newName params trueFRet) acc.moduleFunctions
-                  newBound2 = Map.insert oldName { name: newName, goType: TypeFunc (map snd params) trueFRet } acc.newBound
+                  newBound2 = Map.insert oldName { name: newName, goType: TypeValue } acc.newBound
                 in
                   { declarations: acc.declarations <> emitted.declarations, stmts: acc.stmts <> emitted.assignments, nextId: resBodyMut.nextId, moduleFunctions: newFunctions, newBound: newBound2 }
             )

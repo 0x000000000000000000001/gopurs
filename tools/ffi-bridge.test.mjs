@@ -147,6 +147,7 @@ test('native-call metadata names the emitted worker and retains its calling conv
     assert.deepEqual([...workers.matchAll(/^func (\w+)\(/gm)].map(match => match[1]), [
         'BridgeContract_Callback_nativeWorker', 'BridgeContract_Record_nativeWorker',
         'BridgeContract_Unsupported_nativeWorker', 'BridgeContract_NoResult_nativeWorker',
+        'BridgeContract_Effectful_runEffectWorker',
     ]);
 });
 
