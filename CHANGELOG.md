@@ -8,6 +8,12 @@ All notable changes to gopurs are recorded here. The format follows
 
 ### Changed
 
+- Reduce fully consumed compositions of counted integer translations to guarded
+  arithmetic. Preserve opaque runtime inputs, exact repeated-addition Int32
+  semantics, and the original computation outside the proved input domain.
+- Evaluate bounded closed recursive integer computations and record projections,
+  retaining strict global reads and unknown computations. Bound interpreter
+  work and stack depth separately, and allocate fresh residual bindings.
 - Construct annotated Tuple results directly in the native representation
   required by their consumer, avoiding boxing and reconversion of composite
   fields while preserving the TAST and the existing public representation.

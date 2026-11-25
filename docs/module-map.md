@@ -6,7 +6,7 @@ module. The phase groups organize responsibilities; they are not execution
 order or a proposed directory layout. The [architecture guide](architecture.md)
 explains execution order; the [naming guide](naming.md) defines the terminology.
 
-The map covers **130 modules**. `node tools/check-docs.mjs` verifies source
+The map covers **133 modules**. `node tools/check-docs.mjs` verifies source
 paths, duplicate rows and complete coverage against `src/`. Import lists below
 are sorted and deduplicated from the module source.
 
@@ -50,8 +50,9 @@ are sorted and deduplicated from the module source.
 | `Gopurs.ClosedDictionaries.Admission`<br>`src/Gopurs/ClosedDictionaries/Admission.purs` | Rewrite | Separates existing-binding reuse from new cache admission. | `Cache.LookupTable`, `ClosedDictionaries.Scope`, `CodegenState` |
 | `Gopurs.ClosedDictionaries.Scope`<br>`src/Gopurs/ClosedDictionaries/Scope.purs` | Rewrite | Checks lexical closure and absence of effects or recursion. | — |
 | `Gopurs.ClosedDictionaries`<br>`src/Gopurs/ClosedDictionaries.purs` | Rewrite | Rewrites and caches closed dictionaries. | `ClosedDictionaries.Admission`, `CodegenState` |
-| `Gopurs.ClosedScalar`<br>`src/Gopurs/ClosedScalar.purs` | Rewrite | Evaluates closed pure Int expressions while preserving unknown computations. | — |
+| `Gopurs.ClosedScalar`<br>`src/Gopurs/ClosedScalar.purs` | Rewrite | Evaluates bounded closed Int computations, including recursive record projections, while retaining strict global reads and unknown work. | `ImmediateApplications.Scope` |
 | `Gopurs.ConstructorFold`<br>`src/Gopurs/ConstructorFold.purs` | Rewrite | Fuses fresh constructor producers with complete ordered Int folds. | `ImmediateApplications.Scope`, `WorkerNames` |
+| `Gopurs.CountedFunctionSums`<br>`src/Gopurs/CountedFunctionSums.purs` | Rewrite | Reduces proved compositions of counted Int translations with guarded modular arithmetic and the original fallback. | `ImmediateApplications.Scope` |
 | `Gopurs.DecoderSchemas.Admission`<br>`src/Gopurs/DecoderSchemas/Admission.purs` | Rewrite | Admits decoder schemas and their programs. | `DecoderSchemas.Programs`, `DecoderSchemas.Source`, `DecoderSchemas.Types` |
 | `Gopurs.DecoderSchemas.Programs`<br>`src/Gopurs/DecoderSchemas/Programs.purs` | Rewrite | Derives dictionary programs from schemas. | `DecoderSchemas.Source`, `DecoderSchemas.Types` |
 | `Gopurs.DecoderSchemas.Source`<br>`src/Gopurs/DecoderSchemas/Source.purs` | Rewrite | Resolves source dictionaries and schema symbols. | — |
@@ -59,7 +60,7 @@ are sorted and deduplicated from the module source.
 | `Gopurs.DecoderSchemas.Types`<br>`src/Gopurs/DecoderSchemas/Types.purs` | Rewrite | Defines schemas, programs and admission weights. | — |
 | `Gopurs.DecoderSchemas.Workers`<br>`src/Gopurs/DecoderSchemas/Workers.purs` | Rewrite | Constructs decoder-schema workers. | `DecoderSchemas.Stream`, `DecoderSchemas.Types`, `GoAst`, `GoSymbol`, `Printer` |
 | `Gopurs.DecoderSchemas`<br>`src/Gopurs/DecoderSchemas.purs` | Rewrite | Specializes JSON decoder schemas and workers. | `Cache.LookupTable`, `CodegenState`, `DecoderSchemas.Admission`, `DecoderSchemas.Source`, `DecoderSchemas.Workers`, `GoAst` |
-| `Gopurs.FunctionFusion`<br>`src/Gopurs/FunctionFusion.purs` | Rewrite | Admits and rewrites counted function producers. | `WorkerNames` |
+| `Gopurs.FunctionFusion`<br>`src/Gopurs/FunctionFusion.purs` | Rewrite | Admits counted function producers and reduces their proved scalar consumers before creating workers. | `CountedFunctionSums`, `WorkerNames` |
 | `Gopurs.ImmediateApplications.Scope`<br>`src/Gopurs/ImmediateApplications/Scope.purs` | Rewrite | Computes occurrences, substitutions and local-level renaming. | — |
 | `Gopurs.ImmediateApplications`<br>`src/Gopurs/ImmediateApplications.purs` | Rewrite | Admits and reduces safe immediate applications. | `ImmediateApplications.Scope` |
 | `Gopurs.ListFusion`<br>`src/Gopurs/ListFusion.purs` | Rewrite | Fuses closed list producer/filter/fold pipelines into scalar loops. | `ImmediateApplications.Scope` |
@@ -104,6 +105,7 @@ are sorted and deduplicated from the module source.
 | `Gopurs.ExprAnalysis`<br>`src/Gopurs/ExprAnalysis.purs` | Emit | Provides read-only expression analyses. | `ExprContext`, `GoAst`, `GoTypes` |
 | `Gopurs.ExprContext`<br>`src/Gopurs/ExprContext.purs` | Emit | Carries translation context, results and callbacks. | `CodegenState`, `GoAst` |
 | `Gopurs.FfiBridge.Effects`<br>`src/Gopurs/FfiBridge/Effects.purs` | Emit | Validates effect contracts and generates deferred Go actions and asynchronous adapters. | `FfiBridge.Structured`, `FfiBridge.TypeSupport`, `FfiBridge.Values`, `FfiTypes` |
+| `Gopurs.FfiBridge.ImmediateEffects`<br>`src/Gopurs/FfiBridge/ImmediateEffects.purs` | Emit | Publishes direct workers for foreign actions consumed by an adjacent effect bind. | `CodegenState`, `FfiBridge.Effects`, `FfiBridge.TypeSupport`, `FfiBridge.Values`, `FfiTypes`, `GoAst`, `GoSymbol` |
 | `Gopurs.FfiBridge.Render`<br>`src/Gopurs/FfiBridge/Render.purs` | Emit | Renders wrappers, workers and missing-FFI declarations. | `FfiBridge.Effects`, `FfiBridge.Signatures`, `FfiBridge.Structured`, `FfiBridge.TypeSupport`, `FfiBridge.Values`, `FfiTypes`, `GoTypes` |
 | `Gopurs.FfiBridge.Signatures`<br>`src/Gopurs/FfiBridge/Signatures.purs` | Emit | Matches foreign declarations to native call signatures. | `CodegenState`, `FfiBridge.TypeSupport`, `FfiTypes`, `GoAst`, `GoSymbol` |
 | `Gopurs.FfiBridge.Structured`<br>`src/Gopurs/FfiBridge/Structured.purs` | Emit | Validates closed-record fields and generates conversions to Go structs. | `FfiBridge.TypeSupport`, `FfiTypes`, `GoAst`, `GoTypes`, `Printer` |
@@ -124,6 +126,7 @@ are sorted and deduplicated from the module source.
 | `Gopurs.GoSource`<br>`src/Gopurs/GoSource.purs` | Emit | Binds Go sources to symbols and assembles package files. | `FfiSupport`, `GoCode`, `GoSymbol` |
 | `Gopurs.GoSymbol`<br>`src/Gopurs/GoSymbol.purs` | Emit | Defines and compares Go symbols. | — |
 | `Gopurs.GoTypes`<br>`src/Gopurs/GoTypes.purs` | Emit | Translates PureScript annotations into Go types. | `AdtMetadata`, `GoAst`, `GoSymbol`, `SharedContainerLayout`, `SharedRecordLayout` |
+| `Gopurs.ImmediateFfiEffects`<br>`src/Gopurs/ImmediateFfiEffects.purs` | Emit | Emits immediately consumed foreign actions through their direct worker while preserving argument order. | `CallAnalysis`, `CallArguments`, `ExprAnalysis`, `ExprContext`, `FfiBridge.ImmediateEffects`, `GoAst`, `GoConversions` |
 | `Gopurs.Int32Loops`<br>`src/Gopurs/Int32Loops.purs` | Emit | Proves and versions scalar loops with signed 32-bit state. | `GoAst`, `GoFunctions` |
 | `Gopurs.ListFilter`<br>`src/Gopurs/ListFilter.purs` | Emit | Builds filtered lists forward while sharing the immutable retained suffix. | `CallAnalysis`, `CodegenState`, `ConstructorLayout`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoFunctions` |
 | `Gopurs.LiteralExprs`<br>`src/Gopurs/LiteralExprs.purs` | Emit | Translates array and record literals with their conversions. | `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoTypes`, `Printer`, `RecordExprs` |

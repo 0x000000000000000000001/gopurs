@@ -1,6 +1,6 @@
 module Gopurs.CountedFunctionSums (optimize) where
 
-import Prelude
+import Prelude hiding (add, apply, compare)
 
 import Control.Alternative (guard)
 import Control.Monad.State (State, StateT, evalState, get, put, runStateT)
@@ -104,15 +104,15 @@ candidate context original@(NeutralExpr syntax) = do
   pure (evalState emit (maximumLevel original + 1))
 
 evaluate :: Context -> Env -> NeutralExpr -> Eval Value
-evaluate context env original@(NeutralExpr syntax) = do
+evaluate context env (NeutralExpr syntax) = do
   proof <- get
   lift $ guard (proof.fuel > 0 && context.depth < 64)
   put (proof { fuel = proof.fuel - 1 })
   let child = context { depth = context.depth + 1 }
       go = evaluate child env
   case syntax of
-    Typed Int inner -> case strip inner of
-      Local ident level -> case Map.lookup (Tuple ident level) env of
+    Typed Int inner -> case inner of
+      NeutralExpr (Local ident level) -> case Map.lookup (Tuple ident level) env of
         Just value -> pure value
         Nothing -> do
           lift $ guard context.outer
@@ -121,8 +121,10 @@ evaluate context env original@(NeutralExpr syntax) = do
           put (state { inputs = Set.insert ref state.inputs })
           pure (Integer (Input ref))
       _ -> go inner
-    Typed _ inner -> go inner
-    TypeApp inner _ -> go inner
+    Typed ty inner -> do
+      lift $ guard (functionAnnotation ty)
+      go inner
+    Syn.TypeApp inner _ -> go inner
     Lit (LitInt value) -> pure (Integer (Constant value))
     Local ident level -> lift (Map.lookup (Tuple ident level) env)
     Var (Qualified owner name) -> do
@@ -254,11 +256,16 @@ emitScalar = case _ of
     pure (typed Int (NeutralExpr (Let (Just (Ident "countedFactor")) (Level next) a
       (typed Int (NeutralExpr (Let (Just (Ident "countedIncrement")) (Level (next + 1)) b result))))))
 
-strip :: NeutralExpr -> Syn.BackendSyntax NeutralExpr
-strip (NeutralExpr syntax) = case syntax of
-  Typed _ inner -> strip inner
-  TypeApp inner _ -> strip inner
-  _ -> syntax
+-- Representation annotations must not turn a Number or another primitive
+-- into a proof about Int32 arithmetic. Function/newtype-polymorphic wrappers
+-- remain admissible; their bodies must still use the supported integer syntax.
+functionAnnotation :: ExprType -> Boolean
+functionAnnotation = case _ of
+  Func _ _ -> true
+  ForAll _ inner -> functionAnnotation inner
+  TypeVar _ -> true
+  Any -> true
+  _ -> false
 
 typed :: ExprType -> NeutralExpr -> NeutralExpr
 typed ty = NeutralExpr <<< Typed ty

@@ -124,13 +124,13 @@ test('effects, foreign and imported bindings, unknown branches and unsafe calls 
   unchanged(scalar(global('known')), [['known', lit(5)]], {foreign});
 });
 
-test('recursive groups and direct or indirect global cycles are rejected', () => {
+test('nonterminating calls, direct initializers and recursive lets are rejected', () => {
   const value = scalar(app(global('f'), lit(0)));
   unchanged(value, [['f', lambda(app(global('f'), local('x')))]]);
   unchanged(value, [['f', lambda(app(global('g'), local('x')))], ['g', lambda(app(global('f'), local('x')))]]);
   unchanged(scalar(global('a')), [['a', global('b')], ['b', global('a')]]);
   const source = moduleOf([group([['f', lambda(lit(5))]], true), group([['result', value]])]);
-  assert.deepEqual(body(optimize(source)), value);
+  assert.deepEqual(body(optimize(source)), scalar(lit(5)));
   unchanged(scalar(expr(new S.LetRec(1, [new Tuple('loop', lambda(lit(5)))], app(local('loop', 1), lit(0))))));
 });
 
@@ -148,16 +148,113 @@ test('the output domain requires a TAST Int and never coerces other runtime valu
 });
 
 test('fuel is shared across every strict child and depth also counts type wrappers', () => {
-  const large = record(Array.from({length: 520}, (_, i) => [`field${i}`, lit(i)]));
+  const large = record(Array.from({length: 8200}, (_, i) => [`field${i}`, lit(i)]));
   unchanged(scalar(app(lambda(lit(5)), large)));
   let wrapped = lit(5);
-  for (let i = 0; i < 80; i++) wrapped = typed(C.Any.value, wrapped);
+  for (let i = 0; i < 1030; i++) wrapped = typed(C.Any.value, wrapped);
   unchanged(scalar(wrapped));
   let typedApplication = lit(5);
-  for (let i = 0; i < 80; i++) typedApplication = expr(new S.TypeApp(typedApplication, int));
+  for (let i = 0; i < 1030; i++) typedApplication = expr(new S.TypeApp(typedApplication, int));
   unchanged(scalar(typedApplication));
 });
 
 test('invalid duplicate record fields are rejected conservatively', () => {
   unchanged(scalar(field(record([['run', lit(1)], ['run', lit(2)]]))));
+});
+
+const subtract = (a, b) => expr(new S.PrimOp(new S.Op2(new S.OpIntNum(S.OpSubtract.value), a, b)));
+const equals = (a, b) => expr(new S.PrimOp(new S.Op2(new S.OpIntOrd(S.OpEq.value), a, b)));
+const branch = (condition, yes, no) => expr(new S.Branch([new S.Pair(condition, yes)], no));
+const imported = name => global(name, 'Imported');
+const retained = (names, value, base = 0) => names.reduceRight((body, name, index) => scalar(letIn(null, imported(name), body, base + index)), scalar(lit(value)));
+function recursiveProjection(count, seed = 0, delta = 1, extra = imported('token')) {
+  const number = local('count', 0), state = local('state', 1);
+  const finished = lambda(record([['state', state], ['token', extra]]), 'state', 1);
+  const step = lambda(app(global('walk'), subtract(number, lit(1)), add(state, lit(delta))), 'state', 1);
+  const walk = lambda(branch(equals(number, lit(0)), finished, step), 'count', 0);
+  const result = scalar(field(app(global('walk'), typeof count === 'number' ? lit(count) : count, lit(seed)), 'state'));
+  return moduleOf([group([['walk', walk]], true), group([['result', result]])]);
+}
+
+test('closed recursive record projections fold while retaining imported initialization', () => {
+  for (const count of [0, 1, 2, 7, 60]) for (const [seed, delta] of [[0, 1], [8, -3], [2147483647, 1]]) {
+    const source = recursiveProjection(count, seed, delta);
+    const before = JSON.stringify(source);
+    assert.deepEqual(body(optimize(source)), retained(['token'], (seed + count * delta) | 0));
+    assert.equal(JSON.stringify(source), before);
+  }
+  const runtime = recursiveProjection(local('opaqueCount', 5));
+  assert.deepEqual(body(optimize(runtime)), body(runtime), 'opaque repetition count is never substituted');
+  for (const count of [-1, -2147483648, 5000]) {
+    const source = recursiveProjection(count);
+    assert.deepEqual(body(optimize(source)), body(source), 'divergence or exhausted budget leaves source intact');
+  }
+});
+
+test('strict global reads keep first-observed order through recursion, even in ignored fields', () => {
+  const strict = record([['first', imported('a')], ['again', imported('a')], ['second', imported('b')]]);
+  const source = recursiveProjection(60, 0, 1, strict);
+  assert.deepEqual(body(optimize(source)), retained(['a', 'b'], 60));
+  for (const [value, base] of [
+    [scalar(app(lambda(lit(5)), imported('token'))), 1],
+    [scalar(field(record([['run', lit(5)], ['other', imported('token')]]))), 0],
+  ]) assert.deepEqual(run(value), retained(['token'], 5, base));
+  unchanged(scalar(app(imported('function'), lit(2))));
+  unchanged(scalar(add(imported('integer'), lit(2))));
+});
+
+test('known integer branches evaluate only the selected branch and preserve strict conditions', () => {
+  const failure = expr(new S.Fail('selected failure must survive'));
+  assert.deepEqual(run(scalar(branch(equals(lit(3), lit(3)), lit(8), failure))), scalar(lit(8)));
+  assert.deepEqual(run(scalar(branch(equals(lit(3), lit(4)), failure, lit(9)))), scalar(lit(9)));
+  unchanged(scalar(branch(equals(imported('integer'), lit(4)), lit(8), lit(9))));
+  unchanged(scalar(branch(equals(lit(3), lit(3)), failure, lit(9))));
+  unchanged(scalar(branch(equals(lit(3), lit(4)), lit(8), failure)));
+  const source = recursiveProjection(7, 0, 1, unknown);
+  assert.deepEqual(body(optimize(source)), body(source), 'opaque strict call cannot disappear behind a projection');
+});
+
+test('closed subtraction preserves Int32 overflow and re-entering globals still spends fuel', () => {
+  for (const [left, right, value] of [[-2147483648, 1, 2147483647], [2147483647, -1, -2147483648]]) {
+    assert.deepEqual(run(scalar(subtract(lit(left), lit(right)))), scalar(lit(value)));
+  }
+  const recursive = lambda(app(global('again'), local('x')));
+  unchanged(scalar(app(global('again'), lit(0))), [['again', recursive]]);
+  unchanged(scalar(global('bad')), [['bad', app(lambda(global('bad')), lit(0))]]);
+});
+
+test('strict-child stack depth is bounded independently of tail evaluation steps', () => {
+  let value = lit(0);
+  for (let i = 0; i < 1000; i++) value = add(lit(1), value);
+  assert.doesNotThrow(() => unchanged(scalar(value)));
+});
+
+test('residual bindings receive distinct fresh levels across the original binding', () => {
+  const candidate = scalar(field(record([['run', lit(3)], ['a', imported('first')], ['b', imported('second')]])));
+  const source = expr(new S.Abs([ref(null, 0)], record([['left', candidate], ['right', candidate]])));
+  const rewritten = run(source);
+  const levels = [];
+  function walk(value) {
+    if (!value || typeof value !== 'object') return;
+    if (value instanceof S.Let && value.value0 === Nothing.value) levels.push(value.value1);
+    for (const child of Object.values(value)) Array.isArray(child) ? child.forEach(walk) : walk(child);
+  }
+  walk(rewritten);
+  assert.deepEqual(levels, [1, 2, 3, 4]);
+});
+
+test('integer primitive operands supply missing annotations without assigning types to unknown values', () => {
+  const source = recursiveProjection(60);
+  const closed = body(source).value1;
+  const value = scalar(add(local('opaqueAccumulator', 9), closed));
+  source.bindings.at(-1).bindings[0].value1 = value;
+  const result = body(optimize(source));
+  assert.ok(result instanceof S.Typed);
+  assert.ok(result.value1 instanceof S.PrimOp);
+  assert.deepEqual(result.value1.value0.value1, local('opaqueAccumulator', 9));
+  const folded = result.value1.value0.value2;
+  assert.ok(folded.value1 instanceof S.Let);
+  assert.deepEqual(folded.value1.value2, imported('token'));
+  assert.deepEqual(folded.value1.value3, scalar(lit(60)));
+  unchanged(scalar(add(local('opaqueAccumulator', 9), unknown)));
 });
