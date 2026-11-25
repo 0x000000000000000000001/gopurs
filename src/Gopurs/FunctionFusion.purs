@@ -11,6 +11,7 @@ import Data.Set (Set)
 import Data.Set as Set
 import Data.Tuple (Tuple(..), snd)
 import Gopurs.WorkerNames as WorkerNames
+import Gopurs.CountedFunctionSums as CountedFunctionSums
 import PureScript.Backend.Optimizer.Convert (BackendBindingGroup, BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), ModuleName, Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
@@ -38,7 +39,12 @@ optimizeFunctionProducers mod =
     identities = Set.fromFoldable $ Array.concatMap
       (Array.mapMaybe (\(Tuple name expr) -> if isIdentity expr then Just name else Nothing) <<< _.bindings)
       mod.bindings
-    rewritten = foldl (rewriteGroup mod.name identities) { names, bindings: [] } mod.bindings
+    producers = Set.fromFoldable $ Array.concatMap (\group ->
+      if group.recursive then Array.mapMaybe (\(Tuple name expr) ->
+        name <$ recognize mod.name identities name expr) group.bindings
+      else []) mod.bindings
+    summed = CountedFunctionSums.optimize producers mod
+    rewritten = foldl (rewriteGroup mod.name identities) { names, bindings: [] } summed.bindings
   in mod { bindings = rewritten.bindings }
 
 rewriteGroup
