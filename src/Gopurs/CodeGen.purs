@@ -55,6 +55,7 @@ import Gopurs.ClosedDictionaries (cacheClosedDictionaries)
 import Gopurs.ClosedScalar as ClosedScalar
 import Gopurs.ConstructorFold as ConstructorFold
 import Gopurs.BorrowedObjects (borrowReadOnlyObjects)
+import Gopurs.RefLoopRegions as RefLoopRegions
 import Gopurs.DecoderSchemas (specializeDecoderSchemas)
 import Gopurs.CallExprs as CallExprs
 import Gopurs.FunctionExprs as FunctionExprs
@@ -90,7 +91,7 @@ prepareModule metadata inputMod =
   let
     projected = ListFusion.optimize (RegexMatchProjection.optimize metadata inputMod)
     progressions = ListProgressionFold.prepare projected
-    constants = ClosedScalar.optimize progressions.module
+    constants = ClosedScalar.optimize (RefLoopRegions.optimize progressions.module)
     constructors = ConstructorFold.optimize constants
     schemas = specializeDecoderSchemas metadata (borrowReadOnlyObjects metadata (cacheClosedDictionaries metadata (optimizeImmediateApplications (optimizeFunctionProducers (optimizeThunkProducers constructors)))))
     owned = Ownership.prepare metadata schemas.module
