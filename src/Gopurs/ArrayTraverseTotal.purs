@@ -13,8 +13,9 @@ import Gopurs.CallAnalysis (collectCurriedAbs)
 import Gopurs.CallArguments as CallArguments
 import Gopurs.ExprAnalysis (extractFuncType, getExprType, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, bindParameters, childContext, flattenStmts)
-import Gopurs.GoAst (GoExpr(..), GoType(..), rawGo)
+import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, rawGo)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
+import Gopurs.GoTypes (exprTypeToGoType)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
@@ -89,7 +90,7 @@ emitTotal translate context nextId callbackOffset args parameters result =
     input = fromMaybe (rawGo "nil") (Array.index captured.exprs (callbackOffset + 1))
     inputType = fromMaybe TypeValue (Array.index captured.exprTypes (callbackOffset + 1))
     source = case inputType of
-      TypeNativeArray elementType -> { expr: input, elementType }
+      TypeNativeArray inputElementType -> { expr: input, elementType: inputElementType }
       _ -> { expr: GoPrefixOp "*" (GoCall (rawGo "(*[]gopurs_runtime.Value)") [ GoSelector input "UnsafePtr" ]), elementType: TypeValue }
     parameterNames = map (\(Tuple name level) -> localId name level) parameters
     parameterTypes = map (const TypeInt64) parameters
@@ -99,25 +100,40 @@ emitTotal translate context nextId callbackOffset args parameters result =
     bindings = Array.zipWith GoAssign parameterNames parameterValues
     boundContext = (childContext context (Just Int))
       { bound = bindParameters (Array.zip parameterNames parameterTypes) context.bound }
-    maybeType = ADT "Data.Maybe.Maybe" [ "Data", "Maybe", "Maybe" ] [ Any ]
+    -- The canonical Array/Maybe instance and exact Int callback prove this
+    -- result even when the surrounding polymorphic annotation is residual.
+    maybeType = ADT "Data.Maybe.Maybe" [ "Data", "Maybe", "Maybe" ] [ Array Int ]
+    nativeType = exprTypeToGoType context.metadata.sharedRecords context.metadata.pointerAdtPaths
+      context.metadata.enumAdts context.metadata.elidedCtors context.modNameStr maybeType
+    requested = case context.mbExpectedGoType of
+      Nothing -> Just nativeType
+      Just expected | expected == nativeType -> Just nativeType
+      _ -> Nothing
+    prepared name = AdtExprs.prepareSaturatedAs context.metadata context.modNameStr
+      (Just (ModuleName "Data.Maybe")) name maybeType requested
+    nativeOutput = (AdtExprs.saturatedFieldType (prepared "Just") 0).goType == TypeNativeArray TypeInt64
+    elementType = if nativeOutput then TypeInt64 else TypeValue
+    outputType = TypeNativeArray elementType
     constructor name fields =
-      let built = AdtExprs.saturated context.codegenStateRef
-            (AdtExprs.prepareSaturated context.metadata context.modNameStr (Just (ModuleName "Data.Maybe")) name maybeType)
-            { exprs: fields, exprTypes: map (const TypeValue) fields }
-      in boxGoExpr context.codegenStateRef context.modNameStr built.expr built.exprType
+      let
+        built = AdtExprs.saturated context.codegenStateRef (prepared name)
+          { exprs: fields, exprTypes: map (const (if nativeOutput then outputType else TypeValue)) fields }
+      in if nativeOutput then built
+        else { expr: boxGoExpr context.codegenStateRef context.modNameStr built.expr built.exprType, exprType: TypeValue }
     failure = constructor "Nothing" []
-    success = constructor "Just" [ boxGoExpr context.codegenStateRef context.modNameStr (GoVar outputName) (TypeNativeArray TypeValue) ]
-    loop = emitResult translate boundContext captured.nextId failure outputName indexName valuesName result
+    success = constructor "Just" [ if nativeOutput then GoVar outputName
+        else boxGoExpr context.codegenStateRef context.modNameStr (GoVar outputName) outputType ]
+    loop = emitResult translate boundContext captured.nextId failure.expr elementType outputName indexName valuesName result
     body =
       [ GoAssign valuesName source.expr
-      , GoAssign outputName (rawGo "[]gopurs_runtime.Value{}")
+      , GoAssign outputName (rawGo (goTypeToStr outputType <> "{}"))
       , GoForRange (indexName <> ", " <> valueName <> " := range " <> valuesName)
           ([ GoMutate "_" (GoVar indexName) ] <> bindings <> loop.stmts)
       ]
   in
     { stmts: captured.stmts
-    , expr: GoCall (GoFuncLit [] body success TypeValue) []
-    , exprType: TypeValue
+    , expr: GoCall (GoFuncLit [] body success.expr success.exprType) []
+    , exprType: success.exprType
     , nextId: loop.nextId + 1
     }
   where
@@ -126,18 +142,18 @@ emitTotal translate context nextId callbackOffset args parameters result =
 -- Emit the callback's primitive branches directly into the loop. No per-element
 -- closure/Maybe object is needed. On failure we may omit later callbacks only
 -- because the complete callback body passed the totality proof above.
-emitResult :: TranslateExpr -> ExprContext -> Int -> GoExpr -> String -> String -> String -> TcoExpr -> { stmts :: Array GoExpr, nextId :: Int }
-emitResult translate context nextId failure outputName indexName valuesName expression = case unwrapTcoExpr expression of
+emitResult :: TranslateExpr -> ExprContext -> Int -> GoExpr -> GoType -> String -> String -> String -> TcoExpr -> { stmts :: Array GoExpr, nextId :: Int }
+emitResult translate context nextId failure elementType outputName indexName valuesName expression = case unwrapTcoExpr expression of
   CtorSaturated _ _ _ (Ident "Nothing") [] -> { stmts: [ GoReturn failure ], nextId }
   CtorSaturated _ _ _ (Ident "Just") [ Tuple _ value ] ->
     let
       translated = translate context nextId value
-      boxed = boxGoExpr context.codegenStateRef context.modNameStr translated.expr translated.exprType
+      outputValue = coerceGoExpr context.codegenStateRef context.modNameStr translated.expr translated.exprType elementType
     in
       { stmts: flattenStmts translated.stmts <>
           [ GoIfElse (GoBinOp "==" (GoVar indexName) (GoInt 0))
-              [ GoMutate outputName (GoCall (GoVar "make") [ rawGo "[]gopurs_runtime.Value", GoCall (GoVar "len") [ GoVar valuesName ] ]) ] []
-          , GoMutate (outputName <> "[" <> indexName <> "]") boxed
+              [ GoMutate outputName (GoCall (GoVar "make") [ rawGo (goTypeToStr (TypeNativeArray elementType)), GoCall (GoVar "len") [ GoVar valuesName ] ]) ] []
+          , GoMutate (outputName <> "[" <> indexName <> "]") outputValue
           ]
       , nextId: translated.nextId
       }
@@ -145,9 +161,9 @@ emitResult translate context nextId failure outputName indexName valuesName expr
     foldr (\(Pair condition result) remaining ->
       let
         test = translate (childContext context (Just Boolean)) remaining.nextId condition
-        yes = emitResult translate context test.nextId failure outputName indexName valuesName result
+        yes = emitResult translate context test.nextId failure elementType outputName indexName valuesName result
       in
         { stmts: flattenStmts test.stmts <> [ GoIfElse test.expr yes.stmts remaining.stmts ], nextId: yes.nextId })
-      (emitResult translate context nextId failure outputName indexName valuesName otherwise) branches
+      (emitResult translate context nextId failure elementType outputName indexName valuesName otherwise) branches
   -- Unreachable: the complete tree is admitted before any code is emitted.
   _ -> { stmts: [], nextId }

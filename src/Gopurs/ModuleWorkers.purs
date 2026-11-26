@@ -9,6 +9,8 @@ import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.ExprAnalysis (extractExprFuncType, functionResultAfter, getExprType)
 import Gopurs.ExprContext (ExprContext, TranslateExpr, bindParameters, flattenStmts)
+import Gopurs.ArrayIndexedFold as ArrayIndexedFold
+import Gopurs.CallAnalysis (collectGoSpine, getGoSpineArgs)
 import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..))
 import Gopurs.GoSymbol (GoReference(..), generated)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
@@ -89,9 +91,26 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
         in
           unsafePerformEffect do
             Ref.modify_ (\state -> state { declarations = Array.snoc state.declarations worker }) codegenStateRef
-            pure (boxedWrapper context fn.ident params resultType)
+            pure (case indexedWrapper translate context params fn.body of
+              Just wrapper -> wrapper
+              Nothing -> boxedWrapper context fn.ident params resultType)
   in
     GoCachedValue { identifier: generated modNameStr (modNameStr <> "_" <> fn.ident), expression: value, goType: TypeValue }
+
+-- A scalar indexed fold can read either representation directly. Keep the
+-- public Value wrapper on its original Value buffer instead of first copying
+-- it into the native worker's array. Admission is shared with the fold emitter.
+indexedWrapper :: TranslateExpr -> ExprContext -> Parameters -> TcoExpr -> Maybe GoExpr
+indexedWrapper translate context params body = case params of
+  [ Tuple name (TypeNativeArray TypeInt64) ] -> do
+    let
+      boxedContext = context { bound = bindParameters [ Tuple name TypeValue ] Map.empty }
+      Tuple function spine = collectGoSpine body
+    result <- ArrayIndexedFold.emit translate boxedContext 0 function (getGoSpineArgs spine)
+    pure (GoCall (GoVar "gopurs_runtime.Func")
+      [ GoFuncLit [ Tuple name TypeValue ] (flattenStmts result.stmts)
+          (boxGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType) TypeValue ])
+  _ -> Nothing
 
 -- Module wrappers group up to ten arguments; larger arities keep unary layers.
 -- LocalWorkers and anonymous closures retain their own grouping policies.

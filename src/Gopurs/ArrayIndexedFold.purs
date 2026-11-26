@@ -122,7 +122,9 @@ emit translate context nextId fn args = do
              , exprType: TypeFunc [ TypeInt64, TypeInt64, TypeInt64 ] TypeInt64
              , nextId: translatedBody.nextId
              }
-          else translate ((childContext context Nothing) { mbExpectedGoType = if index == 2 then Just TypeValue else Nothing }) currentId value
+          -- Preserve an already native array. TypedExprs also preserves boxed
+          -- composite inputs here, so this does not force an array conversion.
+          else translate (childContext context Nothing) currentId value
         -- Captures preserve callback/seed/input order. With two arguments the
         -- first two are evaluated now; each later invocation gets a fresh acc.
         captured = CallArguments.capture { prefix: "indexedFold_arg_", markUsed: true } translateArgument nextId args

@@ -83,6 +83,7 @@ newtype SaturatedConstructor = SaturatedConstructor
   , name :: String
   , prepared :: PreparedConstructor
   , nativeTuplePointer :: Boolean
+  , nativeArrayMaybePointer :: Boolean
   }
 
 prepareSaturated :: CodegenMetadata -> String -> Maybe ModuleName -> String -> ExprType -> SaturatedConstructor
@@ -109,15 +110,29 @@ prepareSaturatedAs metadata modNameStr mbMod name ctorType expected =
           && source.symbol == target.symbol
           && source.typeArgs == target.typeArgs
       _, _ -> false
+    -- An explicitly requested canonical Maybe (Array Int) pointer keeps its
+    -- buffer native. The ordinary sum ABI still uses Value payloads.
+    nativeArrayMaybePointer = case expected, fromMaybe prepared.pointerType prepared.leafPointerType of
+      Just (TypeStructPointer target), TypeStructPointer source ->
+        prepared.adtFullName == Just "Data.Maybe.Maybe"
+          && ctorType == ADT "Data.Maybe.Maybe" [ "Data", "Maybe", "Maybe" ] [ Array Int ]
+          && (name == "Just" || name == "Nothing")
+          && source.typeArgs == [ TypeNativeArray TypeInt64 ]
+          && source.baseStructName == target.baseStructName
+          && source.fullPath == target.fullPath
+          && source.symbol == target.symbol
+          && source.fullName == target.fullName
+          && source.typeArgs == target.typeArgs
+      _, _ -> false
   in
-    SaturatedConstructor { metadata, modNameStr, name, prepared, nativeTuplePointer }
+    SaturatedConstructor { metadata, modNameStr, name, prepared, nativeTuplePointer, nativeArrayMaybePointer }
 
 saturatedFieldType :: SaturatedConstructor -> Int -> { exprType :: ExprType, goType :: GoType }
-saturatedFieldType (SaturatedConstructor { metadata, modNameStr, prepared, nativeTuplePointer }) fieldIdx =
+saturatedFieldType (SaturatedConstructor { metadata, modNameStr, prepared, nativeTuplePointer, nativeArrayMaybePointer }) fieldIdx =
   let
     expectedExprType = fromMaybe Any (Array.index prepared.layout.fields.fields fieldIdx)
     fallbackType = ConstructorLayout.fieldType metadata modNameStr prepared.layout.fields prepared.fieldTypeArgs fieldIdx
-    expectedType = if nativeTuplePointer then fallbackType else case prepared.adtFullName >>= \fn -> Map.lookup fn unboxableADTs of
+    expectedType = if nativeTuplePointer || nativeArrayMaybePointer then fallbackType else case prepared.adtFullName >>= \fn -> Map.lookup fn unboxableADTs of
       Just adt ->
         let
           signature = adt.signature prepared.typeArgs
@@ -132,7 +147,7 @@ saturatedFieldType (SaturatedConstructor { metadata, modNameStr, prepared, nativ
 -- Fields arrive in source order, already translated and immediately coerced.
 -- ConstructorExprs owns reuse and statement assembly after field translation.
 saturated :: Ref CodegenState -> SaturatedConstructor -> { exprs :: Array GoExpr, exprTypes :: Array GoType } -> AdtExpr
-saturated codegenStateRef (SaturatedConstructor { metadata, modNameStr, name, prepared, nativeTuplePointer }) accProps =
+saturated codegenStateRef (SaturatedConstructor { metadata, modNameStr, name, prepared, nativeTuplePointer, nativeArrayMaybePointer }) accProps =
   let
     { structName, baseStructName } = prepared.layout.identity
     native =
@@ -146,6 +161,9 @@ saturated codegenStateRef (SaturatedConstructor { metadata, modNameStr, name, pr
         Just expr -> { expr: boxGoExpr codegenStateRef modNameStr expr (fromMaybe TypeValue (Array.head accProps.exprTypes)), exprType: TypeValue }
         Nothing -> native
     else if nativeTuplePointer then native
+    else if nativeArrayMaybePointer then case prepared.leafPointerType of
+      Just pointer -> { expr: rawGo ("(" <> goTypeToStr pointer <> ")(nil)"), exprType: pointer }
+      Nothing -> native
     else case prepared.adtFullName >>= \fn -> Map.lookup fn unboxableADTs >>= \adt -> Just (Tuple fn adt) of
       Just (Tuple fn adt) ->
         let

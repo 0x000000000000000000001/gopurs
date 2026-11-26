@@ -14,6 +14,7 @@ import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.ArrayIntrinsics as ArrayIntrinsics
+import Gopurs.ArrayConcat as ArrayConcat
 import Gopurs.ArrayIntrinsics.Callback as Callback
 import Gopurs.ArrayTraverse as ArrayTraverse
 import Gopurs.ArrayIndexedFold as ArrayIndexedFold
@@ -108,6 +109,19 @@ directArguments translate context@{ codegenStateRef, modNameStr } nextId expecte
         in if Array.index expected index == Just predicateType then
           result { expr = coerceGoExpr codegenStateRef modNameStr result.expr result.exprType predicateType, exprType = predicateType }
           else result)
+      nextId args
+    -- A unary native consumer has no later argument evaluation across which
+    -- array materialization could move. In particular concat's empty-side
+    -- alias must not be copied early relative to another argument factory.
+    else if expected == [ TypeNativeArray TypeInt64 ] && Array.length args == 1 then CallArguments.capture { prefix: "nativeArray_arg_", markUsed: false }
+      (\index argumentId arg ->
+        let native = if Array.index expected index == Just (TypeNativeArray TypeInt64) then
+              ArrayConcat.nativeArgument translate context argumentId arg
+              else Nothing
+        in case native of
+          Just result -> result
+          Nothing -> translate ((childContext context Nothing)
+            { mbExpectedGoType = Just (TypeNativeArray TypeInt64) }) argumentId arg)
       nextId args
     else CallArguments.translate translate context Nothing { stmts: StmtEmpty, nextId } args
 

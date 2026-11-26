@@ -48,6 +48,7 @@ import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, generateReboxFunctions)
 import Gopurs.PrimitiveExprs as PrimitiveExprs
 import Gopurs.RecordExprs as RecordExprs
 import Gopurs.RecordReadGroups as RecordReadGroups
+import Gopurs.ClosedIndexedFolds as ClosedIndexedFolds
 import Gopurs.AdtExprs as AdtExprs
 import Gopurs.ConstructorExprs as ConstructorExprs
 import Gopurs.LiteralExprs as LiteralExprs
@@ -90,7 +91,7 @@ type PreparedModule =
 prepareModule :: CodegenMetadata -> BackendModule -> PreparedModule
 prepareModule metadata inputMod =
   let
-    projected = ListFusion.optimize (RegexMatchProjection.optimize metadata inputMod)
+    projected = ListFusion.optimize (RegexMatchProjection.optimize metadata (ClosedIndexedFolds.optimize inputMod))
     progressions = ListProgressionFold.prepare projected
     constants = ClosedScalar.optimize (RefLoopRegions.optimize progressions.module)
     constructors = ConstructorFold.optimize constants
