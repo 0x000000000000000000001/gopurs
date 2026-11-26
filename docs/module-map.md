@@ -82,7 +82,7 @@ are sorted and deduplicated from the module source.
 | Module and source | Phase | Responsibility | Direct dependencies |
 | --- | --- | --- | --- |
 | `Gopurs.AdtExprs`<br>`src/Gopurs/AdtExprs.purs` | Emit | Constructs ADT representations and constructor reuse. | `CodegenState`, `ConstructorLayout`, `ExprContext`, `GoAst`, `GoConversions`, `GoTypes`, `Printer` |
-| `Gopurs.AffineLoops`<br>`src/Gopurs/AffineLoops.purs` | Emit | Recognizes pure affine recurrences and emits bounded arithmetic fast paths. | `ExprContext`, `FilteredSumLoops`, `GoAst`, `GoFunctions`, `RecordAffineLoops` |
+| `Gopurs.AffineLoops`<br>`src/Gopurs/AffineLoops.purs` | Emit | Recognizes affine recurrences and emits bounded arithmetic fast paths while retaining strict unused global reads. | `ExprContext`, `FilteredSumLoops`, `GoAst`, `GoFunctions`, `RecordAffineLoops` |
 | `Gopurs.ArrayEquality`<br>`src/Gopurs/ArrayEquality.purs` | Emit | Emits native array equality for canonical scalar dictionaries. | `ArrayIntrinsics.Source`, `CallAnalysis`, `CallArguments`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions` |
 | `Gopurs.ArrayIntrinsics.Callback`<br>`src/Gopurs/ArrayIntrinsics/Callback.purs` | Emit | Resolves native callback workers and translates adjacent typed lambdas. | `CallAnalysis`, `CodegenState`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoTypes` |
 | `Gopurs.ArrayIntrinsics.Index`<br>`src/Gopurs/ArrayIntrinsics/Index.purs` | Emit | Admits indexing and converts selected elements. | `ArrayIntrinsics.Source`, `CallAnalysis`, `CallArguments`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoTypes` |

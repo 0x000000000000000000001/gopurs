@@ -8,11 +8,11 @@ import test from 'node:test';
 
 const output = process.argv[2] ?? fileURLToPath(new URL('../output/', import.meta.url));
 const load = name => import(pathToFileURL(resolve(output, name, 'index.js')));
-const [Go, A, C, S, T, Maybe, M, Ord, Tuples, Free, Printer] = await Promise.all([
+const [Go, A, C, S, T, Maybe, M, Ord, Tuples, Free, Printer, Context] = await Promise.all([
     'Gopurs.GoAst', 'Gopurs.AffineLoops', 'PureScript.Backend.Optimizer.CoreFn',
     'PureScript.Backend.Optimizer.Syntax', 'PureScript.Backend.Optimizer.Codegen.Tco',
     'Data.Maybe', 'Data.Map', 'Data.Ord', 'Data.Tuple',
-    'PureScript.Backend.Optimizer.FreeVars', 'Gopurs.Printer',
+    'PureScript.Backend.Optimizer.FreeVars', 'Gopurs.Printer', 'Gopurs.ExprContext',
 ].map(load));
 const { Just, Nothing } = Maybe, { Tuple } = Tuples;
 const int = C.Int.value, i64 = Go.TypeInt64.value;
@@ -38,9 +38,12 @@ function fixture(options = {}) {
     const step = options.step ?? call(options.target ?? variable(), [decrement, update]);
     return typed(int, expr(new S.Branch([new S.Pair(conditionExpr, options.seed ?? accumulator)], step)));
 }
-function optimize(body, parameters = params, result = i64, target = self, fallback = sentinel) {
+const readContext = { depth: 0, mbExpectedExprType: new Just(int), mbExpectedGoType: new Just(i64),
+    options: { isTail: true, inEffectBlock: true }, tcoIdent: new Just('repeat'), loopCtx: [], recVars: [] };
+const noReads = () => () => () => { throw new Error('unexpected global read'); };
+function optimize(body, parameters = params, result = i64, target = self, fallback = sentinel, translate = noReads) {
     const before = JSON.stringify(body);
-    const value = A.wrap(target)(parameters)(result)(body)(fallback);
+    const value = A.wrap(translate)(readContext)(target)(parameters)(result)(body)(fallback);
     assert.equal(JSON.stringify(body), before, 'input IR remains immutable');
     return value;
 }
@@ -84,6 +87,116 @@ test('affine admission rejects calls, effects, changing increments and altered r
     assert.equal(optimize(fixture(), [...params, new Tuple('extra', i64)]), sentinel);
     assert.equal(optimize(fixture(), [new Tuple(counterName, Go.TypeFloat64.value), params[1]]), sentinel);
     assert.equal(optimize(fixture(), params, Go.TypeValue.value), sentinel);
+});
+
+const selfStep = () => call(variable(), [subtract(counter, integer(1)), add(accumulator, integer(60))]);
+const letRead = (name, level, body, value = variable(name, 'RenamedGlobals')) =>
+    expr(new S.Let(new Just(name), level, value, body));
+const twoReads = () => letRead('first', 2, letRead('second', 3, selfStep()));
+const nestedReadStep = () => letRead('first', 2, call(variable(), [subtract(counter, integer(1)),
+    add(accumulator, expr(new S.Let(Nothing.value, 3, variable('second', 'RenamedGlobals'), integer(60))))]));
+const translateRead = context => nextId => value => {
+    assert.equal(context.mbExpectedExprType, Nothing.value, 'the Int result expectation must not reach a global read');
+    assert.equal(context.mbExpectedGoType, Nothing.value);
+    assert.deepEqual(context.options, {isTail:false, inEffectBlock:false});
+    while (value.value1 instanceof S.Typed) value = value.value1.value1;
+    assert.ok(value.value1 instanceof S.Var);
+    const name = value.value1.value0.value1;
+    return {stmts: new Context.StmtLeaf(Go.rawGo(`trace += "${name === 'first' ? 'a' : 'b'}"`)),
+        expr: new Go.GoCall(new Go.GoVar(name === 'first' ? 'GetFirst' : 'GetSecond'), []),
+        exprType:i64, nextId:nextId + 1};
+};
+
+test('affine recurrence admits only unused strict global reads in the recursive branch', () => {
+    const body = fixture({step:twoReads()});
+    const result = optimize(body, params, i64, self, sentinel, translateRead);
+    assert.notEqual(result, sentinel);
+    assert.equal(result.value0.at(-1), sentinel);
+    const code = Printer.printGoExpr(result);
+    assert.ok(code.indexOf('>') < code.indexOf('GetFirst()'), 'positive guard precedes reads');
+    assert.ok(code.indexOf('GetFirst()') < code.indexOf('GetSecond()'));
+    assert.equal((code.match(/GetFirst\(\)/g) ?? []).length, 1);
+    assert.equal((code.match(/GetSecond\(\)/g) ?? []).length, 1);
+
+    const unsupported = [
+        letRead('first', 2, selfStep(), call(variable('observe'), [integer(0)])),
+        letRead('first', 2, selfStep(), local('captured', 9)),
+        letRead('first', 2, selfStep(), expr(new S.Accessor(variable('object'), new S.GetProp('value')))),
+        letRead('first', 2, selfStep(), expr(new S.EffectPure(integer(0)))),
+        letRead('first', 2, call(variable(), [subtract(counter, integer(1)), add(accumulator, local('first', 2))])),
+        // A rebinding of the exact counter level cannot masquerade as unused.
+        letRead('remaining', 0, selfStep()),
+    ];
+    for (const step of unsupported) assert.equal(optimize(fixture({step})), sentinel);
+    let tooMany = selfStep();
+    for (let i=0; i<65; i++) tooMany = letRead('unused'+i, 20+i, tooMany);
+    assert.equal(optimize(fixture({step:tooMany})), sentinel);
+    assert.equal(optimize(letRead('first',2,fixture())),sentinel,'a read outside the branch cannot move under a positive guard');
+});
+
+test('affine constant operands retain strict demands after the step prefix', () => {
+    const body = fixture({step:nestedReadStep()});
+    const result = optimize(body, params, i64, self, sentinel, translateRead);
+    assert.notEqual(result, sentinel);
+    const code = Printer.printGoExpr(result);
+    assert.ok(code.indexOf('GetFirst()') < code.indexOf('GetSecond()'));
+    for (const update of [
+        add(accumulator, letRead('first', 2, integer(60))),
+        add(letRead('first', 2, integer(60)), accumulator),
+    ]) assert.notEqual(optimize(fixture({update}),params,i64,self,sentinel,translateRead),sentinel);
+    for (const value of [call(variable('observe'),[integer(0)]),local('captured',9),
+        expr(new S.Accessor(variable('object'),new S.GetProp('value'))),expr(new S.EffectPure(integer(0)))]) {
+        assert.equal(optimize(fixture({update:add(accumulator,letRead('unused',2,integer(60),value))})),sentinel);
+    }
+    assert.equal(optimize(fixture({update:add(accumulator,letRead('first',2,local('first',2)))})),sentinel);
+    assert.equal(optimize(fixture({update:add(letRead('first',2,accumulator),integer(60))})),sentinel,
+        'only the proven constant operand may contain reads');
+    let constant = integer(60);
+    for (let i=0;i<64;i++) constant=letRead('unused'+i,20+i,constant);
+    assert.equal(optimize(fixture({step:letRead('first',2,call(variable(),[
+        subtract(counter,integer(1)),add(accumulator,constant)]))})),sentinel,'the read budget spans both positions');
+});
+
+test('strict affine fast path keeps first initialization, order, failure and zero-demand behavior', t => {
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-affine-reads-'));
+    t.after(() => rmSync(directory,{recursive:true,force:true}));
+    const n = counterName + '_loop', a = accumulatorName + '_loop';
+    const original = Go.rawGo(`for ${n} != 0 { _ = GetFirst(); _ = GetSecond(); ${n}=int64(int32(${n}-1)); ${a}=int64(int32(${a}+60)) }; return ${a}`);
+    const print = (name, fallback) => Printer.printGoDecl(new Go.GoFunctionDecl({
+        name:{owner:'generated/RenamedGlobals',name},
+        params:params.map(p=>new Tuple(p.value0+'_loop',p.value1)), result:i64,
+        body:optimize(fixture({step:nestedReadStep()}),params,i64,self,fallback,translateRead),
+    }));
+    writeFileSync(join(directory,'go.mod'),'module affineprobe\n\ngo 1.22\n');
+    writeFileSync(join(directory,'affine.go'),`package affineprobe
+import "sync"
+var firstOnce,secondOnce sync.Once
+var firstCalls,secondCalls int
+var firstFailure bool
+var trace string
+func GetFirst()int64{firstCalls++;firstOnce.Do(func(){trace+="A";if firstFailure{panic("first initializer")}});return 41}
+func GetSecond()int64{secondCalls++;secondOnce.Do(func(){trace+="B"});return 9}
+${print('Run',original)}
+${print('Guard',sentinel)}
+`);
+    writeFileSync(join(directory,'affine_test.go'),`package affineprobe
+import ("sync";"testing")
+func reset(){firstOnce=sync.Once{};secondOnce=sync.Once{};firstCalls=0;secondCalls=0;firstFailure=false;trace=""}
+func invoke(n,a int64)(value int64,failed bool){defer func(){if recover()!=nil{failed=true}}();return Run(n,a),false}
+func TestReads(t *testing.T){
+ for _,n:=range []int64{1,2,20,1000,2147483647}{for _,seed:=range []int64{-2147483648,-1,0,2147483647}{
+  reset();want:=int64(int32(seed+n*60));got,failed:=invoke(n,seed)
+  if failed||got!=want||firstCalls!=1||secondCalls!=1||trace!="aAbB"{t.Fatalf("n=%d seed=%d got=%d want=%d calls=%d,%d trace=%s",n,seed,got,want,firstCalls,secondCalls,trace)}
+ }}
+ reset();firstFailure=true;if got,failed:=invoke(0,4294967296);failed||got!=4294967296||trace!=""||firstCalls!=0||secondCalls!=0{t.Fatal("zero demanded a global")}
+ reset();firstFailure=true;if _,failed:=invoke(1,0);!failed||firstCalls!=1||secondCalls!=0||trace!="aA"{t.Fatal("first initialization failure did not stop later reads")}
+ reset();if got:=Run(2,4294967296);got!=120||firstCalls!=2||secondCalls!=2{t.Fatal("wide seed must retain original loop and its reads")}
+ for _,c:=range [][2]int64{{0,0},{-1,0},{-2147483648,0},{2147483648,0},{1,4294967296}}{reset();if Guard(c[0],c[1])!=-98||trace!=""||firstCalls!=0||secondCalls!=0{t.Fatal("unsupported input entered fast path")}}
+}
+`);
+    const run=spawnSync('go',['test','-count=1','-v','.'],{cwd:directory,encoding:'utf8',timeout:60000,env:{...process.env,GOWORK:'off'}});
+    assert.ifError(run.error);
+    assert.equal(run.status,0,run.stdout+run.stderr);
 });
 
 test('generated affine fast paths preserve Int addition and leave unsupported inputs to the loop', t => {

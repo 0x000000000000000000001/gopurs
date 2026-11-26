@@ -8,6 +8,9 @@ All notable changes to gopurs are recorded here. The format follows
 
 ### Changed
 
+- Reduce affine countdowns containing unused global binding reads. Retain the
+  first iteration's strict reads in order on the guarded positive path, and
+  preserve the original loop for zero, negative or wide inputs.
 - Emit native integer multiplication when operand bounds prove an exact
   product within the JavaScript Number integer range. Expose those bounds for
   counted translations while retaining ordinary IntMul semantics elsewhere.

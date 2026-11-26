@@ -56,7 +56,8 @@ function fixture(options = {}) {
 
 function optimize(body, options = {}) {
   const before = JSON.stringify(body);
-  const result = (options.hook ? Affine : RecordLoops).wrap(options.self ?? self)
+  const wrap = options.hook ? Affine.wrap(() => { throw new Error('record recurrence must not emit global reads'); })({}) : RecordLoops.wrap;
+  const result = wrap(options.self ?? self)
     (options.params ?? params)(options.result ?? recordType)(body)(options.fallback ?? fallback);
   assert.equal(JSON.stringify(body), before, 'the source recurrence stays immutable');
   return result;

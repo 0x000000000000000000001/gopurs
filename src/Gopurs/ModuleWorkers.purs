@@ -71,7 +71,7 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
             else coerceGoExpr codegenStateRef modNameStr result.expr result.exprType resultType
           statements = flattenStmts result.stmts <> [ GoReturn returning ]
         in if isSelfRecursive then
-          AffineLoops.wrap (AffineLoops.globalTarget modNameStr fn.ident) params resultType fn.body
+          AffineLoops.wrap translate workerContext (AffineLoops.globalTarget modNameStr fn.ident) params resultType fn.body
             (Int32Loops.loop fn.ident params resultType statements)
           else GoBlock (iterationBindings params <> statements)
     value = if Array.null fn.args then

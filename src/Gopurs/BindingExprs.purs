@@ -56,7 +56,7 @@ nonRecursiveBinding translate context@{ metadata, codegenStateRef, depth, modNam
           trueFRet = resBodyMut.exprType
           localModuleFunctions = Map.insert name (LocalWorkers.signature context name params trueFRet) moduleFunctions
           keepWrapper = LocalWorkers.needsWrapper originalName (Array.length params) body
-          worker = LocalWorkers.emit context name params keepWrapper Nothing resBodyMut
+          worker = LocalWorkers.emit translate context name params keepWrapper Nothing resBodyMut
 
           newBound = Map.insert originalName { name, goType: TypeValue } bound
           resBodyOuter = translate (context { depth = (depth + 1), moduleFunctions = localModuleFunctions, bound = newBound, tcoIdent = Nothing, mbExpectedExprType = Nothing }) resBodyMut.nextId body
@@ -150,7 +150,7 @@ recursive translate context@{ metadata, depth, modNameStr, recVars, moduleFuncti
                   trueFRet = resBodyMut.exprType
                   keepWrapper = LocalWorkers.needsWrapper oldName (Array.length params) body
                     || Array.any (\(Tuple _ binding) -> LocalWorkers.needsWrapper oldName (Array.length params) binding) (toArray bindings)
-                  emitted = LocalWorkers.emit (context { bound = published.bound }) newName params keepWrapper (Just worker.body) resBodyMut
+                  emitted = LocalWorkers.emit translate (context { bound = published.bound }) newName params keepWrapper (Just worker.body) resBodyMut
                   newFunctions = Map.insert newName (LocalWorkers.signature context newName params trueFRet) acc.moduleFunctions
                   newBound2 = Map.insert oldName { name: newName, goType: TypeValue } acc.newBound
                 in

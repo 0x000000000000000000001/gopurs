@@ -14,7 +14,7 @@ import Data.Tuple (Tuple(..), snd)
 import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.CallAnalysis (collectGoSpine, getGoSpineArgs)
 import Gopurs.ExprAnalysis (extractExprFuncType, getExprType, unwrapTcoExpr)
-import Gopurs.ExprContext (ExprContext, ExprResult, flattenStmts)
+import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, flattenStmts)
 import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, rawGo)
 import Gopurs.GoSymbol (GoReference(..))
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
@@ -75,8 +75,8 @@ onlyCurriedApplications expression = case unwrapTcoExpr expression of
 -- The translated body determines the native result. Only the curried wrapper
 -- crosses Value. Declarations stay separate so recursive callers can place the
 -- whole group's declarations before any assignment captures a peer worker.
-emit :: ExprContext -> String -> Parameters -> Boolean -> Maybe TcoExpr -> ExprResult -> { declarations :: Array GoExpr, assignments :: Array GoExpr }
-emit { codegenStateRef, modNameStr, bound } name params keepWrapper loopBody result =
+emit :: TranslateExpr -> ExprContext -> String -> Parameters -> Boolean -> Maybe TcoExpr -> ExprResult -> { declarations :: Array GoExpr, assignments :: Array GoExpr }
+emit translate context@{ codegenStateRef, modNameStr, bound } name params keepWrapper loopBody result =
   let
     nativeName = workerName modNameStr name
     resultType = result.exprType
@@ -91,7 +91,7 @@ emit { codegenStateRef, modNameStr, bound } name params keepWrapper loopBody res
         else []
     body = flattenStmts result.stmts <> [ GoReturn result.expr ]
     functionBody = case loopBody of
-      Just source -> AffineLoops.wrap (AffineLoops.localTarget bound name) params resultType source
+      Just source -> AffineLoops.wrap translate context (AffineLoops.localTarget bound name) params resultType source
         (Int32Loops.loop name params resultType body)
       Nothing -> GoBlock (iterationBindings params <> body)
     nativeAssignment = GoMutate nativeName (GoFuncBlock (loopParameters params) [ functionBody ] resultType)

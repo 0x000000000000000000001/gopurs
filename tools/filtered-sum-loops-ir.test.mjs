@@ -50,7 +50,8 @@ function fixture(options = {}) {
 
 function optimize(body, { parameters = params, result = i64, target = self, fallback = sentinel, hook = false } = {}) {
     const before = JSON.stringify(body);
-    const value = (hook ? Affine : Filtered).wrap(target)(parameters)(result)(body)(fallback);
+    const wrap = hook ? Affine.wrap(() => { throw new Error('filtered recurrence must not emit global reads'); })({}) : Filtered.wrap;
+    const value = wrap(target)(parameters)(result)(body)(fallback);
     assert.equal(JSON.stringify(body), before, 'input IR remains immutable');
     return value;
 }
