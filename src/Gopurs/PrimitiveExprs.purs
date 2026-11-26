@@ -4,6 +4,8 @@ module Gopurs.PrimitiveExprs
   , unary
   , binary
   , boundedIntProduct
+  , guardedIntProduct
+  , powerOfTwoModulo
   , stringLengthComparison
   ) where
 
@@ -11,6 +13,7 @@ import Prelude
 
 import Control.Alternative (guard)
 import Data.Array.NonEmpty as NEA
+import Data.Int.Bits as Bits
 import Data.Maybe (Maybe(..))
 import Data.String.CodeUnits as SCU
 import Data.Tuple (Tuple(..))
@@ -47,7 +50,7 @@ boundedIntProduct translate context nextId operator lhs rhs = do
     right = translate child left.nextId rhs
     operand result = wrapInStmts context.recVars result.stmts TypeInt64
       (unboxGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType TypeInt64)
-    cast name value = GoCall (GoVar name) [ value ]
+    cast name argument = GoCall (GoVar name) [ argument ]
     product = GoBinOp "*" (GoVar "boundedLeft") (GoVar "boundedRight")
     -- Function parameters avoid Go's overflowing constant conversions. The
     -- small IIFE is inlinable; its arguments retain strict left-to-right work.
@@ -55,6 +58,59 @@ boundedIntProduct translate context nextId operator lhs rhs = do
       [ GoReturn (cast "int64" (cast "int32" product)) ] TypeInt64
   pure { stmts: StmtEmpty, expr: GoCall function [ operand left, operand right ]
     , exprType: TypeInt64, nextId: right.nextId }
+
+-- A small proved operand makes a cheap exact-integer path useful even when
+-- the other operand is an opaque Int64. With b <= 21, the checked range still
+-- includes all signed/unsigned 32-bit values. Neither a type annotation nor a
+-- local binding is treated as an Int32 range proof. Outside the guard, retain
+-- JS Number multiplication and its rounding through the existing runtime.
+guardedIntProduct :: TranslateExpr -> ExprContext -> Int -> BackendOperator2 -> TcoExpr -> TcoExpr -> Maybe ExprResult
+guardedIntProduct translate context nextId operator lhs rhs = do
+  guard (operator == OpIntNum OpMultiply)
+  guard (integerAnnotation lhs && integerAnnotation rhs)
+  checked <- case integerMagnitude lhs, integerMagnitude rhs of
+    Just bits, _ | bits <= 21 -> Just { name: "guardedRight", bits }
+    _, Just bits | bits <= 21 -> Just { name: "guardedLeft", bits }
+    _, _ -> Nothing
+  let
+    child = childContext context (Just Int)
+    left = translate child nextId lhs
+    right = translate child left.nextId rhs
+    operand result = wrapInStmts context.recVars result.stmts TypeInt64
+      (unboxGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType TypeInt64)
+    cast name argument = GoCall (GoVar name) [ argument ]
+    limit = GoBinOp "<<" (cast "int64" (GoInt 1)) (GoInt (53 - checked.bits))
+    value = GoVar checked.name
+    within = GoBinOp "&&" (GoBinOp ">=" value (GoPrefixOp "-" limit)) (GoBinOp "<=" value limit)
+    a = GoVar "guardedLeft"
+    b = GoVar "guardedRight"
+    function = GoFuncBlock [ Tuple "guardedLeft" TypeInt64, Tuple "guardedRight" TypeInt64 ]
+      [ GoIfElse within [ GoReturn (cast "int64" (cast "int32" (GoBinOp "*" a b))) ] []
+      , GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "IntMul") [ a, b ])
+      ] TypeInt64
+  pure { stmts: StmtEmpty, expr: GoCall function [ operand left, operand right ]
+    , exprType: TypeInt64, nextId: right.nextId }
+
+-- Euclidean modulo by a positive power of two is the low-bit mask, including
+-- for negative/noncanonical Int64 inputs. Use Go's raw mask rather than the
+-- PureScript bitwise helper, which also narrows its result to Int32.
+powerOfTwoModulo :: TranslateExpr -> ExprContext -> Int -> BackendOperator2 -> TcoExpr -> TcoExpr -> Maybe ExprResult
+powerOfTwoModulo translate context nextId operator lhs rhs = do
+  guard (operator == OpIntNum OpMod && integerAnnotation lhs)
+  modulus <- integerLiteral rhs
+  guard (modulus > 0 && modulus <= 2147483647 && Bits.and modulus (modulus - 1) == 0)
+  let
+    value = translate (childContext context (Just Int)) nextId lhs
+    operand = wrapInStmts context.recVars value.stmts TypeInt64
+      (unboxGoExpr context.codegenStateRef context.modNameStr value.expr value.exprType TypeInt64)
+  pure { stmts: StmtEmpty, expr: GoBinOp "&" operand (GoInt (modulus - 1))
+    , exprType: TypeInt64, nextId: value.nextId }
+
+integerAnnotation :: TcoExpr -> Boolean
+integerAnnotation expression = case getExprType expression of
+  Any -> true
+  Int -> true
+  _ -> false
 
 -- Return b only when |value| <= 2^b. These operations normalize their results;
 -- division, unsigned shifts, arbitrary calls and plain locals are not proofs.
@@ -75,11 +131,19 @@ integerMagnitude (TcoExpr _ syntax) = case syntax of
     OpIntBitOr -> Just 31
     OpIntBitXor -> Just 31
     OpIntBitShiftLeft -> Just 31
-    OpIntNum OpAdd -> Just 31
-    OpIntNum OpSubtract -> Just 31
+    OpIntNum OpAdd -> sumMagnitude left right
+    OpIntNum OpSubtract -> sumMagnitude left right
     OpIntNum OpMultiply -> Just 31
+    OpIntNum OpMod -> case integerLiteral right of
+      Just modulus | modulus > 0 && modulus <= 2147483647 -> literalMagnitude (modulus - 1)
+      _ -> Nothing
     _ -> Nothing
   _ -> Nothing
+
+sumMagnitude :: TcoExpr -> TcoExpr -> Maybe Int
+sumMagnitude left right = case integerMagnitude left, integerMagnitude right of
+  Just a, Just b -> Just (min 31 (max a b + 1))
+  _, _ -> Just 31
 
 integerLiteral :: TcoExpr -> Maybe Int
 integerLiteral (TcoExpr _ syntax) = case syntax of

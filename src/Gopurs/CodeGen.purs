@@ -400,6 +400,10 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
         PrimOp (Op2 op2 e1 e2)
           | Just result <- PrimitiveExprs.boundedIntProduct translateExpr context nextId op2 e1 e2 ->
               result
+          | Just result <- PrimitiveExprs.guardedIntProduct translateExpr context nextId op2 e1 e2 ->
+              result
+          | Just result <- PrimitiveExprs.powerOfTwoModulo translateExpr context nextId op2 e1 e2 ->
+              result
 
         PrimOp (Op2 op2 e1 e2)
           | Just emit <- PrimitiveExprs.binary codegenStateRef modNameStr op2 ->
