@@ -10,7 +10,14 @@ import { findTypedCompiler } from './build/native-workspace.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const modes = [{ name: 'js', GOPURS_JS: '1' }, { name: 'native-parallel', GOPURS_JS: '0' }]
   .filter(mode => !process.env.GOPURS_TEST_MODES || process.env.GOPURS_TEST_MODES.split(',').includes(mode.name));
-const expected = ['42', '42', 'retained!', '7', '11', '21', '[2,4]', '17', '7', '23', '23', 'FE'.repeat(10) + 'FFEEE', ''].join('\n');
+const expected = ['42', '42', 'retained!', '7', '8', '11', '12', '21', '[2,4]', '17', '7', '23', '23', 'FE'.repeat(12) + 'FFEEE', ''].join('\n');
+
+function emittedFunction(source, name) {
+  const start = source.indexOf(`func ${name}(`);
+  if (start < 0) return '';
+  const end = source.indexOf('\nfunc ', start + 1);
+  return source.slice(start, end < 0 ? undefined : end);
+}
 
 test('cached FFI arguments preserve repeated effects, captures, structured values and saved actions', async t => {
   assert.ok(modes.length > 0);
@@ -50,6 +57,16 @@ test('cached FFI arguments preserve repeated effects, captures, structured value
         .map(name => readFileSync(join(generated, name), 'utf8')).join('\n');
       assert.ok(/func Get___gopurs_ffi_argument_Main_\d+\(\) interface\{\}/.test(source), `${profile}: scalar interface cache emitted`);
       assert.ok(/Main_Identity_runEffectWorker\(arg0 interface\{\}\)/.test(source), `${profile}: polymorphic interface worker emitted`);
+      const callers = Object.fromEntries(['literalInt', 'literalText', 'changing', 'changingWithContinuation', 'nested'].map(name => [name,
+        emittedFunction(source, `Get_Main_${name}`) + emittedFunction(source, `Call_Main_${name}`)]));
+      for (const name of ['literalInt', 'literalText', 'changingWithContinuation', 'nested']) {
+        const caller = callers[name];
+        assert.match(caller, /Main_Identity_runEffectWorker\(/, `${profile}: ${name} must invoke the immediate worker`);
+      }
+      // PBO turns this final bind/pure into a terminal action invocation,
+      // outside the adjacent EffectBind specialization checked above.
+      assert.match(callers.changing, /Get_Main_identity\(\)/, `${profile}: terminal action retains its generic path`);
+      writeFileSync(join(directory, 'logs', `${profile}-callers.json`), JSON.stringify(callers, null, 2) + '\n');
       assert.equal(run(`${profile}-go`, 'go', ['run', './main'], join(directory, 'output')), expected);
     }
     completed++;

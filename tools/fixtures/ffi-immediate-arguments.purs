@@ -1,6 +1,7 @@
 -- @inline Main.literalInt never
 -- @inline Main.literalText never
 -- @inline Main.changing never
+-- @inline Main.changingWithContinuation never
 -- @inline Main.nested never
 module Main where
 
@@ -31,6 +32,12 @@ changing ref = do
   value <- identity input
   pure value
 
+changingWithContinuation :: Ref.Ref Int -> Effect Int
+changingWithContinuation ref = do
+  input <- Ref.read ref
+  value <- identity input
+  pure (value + 1)
+
 nested :: Int -> Effect Int
 nested input = do
   left <- identity input
@@ -45,8 +52,10 @@ main = do
   log =<< literalText unit
   ref <- Ref.new 7
   logShow =<< changing ref
+  logShow =<< changingWithContinuation ref
   Ref.write 11 ref
   logShow =<< changing ref
+  logShow =<< changingWithContinuation ref
   logShow =<< nested 10
   array <- identity [ 2, 4 ]
   logShow array

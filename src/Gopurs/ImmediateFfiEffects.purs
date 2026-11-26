@@ -1,4 +1,4 @@
-module Gopurs.ImmediateFfiEffects (translate) where
+module Gopurs.ImmediateFfiEffects (translate, direct) where
 
 import Prelude
 
@@ -36,34 +36,43 @@ translate translateExpr context nextId actionIdent actionLevel factory body = ca
       Local ident level -> guard (ident == actionIdent && level == actionLevel)
       _ -> Nothing
     guard (not (usesLocal actionIdent actionLevel continuation))
-    guard (onlyCurriedApplications factory)
-    let Tuple target spine = collectGoSpine factory
-    foreignTarget <- qualifiedTarget target
-    let
-      args = getGoSpineArgs spine
-      workerKey = Workers.key foreignTarget.name
-      localOwner owner = String.replaceAll (Pattern ".") (Replacement "_") (unwrap owner) == context.modNameStr
-    info <- case foreignTarget.mbMod of
-      Just owner | not (localOwner owner) -> Map.lookup (unwrap owner <> "." <> workerKey) context.metadata.globalFunctions
-      _ -> Map.lookup workerKey context.metadata.ffiFunctions
-    guard (Array.length args == info.arity)
-    let
-      captured = Arguments.capture { prefix: "__ffi_effect_arg_", markUsed: false }
-        (\index argumentId argument ->
-          let argumentResult = translateExpr (childContext context Nothing) argumentId argument
-          in prepareArgument context (fromMaybe TypeValue (Array.index info.fArgs index)) argument argumentResult)
-        (nextId + 1) args
-      originalName = localId resultIdent resultLevel
-      resultName = originalName <> "_" <> show nextId
-      bound = Map.insert originalName { name: resultName, goType: TypeValue } context.bound
-      result = translateExpr (context { depth = context.depth + 1, bound = bound, tcoIdent = Nothing }) captured.nextId continuation
-    pure
-      { stmts: captured.stmts <> StmtLeaf (GoAssign resultName (GoCall (GoRef info.reference) captured.exprs)) <> result.stmts
-      , expr: executeIfOpaque continuation result.expr
-      , exprType: result.exprType
-      , nextId: result.nextId
-      }
+    direct translateExpr context nextId resultIdent resultLevel factory continuation
   _ -> Nothing
+
+-- A factory directly in EffectBind is also immediately executed. Unlike
+-- the Let form it creates no reusable action binding; all of its arguments,
+-- the native factory and then its thunk retain their original order. Worker
+-- eligibility and ABI conversion are exactly the same as for the Let form.
+direct :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> TcoExpr -> TcoExpr -> Maybe ExprResult
+direct translateExpr context nextId resultIdent resultLevel factory continuation = do
+  guard context.options.inEffectBlock
+  guard (onlyCurriedApplications factory)
+  let Tuple target spine = collectGoSpine factory
+  foreignTarget <- qualifiedTarget target
+  let
+    args = getGoSpineArgs spine
+    workerKey = Workers.key foreignTarget.name
+    localOwner owner = String.replaceAll (Pattern ".") (Replacement "_") (unwrap owner) == context.modNameStr
+  info <- case foreignTarget.mbMod of
+    Just owner | not (localOwner owner) -> Map.lookup (unwrap owner <> "." <> workerKey) context.metadata.globalFunctions
+    _ -> Map.lookup workerKey context.metadata.ffiFunctions
+  guard (Array.length args == info.arity)
+  let
+    captured = Arguments.capture { prefix: "__ffi_effect_arg_", markUsed: false }
+      (\index argumentId argument ->
+        let argumentResult = translateExpr (childContext context Nothing) argumentId argument
+        in prepareArgument context (fromMaybe TypeValue (Array.index info.fArgs index)) argument argumentResult)
+      (nextId + 1) args
+    originalName = localId resultIdent resultLevel
+    resultName = originalName <> "_" <> show nextId
+    bound = Map.insert originalName { name: resultName, goType: TypeValue } context.bound
+    result = translateExpr (context { depth = context.depth + 1, bound = bound, tcoIdent = Nothing }) captured.nextId continuation
+  pure
+    { stmts: captured.stmts <> StmtLeaf (GoAssign resultName (GoCall (GoRef info.reference) captured.exprs)) <> result.stmts
+    , expr: executeIfOpaque continuation result.expr
+    , exprType: result.exprType
+    , nextId: result.nextId
+    }
 
 prepareArgument :: ExprContext -> GoType -> TcoExpr -> ExprResult -> ExprResult
 prepareArgument context expected argument result =

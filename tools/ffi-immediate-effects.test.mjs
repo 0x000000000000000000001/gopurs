@@ -16,7 +16,7 @@ import { key } from '../output/Gopurs.FfiBridge.ImmediateEffects/index.js';
 import { prepareFfi } from '../output/Gopurs.FfiSupport/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { StmtEmpty, StmtLeaf, flattenStmts } from '../output/Gopurs.ExprContext/index.js';
-import { translate } from '../output/Gopurs.ImmediateFfiEffects/index.js';
+import { translate, direct } from '../output/Gopurs.ImmediateFfiEffects/index.js';
 import { printGoDecl, printGoExpr } from '../output/Gopurs.Printer/index.js';
 import { literal as primitiveLiteral } from '../output/Gopurs.PrimitiveExprs/index.js';
 import { TcoExpr } from '../output/PureScript.Backend.Optimizer.Codegen.Tco/index.js';
@@ -79,6 +79,8 @@ const translator = () => id => expr => ({
 });
 const emit = (factory, body = bind(pure(arg('result'))), ctx = context) =>
   translate(translator)(ctx)(0)(new Just('action'))(0)(factory)(body);
+const emitDirect = (factory, continuation = pure(arg('result')), ctx = context) =>
+  direct(translator)(ctx)(0)(new Just('answer'))(1)(factory)(continuation);
 const cacheContext = (module = owner) => ({ ...context, modNameStr: module,
   codegenStateRef: { value: { declarations: [], globalId: 0, reboxPairs: emptySet } },
   metadata: module === owner ? context.metadata : {
@@ -176,6 +178,27 @@ test('only a saturated adjacent bind with no remaining action use can select a w
   assert.equal(emit(factory, undefined, { ...context, options: { isTail: false, inEffectBlock: false } }), Nothing.value);
 });
 
+test('direct EffectBind factories use the same certified worker and strict argument captures', () => {
+  const factory = app(global('choose'), arg('count'), arg('left'), arg('right'));
+  const result = emitDirect(factory);
+  assert.ok(result instanceof Just);
+  assert.equal(renderBody(result.value0), renderBody(emit(factory).value0));
+  for (const value of [global('identity'), app(global('identity'), arg('first'), arg('extra')),
+    app(local('saved'), arg('first')), local('saved'), app(global('ordinary'), arg('first')),
+    app(global('saved'), arg('first')), ir(new S.UncurriedApp(global('identity'), [arg('first')])),
+    app(ir(new S.UncurriedApp(global('identity'), [])), arg('first')),
+    ir(new S.EffectDefer(app(global('identity'), arg('first'))))]) {
+    assert.equal(emitDirect(value), Nothing.value);
+  }
+  assert.equal(emitDirect(factory, undefined, { ...context, options: { isTail: false, inEffectBlock: false } }), Nothing.value);
+  assert.ok(emitDirect(app(ir(new S.TypeApp(global('identity'), int)), arg('first'))) instanceof Just);
+  const functions = Map.singleton(owner + '.' + key('identity'))(lookup(key('identity')).value0);
+  assert.ok(emitDirect(app(global('identity'), arg('first')), undefined,
+    { ...context, modNameStr: 'Consumer', metadata: { ffiFunctions: Map.empty, globalFunctions: functions } }) instanceof Just);
+  assert.equal(emitDirect(app(global('identity'), arg('first')), undefined,
+    { ...context, modNameStr: 'Consumer', metadata: { ffiFunctions: Map.empty, globalFunctions: Map.empty } }), Nothing.value);
+});
+
 test('uncurried calls retain their evaluation boundaries while type applications stay transparent', () => {
   const target = global('identity');
   const value = arg('first');
@@ -230,6 +253,13 @@ test('module emission selects the effect worker without exposing its reserved ke
     e(new S.EffectBind(new Just('answer'), 1, e(new S.Local(new Just('pending'), 0)),
       e(new S.EffectPure(e(new S.Local(new Just('answer'), 1))))))));
   const emitted = translateWithFunctions(metadata)(module(action));
+  const directAction = e(new S.EffectBind(new Just('answer'), 1, application('identity'),
+    e(new S.EffectPure(e(new S.Local(new Just('answer'), 1))))));
+  const directCode = translateWithFunctions(metadata)(module(directAction)).code;
+  assert.match(directCode, /RenamedBoundary_Identity_runEffectWorker\(/);
+  assert.match(directCode, /Get___gopurs_ffi_argument_RenamedBoundary_\d+\(/);
+  assert.doesNotMatch(directCode, /Apply2\(Get_RenamedBoundary_identity/);
+
   assert.match(emitted.code, /RenamedBoundary_Identity_runEffectWorker\(/);
   assert.match(emitted.code, /func Get_RenamedBoundary_ffi_argument_0\(/);
   assert.match(emitted.code, /func Get___gopurs_ffi_argument_RenamedBoundary_\d+\(/);
@@ -247,6 +277,7 @@ test('workers preserve factory/thunk order, saved action replay, native fallback
   const emitted = emit(app(global('identity'), arg('first'))).value0;
   const optimized = renderBody(emitted);
   const ordered = renderBody(emit(app(global('choose'), arg('count'), arg('left'), arg('right'))).value0);
+  const directOrdered = renderBody(emitDirect(app(global('choose'), arg('count'), arg('left'), arg('right'))).value0);
   const ctx = cacheContext();
   const literals = [new C.LitInt(41), new C.LitInt(99), new C.LitString('retained'), new C.LitNumber(-0), new C.LitNumber(NaN)];
   const cached = literals.map(literal => renderBody(emitArgument(ir(new S.Lit(literal)), ctx)));
@@ -262,6 +293,7 @@ import("math";"reflect";"testing";"gopurs/output/gopurs_runtime")
 func capture(label string) gopurs_runtime.Value { ${owner}_Trace = append(${owner}_Trace,label); return gopurs_runtime.Int(41) }
 func immediate() gopurs_runtime.Value { ${optimized} }
 func ordered() gopurs_runtime.Value { ${ordered} }
+func directOrdered() gopurs_runtime.Value { ${directOrdered} }
 func TestImmediate(t *testing.T) {
  for replay:=0;replay<2;replay++ {
   ${owner}_Trace=nil
@@ -269,6 +301,8 @@ func TestImmediate(t *testing.T) {
  }
  ${owner}_Trace=nil;ordered()
  if !reflect.DeepEqual(${owner}_Trace,[]string{"count","left","right","factory","effect"}) {t.Fatal("argument order",${owner}_Trace)}
+ ${owner}_Trace=nil;directOrdered()
+ if !reflect.DeepEqual(${owner}_Trace,[]string{"count","left","right","factory","effect"}) {t.Fatal("direct argument order",${owner}_Trace)}
  ${owner}_Trace=nil
  saved:=gopurs_runtime.Apply(_Gopurs_${owner}_Identity,gopurs_runtime.Int(41))
  if !reflect.DeepEqual(${owner}_Trace,[]string{"factory"}) { t.Fatal("eager saved action",${owner}_Trace) }

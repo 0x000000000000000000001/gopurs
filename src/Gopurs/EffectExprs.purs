@@ -16,13 +16,20 @@ import Gopurs.ExprAnalysis (executeIfOpaque, getExprType, isEffectNode, unwrapTc
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), flattenStmts)
 import Gopurs.GoAst (GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr)
+import Gopurs.ImmediateFfiEffects as ImmediateFfiEffects
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident)
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (BackendEffect(..), BackendSyntax(Abs, EffectDefer, Let, LetRec), Level)
 
 bindEffect :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> TcoExpr -> TcoExpr -> ExprResult
-bindEffect translate context@{ codegenStateRef, depth, modNameStr, bound, options: { isTail } } nextId mbIdent lvl binding body =
+bindEffect translate context nextId mbIdent lvl binding body =
+  case ImmediateFfiEffects.direct translate context nextId mbIdent lvl binding body of
+    Just result -> result
+    Nothing -> ordinaryBind translate context nextId mbIdent lvl binding body
+
+ordinaryBind :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> TcoExpr -> TcoExpr -> ExprResult
+ordinaryBind translate context@{ codegenStateRef, depth, modNameStr, bound, options: { isTail } } nextId mbIdent lvl binding body =
   let
     stripEffectDefer (TcoExpr a syn) = case unwrapTcoExpr (TcoExpr a syn) of
       EffectDefer inner -> let Tuple _ i = stripEffectDefer inner in Tuple true i

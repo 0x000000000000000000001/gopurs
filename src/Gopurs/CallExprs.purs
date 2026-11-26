@@ -21,6 +21,7 @@ import Gopurs.ArrayIndexedFold as ArrayIndexedFold
 import Gopurs.ArrayEquality as ArrayEquality
 import Gopurs.ScalarArrayFold as ScalarArrayFold
 import Gopurs.ArrayRangeFold as ArrayRangeFold
+import Gopurs.CodePointFold as CodePointFold
 import Gopurs.ArraySort as ArraySort
 import Gopurs.ObjectTraverse as ObjectTraverse
 import Gopurs.TailRecEffect as TailRecEffect
@@ -81,11 +82,13 @@ application translate context nextId expression =
               Nothing -> curriedCall translate context nextId fn args
 
 scalarFold :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array TcoExpr -> Maybe ExprResult
-scalarFold translate context nextId fn args = case ArrayRangeFold.emit translate context nextId fn args of
+scalarFold translate context nextId fn args = case CodePointFold.emit translate context nextId fn args of
   Just fused -> Just fused
-  Nothing -> case ScalarArrayFold.emit translate context nextId fn args of
-    Just folded -> Just folded
-    Nothing -> ArrayIndexedFold.emit translate context nextId fn args
+  Nothing -> case ArrayRangeFold.emit translate context nextId fn args of
+    Just fused -> Just fused
+    Nothing -> case ScalarArrayFold.emit translate context nextId fn args of
+      Just folded -> Just folded
+      Nothing -> ArrayIndexedFold.emit translate context nextId fn args
 
 -- Only a published native predicate slot enables lambda lowering here. Other
 -- calls retain their current translation. Capture every argument in source

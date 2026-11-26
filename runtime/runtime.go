@@ -389,6 +389,24 @@ tail:
 	return i
 }
 
+// DecodeStringCodePoint reads one PureScript code point from native UTF-8/WTF-8.
+// Adjacent high/low surrogate encodings represent one supplementary code point;
+// isolated surrogates retain their value. Other malformed bytes consume one
+// byte and yield RuneError, matching Data.String.CodePoints.toCodePointArray.
+// The empty input follows utf8.DecodeRuneInString: RuneError with width zero.
+func DecodeStringCodePoint(s string) (rune, int) {
+	r, width := utf8.DecodeRuneInString(s)
+	if r == utf8.RuneError && width == 1 && len(s) >= 3 && s[0] == 0xED && s[1] >= 0xA0 && s[1] <= 0xBF && s[2]&0xC0 == 0x80 {
+		r = rune(int64(s[0]&0x0F)<<12 | int64(s[1]&0x3F)<<6 | int64(s[2]&0x3F))
+		width = 3
+		if r <= 0xDBFF && len(s) >= 6 && s[3] == 0xED && s[4] >= 0xB0 && s[4] <= 0xBF && s[5]&0xC0 == 0x80 {
+			low := rune(int64(s[3]&0x0F)<<12 | int64(s[4]&0x3F)<<6 | int64(s[5]&0x3F))
+			return 0x10000 + (r-0xD800)*0x400 + low - 0xDC00, 6
+		}
+	}
+	return r, width
+}
+
 // CountStringCodeUnits scans a native string using PureScript UTF-16 semantics.
 func CountStringCodeUnits(s string) int {
 	// Count ASCII runs a word at a time. The width table avoids trying every
