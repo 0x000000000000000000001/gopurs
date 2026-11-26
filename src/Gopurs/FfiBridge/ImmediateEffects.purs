@@ -12,12 +12,12 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.FfiBridge.Effects as Effects
-import Gopurs.FfiBridge.TypeSupport (tastForArity)
+import Gopurs.FfiBridge.TypeSupport (getTastArgType, tastForArity)
 import Gopurs.FfiBridge.Values as Values
 import Gopurs.FfiTypes (FfiDecl, TypeNode(..))
-import Gopurs.GoAst (GoType(..))
+import Gopurs.GoAst (GoType(..), goTypeToStr)
 import Gopurs.GoSymbol (GoReference(..), foreignSymbol)
-import PureScript.Backend.Optimizer.CoreFn (DataDecl, ExprType)
+import PureScript.Backend.Optimizer.CoreFn (DataDecl, ExprType(..))
 
 -- '$' cannot occur in a PureScript value identifier. Keep these signatures in
 -- the existing worker table without making them ordinary callable bindings.
@@ -39,12 +39,21 @@ candidate declaration tast = do
 workerName :: FfiDecl -> String
 workerName declaration = declaration.name <> "_runEffectWorker"
 
+-- A polymorphic argument already crosses this native interface as Value.
+-- Let the caller retain that conversion; Foreign and structured arguments
+-- still need their ordinary bridge adaptation inside the worker.
+argumentType :: ExprType -> Int -> TypeNode -> GoType
+argumentType tast index native = case native, getTastArgType tast index of
+  TNamed name, Just (TypeVar _) | name == "any" || name == "interface{}" -> TypeInterface "interface{}"
+  _, _ -> TypeValue
+
 signature :: String -> FfiDecl -> ExprType -> Maybe FunctionInfo
 signature owner declaration tast = do
   _ <- candidate declaration tast
+  let callTast = fromMaybe tast (tastForArity (Array.length declaration.args) tast)
   pure
     { reference: SymbolReference (foreignSymbol owner (workerName declaration))
-    , fArgs: map (const TypeValue) declaration.args
+    , fArgs: Array.mapWithIndex (argumentType callTast) declaration.args
     , fRet: TypeValue
     , arity: Array.length declaration.args
     }
@@ -58,8 +67,11 @@ worker dataDecls declaration tast = do
   c <- candidate declaration tast
   let
     callTast = fromMaybe tast (tastForArity (Array.length declaration.args) tast)
-    params = String.joinWith ", " (Array.mapWithIndex (\i _ -> "arg" <> show i <> " gopurs_runtime.Value") declaration.args)
-    conversions = String.joinWith "\n" (Array.concat (Array.mapWithIndex (Values.boxedArgument dataDecls (Just callTast)) declaration.args))
+    params = String.joinWith ", " (Array.mapWithIndex (\i native -> "arg" <> show i <> " " <> goTypeToStr (argumentType callTast i native)) declaration.args)
+    convert i native = case argumentType callTast i native of
+      TypeInterface _ -> [ "go_arg" <> show i <> " := arg" <> show i ]
+      _ -> Values.boxedArgument dataDecls (Just callTast) i native
+    conversions = String.joinWith "\n" (Array.concat (Array.mapWithIndex convert declaration.args))
     args = String.joinWith ", " (Array.mapWithIndex (\i _ -> "go_arg" <> show i) declaration.args)
     result = case c.nativeResult of
       Nothing -> "go_action()\nreturn gopurs_runtime.Value{}"

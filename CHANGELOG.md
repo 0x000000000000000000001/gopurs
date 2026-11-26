@@ -8,6 +8,9 @@ All notable changes to gopurs are recorded here. The format follows
 
 ### Changed
 
+- Cache immutable scalar literal conversions for polymorphic interface arguments
+  of immediately executed foreign effects. Preserve the boxed FFI representation,
+  deferred factory and effect calls, and ordinary conversion of dynamic inputs.
 - Reduce affine countdowns containing unused global binding reads. Retain the
   first iteration's strict reads in order on the guarded positive path, and
   preserve the original loop for zero, negative or wide inputs.

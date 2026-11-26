@@ -15,9 +15,10 @@ import { ffiFunctionInfos, ffiValueWorkers, generateFfiBridge } from '../output/
 import { key } from '../output/Gopurs.FfiBridge.ImmediateEffects/index.js';
 import { prepareFfi } from '../output/Gopurs.FfiSupport/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
-import { StmtEmpty, flattenStmts } from '../output/Gopurs.ExprContext/index.js';
+import { StmtEmpty, StmtLeaf, flattenStmts } from '../output/Gopurs.ExprContext/index.js';
 import { translate } from '../output/Gopurs.ImmediateFfiEffects/index.js';
-import { printGoExpr } from '../output/Gopurs.Printer/index.js';
+import { printGoDecl, printGoExpr } from '../output/Gopurs.Printer/index.js';
+import { literal as primitiveLiteral } from '../output/Gopurs.PrimitiveExprs/index.js';
 import { TcoExpr } from '../output/PureScript.Backend.Optimizer.Codegen.Tco/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import { NeutralExpr } from '../output/PureScript.Backend.Optimizer.Semantics/index.js';
@@ -31,6 +32,7 @@ const effect = result => new C.ADT('Effect.Effect', ['Effect', 'Effect'], [resul
 const fn = (args, result) => new C.Func(args, result);
 const foreigns = [
   ['identity', new C.ForAll(['a'], fn([variable], effect(variable)))],
+  ['choose', new C.ForAll(['a'], fn([int, variable, variable], effect(variable)))],
   ['native', fn([int], effect(int))],
   ['foreign', fn([foreign], effect(foreign))],
   ['curriedForeign', fn([int], fn([foreign], effect(foreign)))],
@@ -43,7 +45,9 @@ const foreigns = [
 const prepared = prepareFfi({ moduleName: owner, path: owner + '.go' })(owner + '_')(`
 var Trace []string
 var Marker = &struct{}{}
-func Identity(x any) func() any { Trace = append(Trace, "factory"); return func() any { Trace = append(Trace, "effect"); return x } }
+var Last any
+func Identity(x any) func() any { Last = x; Trace = append(Trace, "factory"); return func() any { Trace = append(Trace, "effect"); return x } }
+func Choose(count int64, x any, y interface{}) func() interface{} { Trace = append(Trace, "factory"); return func() interface{} { Trace = append(Trace, "effect"); if count == 0 { return x }; return y } }
 func Native(x int64) func() any { return func() any { return x + 1 } }
 func Foreign(x any) func() any { return func() any { return x } }
 func CurriedForeign(x int64, value any) func() any { return func() any { return value } }
@@ -75,6 +79,25 @@ const translator = () => id => expr => ({
 });
 const emit = (factory, body = bind(pure(arg('result'))), ctx = context) =>
   translate(translator)(ctx)(0)(new Just('action'))(0)(factory)(body);
+const cacheContext = (module = owner) => ({ ...context, modNameStr: module,
+  codegenStateRef: { value: { declarations: [], globalId: 0, reboxPairs: emptySet } },
+  metadata: module === owner ? context.metadata : {
+    ffiFunctions: Map.empty, globalFunctions: Map.singleton(owner + '.' + key('identity'))(lookup(key('identity')).value0),
+  },
+});
+const scalarTranslator = () => id => expr => {
+  let syntax = expr.value1;
+  while (syntax instanceof S.Typed) syntax = syntax.value1.value1;
+  const primitive = syntax instanceof S.Lit ? primitiveLiteral(syntax.value0) : Nothing.value;
+  return { stmts: StmtEmpty.value, nextId: id + 1,
+    ...(primitive instanceof Just ? primitive.value0 : syntax instanceof S.Local ?
+      { expr: Go.rawGo('input'), exprType: Go.TypeInt64.value } :
+      { expr: Go.rawGo('gopurs_runtime.Int(42)'), exprType: Go.TypeValue.value }),
+  };
+};
+const emitArgument = (argument, ctx, translateArgument = scalarTranslator, target = 'identity') =>
+  translate(translateArgument)(ctx)(0)(new Just('action'))(0)(app(global(target), argument))(bind(pure(local('answer', 1)))).value0;
+const renderBody = emitted => flattenStmts(emitted.stmts).map(printGoExpr).join('\n') + '\nreturn ' + printGoExpr(emitted.expr);
 
 test('nominal effect signatures retain polymorphism, native any, Foreign and callback results', () => {
   for (const name of ['identity', 'native', 'foreign', 'curriedForeign', 'callback', 'returned', 'panic']) {
@@ -85,6 +108,57 @@ test('nominal effect signatures retain polymorphism, native any, Foreign and cal
   assert.match(workers, /return gopurs_runtime.Box\(go_result\)/);
   assert.match(workers, /gopurs_runtime.ForeignValue\(arg0\)/);
   assert.match(workers, /return gopurs_runtime.Any\(go_result\)/);
+  assert.deepEqual(lookup(key('identity')).value0.fArgs, [new Go.TypeInterface('interface{}')]);
+  assert.deepEqual(lookup(key('choose')).value0.fArgs, [Go.TypeValue.value, new Go.TypeInterface('interface{}'), new Go.TypeInterface('interface{}')]);
+  for (const name of ['native', 'foreign', 'curriedForeign', 'callback']) {
+    assert.ok(lookup(key(name)).value0.fArgs.every(type => type === Go.TypeValue.value), name);
+  }
+});
+
+test('only statement-free scalar literals cache their canonical Value-to-interface conversion', () => {
+  for (const [literal, nativeCall] of [
+    [new C.LitInt(41), /gopurs_runtime.Int\(int64\(41\)\)/],
+    [new C.LitBoolean(true), /gopurs_runtime.Bool\(true\)/],
+    [new C.LitString('hello'), /gopurs_runtime.StrWithCodeUnits\("hello", 5\)/],
+    [new C.LitChar('x'), /gopurs_runtime.StrWithCodeUnits\("x", 1\)/],
+    [new C.LitNumber(-0), /gopurs_runtime.NegativeZero\(\)/],
+    [new C.LitNumber(NaN), /math.NaN\(\)/],
+    [new C.LitNumber(Infinity), /math.Inf\(1\)/],
+  ]) {
+    const ctx = cacheContext();
+    const emitted = emitArgument(ir(new S.Typed(variable, ir(new S.Lit(literal)))), ctx);
+    const [declaration] = ctx.codegenStateRef.value.declarations;
+    assert.ok(declaration instanceof Go.GoCachedValue);
+    assert.deepEqual(declaration.value0.goType, new Go.TypeInterface('interface{}'));
+    const code = printGoDecl(declaration);
+    assert.match(code, nativeCall);
+    assert.doesNotMatch(code, /Identity|Apply|runEffect/);
+    assert.match(renderBody(emitted), /Get___gopurs_ffi_argument_RenamedBoundary_0\(\)/);
+  }
+  for (const argument of [local('changing'), global('changing'), ir(new S.Lit(new C.LitArray([]))),
+    ir(new S.Lit(new C.LitRecord([]))), app(global('identity'), arg('computed'))]) {
+    const ctx = cacheContext();
+    emitArgument(argument, ctx);
+    assert.deepEqual(ctx.codegenStateRef.value.declarations, []);
+  }
+  const ctx = cacheContext();
+  const withStatements = () => id => expression => ({ ...scalarTranslator()(id)(expression), stmts: new StmtLeaf(Go.rawGo('observe()')) });
+  emitArgument(ir(new S.Lit(new C.LitInt(41))), ctx, withStatements);
+  emitArgument(ir(new S.Lit(new C.LitInt(41))), ctx, scalarTranslator, 'native');
+  assert.deepEqual(ctx.codegenStateRef.value.declarations, []);
+});
+
+test('cache symbols are unique across functions, literal types and modules', () => {
+  const names = [];
+  for (const module of [owner, 'OtherModule']) {
+    const ctx = cacheContext(module);
+    // Each call starts with nextId=0, as separate function bodies can do.
+    for (const literal of [new C.LitInt(41), new C.LitInt(99), new C.LitString('same site')]) {
+      emitArgument(ir(new S.Lit(literal)), ctx);
+    }
+    names.push(...ctx.codegenStateRef.value.declarations.map(declaration => declaration.value0.identifier.name));
+  }
+  assert.equal(new Set(names).size, 6);
 });
 
 test('only a saturated adjacent bind with no remaining action use can select a worker', () => {
@@ -147,7 +221,7 @@ test('module emission selects the effect worker without exposing its reserved ke
     classDeclsFields: Map.empty, ffiFunctions: infos,
   });
   const module = value => ({
-    name: owner, bindings: [{ recursive: false, bindings: [new Tuple('action', value)] }],
+    name: owner, bindings: [{ recursive: false, bindings: [new Tuple('ffi_argument_0', literal), new Tuple('action', value)] }],
     comments: [], imports: emptySet, exports: emptySet, reExports: emptySet,
     dataTypes: Map.empty, dataDecls: [], classDecls: [], foreign: foreignMap,
     implementations: Map.empty, directives: Map.empty,
@@ -157,6 +231,8 @@ test('module emission selects the effect worker without exposing its reserved ke
       e(new S.EffectPure(e(new S.Local(new Just('answer'), 1))))))));
   const emitted = translateWithFunctions(metadata)(module(action));
   assert.match(emitted.code, /RenamedBoundary_Identity_runEffectWorker\(/);
+  assert.match(emitted.code, /func Get_RenamedBoundary_ffi_argument_0\(/);
+  assert.match(emitted.code, /func Get___gopurs_ffi_argument_RenamedBoundary_\d+\(/);
   assert.ok(Map.lookup(ordString)(owner + '.' + key('identity'))(emitted.functions) instanceof Just);
   assert.doesNotMatch(translateWithFunctions(metadata)(module(application(collision))).code,
     /RenamedBoundary_Identity_runEffectWorker\(/);
@@ -169,17 +245,30 @@ test('workers preserve factory/thunk order, saved action replay, native fallback
   copyFileSync(new URL('../runtime/runtime.go', import.meta.url), join(directory, 'gopurs_runtime/runtime.go'));
   writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
   const emitted = emit(app(global('identity'), arg('first'))).value0;
-  const optimized = flattenStmts(emitted.stmts).map(printGoExpr).join('\n') + '\nreturn ' + printGoExpr(emitted.expr);
-  writeFileSync(join(directory, 'bridge.go'), 'package main\nimport "gopurs/output/gopurs_runtime"\n' + prepared.content + '\n' + wrappers + '\n' + workers);
+  const optimized = renderBody(emitted);
+  const ordered = renderBody(emit(app(global('choose'), arg('count'), arg('left'), arg('right'))).value0);
+  const ctx = cacheContext();
+  const literals = [new C.LitInt(41), new C.LitInt(99), new C.LitString('retained'), new C.LitNumber(-0), new C.LitNumber(NaN)];
+  const cached = literals.map(literal => renderBody(emitArgument(ir(new S.Lit(literal)), ctx)));
+  const dynamic = renderBody(emitArgument(local('changing'), ctx));
+  const declarations = ctx.codegenStateRef.value.declarations;
+  const getters = declarations.map(declaration => 'Get_' + declaration.value0.identifier.name + '()');
+  writeFileSync(join(directory, 'bridge.go'), 'package main\nimport("sync";"math";"gopurs/output/gopurs_runtime")\n' +
+    prepared.content + '\n' + wrappers + '\n' + workers + '\n' + declarations.map(printGoDecl).join('\n') + '\n' +
+    cached.map((body, index) => `func cached${index}() gopurs_runtime.Value { ${body} }`).join('\n') +
+    `\nfunc dynamic(input int64) gopurs_runtime.Value { ${dynamic} }`);
   writeFileSync(join(directory, 'bridge_test.go'), `package main
-import("reflect";"testing";"gopurs/output/gopurs_runtime")
+import("math";"reflect";"testing";"gopurs/output/gopurs_runtime")
 func capture(label string) gopurs_runtime.Value { ${owner}_Trace = append(${owner}_Trace,label); return gopurs_runtime.Int(41) }
 func immediate() gopurs_runtime.Value { ${optimized} }
+func ordered() gopurs_runtime.Value { ${ordered} }
 func TestImmediate(t *testing.T) {
  for replay:=0;replay<2;replay++ {
   ${owner}_Trace=nil
   if immediate().IntVal!=42 || !reflect.DeepEqual(${owner}_Trace,[]string{"first","factory","effect"}) { t.Fatal(${owner}_Trace) }
  }
+ ${owner}_Trace=nil;ordered()
+ if !reflect.DeepEqual(${owner}_Trace,[]string{"count","left","right","factory","effect"}) {t.Fatal("argument order",${owner}_Trace)}
  ${owner}_Trace=nil
  saved:=gopurs_runtime.Apply(_Gopurs_${owner}_Identity,gopurs_runtime.Int(41))
  if !reflect.DeepEqual(${owner}_Trace,[]string{"factory"}) { t.Fatal("eager saved action",${owner}_Trace) }
@@ -197,6 +286,33 @@ func TestImmediate(t *testing.T) {
  ${owner}_Trace=nil
  func(){defer func(){if recover()!=${owner}_Marker{t.Fatal("panic identity")}}();${owner}_Panic_runEffectWorker(gopurs_runtime.Int(0))}()
  if !reflect.DeepEqual(${owner}_Trace,[]string{"factory","effect"}) {t.Fatal("panic timing",${owner}_Trace)}
+}
+func TestCachedArguments(t *testing.T) {
+ ${owner}_Trace=nil
+ initial:=[]any{${getters.join(',')}}
+ if len(${owner}_Trace)!=0 {t.Fatal("cache construction executed a factory",${owner}_Trace)}
+ for index,call:=range []func()gopurs_runtime.Value{cached0,cached1,cached2,cached3,cached4} {
+  value,ok:=initial[index].(gopurs_runtime.Value)
+  if !ok {t.Fatalf("literal %d lost canonical Value ABI: %T",index,initial[index])}
+  switch index {
+  case 0: if value.IntVal!=41 {t.Fatal(value)}
+  case 1: if value.IntVal!=99 {t.Fatal(value)}
+  case 2: if value.StrVal()!="retained" {t.Fatal(value)}
+  case 3: if !math.Signbit(value.FloatVal()) || value.FloatVal()!=0 {t.Fatal("negative zero",value)}
+  case 4: if !math.IsNaN(value.FloatVal()) {t.Fatal("NaN",value)}
+  }
+  for replay:=0;replay<2;replay++ {
+   ${owner}_Trace=nil;call()
+   if ${owner}_Last!=initial[index] {t.Fatal("the converted literal was not reused",index)}
+   if !reflect.DeepEqual(${owner}_Trace,[]string{"factory","effect"}) {t.Fatal("effects were cached",${owner}_Trace)}
+  }
+ }
+ for _,input:=range []int64{13,27,-9} {
+  ${owner}_Trace=nil;dynamic(input)
+  value,ok:=${owner}_Last.(gopurs_runtime.Value)
+  if !ok || value.IntVal!=input {t.Fatal("dynamic argument was cached or changed ABI",${owner}_Last)}
+  if !reflect.DeepEqual(${owner}_Trace,[]string{"factory","effect"}) {t.Fatal(${owner}_Trace)}
+ }
 }
 `);
   const result = spawnSync('go', ['test', '.'], { cwd: directory, encoding: 'utf8', env: { ...process.env, GOWORK: 'off' } });

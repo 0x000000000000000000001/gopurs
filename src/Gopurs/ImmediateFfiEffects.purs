@@ -6,22 +6,25 @@ import Control.Alternative (guard)
 import Data.Array as Array
 import Data.Foldable (any)
 import Data.Map as Map
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
+import Effect.Ref as Ref
+import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CallAnalysis (collectGoSpine, getGoSpineArgs, qualifiedTarget)
 import Gopurs.CallArguments as Arguments
 import Gopurs.ExprAnalysis (executeIfOpaque, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, childContext)
 import Gopurs.FfiBridge.ImmediateEffects as Workers
-import Gopurs.GoAst (GoExpr(..), GoType(..))
+import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr)
+import Gopurs.GoSymbol (GoReference(..), generated)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
-import PureScript.Backend.Optimizer.CoreFn (Ident)
+import PureScript.Backend.Optimizer.CoreFn (Ident, Literal(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
-import PureScript.Backend.Optimizer.Syntax (BackendSyntax(App, EffectBind, Local, Var), Level)
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(App, EffectBind, Lit, Local, Var), Level)
 
 -- A directly adjacent bind is the only permitted consumer. In particular, a
 -- captured, replayed or saved action keeps the existing boxed representation.
@@ -46,9 +49,9 @@ translate translateExpr context nextId actionIdent actionLevel factory body = ca
     guard (Array.length args == info.arity)
     let
       captured = Arguments.capture { prefix: "__ffi_effect_arg_", markUsed: false }
-        (\_ argumentId argument ->
+        (\index argumentId argument ->
           let argumentResult = translateExpr (childContext context Nothing) argumentId argument
-          in argumentResult { expr = boxGoExpr context.codegenStateRef context.modNameStr argumentResult.expr argumentResult.exprType, exprType = TypeValue })
+          in prepareArgument context (fromMaybe TypeValue (Array.index info.fArgs index)) argument argumentResult)
         (nextId + 1) args
       originalName = localId resultIdent resultLevel
       resultName = originalName <> "_" <> show nextId
@@ -61,6 +64,40 @@ translate translateExpr context nextId actionIdent actionLevel factory body = ca
       , nextId: result.nextId
       }
   _ -> Nothing
+
+prepareArgument :: ExprContext -> GoType -> TcoExpr -> ExprResult -> ExprResult
+prepareArgument context expected argument result =
+  let
+    boxed = boxGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType
+    prepared = case expected of
+      TypeInterface name -> case result.stmts of
+        StmtEmpty | scalarLiteral argument result.exprType -> cacheArgument context expected boxed
+        _ -> GoCall (GoVar name) [ boxed ]
+      _ -> boxed
+  in result { expr = prepared, exprType = expected }
+
+-- Cache the immutable Value-to-interface conversion, never an expression,
+-- FFI factory or effect. Keep the emitted literal intact, including -0/NaN.
+scalarLiteral :: TcoExpr -> GoType -> Boolean
+scalarLiteral argument native = case unwrapTcoExpr argument, native of
+  Lit (LitInt _), TypeInt64 -> true
+  Lit (LitNumber _), TypeFloat64 -> true
+  Lit (LitBoolean _), TypeBool -> true
+  Lit (LitString _), TypeString -> true
+  Lit (LitChar _), TypeString -> true
+  _, _ -> false
+
+cacheArgument :: ExprContext -> GoType -> GoExpr -> GoExpr
+cacheArgument context native value = unsafePerformEffect do
+  state <- Ref.read context.codegenStateRef
+  let
+    name = "__gopurs_ffi_argument_" <> context.modNameStr <> "_" <> show state.globalId
+    binding = { identifier: generated context.modNameStr name, expression: value, goType: native }
+  Ref.modify_ (\current -> current
+    { globalId = current.globalId + 1
+    , declarations = current.declarations <> [ GoCachedValue binding ]
+    }) context.codegenStateRef
+  pure (GoCall (GoRef (SymbolReference (generated context.modNameStr ("Get_" <> name)))) [])
 
 usesLocal :: Maybe Ident -> Level -> TcoExpr -> Boolean
 usesLocal ident level (TcoExpr _ syntax) = case syntax of
