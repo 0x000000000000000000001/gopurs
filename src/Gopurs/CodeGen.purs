@@ -47,6 +47,7 @@ import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, generateReboxFunctions)
 import Gopurs.PrimitiveExprs as PrimitiveExprs
 import Gopurs.RecordExprs as RecordExprs
+import Gopurs.RecordReadGroups as RecordReadGroups
 import Gopurs.AdtExprs as AdtExprs
 import Gopurs.ConstructorExprs as ConstructorExprs
 import Gopurs.LiteralExprs as LiteralExprs
@@ -196,7 +197,7 @@ translatePreparedWithFunctions sourceMetadata prepared =
         , value: foreignSymbol modNameStr ("_Gopurs_" <> modNameStr <> "_" <> capitalize (sanitizeName name))
         })
       (Map.toUnfoldable mod.foreign)
-    declarationGroups =
+    declarationGroups = map (map RecordReadGroups.declaration)
       [ allDeclsAst <> prepared.declarations
       , helpers.declarations <> unsafePerformEffect (generateReboxFunctions metadata codegenStateRef modNameStr)
       , foreignGetters

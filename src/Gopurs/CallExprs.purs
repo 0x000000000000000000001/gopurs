@@ -16,6 +16,7 @@ import Data.Tuple (Tuple(..))
 import Gopurs.ArrayIntrinsics as ArrayIntrinsics
 import Gopurs.ArrayIntrinsics.Callback as Callback
 import Gopurs.ArrayTraverse as ArrayTraverse
+import Gopurs.ArrayIndexedFold as ArrayIndexedFold
 import Gopurs.ArrayEquality as ArrayEquality
 import Gopurs.ScalarArrayFold as ScalarArrayFold
 import Gopurs.ArrayRangeFold as ArrayRangeFold
@@ -81,7 +82,9 @@ application translate context nextId expression =
 scalarFold :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array TcoExpr -> Maybe ExprResult
 scalarFold translate context nextId fn args = case ArrayRangeFold.emit translate context nextId fn args of
   Just fused -> Just fused
-  Nothing -> ScalarArrayFold.emit translate context nextId fn args
+  Nothing -> case ScalarArrayFold.emit translate context nextId fn args of
+    Just folded -> Just folded
+    Nothing -> ArrayIndexedFold.emit translate context nextId fn args
 
 -- Only a published native predicate slot enables lambda lowering here. Other
 -- calls retain their current translation. Capture every argument in source

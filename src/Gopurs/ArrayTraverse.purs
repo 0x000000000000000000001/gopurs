@@ -10,6 +10,7 @@ import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..))
 import Gopurs.AdtExprs as AdtExprs
+import Gopurs.ArrayTraverseTotal as ArrayTraverseTotal
 import Gopurs.CallAnalysis (collectCurriedAbs, collectGoSpine, getGoSpineArgs, qualifiedTarget)
 import Gopurs.CallArguments (Arguments, applyBoxed)
 import Gopurs.CallArguments as CallArguments
@@ -30,8 +31,11 @@ import PureScript.Backend.Optimizer.Syntax (BackendAccessor(GetProp), BackendSyn
 emit :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array TcoExpr -> Maybe ExprResult
 emit translate context nextId fn args = do
   traversal <- recognize fn args
-  let captured = captureArguments translate context nextId traversal
-  pure (emitLoop context traversal captured)
+  pure case if traversal.plan.moduleName == "Data.Maybe" then
+    ArrayTraverseTotal.emit translate context nextId traversal.indexed traversal.callbackOffset traversal.args
+    else Nothing of
+      Just result -> result
+      Nothing -> emitLoop context traversal (captureArguments translate context nextId traversal)
 
 type ApplicativePlan =
   { moduleName :: String
