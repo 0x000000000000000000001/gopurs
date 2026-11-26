@@ -24,6 +24,7 @@ import Gopurs.GoConversions.NativeAdts (UnboxedADT, unboxableADTs, getUnboxedADT
 import Gopurs.GoConversions.NativeAdts (slotType)
 import Gopurs.GoConversions.Rebox as Rebox
 import Gopurs.Printer (printGoExpr)
+import Gopurs.RecordShapeGuard as RecordShapeGuard
 import PureScript.Backend.Optimizer.FfiSupport (hashString)
 
 -- Select a conversion before crossing Value. Record projection, native ADT
@@ -251,21 +252,12 @@ unboxRecord coerceField expr fields =
     -- keys also preserve RecordGet's first-match semantics for duplicate keys.
     -- IntVal reads cannot call getters or mutate another field during copying;
     -- composite/foreign coercions retain their original ordered access path.
-    -- boxRecord uses compact layouts for zero through five fields. Avoid
-    -- adding a branch to those already small projections.
-    guardedProjection = if Array.length fields > 5 && Array.length (Array.nub keys) == Array.length keys
+    guardedProjection = if Array.length fields > 0 && Array.length (Array.nub keys) == Array.length keys
       && Array.all (\(Tuple _ fieldType) -> fieldType == TypeInt64) fields then
-      let
-        count = show (Array.length fields)
-        labels = String.joinWith " && " (Array.mapWithIndex
-          (\index key -> "recordProjection_data.Keys[" <> show index <> "] == " <> printGoExpr (GoString key)) keys)
-        copies = String.joinWith "\n" (Array.mapWithIndex (\index (Tuple key _) ->
-          "clone." <> recordFieldName key <> " = recordProjection_data.Vals[" <> show index <> "].IntVal") fields)
-      in
-        "if orig.Type == gopurs_runtime.TypeRecordData && orig.UnsafePtr != nil {\n"
-          <> "recordProjection_data := (*gopurs_runtime.RecordData)(orig.UnsafePtr)\n"
-          <> "if len(recordProjection_data.Keys) == " <> count <> " && len(recordProjection_data.Vals) >= " <> count
-          <> " && " <> labels <> " {\n" <> copies <> "\nreturn clone\n}\n}\n"
+      RecordShapeGuard.integerReads "recordProjection" "orig" keys (\values ->
+        String.joinWith "\n" (Array.zipWith (\(Tuple key _) value ->
+          "clone." <> recordFieldName key <> " = " <> printGoExpr value) fields values)
+          <> "\nreturn clone")
       else ""
   in
     rawGo ("func() " <> recordType <> " {\n\t\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t\t_ = orig\n\t\t\t\t\tclone := " <> recordType <> "{}\n" <> guardedProjection <> assignments <> "\n\t\t\t\t\treturn clone\n\t\t\t\t}()")

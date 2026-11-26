@@ -98,7 +98,14 @@ test("grouped record reads preserve values, immutable sources, call order and se
             workers[name] = emittedWorker(join(directory, "output"), `Get_Main_${name}`) +
               emittedWorker(join(directory, "output"), `Call_Main_${name}`);
             assert.ok(workers[name]);
-            assert.doesNotMatch(workers[name], /recordReadGroup_data/, `${profile}: calls must retain their original evaluation boundary`);
+            if (name === "withFactories") {
+              assert.doesNotMatch(workers[name], /recordReadGroup_data/, `${profile}: record factories must retain their original evaluation boundary`);
+            } else {
+              // Compact groups may now cover the pure prefix before mark.
+              // The source oracle below checks that both unknown calls still
+              // happen in their original order; neither call joins the group.
+              assert.match(workers[name], /Main_mark\(/, `${profile}: unknown calls must remain present`);
+            }
           }
           writeFileSync(join(directory, "logs", `${profile}-workers.json`), JSON.stringify(workers, null, 2) + "\n");
           const actual = parse(run(`${profile}-go`, "go", ["run", "./main"], join(directory, "output")));

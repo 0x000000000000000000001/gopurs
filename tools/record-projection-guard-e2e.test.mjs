@@ -91,12 +91,14 @@ test("record projection preserves complete records, aliases, Int32 results and e
       if (process.env.GOPURS_TEST_FRONTEND_ONLY !== "1") {
         for (const profile of ["release", "dev"]) {
           run(profile, process.env.GOPURS_TEST_COMPILER ?? join(root, "bin/gopurs"), [`--${profile}`, "--main", "Main"]);
-          const workers = Object.fromEntries(["inspectWide", "inspectEight"].map(name => [name,
+          const workers = Object.fromEntries(["inspectWide", "inspectEight", "inspectPair"].map(name => [name,
             emittedWorker(join(directory, "output"), `Get_Main_${name}`) +
             emittedWorker(join(directory, "output"), `Call_Main_${name}`)]));
-          for (const [name, worker] of Object.entries(workers)) {
-            assert.match(worker, /recordProjection_data/, `${profile}: ${name} must exercise guarded boxed-to-native projection`);
+          for (const name of ["inspectWide", "inspectEight"]) {
+            assert.match(workers[name], /recordProjection_data/, `${profile}: ${name} must exercise guarded boxed-to-native projection`);
           }
+          assert.match(workers.inspectPair, /TypeRecord2/, `${profile}: pair projection must check the compact record tag`);
+          assert.match(workers.inspectPair, /RecordFields2\(/, `${profile}: pair projection must preserve both compact payload layouts`);
           writeFileSync(join(directory, "logs", `${profile}-workers.json`), JSON.stringify(workers, null, 2) + "\n");
           const actual = parse(run(`${profile}-go`, "go", ["run", "./main"], join(directory, "output")));
           assert.deepEqual(actual, oracle, `${profile}: complete records, overflow, immutable sources, shared references and evaluation order agree with JavaScript`);

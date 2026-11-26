@@ -5,10 +5,10 @@ import Prelude
 import Control.Alternative (guard)
 import Data.Array as Array
 import Data.Maybe (Maybe(..))
-import Data.String as String
 import Data.Tuple (Tuple(..))
 import Gopurs.GoAst (GoDecl(..), GoExpr(..), rawGo)
 import Gopurs.Printer (printGoExpr)
+import Gopurs.RecordShapeGuard as RecordShapeGuard
 
 type Reads = { source :: Maybe String, keys :: Array String, variables :: Array String }
 
@@ -39,27 +39,19 @@ grouped original = do
   reads <- scalar original
   source <- reads.source
   let keys = Array.sort (Array.nub reads.keys)
-  -- Canonical boxing uses compact records through five fields. A complete
-  -- larger shape must be checked at this consumption site, never cached.
-  guard (Array.length keys > 5)
+  guard (Array.length reads.keys >= 2)
   let
     prefix = fresh "recordReadGroup" reads.variables
     input = prefix <> "_input"
-    dataName = prefix <> "_data"
-    count = show (Array.length keys)
-    labels = String.joinWith " && " (Array.mapWithIndex
-      (\index key -> dataName <> ".Keys[" <> show index <> "] == " <> printGoExpr (GoString key)) keys)
-    fast = replace source dataName keys original
   pure (rawGo
     ("func(" <> input <> " gopurs_runtime.Value) int64 {\n"
-      <> "if " <> input <> ".Type == gopurs_runtime.TypeRecordData && " <> input <> ".UnsafePtr != nil {\n"
-      <> dataName <> " := (*gopurs_runtime.RecordData)(" <> input <> ".UnsafePtr)\n"
-      <> "if len(" <> dataName <> ".Keys) == " <> count <> " && len(" <> dataName <> ".Vals) >= " <> count
-      <> " && " <> labels <> " {\nreturn " <> printGoExpr fast <> "\n}\n}\n"
+      <> RecordShapeGuard.integerReads prefix input keys (\values ->
+        "return " <> printGoExpr (additions (replace source keys values original)))
       <> "return " <> printGoExpr original <> "\n}(" <> source <> ")"))
 
 fresh :: String -> Array String -> String
-fresh prefix variables = if Array.elem (prefix <> "_input") variables || Array.elem (prefix <> "_data") variables
+fresh prefix variables = if Array.any (\suffix -> Array.elem (prefix <> suffix) variables)
+  [ "_input", "_data", "_keys", "_value0", "_value1" ]
   then fresh (prefix <> "_") variables else prefix
 
 empty :: Reads
@@ -96,13 +88,42 @@ combine left right = do
     _, _ -> Nothing
   pure { source, keys: left.keys <> right.keys, variables: left.variables <> right.variables }
 
-replace :: String -> String -> Array String -> GoExpr -> GoExpr
-replace source dataName keys expression = case expression of
+replace :: String -> Array String -> Array GoExpr -> GoExpr -> GoExpr
+replace source keys values expression = case expression of
   GoSelector (GoRecordAccess (GoVar object) key) "IntVal" | object == source ->
     case Array.elemIndex key keys of
-      Just index -> GoSelector (GoIndex (GoSelector (GoVar dataName) "Vals") (GoInt index)) "IntVal"
+      Just index -> case Array.index values index of
+        Just value -> value
+        Nothing -> expression
       Nothing -> expression
-  _ -> children (replace source dataName keys) expression
+  _ -> children (replace source keys values) expression
+
+-- IntAdd is addition modulo 2^32, including noncanonical Int64 leaves.
+-- Inside this validated read-only region, connected additions need only their
+-- outer narrowing. Other arithmetic keeps its original narrowing boundary;
+-- in particular IntMul's JS Number rounding is never treated as ring multiply.
+additions :: GoExpr -> GoExpr
+additions expression = case expression of
+  GoCall (GoSelector (GoVar "gopurs_runtime") "IntAdd") [ _, _ ] ->
+    if constantAddition expression then expression
+    else GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ chain expression ] ]
+  _ -> children additions expression
+  where
+  chain value = case value of
+    GoCall (GoSelector (GoVar "gopurs_runtime") "IntAdd") [ left, right ] ->
+      if constantAddition value then value else GoBinOp "+" (chain left) (chain right)
+    other -> additions other
+
+-- Go rejects an overflowing constant conversion instead of applying runtime
+-- Int32 wrapping. Keep constant-only islands as runtime calls, including when
+-- they are nested inside a larger addition with dynamic leaves.
+constantAddition :: GoExpr -> Boolean
+constantAddition = case _ of
+  GoInt _ -> true
+  GoCall (GoVar cast) [ value ] | cast == "int64" || cast == "int32" -> constantAddition value
+  GoCall (GoSelector (GoVar "gopurs_runtime") "IntAdd") [ left, right ] ->
+    constantAddition left && constantAddition right
+  _ -> false
 
 -- Walk inside existing containers only. No expression is moved into or out of
 -- a branch, binding, callback, loop or argument position. Opaque generated code
