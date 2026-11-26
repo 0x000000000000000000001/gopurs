@@ -8,6 +8,9 @@ All notable changes to gopurs are recorded here. The format follows
 
 ### Changed
 
+- Expose native integer callbacks for cached, typed `Effect Int` actions.
+  Preserve their ordinary entry point and deferred execution, and unwrap
+  unary callbacks carrying function metadata without a recursive `Apply`.
 - Cache immutable scalar literal conversions for polymorphic interface arguments
   of immediately executed foreign effects. Preserve the boxed FFI representation,
   deferred factory and effect calls, and ordinary conversion of dynamic inputs.

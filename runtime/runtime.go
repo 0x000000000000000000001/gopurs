@@ -1565,7 +1565,11 @@ func Apply(f Value, arg Value) Value {
 	}
 	switch f.Type {
 	case TypeFunctionData:
-		return Apply((*functionData)(f.UnsafePtr).function, arg)
+		f = (*functionData)(f.UnsafePtr).function
+		if f.Type != TypeFunc || f.UnsafePtr == nil {
+			return Apply(f, arg)
+		}
+		fallthrough
 	case TypeFunc:
 		return (*(*func(Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg)
 	case TypeFunc2:

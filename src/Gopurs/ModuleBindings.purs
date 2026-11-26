@@ -15,6 +15,7 @@ import Data.Tuple (Tuple(..))
 import Effect.Ref (Ref)
 import Gopurs.CallAnalysis (extractUncurriedAbs)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
+import Gopurs.EffectExprs as EffectExprs
 import Gopurs.ExprAnalysis (extractFuncType)
 import Gopurs.ExprContext (ModuleFunctions, TranslateExpr, wrapInStmts)
 import Gopurs.GoAst (GoDecl(..), GoType(..), sanitizeName)
@@ -150,7 +151,10 @@ declarations translate metadata codegenStateRef modNameStr moduleFunctions group
                   Array.concatMap
                     ( \(Tuple (Ident name) expr) ->
                         let
-                          res = translate (context { depth = 0, bound = Map.empty, tcoIdent = (Just (sanitizeName name)), loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = (Just (annotationType expr)) }) 0 expr
+                          bindingContext = context { depth = 0, bound = Map.empty, tcoIdent = (Just (sanitizeName name)), loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = (Just (annotationType expr)) }
+                          res = case EffectExprs.wrapCachedInt translate bindingContext 0 expr of
+                            Just cached -> cached
+                            Nothing -> translate bindingContext 0 expr
                         in
                           [ GoCachedValue { identifier: generated modNameStr (modNameStr <> "_" <> sanitizeName name), expression: wrapInStmts [] res.stmts TypeValue (boxGoExpr codegenStateRef modNameStr res.expr res.exprType), goType: TypeValue } ]
                     )

@@ -4,18 +4,20 @@ module Gopurs.EffectExprs
   , defer
   , primitive
   , wrap
+  , wrapCachedInt
   ) where
 
 import Prelude
+import Control.Alternative (guard)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import Gopurs.ExprAnalysis (executeIfOpaque, unwrapTcoExpr)
+import Gopurs.ExprAnalysis (executeIfOpaque, getExprType, isEffectNode, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), flattenStmts)
 import Gopurs.GoAst (GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
-import PureScript.Backend.Optimizer.CoreFn (Ident)
+import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident)
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (BackendEffect(..), BackendSyntax(Abs, EffectDefer, Let, LetRec), Level)
 
@@ -93,13 +95,42 @@ primitive translate context@{ codegenStateRef, depth, modNameStr } nextId eff =
       }
 
 wrap :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> ExprResult
-wrap translate context@{ codegenStateRef, modNameStr } nextId tcoExpr =
+wrap translate context nextId tcoExpr =
   let
     res = translate (context { options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId tcoExpr
-    funcExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
-      [ GoFuncBlock [ Tuple "_" TypeValue ]
-          (flattenStmts res.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr res.expr res.exprType) ])
-          TypeValue
-      ]
   in
-    { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: res.nextId }
+    { stmts: StmtEmpty, expr: boxedAction context res, exprType: TypeValue, nextId: res.nextId }
+
+-- ModuleBindings calls this only for values initialized by a cached getter.
+-- Match exactly the effect syntax wrap already defers: aliases, factories and
+-- EffectDefer retain their existing construction/evaluation boundaries.
+wrapCachedInt :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Maybe ExprResult
+wrapCachedInt translate context nextId expression = do
+  case getExprType expression of
+    ADT "Effect.Effect" _ [ Int ] -> pure unit
+    _ -> Nothing
+  guard (isEffectNode expression)
+  let
+    result = translate (context { options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId expression
+    -- Translate once, retaining the original boxed body as an independent
+    -- entry point. Each invocation executes exactly one of these bodies.
+    nativeResult = case result.exprType, result.expr of
+      TypeInt64, value -> Just value
+      TypeValue, GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ value ] -> Just value
+      _, _ -> Nothing
+    action = case nativeResult of
+      Just value ->
+        let native = GoFuncBlock [] (flattenStmts result.stmts <> [ GoReturn value ]) TypeInt64
+        in GoCall (GoSelector (GoVar "gopurs_runtime") "WithFunctionData") [ boxedAction context result, native ]
+      -- Boxed dynamic results retain the FFI's complete Unbox semantics.
+      -- Reuse this translation even when it cannot provide a native entry.
+      Nothing -> boxedAction context result
+  pure { stmts: StmtEmpty, expr: action, exprType: TypeValue, nextId: result.nextId }
+
+boxedAction :: ExprContext -> ExprResult -> GoExpr
+boxedAction { codegenStateRef, modNameStr } result =
+  GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
+    [ GoFuncBlock [ Tuple "_" TypeValue ]
+        (flattenStmts result.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr result.expr result.exprType) ])
+        TypeValue
+    ]

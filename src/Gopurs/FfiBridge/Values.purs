@@ -116,6 +116,18 @@ fromValue dataDecls array@(TArray item) mbTast valName depth
         "func() " <> printTypeNode array <> " { _source := " <> valName
           <> "; _out := make(" <> printTypeNode array <> ", gopurs_runtime.ArrayLength(_source)); for _i := range _out { _out[_i] = "
           <> converted <> " }; return _out }()"
+-- Resolve this exact optional entry once when adapting an Effect Int callback.
+-- Actions without matching metadata keep the ordinary Apply/Unbox entry.
+fromValue _ (TFunc [] (Just (TNamed native))) (Just (ADT "Effect.Effect" _ [ Int ])) valName _
+  | native == "int" || native == "int64" =
+      let
+        fast = if native == "int64" then "__gopurs_native_action"
+          else "func() int { return int(__gopurs_native_action()) }"
+      in
+        "func(__gopurs_action gopurs_runtime.Value) func() " <> native <> " {\n"
+          <> "\t\tif __gopurs_native_action, ok := gopurs_runtime.FunctionData[func() int64](__gopurs_action); ok { return " <> fast <> " }\n"
+          <> "\t\treturn func() " <> native <> " { return gopurs_runtime.Unbox[" <> native <> "](gopurs_runtime.Apply(__gopurs_action, gopurs_runtime.Value{})) }\n"
+          <> "\t}(" <> valName <> ")"
 fromValue dataDecls (TFunc args ret) mbTast valName depth =
   let
     paramsArr = Array.mapWithIndex (\cidx atype -> "p" <> show depth <> "_" <> show cidx <> " " <> printTypeNode atype) args

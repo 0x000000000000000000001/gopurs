@@ -101,7 +101,7 @@ are sorted and deduplicated from the module source.
 | `Gopurs.CongruenceSum`<br>`src/Gopurs/CongruenceSum.purs` | Emit | Recognizes pure congruence predicates and emits bounded arithmetic sums. | `GoAst` |
 | `Gopurs.ConstructorExprs`<br>`src/Gopurs/ConstructorExprs.purs` | Emit | Translates constructor definitions and saturated construction. | `AdtExprs`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoTypes` |
 | `Gopurs.ControlExprs`<br>`src/Gopurs/ControlExprs.purs` | Emit | Translates branches, alternatives and control flow. | `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoTypes`, `Printer` |
-| `Gopurs.EffectExprs`<br>`src/Gopurs/EffectExprs.purs` | Emit | Translates effect expressions and their wrappers. | `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions` |
+| `Gopurs.EffectExprs`<br>`src/Gopurs/EffectExprs.purs` | Emit | Translates effect expressions and their wrappers, including native integer entries for cached typed actions. | `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions` |
 | `Gopurs.ExprAnalysis`<br>`src/Gopurs/ExprAnalysis.purs` | Emit | Provides read-only expression analyses. | `ExprContext`, `GoAst`, `GoTypes` |
 | `Gopurs.ExprContext`<br>`src/Gopurs/ExprContext.purs` | Emit | Carries translation context, results and callbacks. | `CodegenState`, `GoAst` |
 | `Gopurs.FfiBridge.Effects`<br>`src/Gopurs/FfiBridge/Effects.purs` | Emit | Validates effect contracts and generates deferred Go actions and asynchronous adapters. | `FfiBridge.Structured`, `FfiBridge.TypeSupport`, `FfiBridge.Values`, `FfiTypes` |
@@ -110,7 +110,7 @@ are sorted and deduplicated from the module source.
 | `Gopurs.FfiBridge.Signatures`<br>`src/Gopurs/FfiBridge/Signatures.purs` | Emit | Matches foreign declarations to native call signatures. | `CodegenState`, `FfiBridge.TypeSupport`, `FfiTypes`, `GoAst`, `GoSymbol` |
 | `Gopurs.FfiBridge.Structured`<br>`src/Gopurs/FfiBridge/Structured.purs` | Emit | Validates closed-record fields and generates conversions to Go structs. | `FfiBridge.TypeSupport`, `FfiTypes`, `GoAst`, `GoTypes`, `Printer` |
 | `Gopurs.FfiBridge.TypeSupport`<br>`src/Gopurs/FfiBridge/TypeSupport.purs` | Emit | Instantiates bridge types and generic arguments. | `FfiTypes` |
-| `Gopurs.FfiBridge.Values`<br>`src/Gopurs/FfiBridge/Values.purs` | Emit | Adapts FFI arguments, callbacks and results. | `FfiBridge.Structured`, `FfiBridge.TypeSupport`, `FfiTypes`, `GoTypes` |
+| `Gopurs.FfiBridge.Values`<br>`src/Gopurs/FfiBridge/Values.purs` | Emit | Adapts FFI arguments, callbacks and results, selecting exact native integer effect metadata with a boxed fallback. | `FfiBridge.Structured`, `FfiBridge.TypeSupport`, `FfiTypes`, `GoTypes` |
 | `Gopurs.FfiBridge`<br>`src/Gopurs/FfiBridge.purs` | Emit | Assembles typed FFI bridges. | `CodegenState`, `FfiBridge.Effects`, `FfiBridge.Render`, `FfiBridge.Signatures`, `FfiBridge.TypeSupport`, `FfiTypes`, `GoAst`, `GoTypes` |
 | `Gopurs.FfiSupport`<br>`src/Gopurs/FfiSupport.purs` | Emit | Parses Go FFI and exposes support operations. | `FfiTypes` |
 | `Gopurs.FfiTypes`<br>`src/Gopurs/FfiTypes.purs` | Emit | Defines FFI bridge types. | — |
@@ -131,7 +131,7 @@ are sorted and deduplicated from the module source.
 | `Gopurs.ListFilter`<br>`src/Gopurs/ListFilter.purs` | Emit | Builds filtered lists forward while sharing the immutable retained suffix. | `CallAnalysis`, `CodegenState`, `ConstructorLayout`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoFunctions` |
 | `Gopurs.LiteralExprs`<br>`src/Gopurs/LiteralExprs.purs` | Emit | Translates array and record literals with their conversions. | `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoTypes`, `Printer`, `RecordExprs` |
 | `Gopurs.LocalWorkers`<br>`src/Gopurs/LocalWorkers.purs` | Emit | Emits local workers, parameters and signatures. | `AffineLoops`, `CodegenState`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoFunctions`, `GoSymbol`, `GoTypes`, `Int32Loops` |
-| `Gopurs.ModuleBindings`<br>`src/Gopurs/ModuleBindings.purs` | Emit | Emits module functions, signatures and tail-call groups. | `CallAnalysis`, `CodegenState`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoSymbol`, `GoTypes`, `ListFilter`, `ModuleWorkers`, `NativeRecordArgs` |
+| `Gopurs.ModuleBindings`<br>`src/Gopurs/ModuleBindings.purs` | Emit | Emits module functions, signatures and tail-call groups, selecting typed native effect entries only for cached values. | `CallAnalysis`, `CodegenState`, `EffectExprs`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoSymbol`, `GoTypes`, `ListFilter`, `ModuleWorkers`, `NativeRecordArgs` |
 | `Gopurs.ModuleDeclarations`<br>`src/Gopurs/ModuleDeclarations.purs` | Emit | Emits ADT structs and class-getter registration. | `CodegenState`, `GoAst`, `GoSymbol`, `GoTypes` |
 | `Gopurs.ModuleWorkers`<br>`src/Gopurs/ModuleWorkers.purs` | Emit | Emits module workers and wrappers. | `AffineLoops`, `ArraySnoc`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoFunctions`, `GoSymbol`, `Int32Loops`, `ListFilter`, `TailAddLoops` |
 | `Gopurs.ObjectTraverse`<br>`src/Gopurs/ObjectTraverse.purs` | Emit | Emits Either traversal loops over objects. | `AdtExprs`, `CallAnalysis`, `CallArguments`, `ExprContext`, `GoAst`, `GoConversions` |
