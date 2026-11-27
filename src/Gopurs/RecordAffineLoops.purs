@@ -1,12 +1,13 @@
 -- Collapse pure countdown recurrences over immutable native records. The
 -- complete update tree is proved before changing the number of iterations.
-module Gopurs.RecordAffineLoops (wrap, hot) where
+module Gopurs.RecordAffineLoops (wrap, hot, flatAdditive, additiveTotal) where
 
 import Prelude
 
 import Control.Alternative (guard)
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
+import Data.Foldable (foldl)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..), fst)
@@ -176,3 +177,25 @@ narrow value = GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ value ] ]
 
 integer :: Int -> GoExpr
 integer value = GoCall (GoVar "int64") [ GoInt value ]
+
+-- Ephemeral consumers reuse this complete recurrence proof. No imported ABI
+-- or usage count establishes the meaning of an arbitrary record function.
+flatAdditive :: (TcoExpr -> Boolean) -> Parameters -> GoType -> TcoExpr -> Maybe { keys :: Array String, deltas :: Array Int, counterFirst :: Boolean }
+flatAdditive self params result body = do
+  recurrence <- recognize self params result body
+  fields <- case result of
+    TypeRecord fields | Array.all (\(Tuple _ ty) -> ty == TypeInt64) fields -> Just fields
+    _ -> Nothing
+  changes <- case recurrence.changes of
+    Fields _ changes | not (Array.null changes) -> Just changes
+    _ -> Nothing
+  deltas <- traverse (\(Tuple _ change) -> case change of
+    Add (Constant delta) -> Just delta
+    _ -> Nothing) changes
+  pure { keys: map fst fields, deltas, counterFirst: case params of
+    [ Tuple _ TypeInt64, _ ] -> true
+    _ -> false }
+
+additiveTotal :: GoExpr -> Array Int -> GoExpr
+additiveTotal counter deltas = foldl (GoBinOp "+") (GoInt 0)
+  (map (total counter <<< Constant) deltas)

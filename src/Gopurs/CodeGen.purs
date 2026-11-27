@@ -67,6 +67,7 @@ import Gopurs.ControlExprs as ControlExprs
 import Gopurs.EffectExprs as EffectExprs
 import Gopurs.FfiBridge.ImmediateEffects as ImmediateEffects
 import Gopurs.TypedExprs as TypedExprs
+import Gopurs.RecordConsumer as RecordConsumer
 import Gopurs.ModuleBindings as ModuleBindings
 import Gopurs.ModuleDeclarations as ModuleDeclarations
 import Gopurs.GoImports (collectImports)
@@ -197,7 +198,9 @@ translatePreparedWithFunctions sourceMetadata prepared =
 
     Tuple allDeclsAst helpers = unsafePerformEffect do
       let
-        d = ModuleBindings.declarations translateExpr metadata codegenStateRef modNameStr moduleFunctions preparedBindings.bindings
+        proofs = RecordConsumer.prepare modNameStr moduleFunctions preparedBindings.bindings
+        translator = if Map.isEmpty proofs then translateExpr else translateExprWith proofs
+        d = ModuleBindings.declarations translator metadata codegenStateRef modNameStr moduleFunctions preparedBindings.bindings
       h <- Ref.read codegenStateRef
       pure (Tuple d h)
 
@@ -221,17 +224,21 @@ translatePreparedWithFunctions sourceMetadata prepared =
     }
 
 translateExpr :: TranslateExpr
-translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: { inEffectBlock }, mbExpectedExprType } nextId tcoExpr@(TcoExpr _ expr) =
+translateExpr = translateExprWith Map.empty
+
+translateExprWith :: RecordConsumer.Plans -> TranslateExpr
+translateExprWith proofs context@{ metadata, codegenStateRef, modNameStr, bound, options: { inEffectBlock }, mbExpectedExprType } nextId tcoExpr@(TcoExpr _ expr) =
   let
+    recur = translateExprWith proofs
     child = childContext context Nothing
     isEff = isEffectNode tcoExpr
   in
     if isEff && not inEffectBlock then
-      EffectExprs.wrap translateExpr context nextId tcoExpr
+      EffectExprs.wrap recur context nextId tcoExpr
     else
       case expr of
         Typed type_ a ->
-          TypedExprs.annotated translateExpr context nextId type_ a
+          TypedExprs.annotated recur context nextId type_ a
         Var (Qualified mbMn (Ident i)) ->
           let
             safeName = sanitizeName i
@@ -270,10 +277,10 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
               { stmts: StmtEmpty, expr: result.expr, exprType: result.exprType, nextId }
 
         Lit (LitArray xs) ->
-          LiteralExprs.array translateExpr context nextId xs
+          LiteralExprs.array recur context nextId xs
 
         Lit (LitRecord props) ->
-          LiteralExprs.record translateExpr context nextId (getExprType tcoExpr) props
+          LiteralExprs.record recur context nextId (getExprType tcoExpr) props
 
         expr_
           | ( case expr_ of
@@ -281,41 +288,43 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
                 Syn.TypeApp _ _ -> true
                 _ -> false
             ) ->
-              CallExprs.application translateExpr context nextId tcoExpr
+              CallExprs.application recur context nextId tcoExpr
 
         Abs args body ->
-          FunctionExprs.abstraction translateExpr context nextId tcoExpr args body
+          FunctionExprs.abstraction recur context nextId tcoExpr args body
 
         UncurriedApp fn args ->
-          CallExprs.uncurriedApplication translateExpr context nextId tcoExpr fn args
+          CallExprs.uncurriedApplication recur context nextId tcoExpr fn args
 
         UncurriedAbs args body ->
-          FunctionExprs.uncurriedAbstraction translateExpr context nextId tcoExpr args body
+          FunctionExprs.uncurriedAbstraction recur context nextId tcoExpr args body
 
         UncurriedEffectApp fn args ->
-          CallExprs.effectApplication translateExpr context nextId fn args
+          CallExprs.effectApplication recur context nextId fn args
 
         UncurriedEffectAbs args body ->
-          FunctionExprs.effectAbstraction translateExpr context nextId tcoExpr args body
+          FunctionExprs.effectAbstraction recur context nextId tcoExpr args body
 
         EffectBind mbIdent lvl binding body ->
-          EffectExprs.bindEffect translateExpr context nextId mbIdent lvl binding body
+          EffectExprs.bindEffect recur context nextId mbIdent lvl binding body
 
         EffectPure binding ->
-          EffectExprs.pureValue translateExpr context nextId binding
+          EffectExprs.pureValue recur context nextId binding
 
         EffectDefer binding ->
-          EffectExprs.defer translateExpr context nextId binding
+          EffectExprs.defer recur context nextId binding
 
         Let mbIdent lvl binding body ->
-          BindingExprs.nonRecursive translateExpr context nextId mbIdent lvl binding body
+          case RecordConsumer.emit proofs recur context nextId mbIdent lvl binding body of
+            Just result -> result
+            Nothing -> BindingExprs.nonRecursive recur context nextId mbIdent lvl binding body
 
         LetRec lvl bindings body ->
-          BindingExprs.recursive translateExpr context nextId tcoExpr lvl bindings body
+          BindingExprs.recursive recur context nextId tcoExpr lvl bindings body
 
         Accessor obj accessor ->
           let
-            resObj = translateExpr child nextId obj
+            resObj = recur child nextId obj
           in
             case accessor of
               GetProp prop ->
@@ -334,11 +343,11 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
 
         Update obj props ->
           let
-            resObj = translateExpr child nextId obj
+            resObj = recur child nextId obj
             accProps = foldl
               ( \acc (Prop key val) ->
                   let
-                    resVal = translateExpr child acc.nextId val
+                    resVal = recur child acc.nextId val
                   in
                     { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs { key, expr: resVal.expr, goType: resVal.exprType }, exprType: TypeValue, nextId: resVal.nextId }
               )
@@ -353,18 +362,18 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
           ConstructorExprs.definition context nextId tcoExpr name fields
 
         CtorSaturated (Qualified mbMod _) _ _ (Ident name) props ->
-          ConstructorExprs.saturated translateExpr context nextId tcoExpr mbMod name props
+          ConstructorExprs.saturated recur context nextId tcoExpr mbMod name props
 
         Fail msg ->
           ControlExprs.failure context nextId tcoExpr msg
 
         Branch branches def ->
-          ControlExprs.branch translateExpr context nextId branches def
+          ControlExprs.branch recur context nextId branches def
 
         PrimOp (Op1 op1 e)
           | Just emit <- PrimitiveExprs.unary codegenStateRef modNameStr op1 ->
               let
-                resE = translateExpr child nextId e
+                resE = recur child nextId e
                 result = emit { expr: resE.expr, exprType: resE.exprType }
               in
                 { stmts: resE.stmts, expr: result.expr, exprType: result.exprType, nextId: resE.nextId }
@@ -374,56 +383,56 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
             -- A pointer ADT's tag is independent of its type arguments. Keep
             -- the operand's representation: coercing a boxed List here would
             -- copy its entire tail merely to distinguish Nil from Cons.
-            translateOperand expected operand@(TcoExpr _ syntax) =
+            recurOperand expected operand@(TcoExpr _ syntax) =
               case syntax of
                 Typed type_ inner
                   | TypeStructPointer _ <- exprTypeToGoType metadata.sharedRecords metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr type_ ->
-                      translateOperand (Just type_) inner
+                      recurOperand (Just type_) inner
                 _ ->
-                  translateExpr (child { mbExpectedExprType = expected }) nextId operand
-            resE = translateOperand Nothing e
+                  recur (child { mbExpectedExprType = expected }) nextId operand
+            resE = recurOperand Nothing e
           in
             AdtExprs.isTag metadata codegenStateRef modNameStr mbMod tag resE
 
         PrimOp (Op1 OpArrayLength e) ->
           let
-            resE = translateExpr child nextId e
+            resE = recur child nextId e
           in
             case resE.exprType of
               TypeNativeArray _ -> { stmts: resE.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoVar "len") [ resE.expr ] ] ], exprType: TypeValue, nextId: resE.nextId }
               _ -> { stmts: resE.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayLength") [ boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType ] ] ], exprType: TypeValue, nextId: resE.nextId }
 
         PrimOp (Op2 OpBooleanAnd e1 e2) ->
-          ControlExprs.booleanAnd translateExpr context nextId e1 e2
+          ControlExprs.booleanAnd recur context nextId e1 e2
 
         PrimOp (Op2 OpBooleanOr e1 e2) ->
-          ControlExprs.booleanOr translateExpr context nextId e1 e2
+          ControlExprs.booleanOr recur context nextId e1 e2
 
         PrimOp (Op2 OpArrayIndex e1 e2) ->
-          ArrayIntrinsics.unsafeIndex translateExpr context nextId e1 e2
+          ArrayIntrinsics.unsafeIndex recur context nextId e1 e2
 
         PrimOp (Op2 op2 e1 e2)
-          | Just result <- PrimitiveExprs.stringLengthComparison translateExpr context nextId op2 e1 e2 ->
+          | Just result <- PrimitiveExprs.stringLengthComparison recur context nextId op2 e1 e2 ->
               result
 
         PrimOp (Op2 op2 e1 e2)
-          | Just result <- PrimitiveExprs.boundedIntProduct translateExpr context nextId op2 e1 e2 ->
+          | Just result <- PrimitiveExprs.boundedIntProduct recur context nextId op2 e1 e2 ->
               result
-          | Just result <- PrimitiveExprs.guardedIntProduct translateExpr context nextId op2 e1 e2 ->
+          | Just result <- PrimitiveExprs.guardedIntProduct recur context nextId op2 e1 e2 ->
               result
-          | Just result <- PrimitiveExprs.powerOfTwoModulo translateExpr context nextId op2 e1 e2 ->
+          | Just result <- PrimitiveExprs.powerOfTwoModulo recur context nextId op2 e1 e2 ->
               result
 
         PrimOp (Op2 op2 e1 e2)
           | Just emit <- PrimitiveExprs.binary codegenStateRef modNameStr op2 ->
               let
-                res1 = translateExpr child nextId e1
-                res2 = translateExpr child res1.nextId e2
+                res1 = recur child nextId e1
+                res2 = recur child res1.nextId e2
                 result = emit { expr: res1.expr, exprType: res1.exprType } { expr: res2.expr, exprType: res2.exprType }
               in
                 { stmts: res1.stmts <> res2.stmts, expr: result.expr, exprType: result.exprType, nextId: res2.nextId }
 
         PrimEffect eff ->
-          EffectExprs.primitive translateExpr context nextId eff
+          EffectExprs.primitive recur context nextId eff
 
         _ -> { stmts: StmtEmpty, expr: GoVar "gopurs_runtime.Value{}", exprType: TypeValue, nextId }
