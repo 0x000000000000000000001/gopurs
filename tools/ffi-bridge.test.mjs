@@ -137,7 +137,10 @@ test('native-call metadata names the emitted worker and retains its calling conv
         assert.ok(found instanceof Just, name);
         const { reference, ...signature } = found.value0;
         assert.deepEqual(reference.value0, { name: fullName, owner: 'ffi/' + moduleName });
-        assert.deepEqual(signature, { fArgs, fRet, arity: fArgs.length });
+        assert.deepEqual(signature, {
+            fArgs, fRet, arity: fArgs.length,
+            arrayFold: Nothing.value, codePointFold: Nothing.value,
+        });
     }
     for (const name of ['record', 'unsupported', 'effectful', 'constant', 'zero', 'untyped', 'missing']) {
         assert.equal(lookup(ordString)(name)(signatures), Nothing.value, name);

@@ -62,7 +62,7 @@ boxedArgument dataDecls mbTast i t =
             [ "\tgo_arg" <> show i <> " := gopurs_runtime.UnboxObject(arg" <> show i <> ")" ]
           else if et == "any" || et == "interface{}" then
             [ "\targ" <> show i <> "_map := gopurs_runtime.RecordToMap(arg" <> show i <> ")"
-            , "\tgo_arg" <> show i <> " := make(" <> typStr <> ")"
+            , "\tgo_arg" <> show i <> " := make(" <> typStr <> ", len(arg" <> show i <> "_map))"
             , "\tfor k, v := range arg" <> show i <> "_map { go_arg" <> show i <> "[k] = v }"
             ]
           else
@@ -192,7 +192,7 @@ fromValue dataDecls (TNamed anyT) mbTast valName depth | anyT == "any" || anyT =
             )
             fields
         in
-          "func() map[string]any {\n\t\t\t_raw := gopurs_runtime.RecordToMap(" <> valName <> ")\n\t\t\tres_map := make(map[string]any)\n" <> String.joinWith "\n" fieldStr <> "\n\t\t\treturn res_map\n\t\t}()"
+          "func() map[string]any {\n\t\t\t_raw := gopurs_runtime.RecordToMap(" <> valName <> ")\n\t\t\tres_map := make(map[string]any, " <> show (Array.length fields) <> ")\n" <> String.joinWith "\n" fieldStr <> "\n\t\t\treturn res_map\n\t\t}()"
       Just f@(Func _ _) ->
         fromValue dataDecls (exprTypeToDummyTypeNode f) resolvedTast valName depth
       _ -> "gopurs_runtime.Unbox[" <> anyT <> "](" <> valName <> ")"
@@ -261,7 +261,7 @@ toValue dataDecls (TMap _ _) (Just (Record (Row fields tail))) valName | isClose
       )
       fields
   in
-    "func() gopurs_runtime.Value {\n\t\t\t_raw := " <> valName <> "\n\t\t\tres_map := make(map[string]gopurs_runtime.Value)\n" <> String.joinWith "\n" fieldStr <> "\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
+    "func() gopurs_runtime.Value {\n\t\t\t_raw := " <> valName <> "\n\t\t\tres_map := make(map[string]gopurs_runtime.Value, " <> show (Array.length fields) <> ")\n" <> String.joinWith "\n" fieldStr <> "\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
 toValue dataDecls (TMap _ _) mbTast valName =
   let
     resolvedTast = map (resolveNewtype dataDecls) mbTast
@@ -272,7 +272,7 @@ toValue dataDecls (TMap _ _) mbTast valName =
     if isOpaque then
       "gopurs_runtime.Any(" <> valName <> ")"
     else
-      "func() gopurs_runtime.Value {\n\t\t\tres_map := make(map[string]gopurs_runtime.Value)\n\t\t\tfor k, v := range " <> valName <> " { res_map[k] = gopurs_runtime.Box(v) }\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
+      "func() gopurs_runtime.Value {\n\t\t\t_source := " <> valName <> "\n\t\t\tres_map := make(map[string]gopurs_runtime.Value, len(_source))\n\t\t\tfor k, v := range _source { res_map[k] = gopurs_runtime.Box(v) }\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
 toValue _ (TNamed anyT) mbTast valName | (anyT == "any" || anyT == "interface{}") && isForeign mbTast = "gopurs_runtime.Any(" <> valName <> ")"
 toValue dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "interface{}" =
   let
@@ -287,7 +287,7 @@ toValue dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "inter
             )
             fields
         in
-          "func() gopurs_runtime.Value {\n\t\t\t_raw := gopurs_runtime.RecordToMap(gopurs_runtime.Box(" <> valName <> "))\n\t\t\tres_map := make(map[string]gopurs_runtime.Value)\n" <> String.joinWith "\n" fieldStr <> "\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
+          "func() gopurs_runtime.Value {\n\t\t\t_raw := gopurs_runtime.RecordToMap(gopurs_runtime.Box(" <> valName <> "))\n\t\t\tres_map := make(map[string]gopurs_runtime.Value, " <> show (Array.length fields) <> ")\n" <> String.joinWith "\n" fieldStr <> "\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
       Just f@(Func _ _) ->
         let
           fArgs = flattenFuncArgs f
