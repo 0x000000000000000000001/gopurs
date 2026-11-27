@@ -114,7 +114,7 @@ workerInputs :: ModuleFunctions -> BackendModule -> Map.Map String (Maybe Functi
 workerInputs available = foldWorkerReferences
   (\owner name acc -> foldl
     (\entries ident -> let key = unwrap owner <> "." <> ident in Map.insert key (Map.lookup key available) entries)
-    acc [ name, ImmediateEffects.key name ])
+    acc [ name, ImmediateEffects.key name, ImmediateEffects.factoryKey name ])
   Map.empty
 
 -- The emitter can resolve immutable owner contributions without decoding every
@@ -416,6 +416,8 @@ translateExprWith proofs context@{ metadata, codegenStateRef, modNameStr, bound,
               result
 
         PrimOp (Op2 op2 e1 e2)
+          | Just result <- PrimitiveExprs.modularIntProduct recur context nextId op2 e1 e2 ->
+              result
           | Just result <- PrimitiveExprs.boundedIntProduct recur context nextId op2 e1 e2 ->
               result
           | Just result <- PrimitiveExprs.guardedIntProduct recur context nextId op2 e1 e2 ->

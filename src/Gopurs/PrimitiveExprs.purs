@@ -3,6 +3,7 @@ module Gopurs.PrimitiveExprs
   , literal
   , unary
   , binary
+  , modularIntProduct
   , boundedIntProduct
   , guardedIntProduct
   , powerOfTwoModulo
@@ -34,6 +35,68 @@ type PrimitiveExpr =
   { expr :: GoExpr
   , exprType :: GoType
   }
+
+-- Exact modulo-2^32 product encoded as 16-bit split JS-safe arithmetic:
+--   ((x & 65535) * (y | 0)) + (((x >> 16) * (y | 0)) << 16)
+-- In Go two's-complement int64 arithmetic, int64(int32(x * y)) is exact for
+-- every 64-bit x, y. Restrict to pure Local operands so evaluation order and
+-- side effects remain unchanged and no IIFE/NOOP overhead is introduced.
+modularIntProduct :: TranslateExpr -> ExprContext -> Int -> BackendOperator2 -> TcoExpr -> TcoExpr -> Maybe ExprResult
+modularIntProduct translate context nextId operator lhs rhs = do
+  guard (operator == OpIntNum OpAdd)
+  Tuple lowFactor lowOther <- matchLow lhs
+  Tuple highFactor highOther <- matchHigh rhs
+  guard (sameLocal lowFactor highFactor && sameLocal lowOther highOther)
+  let
+    child = childContext context (Just Int)
+    left = translate child nextId lowFactor
+    right = translate child left.nextId lowOther
+    leftVal = unboxGoExpr context.codegenStateRef context.modNameStr left.expr left.exprType TypeInt64
+    rightVal = unboxGoExpr context.codegenStateRef context.modNameStr right.expr right.exprType TypeInt64
+    cast name argument = GoCall (GoVar name) [ argument ]
+  pure
+    { stmts: left.stmts <> right.stmts
+    , expr: cast "int64" (cast "int32" (GoBinOp "*" leftVal rightVal))
+    , exprType: TypeInt64
+    , nextId: right.nextId
+    }
+  where
+  matchLow expr = case unwrapTcoExpr expr of
+    PrimOp (Syn.Op2 (OpIntNum OpMultiply) a b) -> do
+      x <- matchMask16 a
+      y <- matchBitOr0 b
+      pure (Tuple x y)
+    _ -> Nothing
+
+  matchHigh expr = case unwrapTcoExpr expr of
+    PrimOp (Syn.Op2 OpIntBitShiftLeft inner shift) | integerLiteral shift == Just 16 ->
+      case unwrapTcoExpr inner of
+        PrimOp (Syn.Op2 (OpIntNum OpMultiply) a b) -> do
+          x <- matchShiftRight16 a
+          y <- matchBitOr0 b
+          pure (Tuple x y)
+        _ -> Nothing
+    _ -> Nothing
+
+  matchMask16 expr = case unwrapTcoExpr expr of
+    PrimOp (Syn.Op2 OpIntBitAnd x mask) | integerLiteral mask == Just 65535 -> localOperand x
+    _ -> Nothing
+
+  matchShiftRight16 expr = case unwrapTcoExpr expr of
+    PrimOp (Syn.Op2 OpIntBitShiftRight x shift) | integerLiteral shift == Just 16 -> localOperand x
+    _ -> Nothing
+
+  matchBitOr0 expr = case unwrapTcoExpr expr of
+    PrimOp (Syn.Op2 OpIntBitOr y zero) | integerLiteral zero == Just 0 -> localOperand y
+    _ -> Nothing
+
+  localOperand expr = case unwrapTcoExpr expr of
+    Local _ _ -> Just expr
+    _ -> Nothing
+
+  sameLocal a b = case unwrapTcoExpr a, unwrapTcoExpr b of
+    Local id1 lvl1, Local id2 lvl2 -> id1 == id2 && lvl1 == lvl2
+    _, _ -> false
 
 -- IntMul follows JS Number multiplication before narrowing. A native integer
 -- product is equivalent only when the syntax bounds its magnitude by 2^53.

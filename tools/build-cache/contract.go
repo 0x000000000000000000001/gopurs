@@ -208,7 +208,14 @@ func outputPath(kind, module, path string) bool {
 	case "ffi":
 		return validModule(module) && path == "purescript/"+goName+"_ffi.go"
 	case "runtime":
-		return module == "" && path == "gopurs_runtime/runtime.go"
+		if module != "" {
+			return false
+		}
+		switch path {
+		case "gopurs_runtime/runtime.go", "gopurs_runtime/simd_asm.go", "gopurs_runtime/simd_generic.go", "gopurs_runtime/simd_arm64.s", "gopurs_runtime/simd_amd64.s":
+			return true
+		}
+		return false
 	case "entry":
 		return validModule(module) && (path == "main/main.go" || path == module+"/main/main.go")
 	case "package", "ffi-package", "order", "package-init":

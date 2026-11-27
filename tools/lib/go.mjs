@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+
+const runtimeDirectory = new URL("../../runtime/", import.meta.url);
+const runtimeSimdNames = ["simd_asm.go", "simd_generic.go", "simd_arm64.s", "simd_amd64.s"];
 
 /** Create a temporary directory owned by a node:test context. */
 export function temporaryDirectory(t, prefix) {
@@ -17,6 +20,9 @@ export function goModule(t, prefix, { module = "gopurs/output", go = "1.22", run
   if (runtime !== undefined) {
     mkdirSync(join(directory, "gopurs_runtime"));
     writeFileSync(join(directory, "gopurs_runtime/runtime.go"), runtime);
+    for (const name of runtimeSimdNames) {
+      copyFileSync(new URL(name, runtimeDirectory), join(directory, "gopurs_runtime", name));
+    }
   }
   writeFileSync(join(directory, "go.mod"), `module ${module}\n\ngo ${go}\n`);
   return directory;

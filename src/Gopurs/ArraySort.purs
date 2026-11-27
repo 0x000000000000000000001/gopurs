@@ -1,4 +1,4 @@
-module Gopurs.ArraySort (emit) where
+module Gopurs.ArraySort (emit, intComparator, staticOrderingConversion) where
 
 import Prelude
 
@@ -208,6 +208,14 @@ emit translate context@{ metadata, codegenStateRef, modNameStr } nextId fn args 
         ] <> sortBody
       _, Just ascending ->
         [ GoAssign "arraySort_input" (argument 2)
+        , GoIfElse (rawGo "arraySort_input.Type == gopurs_runtime.TypeInt32Array")
+            ([ GoAssign "arraySort_ints32" (rawGo "*(*[]int32)(arraySort_input.UnsafePtr)")
+             , GoAssign "arraySort_output" (GoCall (GoVar "make") [ rawGo "[]int64", GoCall (GoVar "len") [ GoVar "arraySort_ints32" ] ])
+             , GoForRange "index, value := range arraySort_ints32"
+                 [ GoMutate "arraySort_output[index]" (GoCall (GoVar "int64") [ GoVar "value" ]) ]
+             , GoIfElse (GoBinOp "<" length (GoInt 2)) [ GoReturn (GoVar "arraySort_output") ] []
+             ] <> directSortBody ascending <> [ GoReturn (GoVar "arraySort_output") ])
+            []
         , GoIfElse (rawGo "arraySort_input.Type == gopurs_runtime.TypeIntArray")
             ([ GoAssign "arraySort_ints" (rawGo "*(*[]int64)(arraySort_input.UnsafePtr)") ]
               <> directSortFrom "arraySort_ints" ascending
@@ -222,15 +230,22 @@ emit translate context@{ metadata, codegenStateRef, modNameStr } nextId fn args 
       _, Nothing ->
         [ GoAssign "arraySort_input" (argument 2)
         , rawGo "var arraySort_output []int64"
-        , GoIfElse (rawGo "arraySort_input.Type == gopurs_runtime.TypeIntArray")
-            [ GoAssign "arraySort_ints" (rawGo "*(*[]int64)(arraySort_input.UnsafePtr)")
-            , GoMutate "arraySort_output" (GoCall (GoVar "make") [ rawGo "[]int64", GoCall (GoVar "len") [ GoVar "arraySort_ints" ] ])
-            , GoCall (GoVar "copy") [ GoVar "arraySort_output", GoVar "arraySort_ints" ]
+        , GoIfElse (rawGo "arraySort_input.Type == gopurs_runtime.TypeInt32Array")
+            [ GoAssign "arraySort_ints32" (rawGo "*(*[]int32)(arraySort_input.UnsafePtr)")
+            , GoMutate "arraySort_output" (GoCall (GoVar "make") [ rawGo "[]int64", GoCall (GoVar "len") [ GoVar "arraySort_ints32" ] ])
+            , GoForRange "index, value := range arraySort_ints32"
+                [ GoMutate "arraySort_output[index]" (GoCall (GoVar "int64") [ GoVar "value" ]) ]
             ]
-            [ GoAssign "arraySort_values" (rawGo "*(*[]gopurs_runtime.Value)(arraySort_input.UnsafePtr)")
-            , GoMutate "arraySort_output" (GoCall (GoVar "make") [ rawGo "[]int64", GoCall (GoVar "len") [ GoVar "arraySort_values" ] ])
-            , GoForRange "index, value := range arraySort_values"
-                [ GoMutate "arraySort_output[index]" (GoSelector (GoVar "value") "IntVal") ]
+            [ GoIfElse (rawGo "arraySort_input.Type == gopurs_runtime.TypeIntArray")
+                [ GoAssign "arraySort_ints" (rawGo "*(*[]int64)(arraySort_input.UnsafePtr)")
+                , GoMutate "arraySort_output" (GoCall (GoVar "make") [ rawGo "[]int64", GoCall (GoVar "len") [ GoVar "arraySort_ints" ] ])
+                , GoCall (GoVar "copy") [ GoVar "arraySort_output", GoVar "arraySort_ints" ]
+                ]
+                [ GoAssign "arraySort_values" (rawGo "*(*[]gopurs_runtime.Value)(arraySort_input.UnsafePtr)")
+                , GoMutate "arraySort_output" (GoCall (GoVar "make") [ rawGo "[]int64", GoCall (GoVar "len") [ GoVar "arraySort_values" ] ])
+                , GoForRange "index, value := range arraySort_values"
+                    [ GoMutate "arraySort_output[index]" (GoSelector (GoVar "value") "IntVal") ]
+                ]
             ]
         , GoIfElse (GoBinOp "<" length (GoInt 2)) [ GoReturn (GoVar "arraySort_output") ] []
         ] <> sortBody

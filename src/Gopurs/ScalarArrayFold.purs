@@ -47,11 +47,23 @@ emit translate context@{ codegenStateRef, modNameStr } nextId fn args = do
       _ ->
         [ GoAssign "scalarFold_input" (arg 2)
         , GoAssign "scalarFold_result" initial
-        , GoIfElse (rawGo "scalarFold_input.Type == gopurs_runtime.TypeIntArray")
-            ([ GoAssign "scalarFold_ints" (rawGo "*(*[]int64)(scalarFold_input.UnsafePtr)") ] <>
-              integerSumBody "scalarFold_ints" (GoVar "scalarFold_value") identity)
-            ([ GoAssign "scalarFold_values" (rawGo "*(*[]gopurs_runtime.Value)(scalarFold_input.UnsafePtr)") ] <>
-              integerSumBody "scalarFold_values" (GoSelector (GoVar "scalarFold_value") "IntVal") (\value -> GoSelector value "IntVal"))
+        , GoIfElse (rawGo "scalarFold_input.Type == gopurs_runtime.TypeInt32Array")
+            [ GoAssign "scalarFold_ints32" (rawGo "*(*[]int32)(scalarFold_input.UnsafePtr)")
+            , GoIfElse (GoBinOp ">" (GoCall (GoVar "len") [ GoVar "scalarFold_ints32" ]) (GoInt 0))
+                [ GoMutate "scalarFold_result"
+                    (GoCall (GoVar "int64")
+                      [ GoBinOp "+"
+                          (GoCall (GoVar "int32") [ GoVar "scalarFold_result" ])
+                          (GoCall (GoSelector (GoVar "gopurs_runtime") "SumInt32") [ GoVar "scalarFold_ints32" ])
+                      ])
+                ] []
+            ]
+            [ GoIfElse (rawGo "scalarFold_input.Type == gopurs_runtime.TypeIntArray")
+                ([ GoAssign "scalarFold_ints" (rawGo "*(*[]int64)(scalarFold_input.UnsafePtr)") ] <>
+                  integerSumBody "scalarFold_ints" (GoVar "scalarFold_value") identity)
+                ([ GoAssign "scalarFold_values" (rawGo "*(*[]gopurs_runtime.Value)(scalarFold_input.UnsafePtr)") ] <>
+                  integerSumBody "scalarFold_values" (GoSelector (GoVar "scalarFold_value") "IntVal") (\value -> GoSelector value "IntVal"))
+            ]
         ]
     expr = if scalar == TypeInt64 then
       GoCall (GoFuncLit [] intBody (GoVar "scalarFold_result") scalar) []
@@ -79,7 +91,7 @@ integerSumBody source element unbox =
   ] <>
   map (\lane -> GoAssign (accumulator lane) (GoCall (GoVar "int64") [ GoInt 0 ])) lanes <>
   [ GoAssign index (GoInt 0)
-  , GoForRange ("; " <> index <> " + 8 <= len(" <> values <> "); " <> index <> " += 8")
+  , GoForRange ("; " <> index <> " <= len(" <> values <> ")-8; " <> index <> " += 8")
       ([ GoAssign chunk (rawGo (values <> "[" <> index <> ":" <> index <> "+8]")) ] <>
         map (\lane -> GoMutate (accumulator lane)
           (GoBinOp "+" (GoVar (accumulator lane)) (unbox (GoIndex (GoVar chunk) (GoInt lane))))) lanes)

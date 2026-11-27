@@ -85,8 +85,8 @@ emit translate context@{ codegenStateRef, modNameStr } nextId fn args = do
     end = scalar 4
     fast = constantSum pipeline.predicate (scalar 1) start end <>
       loop predicate (scalar 1) start end
-    slow = flattenStmts fallback.stmts <>
-      [ GoReturn (coerceGoExpr codegenStateRef modNameStr fallback.expr fallback.exprType TypeInt64) ]
+    slow = [ GoReturn (GoCall (GoFuncBlock [] (flattenStmts fallback.stmts <>
+      [ GoReturn (coerceGoExpr codegenStateRef modNameStr fallback.expr fallback.exprType TypeInt64) ]) TypeInt64) []) ]
     admitted = GoBinOp "&&" (signed32 start) (signed32 end)
     expr = GoCall (GoFuncBlock [] [ GoIfElse admitted fast slow ] TypeInt64) []
   pure { stmts: captured.stmts, expr, exprType: TypeInt64, nextId: fallback.nextId }

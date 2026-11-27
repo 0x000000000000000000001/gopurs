@@ -58,7 +58,9 @@ test('scalar fold retains argument order, empty seeds, Int wrap and string appen
     t.after(() => rmSync(dir, { recursive: true, force: true }));
     mkdirSync(join(dir, 'gopurs_runtime'));
     writeFileSync(join(dir, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
-    writeFileSync(join(dir, 'gopurs_runtime/runtime.go'), readFileSync(new URL('../runtime/runtime.go', import.meta.url)));
+    for (const file of ['runtime.go', 'simd_asm.go', 'simd_generic.go', 'simd_arm64.s', 'simd_amd64.s']) {
+        writeFileSync(join(dir, 'gopurs_runtime', file), readFileSync(new URL(`../runtime/${file}`, import.meta.url)));
+    }
     writeFileSync(join(dir, 'fold.go'), `package fold
 import (r "gopurs/output/gopurs_runtime"; "gopurs/output/gopurs_runtime")
 var trace []int

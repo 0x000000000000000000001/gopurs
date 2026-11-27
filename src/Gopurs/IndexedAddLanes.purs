@@ -1,10 +1,21 @@
-module Gopurs.IndexedAddLanes (eligible, extractContribution, emit, emitContribution) where
+module Gopurs.IndexedAddLanes
+  ( AffineParity
+  , eligible
+  , extractContribution
+  , extractAffineParity
+  , emit
+  , emitContribution
+  , emitAffineSimdCall
+  , emitAffineStep32
+  ) where
 
 import Prelude
 import Control.Alternative (guard)
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
 import Data.Foldable (all)
+import Data.Int.Bits as Bits
+import Data.Map as Map
 import Data.Maybe (Maybe(..), isJust)
 import Data.Tuple (Tuple(..), snd)
 import Gopurs.ArrayIndexedFold (readOnlyScalar)
@@ -15,7 +26,14 @@ import Gopurs.GoAst (GoExpr(..), rawGo)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (Ident, Literal(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
-import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), BackendOperator(..), BackendOperator2(..), BackendOperatorNum(..), Level)
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), Level, Pair(..))
+
+type AffineParity =
+  { aEven :: Int
+  , bEven :: Int
+  , aOdd :: Int
+  , bOdd :: Int
+  }
 
 -- Existing fusion admits closed primitive callbacks. Recheck that contract,
 -- then restrict lanes to a normalizing mapper and an additive accumulator.
@@ -154,3 +172,191 @@ emitContribution names contribute fallback =
           [ GoMutate names.result (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "+" (GoVar names.result) (contribute tailIdx tailElem) ] ]) ]
       ]
   in GoIfElse (rawGo ("len(" <> names.source <> ") < 8")) [ fallback ] body
+
+data AffineVal
+  = ConstInt Int
+  | Affine Int Int
+  | IndexVar
+
+smallMul :: Int -> Boolean
+smallMul c = c >= -2097152 && c <= 2097152
+
+-- Symbolically evaluate a closed primitive expression over Z/2^32Z assuming
+-- its value input lies in signed Int32 (guaranteed for TypeInt32Array elements
+-- and for outputs of Int32-normalizing operations). Every OpMultiply requires
+-- at least one factor in [-2^21, 2^21] so |a * b| <= 2^52 < 2^53 and JS
+-- float64 rounding cannot differ from exact modulo-2^32 multiplication.
+extractAffineParity :: Maybe TcoExpr -> TcoExpr -> Maybe AffineParity
+extractAffineParity mbMapper folder = do
+  contrib <- extractContribution folder
+  let
+    idxLevel = Just (snd contrib.index)
+    valLevel = snd contrib.value
+  Tuple evenVal oddVal <- case mbMapper of
+    Nothing -> do
+      c0 <- evalAffine (Map.singleton valLevel (Affine 1 0)) idxLevel 0 contrib.body
+      c1 <- evalAffine (Map.singleton valLevel (Affine 1 0)) idxLevel 1 contrib.body
+      pure (Tuple c0 c1)
+    Just mapper -> case unwrapTcoExpr mapper of
+      Abs mapArgs mapBody -> do
+        let mapped = collectCurriedAbs mapArgs mapBody
+            arity = NEA.length mapped.args
+        guard ((arity == 1 || arity == 2) && total mapped.body && closedPrimitiveCallback arity (neutral mapper))
+        Tuple mIdx mVal <- case NEA.toArray mapped.args of
+          [ Tuple _ v ] -> Just (Tuple Nothing v)
+          [ Tuple _ i, Tuple _ v ] -> Just (Tuple (Just i) v)
+          _ -> Nothing
+        m0 <- evalAffine (Map.singleton mVal (Affine 1 0)) mIdx 0 mapped.body
+        m1 <- evalAffine (Map.singleton mVal (Affine 1 0)) mIdx 1 mapped.body
+        guard (isScalarAffine m0 && isScalarAffine m1)
+        c0 <- evalAffine (Map.singleton valLevel m0) idxLevel 0 contrib.body
+        c1 <- evalAffine (Map.singleton valLevel m1) idxLevel 1 contrib.body
+        pure (Tuple c0 c1)
+      _ -> Nothing
+  Tuple aEven bEven <- toPair evenVal
+  Tuple aOdd bOdd <- toPair oddVal
+  pure { aEven, bEven, aOdd, bOdd }
+  where
+  isScalarAffine = case _ of
+    ConstInt _ -> true
+    Affine _ _ -> true
+    IndexVar -> false
+
+  toPair = case _ of
+    ConstInt b -> Just (Tuple 0 b)
+    Affine a b -> Just (Tuple a b)
+    IndexVar -> Nothing
+
+  evalAffine :: Map.Map Level AffineVal -> Maybe Level -> Int -> TcoExpr -> Maybe AffineVal
+  evalAffine env idxLevel parity expr = case unwrapTcoExpr expr of
+    Lit (LitInt n) -> Just (ConstInt n)
+    Local _ level ->
+      if Just level == idxLevel then Just IndexVar
+      else Map.lookup level env
+    Let _ level rhs body -> do
+      val <- evalAffine env idxLevel parity rhs
+      evalAffine (Map.insert level val env) idxLevel parity body
+    PrimOp (Op1 OpIntNegate inner) -> case evalAffine env idxLevel parity inner of
+      Just (ConstInt c) -> Just (ConstInt (-c))
+      Just (Affine a b) -> Just (Affine (-a) (-b))
+      _ -> Nothing
+    PrimOp (Op2 op left right) -> do
+      lv <- evalAffine env idxLevel parity left
+      rv <- evalAffine env idxLevel parity right
+      case op of
+        OpIntNum OpAdd -> case lv, rv of
+          ConstInt c1, ConstInt c2 -> Just (ConstInt (c1 + c2))
+          Affine a b, ConstInt c -> Just (Affine a (b + c))
+          ConstInt c, Affine a b -> Just (Affine a (c + b))
+          Affine a1 b1, Affine a2 b2 -> Just (Affine (a1 + a2) (b1 + b2))
+          _, _ -> Nothing
+        OpIntNum OpSubtract -> case lv, rv of
+          ConstInt c1, ConstInt c2 -> Just (ConstInt (c1 - c2))
+          Affine a b, ConstInt c -> Just (Affine a (b - c))
+          ConstInt c, Affine a b -> Just (Affine (-a) (c - b))
+          Affine a1 b1, Affine a2 b2 -> Just (Affine (a1 - a2) (b1 - b2))
+          _, _ -> Nothing
+        OpIntNum OpMultiply -> case lv, rv of
+          ConstInt c1, ConstInt c2 | smallMul c1 || smallMul c2 -> Just (ConstInt (c1 * c2))
+          ConstInt c, Affine a b | smallMul c -> Just (Affine (c * a) (c * b))
+          Affine a b, ConstInt c | smallMul c -> Just (Affine (c * a) (c * b))
+          _, _ -> Nothing
+        OpIntNum OpMod -> case lv, rv of
+          IndexVar, ConstInt 2 -> Just (ConstInt parity)
+          ConstInt c1, ConstInt c2 | c2 > 0 -> Just (ConstInt (c1 `mod` c2))
+          _, _ -> Nothing
+        OpIntBitAnd -> case lv, rv of
+          IndexVar, ConstInt 1 -> Just (ConstInt parity)
+          ConstInt 1, IndexVar -> Just (ConstInt parity)
+          ConstInt c1, ConstInt c2 -> Just (ConstInt (Bits.and c1 c2))
+          _, _ -> Nothing
+        OpIntBitOr -> case lv, rv of
+          ConstInt c1, ConstInt c2 -> Just (ConstInt (Bits.or c1 c2))
+          _, _ -> Nothing
+        OpIntBitXor -> case lv, rv of
+          ConstInt c1, ConstInt c2 -> Just (ConstInt (Bits.xor c1 c2))
+          _, _ -> Nothing
+        OpIntBitShiftLeft -> case lv, rv of
+          ConstInt c, ConstInt k | k >= 0 && k <= 31 -> Just (ConstInt (Bits.shl c k))
+          Affine a b, ConstInt k | k >= 0 && k <= 31 -> Just (Affine (Bits.shl a k) (Bits.shl b k))
+          _, _ -> Nothing
+        _ -> Nothing
+    Branch branches otherwise ->
+      evalBranches env idxLevel parity (NEA.toArray branches) otherwise
+    _ -> Nothing
+
+  evalBranches env idxLevel parity branches fallback = case Array.uncons branches of
+    Nothing -> evalAffine env idxLevel parity fallback
+    Just { head: Pair cond branchResult, tail } -> do
+      taken <- evalBool env idxLevel parity cond
+      if taken then evalAffine env idxLevel parity branchResult
+      else evalBranches env idxLevel parity tail fallback
+
+  evalBool env idxLevel parity expr = case unwrapTcoExpr expr of
+    Lit (LitBoolean b) -> Just b
+    PrimOp (Op1 OpBooleanNot inner) -> not <$> evalBool env idxLevel parity inner
+    PrimOp (Op2 OpBooleanAnd left right) -> do
+      l <- evalBool env idxLevel parity left
+      if not l then Just false else evalBool env idxLevel parity right
+    PrimOp (Op2 OpBooleanOr left right) -> do
+      l <- evalBool env idxLevel parity left
+      if l then Just true else evalBool env idxLevel parity right
+    PrimOp (Op2 (OpIntOrd ordOp) left right) -> do
+      lv <- evalAffine env idxLevel parity left
+      rv <- evalAffine env idxLevel parity right
+      case lv, rv of
+        ConstInt a, ConstInt b -> Just case ordOp of
+          OpEq -> a == b
+          OpNotEq -> a /= b
+          OpLt -> a < b
+          OpLte -> a <= b
+          OpGt -> a > b
+          OpGte -> a >= b
+        _, _ -> Nothing
+    _ -> Nothing
+
+emitAffineSimdCall :: String -> String -> AffineParity -> Boolean -> Array GoExpr
+emitAffineSimdCall target resultName aff swapped =
+  let
+    aE = if swapped then aff.aOdd else aff.aEven
+    bE = if swapped then aff.bOdd else aff.bEven
+    aO = if swapped then aff.aEven else aff.aOdd
+    bO = if swapped then aff.bEven else aff.bOdd
+    call =
+      if aE == 1 && bE == 0 && aO == 1 && bO == 0 then
+        GoCall (GoSelector (GoVar "gopurs_runtime") "SumInt32") [ rawGo target ]
+      else
+        GoCall (GoSelector (GoVar "gopurs_runtime") "AffineParitySumInt32")
+          [ rawGo target
+          , GoCall (GoVar "int32") [ GoInt aE ]
+          , GoCall (GoVar "int32") [ GoInt bE ]
+          , GoCall (GoVar "int32") [ GoInt aO ]
+          , GoCall (GoVar "int32") [ GoInt bO ]
+          ]
+  in
+    [ GoIfElse (GoBinOp ">" (GoCall (GoVar "len") [ rawGo target ]) (GoInt 0))
+        [ GoMutate resultName
+            (GoCall (GoVar "int64")
+              [ GoBinOp "+" (GoCall (GoVar "int32") [ GoVar resultName ]) call ])
+        ] []
+    ]
+
+emitAffineStep32 :: String -> GoExpr -> GoExpr -> AffineParity -> GoExpr
+emitAffineStep32 acc32Name idxExpr val32Expr aff =
+  let
+    int32Lit n = GoCall (GoVar "int32") [ GoInt n ]
+    term a b = case a, b of
+      0, _ -> int32Lit b
+      1, 0 -> val32Expr
+      1, _ -> GoBinOp "+" val32Expr (int32Lit b)
+      (-1), 0 -> GoPrefixOp "-" val32Expr
+      _, 0 -> GoBinOp "*" (int32Lit a) val32Expr
+      _, _ -> GoBinOp "+" (GoBinOp "*" (int32Lit a) val32Expr) (int32Lit b)
+    addTo expr = GoMutate acc32Name (GoBinOp "+" (GoVar acc32Name) expr)
+  in
+    if aff.aEven == aff.aOdd && aff.bEven == aff.bOdd then
+      addTo (term aff.aEven aff.bEven)
+    else
+      GoIfElse (GoBinOp "==" (GoBinOp "&" idxExpr (GoInt 1)) (GoInt 0))
+        [ addTo (term aff.aEven aff.bEven) ]
+        [ addTo (term aff.aOdd aff.bOdd) ]

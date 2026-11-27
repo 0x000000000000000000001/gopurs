@@ -4,6 +4,7 @@ module Gopurs.CallArguments
   , translateBoxed
   , capture
   , coercePrefix
+  , coercePrefixBorrow
   , boxRemaining
   , applyBoxed
   ) where
@@ -80,6 +81,21 @@ coercePrefix { codegenStateRef, modNameStr } arity expected args =
     (\index expr -> coerceGoExpr codegenStateRef modNameStr expr
       (fromMaybe TypeValue (Array.index args.exprTypes index))
       (fromMaybe TypeValue (Array.index expected index)))
+    (Array.take arity args.exprs)
+
+-- Pure PureScript workers never mutate their []int64 parameters, so boxed
+-- IntArray arguments can be borrowed read-only instead of defensively cloned.
+coercePrefixBorrow :: ExprContext -> Int -> Array GoType -> Arguments -> Array GoExpr
+coercePrefixBorrow { codegenStateRef, modNameStr } arity expected args =
+  Array.mapWithIndex
+    (\index expr ->
+      let
+        from = fromMaybe TypeValue (Array.index args.exprTypes index)
+        to = fromMaybe TypeValue (Array.index expected index)
+      in case from, to of
+        TypeValue, TypeNativeArray TypeInt64 ->
+          GoCall (GoSelector (GoVar "gopurs_runtime") "BorrowIntArray") [ expr ]
+        _, _ -> coerceGoExpr codegenStateRef modNameStr expr from to)
     (Array.take arity args.exprs)
 
 boxRemaining :: ExprContext -> Int -> Arguments -> Array GoExpr

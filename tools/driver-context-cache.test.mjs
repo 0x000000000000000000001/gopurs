@@ -118,7 +118,7 @@ test("compiler context, options and entry transitions equal fresh generation in 
       .flatMap(entry => {
         const name = prefix + entry.name, file = join(path, entry.name);
         if (entry.isDirectory()) return Object.entries(generated(file, name + "/"));
-        return name.endsWith(".go") ? [[name, hash(readFileSync(file))]] : [];
+        return (name.endsWith(".go") || name.endsWith(".s")) ? [[name, hash(readFileSync(file))]] : [];
       }));
   }
   function timestamps(files) {

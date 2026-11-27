@@ -217,7 +217,7 @@ nativeCall :: ExprContext -> GoExpr -> Array GoType -> GoType -> Int -> Argument
 nativeCall context@{ codegenStateRef, modNameStr } fn expected ret arity args =
   let
     remaining = CallArguments.boxRemaining context arity args
-    callArgs = CallArguments.coercePrefix context arity expected args
+    callArgs = CallArguments.coercePrefixBorrow context arity expected args
     call = GoCall fn callArgs
     expr = if Array.null remaining then call else applyBoxed (boxGoExpr codegenStateRef modNameStr call ret) remaining
     exprType = if Array.null remaining then ret else TypeValue

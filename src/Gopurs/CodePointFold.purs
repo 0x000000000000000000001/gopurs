@@ -106,53 +106,97 @@ emitLoop translate context nextId callback seed input limit grouped =
       (case limit of
         Just count -> [ callback, seed, count, input ]
         Nothing -> [ callback, seed, input ])
+    directAdd = case Array.head captured.exprs of
+      -- Inspect the translated callback AST directly (not just source syntax)
+      -- so synthetic test translators retain their exact step semantics.
+      Just (GoVar _) ->
+        let
+          checkBody = translate callbackContext captured.nextId grouped.body
+          accName = fromMaybe "" (map (\(Tuple name _) -> name) (Array.index params 0))
+          cpName = fromMaybe "" (map (\(Tuple name _) -> name) (Array.index params 1))
+        in Array.null (flattenStmts checkBody.stmts) && case integer checkBody.expr checkBody.exprType of
+          GoCall (GoSelector (GoVar "gopurs_runtime") "IntAdd") [ GoVar a, GoVar b ] ->
+            (a == accName && b == cpName) || (a == cpName && b == accName)
+          _ -> false
+      _ -> false
     arg index = fromMaybe (rawGo "nil") (Array.index captured.exprs index)
     argType index = fromMaybe TypeValue (Array.index captured.exprTypes index)
     inputIndex = if isJust limit then 3 else 2
     str = coerceGoExpr context.codegenStateRef context.modNameStr (arg inputIndex) (argType inputIndex) TypeString
-    preparation = if isJust limit then
-      [ GoAssign "codePointTake_limit" (integer (arg 2) (argType 2)), GoAssign "codePointFold_offset" (GoInt 0) ] else []
-    loopHeader = if isJust limit then
-      "codePointTake_count := int64(0); codePointTake_count < codePointTake_limit && codePointFold_offset < len(codePointFold_input); codePointTake_count++"
-      else "codePointFold_offset := 0; codePointFold_offset < len(codePointFold_input);"
+    stepStmt valueExpr =
+      if directAdd then
+        GoMutate "codePointFold_acc" (GoBinOp "+" (GoVar "codePointFold_acc") valueExpr)
+      else
+        GoMutate "codePointFold_result" (GoCall (arg 0) [ GoVar "codePointFold_result", valueExpr ])
+    bounded = isJust limit
+    preparation =
+      [ GoAssign "codePointFold_rem" (GoVar "codePointFold_input") ]
+        <> (if directAdd then [ GoAssign "codePointFold_acc" (rawGo "int64(0)") ] else [])
+        <> (if bounded then [ GoAssign "codePointTake_limit" (integer (arg 2) (argType 2)), GoAssign "codePointTake_count" (rawGo "int64(0)") ] else [])
+    mainHeader = if bounded then
+      "; codePointTake_count < codePointTake_limit && len(codePointFold_rem) >= 4; codePointTake_count++"
+      else "; len(codePointFold_rem) >= 4;"
+    tailHeader = if bounded then
+      "; codePointTake_count < codePointTake_limit && len(codePointFold_rem) > 0; codePointTake_count++"
+      else "; len(codePointFold_rem) > 0;"
+    -- Shrinking string slice `rem` with `len(rem) >= 4` eliminates all bounds
+    -- checks on `rem[0..3]` and `rem[1..4:]` inside Go's prove pass.
+    -- Surrogates (0xED) and malformed sequences delegate to DecodeStringCodePoint.
+    mainLoop = GoForRange mainHeader
+      [ GoAssign "codePointFold_b0" (GoIndex (GoVar "codePointFold_rem") (GoInt 0))
+      , GoIfElse (rawGo "codePointFold_b0 < 0x80")
+          [ stepStmt (rawGo "int64(codePointFold_b0)")
+          , GoMutate "codePointFold_rem" (rawGo "codePointFold_rem[1:]")
+          ]
+          [ GoIfElse (rawGo "codePointFold_b0 < 0xE0")
+              [ GoAssign "codePointFold_b1" (GoIndex (GoVar "codePointFold_rem") (GoInt 1))
+              , GoIfElse (rawGo "codePointFold_b0 >= 0xC2 && codePointFold_b1&0xC0 == 0x80")
+                  [ stepStmt (rawGo "int64(codePointFold_b0&0x1F)<<6 | int64(codePointFold_b1&0x3F)")
+                  , GoMutate "codePointFold_rem" (rawGo "codePointFold_rem[2:]")
+                  ]
+                  [ stepStmt (rawGo "int64(0xFFFD)")
+                  , GoMutate "codePointFold_rem" (rawGo "codePointFold_rem[1:]")
+                  ]
+              ]
+              [ GoIfElse (rawGo "codePointFold_b0 < 0xF0")
+                  [ GoAssign "codePointFold_b1" (GoIndex (GoVar "codePointFold_rem") (GoInt 1))
+                  , GoAssign "codePointFold_b2" (GoIndex (GoVar "codePointFold_rem") (GoInt 2))
+                  , GoIfElse (rawGo "codePointFold_b0 != 0xED && ((codePointFold_b1^0x80)|(codePointFold_b2^0x80)) < 0x40 && (codePointFold_b0 != 0xE0 || codePointFold_b1 >= 0xA0)")
+                      [ stepStmt (rawGo "int64(codePointFold_b0&0x0F)<<12 | int64(codePointFold_b1&0x3F)<<6 | int64(codePointFold_b2&0x3F)")
+                      , GoMutate "codePointFold_rem" (rawGo "codePointFold_rem[3:]")
+                      ]
+                      [ rawGo "codePointFold_value, codePointFold_width := gopurs_runtime.DecodeStringCodePoint(codePointFold_rem)"
+                      , stepStmt (rawGo "int64(codePointFold_value)")
+                      , GoMutate "codePointFold_rem" (rawGo "codePointFold_rem[codePointFold_width:]")
+                      ]
+                  ]
+                  [ GoAssign "codePointFold_b1" (GoIndex (GoVar "codePointFold_rem") (GoInt 1))
+                  , GoAssign "codePointFold_b2" (GoIndex (GoVar "codePointFold_rem") (GoInt 2))
+                  , GoAssign "codePointFold_b3" (GoIndex (GoVar "codePointFold_rem") (GoInt 3))
+                  , GoIfElse (rawGo "codePointFold_b0 <= 0xF4 && ((codePointFold_b1^0x80)|(codePointFold_b2^0x80)|(codePointFold_b3^0x80)) < 0x40 && (codePointFold_b0 != 0xF0 || codePointFold_b1 >= 0x90) && (codePointFold_b0 != 0xF4 || codePointFold_b1 <= 0x8F)")
+                      [ stepStmt (rawGo "int64(codePointFold_b0&0x07)<<18 | int64(codePointFold_b1&0x3F)<<12 | int64(codePointFold_b2&0x3F)<<6 | int64(codePointFold_b3&0x3F)")
+                      , GoMutate "codePointFold_rem" (rawGo "codePointFold_rem[4:]")
+                      ]
+                      [ stepStmt (rawGo "int64(0xFFFD)")
+                      , GoMutate "codePointFold_rem" (rawGo "codePointFold_rem[1:]")
+                      ]
+                  ]
+              ]
+          ]
+      ]
+    tailLoop = GoForRange tailHeader
+      [ rawGo "codePointFold_value, codePointFold_width := gopurs_runtime.DecodeStringCodePoint(codePointFold_rem)"
+      , stepStmt (rawGo "int64(codePointFold_value)")
+      , GoMutate "codePointFold_rem" (rawGo "codePointFold_rem[codePointFold_width:]")
+      ]
+    finalize = if directAdd then
+      [ GoIfElse (rawGo "len(codePointFold_rem) < len(codePointFold_input)")
+          [ GoMutate "codePointFold_result" (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "+" (GoVar "codePointFold_result") (GoVar "codePointFold_acc") ] ]) ] []
+      ] else []
     body =
       [ GoAssign "codePointFold_input" str
       , GoAssign "codePointFold_result" (integer (arg 1) (argType 1))
-      ] <> preparation <>
-      [ GoForRange loopHeader
-          [ GoAssign "codePointFold_b0" (GoIndex (GoVar "codePointFold_input") (GoVar "codePointFold_offset"))
-          , rawGo "var codePointFold_value rune"
-          , rawGo "var codePointFold_width int"
-          -- Inline valid ASCII and 2/3/4-byte UTF-8 decoding to keep common
-          -- Unicode characters off the slow call path. Surrogates (0xED) and
-          -- malformed sequences still delegate to DecodeStringCodePoint.
-          , GoIfElse (rawGo "codePointFold_b0 < 0x80")
-              [ GoMutate "codePointFold_value" (rawGo "rune(codePointFold_b0)")
-              , GoMutate "codePointFold_width" (GoInt 1)
-              ]
-              [ GoIfElse (rawGo "codePointFold_b0 >= 0xC2 && codePointFold_b0 < 0xE0 && codePointFold_offset+1 < len(codePointFold_input) && codePointFold_input[codePointFold_offset+1]&0xC0 == 0x80")
-                  [ GoMutate "codePointFold_value" (rawGo "rune(codePointFold_b0&0x1F)<<6 | rune(codePointFold_input[codePointFold_offset+1]&0x3F)")
-                  , GoMutate "codePointFold_width" (GoInt 2)
-                  ]
-                  [ GoIfElse (rawGo "codePointFold_b0 >= 0xE0 && codePointFold_b0 < 0xF0 && codePointFold_b0 != 0xED && codePointFold_offset+2 < len(codePointFold_input) && codePointFold_input[codePointFold_offset+1]&0xC0 == 0x80 && codePointFold_input[codePointFold_offset+2]&0xC0 == 0x80 && (codePointFold_b0 != 0xE0 || codePointFold_input[codePointFold_offset+1] >= 0xA0)")
-                      [ GoMutate "codePointFold_value" (rawGo "rune(codePointFold_b0&0x0F)<<12 | rune(codePointFold_input[codePointFold_offset+1]&0x3F)<<6 | rune(codePointFold_input[codePointFold_offset+2]&0x3F)")
-                      , GoMutate "codePointFold_width" (GoInt 3)
-                      ]
-                      [ GoIfElse (rawGo "codePointFold_b0 >= 0xF0 && codePointFold_b0 <= 0xF4 && codePointFold_offset+3 < len(codePointFold_input) && codePointFold_input[codePointFold_offset+1]&0xC0 == 0x80 && codePointFold_input[codePointFold_offset+2]&0xC0 == 0x80 && codePointFold_input[codePointFold_offset+3]&0xC0 == 0x80 && (codePointFold_b0 != 0xF0 || codePointFold_input[codePointFold_offset+1] >= 0x90) && (codePointFold_b0 != 0xF4 || codePointFold_input[codePointFold_offset+1] <= 0x8F)")
-                          [ GoMutate "codePointFold_value" (rawGo "rune(codePointFold_b0&0x07)<<18 | rune(codePointFold_input[codePointFold_offset+1]&0x3F)<<12 | rune(codePointFold_input[codePointFold_offset+2]&0x3F)<<6 | rune(codePointFold_input[codePointFold_offset+3]&0x3F)")
-                          , GoMutate "codePointFold_width" (GoInt 4)
-                          ]
-                          [ GoMutate "codePointFold_value, codePointFold_width"
-                              (GoCall (GoSelector (GoVar "gopurs_runtime") "DecodeStringCodePoint") [ rawGo "codePointFold_input[codePointFold_offset:]" ])
-                          ]
-                      ]
-                  ]
-              ]
-          , GoMutate "codePointFold_result" (GoCall (arg 0)
-              [ GoVar "codePointFold_result", GoCall (GoVar "int64") [ GoVar "codePointFold_value" ] ])
-          , GoMutate "codePointFold_offset" (GoBinOp "+" (GoVar "codePointFold_offset") (GoVar "codePointFold_width"))
-          ]
-      ]
+      ] <> preparation <> [ mainLoop, tailLoop ] <> finalize
   in { stmts: captured.stmts, expr: GoCall (GoFuncLit [] body (GoVar "codePointFold_result") TypeInt64) []
        , exprType: TypeInt64, nextId: captured.nextId }
   where

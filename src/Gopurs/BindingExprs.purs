@@ -6,10 +6,11 @@ module Gopurs.BindingExprs
 import Prelude
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray, toArray)
-import Data.Foldable (foldMap, foldl)
+import Data.Foldable (any, foldMap, foldl)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
+import Data.Set as Set
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..), fst, snd)
 import Effect.Ref as Ref
@@ -39,7 +40,9 @@ nonRecursive translate context nextId mbIdent lvl binding body =
       Just result -> result
       Nothing -> case ImmediateFfiEffects.translate translate context nextId mbIdent lvl binding body of
         Just result -> result
-        Nothing -> nonRecursiveBinding translate context nextId mbIdent lvl binding body
+        Nothing -> case ImmediateFfiEffects.bindThunk translate context nextId mbIdent lvl binding body of
+          Just result -> result
+          Nothing -> nonRecursiveBinding translate context nextId mbIdent lvl binding body
 
 nonRecursiveBinding :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> TcoExpr -> TcoExpr -> ExprResult
 nonRecursiveBinding translate context@{ metadata, codegenStateRef, depth, modNameStr, moduleFunctions, bound } nextId mbIdent lvl binding body =
@@ -62,7 +65,7 @@ nonRecursiveBinding translate context@{ metadata, codegenStateRef, depth, modNam
           trueFRet = resBodyMut.exprType
           localModuleFunctions = Map.insert name (LocalWorkers.signature context name params trueFRet) moduleFunctions
           keepWrapper = LocalWorkers.needsWrapper originalName (Array.length params) body
-          worker = LocalWorkers.emit translate context name params keepWrapper Nothing resBodyMut
+          worker = LocalWorkers.emit translate context name params keepWrapper true Nothing resBodyMut
 
           newBound = Map.insert originalName { name, goType: TypeValue } bound
           resBodyOuter = translate (context { depth = (depth + 1), moduleFunctions = localModuleFunctions, bound = newBound, tcoIdent = Nothing, mbExpectedExprType = Nothing }) resBodyMut.nextId body
@@ -107,12 +110,14 @@ recursive translate context@{ metadata, depth, modNameStr, recVars, moduleFuncti
     isLoop = (unwrap tcoAnalysis).role.isLoop
     mutRecBinds =
       if isLoop then
-        traverse (\(Tuple (Ident name) val) -> map (\abs -> { ident: sanitizeName name, args: abs.args, body: abs.body, val }) (extractUncurriedAbs val)) (toArray bindings)
+        traverse (\(Tuple (Ident name) val) -> map (\abs -> { rawIdent: name, ident: sanitizeName name, args: abs.args, body: abs.body, val }) (extractUncurriedAbs val)) (toArray bindings)
       else Nothing
   in
     case mutRecBinds of
-      Just fns ->
+      Just allFns ->
         let
+          fns = pruneUnreachablePeers lvl allFns body
+          standaloneGroup = Array.length fns == 1
           -- Resolve parameters once, then publish every provisional signature
           -- before translating any body. The annotated return is provisional:
           -- bodies refine the function table in source order.
@@ -155,8 +160,8 @@ recursive translate context@{ metadata, depth, modNameStr, recVars, moduleFuncti
                   resBodyMut = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = acc.moduleFunctions, bound = loopBound, tcoIdent = (Just newName), loopCtx = currentLoopCtx, options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = worker.expectedReturn, mbExpectedGoType = Just worker.resultType }) acc.nextId worker.body
                   trueFRet = resBodyMut.exprType
                   keepWrapper = LocalWorkers.needsWrapper oldName (Array.length params) body
-                    || Array.any (\(Tuple _ binding) -> LocalWorkers.needsWrapper oldName (Array.length params) binding) (toArray bindings)
-                  emitted = LocalWorkers.emit translate (context { bound = published.bound }) newName params keepWrapper (Just worker.body) resBodyMut
+                    || Array.any (\peer -> LocalWorkers.needsWrapper oldName (Array.length params) peer.val) fns
+                  emitted = LocalWorkers.emit translate (context { bound = published.bound }) newName params keepWrapper standaloneGroup (Just worker.body) resBodyMut
                   newFunctions = Map.insert newName (LocalWorkers.signature context newName params trueFRet) acc.moduleFunctions
                   newBound2 = Map.insert oldName { name: newName, goType: TypeValue } acc.newBound
                 in
@@ -173,6 +178,43 @@ recursive translate context@{ metadata, depth, modNameStr, recVars, moduleFuncti
 
       Nothing ->
         initializeRecursiveValues translate (context { recVars = combinedRecVars }) isLoop allocated (toArray bindings) body
+
+-- Drop unreachable pure peer abstractions in a multi-function LetRec group
+-- when body references at least one binding in the group (e.g. after PBO
+-- specializes one recursive entry and leaves the unspecialized peer dead).
+pruneUnreachablePeers
+  :: forall r
+   . Level
+  -> Array { rawIdent :: String, val :: TcoExpr | r }
+  -> TcoExpr
+  -> Array { rawIdent :: String, val :: TcoExpr | r }
+pruneUnreachablePeers lvl fns body
+  | Array.length fns <= 1 = fns
+  | otherwise =
+      let
+        keyOf fn = localId (Just (Ident fn.rawIdent)) lvl
+        initial = Set.fromFoldable (Array.mapMaybe (\fn ->
+          let k = keyOf fn in if mentionsLocal k body then Just k else Nothing) fns)
+      in
+        if Set.isEmpty initial then fns
+        else
+          let
+            reachable = expand initial
+            expand seen =
+              let
+                next = foldl (\acc fn ->
+                  if Set.member (keyOf fn) seen then
+                    foldl (\inner peer ->
+                      let pk = keyOf peer
+                      in if not (Set.member pk inner) && mentionsLocal pk fn.val then Set.insert pk inner else inner)
+                      acc fns
+                  else acc) seen fns
+              in if Set.size next == Set.size seen then seen else expand next
+          in Array.filter (\fn -> Set.member (keyOf fn) reachable) fns
+  where
+  mentionsLocal target (TcoExpr _ syntax) = case syntax of
+    Local ident level -> localId ident level == target
+    _ -> any (mentionsLocal target) syntax
 
 type RecursiveAllocation =
   { newBound :: LocalEnv

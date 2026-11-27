@@ -713,6 +713,16 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 	if err := add("runtime", "", "gopurs_runtime/runtime.go", false); err != nil {
 		return err
 	}
+	for _, extra := range []string{
+		"gopurs_runtime/simd_asm.go",
+		"gopurs_runtime/simd_generic.go",
+		"gopurs_runtime/simd_arm64.s",
+		"gopurs_runtime/simd_amd64.s",
+	} {
+		if err := add("runtime", "", extra, true); err != nil {
+			return err
+		}
+	}
 	if usesGoPackages(state.Spec) {
 		files, expected, err := packageOutputPlan(stage, state.Modules, req.Entries)
 		if err != nil {
@@ -866,7 +876,7 @@ func (s store) checkLegacyOutputs(manifest Manifest) error {
 			return err
 		}
 		for _, file := range files {
-			if !strings.HasSuffix(file.Name(), ".go") {
+			if !strings.HasSuffix(file.Name(), ".go") && !strings.HasSuffix(file.Name(), ".s") {
 				continue
 			}
 			rel := filepath.ToSlash(filepath.Join(dir, file.Name()))

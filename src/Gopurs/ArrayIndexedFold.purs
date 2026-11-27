@@ -137,15 +137,33 @@ emit translate context nextId fn args = do
         indexName = "indexedFold_index_" <> suffix
         valueName = "indexedFold_value_" <> suffix
         complete = Array.length args == 3
-        source = arraySource inputName valuesName (if complete then argumentType 2 else TypeValue)
+        inputType = if complete then argumentType 2 else TypeValue
+        loopOver sliceTarget elemExpr =
+          GoForRange (indexName <> ", " <> valueName <> " := range " <> sliceTarget)
+            [ GoMutate resultName (GoCall (argument 0)
+                [ GoCall (GoVar "int64") [ GoVar indexName ], GoVar resultName, elemExpr ]) ]
+        sourceLoop = case inputType of
+          TypeNativeArray inner ->
+            let source = arraySource inputName valuesName inputType
+            in [ source.assignment, loopOver source.target (integer (GoVar valueName) inner) ]
+          _ ->
+            [ GoIfElse (rawGo (inputName <> ".Type == gopurs_runtime.TypeInt32Array"))
+                [ GoAssign (valuesName <> "_i32") (rawGo ("*(*[]int32)(" <> inputName <> ".UnsafePtr)"))
+                , loopOver (valuesName <> "_i32") (GoCall (GoVar "int64") [ GoVar valueName ])
+                ]
+                [ GoIfElse (rawGo (inputName <> ".Type == gopurs_runtime.TypeIntArray"))
+                    [ GoAssign (valuesName <> "_i64") (rawGo ("*(*[]int64)(" <> inputName <> ".UnsafePtr)"))
+                    , loopOver (valuesName <> "_i64") (GoVar valueName)
+                    ]
+                    [ GoAssign valuesName (rawGo ("*(*[]gopurs_runtime.Value)(" <> inputName <> ".UnsafePtr)"))
+                    , loopOver valuesName (GoSelector (GoVar valueName) "IntVal")
+                    ]
+                ]
+            ]
         body =
           (if complete then [ GoAssign inputName (argument 2) ] else []) <>
-          [ source.assignment
-          , GoAssign resultName (integer (argument 1) (argumentType 1))
-          , GoForRange (indexName <> ", " <> valueName <> " := range " <> source.target)
-              [ GoMutate resultName (GoCall (argument 0)
-                  [ GoCall (GoVar "int64") [ GoVar indexName ], GoVar resultName, integer (GoVar valueName) source.elementType ]) ]
-          ]
+          [ GoAssign resultName (integer (argument 1) (argumentType 1)) ] <>
+          sourceLoop
         resultExpr = GoVar resultName
         expression = if complete then GoCall (GoFuncLit [] body resultExpr TypeInt64) []
           else GoCall (GoSelector (GoVar "gopurs_runtime") "Func")

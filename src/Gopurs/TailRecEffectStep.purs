@@ -11,10 +11,11 @@ import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import Gopurs.ExprAnalysis (executeIfOpaque, extractFuncType, unwrapTcoExpr)
-import Gopurs.ExprContext (ExprContext, TranslateExpr, childContext, flattenStmts)
+import Gopurs.ExprContext (ExprContext, StmtTree(..), TranslateExpr, childContext, flattenStmts)
 import Gopurs.GoAst (GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoTypes (exprTypeToGoType)
+import Gopurs.ImmediateFfiEffects as ImmediateFfiEffects
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
@@ -114,9 +115,16 @@ emitPlan translate context@{ codegenStateRef, modNameStr } nextId stateName loop
       -- execute in effect context, and opaque actions keep their ordinary Apply.
       runAction expr = case unwrapTcoExpr expr of
         EffectDefer inner -> runAction inner
-        _ ->
-          let actionResult = translate ((childContext context Nothing) { options = { isTail: false, inEffectBlock: true } }) (nextId + 1) expr
-          in actionResult { expr = executeIfOpaque expr (boxGoExpr codegenStateRef modNameStr actionResult.expr actionResult.exprType), exprType = TypeValue }
+        _ -> case ImmediateFfiEffects.invokeBoundThunkExpr context expr of
+          Just invoked ->
+            { stmts: StmtEmpty
+            , expr: boxGoExpr codegenStateRef modNameStr invoked.adapted.expr invoked.adapted.exprType
+            , exprType: TypeValue
+            , nextId: nextId + 1
+            }
+          Nothing ->
+            let actionResult = translate ((childContext context Nothing) { options = { isTail: false, inEffectBlock: true } }) (nextId + 1) expr
+            in actionResult { expr = executeIfOpaque expr (boxGoExpr codegenStateRef modNameStr actionResult.expr actionResult.exprType), exprType = TypeValue }
       result = if action then runAction value else translate (childContext context Nothing) (nextId + 1) value
       name = localId ident level <> "_" <> show nextId
       bound = Map.insert (localId ident level) { name, goType: result.exprType } context.bound

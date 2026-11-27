@@ -1,6 +1,8 @@
 module Gopurs.FfiBridge.ImmediateEffects
   ( key
+  , factoryKey
   , signature
+  , factorySignature
   , worker
   ) where
 
@@ -10,6 +12,8 @@ import Control.Alternative (guard)
 import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
+import Data.Traversable (traverse)
+import Data.Tuple (Tuple(..))
 import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.FfiBridge.Effects as Effects
 import Gopurs.FfiBridge.TypeSupport (getTastArgType, tastForArity)
@@ -23,6 +27,9 @@ import PureScript.Backend.Optimizer.CoreFn (DataDecl, ExprType(..))
 -- the existing worker table without making them ordinary callable bindings.
 key :: String -> String
 key name = "$gopursRunEffect$" <> name
+
+factoryKey :: String -> String
+factoryKey name = "$gopursEffectFactory$" <> name
 
 type Candidate = { result :: ExprType, nativeResult :: Maybe TypeNode }
 
@@ -47,6 +54,38 @@ argumentType tast index native = case native, getTastArgType tast index of
   TNamed name, Just (TypeVar _) | name == "any" || name == "interface{}" -> TypeInterface "interface{}"
   _, _ -> TypeValue
 
+directArgumentType :: ExprType -> Int -> TypeNode -> Maybe GoType
+directArgumentType tast index native = case native, getTastArgType tast index of
+  TNamed name, Just (TypeVar _) | name == "any" || name == "interface{}" -> Just (TypeInterface "interface{}")
+  TNamed "gopurs_runtime.Value", _ -> Just TypeValue
+  TNamed "int64", Just Int -> Just TypeInt64
+  TNamed "float64", Just Number -> Just TypeFloat64
+  TNamed "bool", Just Boolean -> Just TypeBool
+  TNamed "string", Just String -> Just TypeString
+  _, _ -> Nothing
+
+-- Direct invocation must preserve Values.toValue without module dataDecls
+-- (so never admit ADTs/newtypes/records/functions through an `any` boundary).
+directReturnType :: Maybe TypeNode -> ExprType -> Maybe GoType
+directReturnType native result = case native, result of
+  Just (TNamed "gopurs_runtime.Value"), _ -> Just TypeValue
+  Just (TNamed name), _ | (name == "any" || name == "interface{}") && simpleBoxable result -> Just (TypeInterface "interface{}")
+  Just (TNamed "int64"), Int -> Just TypeInt64
+  Just (TNamed "float64"), Number -> Just TypeFloat64
+  Just (TNamed "bool"), Boolean -> Just TypeBool
+  Just (TNamed "string"), String -> Just TypeString
+  _, _ -> Nothing
+  where
+  simpleBoxable = case _ of
+    TypeVar _ -> true
+    Int -> true
+    Number -> true
+    String -> true
+    Boolean -> true
+    Char -> true
+    Unit -> true
+    _ -> false
+
 signature :: String -> FfiDecl -> ExprType -> Maybe FunctionInfo
 signature owner declaration tast = do
   _ <- candidate declaration tast
@@ -55,6 +94,19 @@ signature owner declaration tast = do
     { arrayFold: Nothing, codePointFold: Nothing, reference: SymbolReference (foreignSymbol owner (workerName declaration))
     , fArgs: Array.mapWithIndex (argumentType callTast) declaration.args
     , fRet: TypeValue
+    , arity: Array.length declaration.args
+    }
+
+factorySignature :: String -> FfiDecl -> ExprType -> Maybe FunctionInfo
+factorySignature owner declaration tast = do
+  c <- candidate declaration tast
+  let callTast = fromMaybe tast (tastForArity (Array.length declaration.args) tast)
+  fArgs <- traverse (\(Tuple index native) -> directArgumentType callTast index native) (Array.mapWithIndex Tuple declaration.args)
+  ret <- directReturnType c.nativeResult c.result
+  pure
+    { arrayFold: Nothing, codePointFold: Nothing, reference: SymbolReference (foreignSymbol owner declaration.name)
+    , fArgs
+    , fRet: TypeFunc [] ret
     , arity: Array.length declaration.args
     }
 

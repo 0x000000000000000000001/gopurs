@@ -592,15 +592,29 @@ func preparePackageSession(stage string, state *buildSession, entries []string, 
 	}
 	// Runtime is a producer output, not an external input. Native companion
 	// packages are frozen from the public module before collecting their exports.
-	data, err = os.ReadFile(filepath.Join(stage, "output", "gopurs_runtime", "runtime.go"))
+	runtimeDir := filepath.Join(stage, "output", "gopurs_runtime")
+	runtimeEntries, err := os.ReadDir(runtimeDir)
 	if err != nil {
 		return err
 	}
 	if err := os.Mkdir(filepath.Join(workspace, "gopurs_runtime"), 0700); err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(workspace, "gopurs_runtime", "runtime.go"), data, 0600); err != nil {
-		return err
+	for _, entry := range runtimeEntries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if !strings.HasSuffix(name, ".go") && !strings.HasSuffix(name, ".s") {
+			continue
+		}
+		data, err = os.ReadFile(filepath.Join(runtimeDir, name))
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(filepath.Join(workspace, "gopurs_runtime", name), data, 0600); err != nil {
+			return err
+		}
 	}
 	copied := map[string]bool{"gopurs_runtime": true}
 	paths := make([]string, 0, len(imports))

@@ -12,11 +12,11 @@ import { empty as emptySet } from '../output/Data.Set/index.js';
 import { Tuple } from '../output/Data.Tuple/index.js';
 import { workerInputs, translateWithFunctions } from '../output/Gopurs.CodeGen/index.js';
 import { ffiFunctionInfos, ffiValueWorkers, generateFfiBridge } from '../output/Gopurs.FfiBridge/index.js';
-import { key } from '../output/Gopurs.FfiBridge.ImmediateEffects/index.js';
+import { key, factoryKey } from '../output/Gopurs.FfiBridge.ImmediateEffects/index.js';
 import { prepareFfi } from '../output/Gopurs.FfiSupport/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { StmtEmpty, StmtLeaf, flattenStmts } from '../output/Gopurs.ExprContext/index.js';
-import { translate, direct } from '../output/Gopurs.ImmediateFfiEffects/index.js';
+import { translate, direct, bindThunk, invokeBoundThunk } from '../output/Gopurs.ImmediateFfiEffects/index.js';
 import { printGoDecl, printGoExpr } from '../output/Gopurs.Printer/index.js';
 import { literal as primitiveLiteral } from '../output/Gopurs.PrimitiveExprs/index.js';
 import { TcoExpr } from '../output/PureScript.Backend.Optimizer.Codegen.Tco/index.js';
@@ -256,16 +256,109 @@ test('module emission selects the effect worker without exposing its reserved ke
   const directAction = e(new S.EffectBind(new Just('answer'), 1, application('identity'),
     e(new S.EffectPure(e(new S.Local(new Just('answer'), 1))))));
   const directCode = translateWithFunctions(metadata)(module(directAction)).code;
-  assert.match(directCode, /RenamedBoundary_Identity_runEffectWorker\(/);
+  assert.match(directCode, /gopurs_runtime\.Box\(RenamedBoundary_Identity\(/);
   assert.match(directCode, /Get___gopurs_ffi_argument_RenamedBoundary_\d+\(/);
+  assert.doesNotMatch(directCode, /RenamedBoundary_Identity_runEffectWorker\(/);
   assert.doesNotMatch(directCode, /Apply2\(Get_RenamedBoundary_identity/);
 
-  assert.match(emitted.code, /RenamedBoundary_Identity_runEffectWorker\(/);
+  assert.match(emitted.code, /gopurs_runtime\.Box\(RenamedBoundary_Identity\(/);
   assert.match(emitted.code, /func Get_RenamedBoundary_ffi_argument_0\(/);
   assert.match(emitted.code, /func Get___gopurs_ffi_argument_RenamedBoundary_\d+\(/);
   assert.ok(Map.lookup(ordString)(owner + '.' + key('identity'))(emitted.functions) instanceof Just);
+  assert.ok(Map.lookup(ordString)(owner + '.' + factoryKey('identity'))(emitted.functions) instanceof Just);
   assert.doesNotMatch(translateWithFunctions(metadata)(module(application(collision))).code,
     /RenamedBoundary_Identity_runEffectWorker\(/);
+  assert.doesNotMatch(translateWithFunctions(metadata)(module(application(Go.sanitizeName(factoryKey('identity'))))).code,
+    /RenamedBoundary_Identity\(/);
+
+  // Complex adapters (Foreign) still route through their certified _runEffectWorker.
+  const foreignAction = e(new S.EffectBind(new Just('answer'), 1, application('foreign'),
+    e(new S.EffectPure(e(new S.Local(new Just('answer'), 1))))));
+  assert.match(translateWithFunctions(metadata)(module(foreignAction)).code, /RenamedBoundary_Foreign_runEffectWorker\(/);
+
+  // Unused result skips Box while still invoking factory and thunk.
+  const discardedAction = e(new S.EffectBind(new Just('unused'), 1, application('identity'),
+    e(new S.EffectPure(literal))));
+  const discardedCode = translateWithFunctions(metadata)(module(discardedAction)).code;
+  assert.match(discardedCode, /_ = RenamedBoundary_Identity\(__ffi_effect_arg_\d+\)\(\)/);
+  assert.doesNotMatch(discardedCode, /gopurs_runtime\.Box\(RenamedBoundary_Identity/);
+
+  // Let-bound Effect factory hoisted across EffectPure / replay keeps its native thunk without Apply.
+  const hoistedAction = e(new S.Let(new Just('pending'), 0, application('identity'),
+    e(new S.EffectPure(
+      e(new S.EffectBind(new Just('first'), 1, e(new S.Local(new Just('pending'), 0)),
+        e(new S.EffectBind(new Just('second'), 2, e(new S.Local(new Just('pending'), 0)),
+          e(new S.EffectPure(e(new S.Local(new Just('second'), 2))))))))))));
+  const hoistedCode = translateWithFunctions(metadata)(module(hoistedAction)).code;
+  assert.match(hoistedCode, /pending_0_0 := RenamedBoundary_Identity\(/);
+  assert.match(hoistedCode, /_ = pending_0_0\(\)/);
+  assert.match(hoistedCode, /second_2_\d+ := gopurs_runtime\.Box\(pending_0_0\(\)\)/);
+  assert.doesNotMatch(hoistedCode, /gopurs_runtime\.Apply/);
+
+  // Escaping Let-bound Effect factory retains its boxed Apply representation.
+  const escapedAction = e(new S.Let(new Just('pending'), 0, application('identity'),
+    e(new S.EffectBind(new Just('first'), 1, e(new S.Local(new Just('pending'), 0)),
+      e(new S.EffectPure(e(new S.Local(new Just('pending'), 0))))))));
+  const escapedCode = translateWithFunctions(metadata)(module(escapedAction)).code;
+  assert.match(escapedCode, /gopurs_runtime\.Apply\(Get_RenamedBoundary_identity\(\)/);
+});
+
+test('hoisted Let-bound native thunks execute factory once and replay thunk without runtime Apply', t => {
+  const e = syntax => new NeutralExpr(syntax);
+  const target = name => e(new S.Var(new C.Qualified(new Just(owner), name)));
+  const literal = n => e(new S.Typed(int, e(new S.Lit(new C.LitInt(n)))));
+  const foreignMap = foreigns.reduce((acc, entry) => Map.insert(ordString)(entry.value0)(entry.value1)(acc), Map.empty);
+  const metadata = withReboxFields({
+    elidedCtors: emptySet, ctorTypes: Map.empty, pointerAdtPaths: Map.empty,
+    pointerAdtNodes: emptySet, pointerAdtLeaves: emptyMapOrEmpty(), enumAdts: emptySet,
+    enumCtors: emptySet, globalTypes: Map.empty, globalFunctions: Map.empty,
+    classDeclsFields: Map.empty, ffiFunctions: infos,
+  });
+  function emptyMapOrEmpty() { return Map.empty; }
+  const hoisted = e(new S.Let(new Just('pending'), 0, e(new S.App(target('identity'), [literal(41)])),
+    e(new S.EffectPure(
+      e(new S.EffectBind(new Just('unused'), 1, e(new S.Local(new Just('pending'), 0)),
+        e(new S.EffectBind(new Just('answer'), 2, e(new S.Local(new Just('pending'), 0)),
+          e(new S.EffectPure(e(new S.Local(new Just('answer'), 2))))))))))));
+  const panicUnused = e(new S.EffectBind(new Just('unused'), 1, e(new S.App(target('panic'), [literal(0)])),
+    e(new S.EffectPure(literal(7)))));
+  const mod = {
+    name: owner,
+    bindings: [{ recursive: false, bindings: [new Tuple('hoisted', hoisted), new Tuple('panicUnused', panicUnused)] }],
+    comments: [], imports: emptySet, exports: emptySet, reExports: emptySet,
+    dataTypes: Map.empty, dataDecls: [], classDecls: [], foreign: foreignMap,
+    implementations: Map.empty, directives: Map.empty,
+  };
+  const emitted = translateWithFunctions(metadata)(mod);
+  assert.doesNotMatch(emitted.code, /gopurs_runtime\.Apply/);
+  const directory = mkdtempSync(join(tmpdir(), 'gopurs-ffi-bound-thunk-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  mkdirSync(join(directory, 'gopurs_runtime'));
+  mkdirSync(join(directory, 'purescript'));
+  copyFileSync(new URL('../runtime/runtime.go', import.meta.url), join(directory, 'gopurs_runtime/runtime.go'));
+  writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+  writeFileSync(join(directory, 'purescript/mod.go'), emitted.code);
+  writeFileSync(join(directory, 'purescript/ffi.go'), 'package purescript\nimport "gopurs/output/gopurs_runtime"\n' + prepared.content + '\n' + wrappers + '\n' + workers);
+  writeFileSync(join(directory, 'main_test.go'), `package main
+import("reflect";"testing";"gopurs/output/gopurs_runtime";p "gopurs/output/purescript")
+func TestHoistedThunkReplay(t *testing.T) {
+  p.${owner}_Trace = nil
+  inner := gopurs_runtime.Apply(p.Get_${owner}_hoisted(), gopurs_runtime.Value{})
+  if !reflect.DeepEqual(p.${owner}_Trace, []string{"factory"}) { t.Fatal("factory timing", p.${owner}_Trace) }
+  for i := 0; i < 2; i++ {
+    if got := gopurs_runtime.Apply(inner, gopurs_runtime.Value{}).IntVal; got != 41 { t.Fatal("replay value", got) }
+  }
+  if !reflect.DeepEqual(p.${owner}_Trace, []string{"factory", "effect", "effect", "effect", "effect"}) { t.Fatal("replay trace", p.${owner}_Trace) }
+  p.${owner}_Trace = nil
+  func() {
+    defer func() { if recover() != p.${owner}_Marker { t.Fatal("discarded panic identity") } }()
+    gopurs_runtime.Apply(p.Get_${owner}_panicUnused(), gopurs_runtime.Value{})
+  }()
+  if !reflect.DeepEqual(p.${owner}_Trace, []string{"factory", "effect"}) { t.Fatal("discarded panic trace", p.${owner}_Trace) }
+}
+`);
+  const result = spawnSync('go', ['test', '-count=1', '.'], { cwd: directory, encoding: 'utf8', env: { ...process.env, GOWORK: 'off' } });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
 });
 
 test('workers preserve factory/thunk order, saved action replay, native fallback and callback values', t => {

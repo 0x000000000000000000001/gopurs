@@ -10,6 +10,7 @@ import Data.Array as Array
 import Data.Foldable (any)
 import Data.Maybe (Maybe(..))
 import Data.String as String
+import Data.String.Pattern (Pattern(..))
 import Data.Tuple (Tuple(..), snd)
 import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.CallAnalysis (collectGoSpine, getGoSpineArgs)
@@ -75,26 +76,37 @@ onlyCurriedApplications expression = case unwrapTcoExpr expression of
 -- The translated body determines the native result. Only the curried wrapper
 -- crosses Value. Declarations stay separate so recursive callers can place the
 -- whole group's declarations before any assignment captures a peer worker.
-emit :: TranslateExpr -> ExprContext -> String -> Parameters -> Boolean -> Maybe TcoExpr -> ExprResult -> { declarations :: Array GoExpr, assignments :: Array GoExpr }
-emit translate context@{ codegenStateRef, modNameStr, bound } name params keepWrapper loopBody result =
+-- When a standalone worker does not reference itself (e.g. non-recursive or
+-- TCO-rewritten loop), initializing `var name func(...) R = func(...) R { ... }`
+-- lets Go statically devirtualize and inline direct calls.
+emit :: TranslateExpr -> ExprContext -> String -> Parameters -> Boolean -> Boolean -> Maybe TcoExpr -> ExprResult -> { declarations :: Array GoExpr, assignments :: Array GoExpr }
+emit translate context@{ codegenStateRef, modNameStr, bound } name params keepWrapper standalone loopBody result =
   let
     nativeName = workerName modNameStr name
     resultType = result.exprType
-    declarations =
-      [ rawGo ("var " <> nativeName <> " func(" <> String.joinWith ", " (map (goTypeToStr <<< snd) params) <> ") " <> goTypeToStr resultType)
-      , rawGo ("_ = " <> nativeName)
-      ]
-        <> if keepWrapper then
-          [ rawGo ("var " <> name <> " gopurs_runtime.Value")
-          , rawGo ("_ = " <> name)
-          ]
-        else []
     body = flattenStmts result.stmts <> [ GoReturn result.expr ]
     functionBody = case loopBody of
       Just source -> AffineLoops.wrap translate context (AffineLoops.localTarget bound name) params resultType source
         (Int32Loops.loop name params resultType body)
       Nothing -> GoBlock (iterationBindings params <> body)
-    nativeAssignment = GoMutate nativeName (GoFuncBlock (loopParameters params) [ functionBody ] resultType)
+    funcTypeStr = "func(" <> String.joinWith ", " (map (goTypeToStr <<< snd) params) <> ") " <> goTypeToStr resultType
+    funcLiteral = GoFuncBlock (loopParameters params) [ functionBody ] resultType
+    inlineInit = standalone && not (mentionsName nativeName functionBody)
+    wrapperDeclarations =
+      if keepWrapper then
+        [ rawGo ("var " <> name <> " gopurs_runtime.Value")
+        , rawGo ("_ = " <> name)
+        ]
+      else []
+    declarations =
+      (if inlineInit then
+        [ GoMutate ("var " <> nativeName <> " " <> funcTypeStr) funcLiteral
+        , rawGo ("_ = " <> nativeName)
+        ]
+      else
+        [ rawGo ("var " <> nativeName <> " " <> funcTypeStr)
+        , rawGo ("_ = " <> nativeName)
+        ]) <> wrapperDeclarations
     call = GoCall (GoVar nativeName) (map (\(Tuple param ty) ->
       coerceGoExpr codegenStateRef modNameStr (GoVar (param <> "_loop_val")) TypeValue ty) params)
     boxedResult = boxGoExpr codegenStateRef modNameStr call resultType
@@ -103,5 +115,56 @@ emit translate context@{ codegenStateRef, modNameStr, bound } name params keepWr
       else Array.foldr (\(Tuple param _) inner ->
         GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
           [ GoFuncLit [ Tuple (param <> "_loop_val") TypeValue ] [] inner TypeValue ]) boxedResult params
+    assignments =
+      (if inlineInit then [] else [ GoMutate nativeName funcLiteral ])
+        <> if keepWrapper then [ GoMutate name wrapper ] else []
   in
-    { declarations, assignments: [ nativeAssignment ] <> if keepWrapper then [ GoMutate name wrapper ] else [] }
+    { declarations, assignments }
+
+mentionsName :: String -> GoExpr -> Boolean
+mentionsName target = go
+  where
+  many exprs = Array.any go exprs
+  go = case _ of
+    GoVar v -> v == target
+    GoRef (LocalReference v) -> v == target
+    GoRef _ -> false
+    GoString _ -> false
+    GoInt _ -> false
+    GoCall fn args -> go fn || many args
+    GoTypeApply fn _ -> go fn
+    GoSelector obj _ -> go obj
+    GoBlock stmts -> many stmts
+    GoReturn e -> go e
+    GoAssign _ e -> go e
+    GoRecordDict _ props -> Array.any (go <<< snd) props
+    GoRecordUpdateDict obj props -> go obj || Array.any (go <<< snd) props
+    GoRecordUpdateStatic obj _ updates fallback -> go obj || Array.any (go <<< snd) updates || Array.any (go <<< snd) fallback
+    GoRecordUpdateNative _ obj props -> go obj || Array.any (go <<< snd) props
+    GoIIFE _ val b -> go val || go b
+    GoLetRec binds b -> Array.any (go <<< snd) binds || go b
+    GoRecordAccess obj _ -> go obj
+    GoStructAccess obj _ -> go obj
+    GoRecordFieldAccess obj _ -> go obj
+    GoRecordAccessStatic obj _ _ -> go obj
+    GoConstructor _ _ _ args -> many args
+    GoConstructorDict _ args -> many args
+    GoConstructorAccess obj _ _ _ _ -> go obj
+    GoBranch branches def -> Array.any (\(Tuple c t) -> go c || go t) branches || go def
+    GoBinOp _ l r -> go l || go r
+    GoPrefixOp _ e -> go e
+    GoTypeAssertion e _ -> go e
+    GoIndex e i -> go e || go i
+    GoBoxStructPointer _ e -> go e
+    GoBoxIntArray e -> go e
+    GoUnboxIntArray e -> go e
+    GoFreshFilterArray e -> go e
+    GoRaw code -> String.contains (Pattern target) code.text
+    GoFor _ stmts -> many stmts
+    GoForRange range stmts -> String.contains (Pattern target) range || many stmts
+    GoContinue _ -> false
+    GoMutate lhs rhs -> String.contains (Pattern target) lhs || go rhs
+    GoIfElse c t f -> go c || many t || many f
+    GoFuncBlock _ stmts _ -> many stmts
+    GoFuncLit _ stmts e _ -> many stmts || go e
+    GoStructValue _ _ args -> many args

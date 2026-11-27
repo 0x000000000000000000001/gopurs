@@ -160,7 +160,7 @@ func main() {
                 trace=nil;result:=probe();if !slices.Equal(trace,input){panic(fmt.Sprintf("%s/%d callback order: %v",kind,mode,trace))}
                 if kind=="fold"{if result.IntVal!=fold{panic("left fold")};continue}
                 if !slices.Equal(values(result),expected){panic(fmt.Sprintf("%s/%d values: %v",kind,mode,values(result)))}
-                repeated:=probe();if len(expected)>0{if result.Type==gopurs_runtime.TypeIntArray{(*(*[]int64)(result.UnsafePtr))[0]=99}else{(*(*[]gopurs_runtime.Value)(result.UnsafePtr))[0]=gopurs_runtime.Int(99)}}
+                repeated:=probe();if len(expected)>0{if result.Type==gopurs_runtime.TypeInt32Array{(*(*[]int32)(result.UnsafePtr))[0]=99}else if result.Type==gopurs_runtime.TypeIntArray{(*(*[]int64)(result.UnsafePtr))[0]=99}else{(*(*[]gopurs_runtime.Value)(result.UnsafePtr))[0]=gopurs_runtime.Int(99)}}
                 if !slices.Equal(values(repeated),expected)||!slices.Equal(values(array),input){panic("array alias")}
             }
         }

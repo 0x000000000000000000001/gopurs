@@ -201,6 +201,7 @@ const (
 	TypeFunc11       = 26
 	TypeFunctionData = 27
 	TypeIntArray     = 28
+	TypeInt32Array   = 29
 )
 
 // We do not add FloatVal or BoolVal fields to keep the struct size minimal.
@@ -240,11 +241,10 @@ func StrValue(v Value) string {
 	if v.UnsafePtr == nil {
 		return ""
 	}
-	length := v.IntVal
-	if length < 0 {
-		length = (-1 - length) >> 31
+	if v.IntVal >= 0 {
+		return unsafe.String((*byte)(v.UnsafePtr), int(v.IntVal))
 	}
-	return unsafe.String((*byte)(v.UnsafePtr), int(length))
+	return unsafe.String((*byte)(v.UnsafePtr), int(uint64(^v.IntVal)>>31))
 }
 
 func Str(v string) Value {
@@ -691,10 +691,46 @@ func Array(v []Value) Value {
 	return Value{Type: TypeArray, UnsafePtr: unsafe.Pointer(ptr)}
 }
 
-func IntArray(v []int64) Value {
-	ptr := new([]int64)
+func Int32Array(v []int32) Value {
+	ptr := new([]int32)
 	*ptr = v
-	return Value{Type: TypeIntArray, UnsafePtr: unsafe.Pointer(ptr)}
+	return Value{Type: TypeInt32Array, UnsafePtr: unsafe.Pointer(ptr)}
+}
+
+func IntArray(v []int64) Value {
+	if len(v) == 0 {
+		ptr := new([]int32)
+		if v != nil {
+			*ptr = []int32{}
+		}
+		return Value{Type: TypeInt32Array, UnsafePtr: unsafe.Pointer(ptr)}
+	}
+	compact := make([]int32, len(v))
+	for i, x := range v {
+		n := int32(x)
+		if int64(n) != x {
+			ptr := new([]int64)
+			*ptr = v
+			return Value{Type: TypeIntArray, UnsafePtr: unsafe.Pointer(ptr)}
+		}
+		compact[i] = n
+	}
+	ptr := new([]int32)
+	*ptr = compact
+	return Value{Type: TypeInt32Array, UnsafePtr: unsafe.Pointer(ptr)}
+}
+
+func EqualInt32Array(a, b []int32) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	if len(a) == 0 {
+		return true
+	}
+	return bytes.Equal(
+		unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(a))), len(a)*4),
+		unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(b))), len(b)*4),
+	)
 }
 
 func EqualIntArray(a, b []int64) bool {
@@ -710,25 +746,149 @@ func EqualIntArray(a, b []int64) bool {
 	)
 }
 
+func EqualIntArrayWithValue(native []int64, boxed Value) bool {
+	switch boxed.Type {
+	case TypeInt32Array:
+		rhs := *(*[]int32)(boxed.UnsafePtr)
+		if len(native) != len(rhs) {
+			return false
+		}
+		for i, v := range rhs {
+			if native[i] != int64(v) {
+				return false
+			}
+		}
+		return true
+	case TypeIntArray:
+		return EqualIntArray(native, *(*[]int64)(boxed.UnsafePtr))
+	default:
+		rhs := *(*[]Value)(boxed.UnsafePtr)
+		if len(native) != len(rhs) {
+			return false
+		}
+		for i, v := range rhs {
+			if native[i] != v.IntVal {
+				return false
+			}
+		}
+		return true
+	}
+}
+
+func EqualIntArrayValues(left, right Value) bool {
+	switch left.Type {
+	case TypeInt32Array:
+		lhs := *(*[]int32)(left.UnsafePtr)
+		switch right.Type {
+		case TypeInt32Array:
+			return EqualInt32Array(lhs, *(*[]int32)(right.UnsafePtr))
+		case TypeIntArray:
+			rhs := *(*[]int64)(right.UnsafePtr)
+			if len(lhs) != len(rhs) {
+				return false
+			}
+			for i, v := range lhs {
+				if int64(v) != rhs[i] {
+					return false
+				}
+			}
+			return true
+		default:
+			rhs := *(*[]Value)(right.UnsafePtr)
+			if len(lhs) != len(rhs) {
+				return false
+			}
+			for i, v := range lhs {
+				if int64(v) != rhs[i].IntVal {
+					return false
+				}
+			}
+			return true
+		}
+	case TypeIntArray:
+		return EqualIntArrayWithValue(*(*[]int64)(left.UnsafePtr), right)
+	default:
+		lhs := *(*[]Value)(left.UnsafePtr)
+		switch right.Type {
+		case TypeInt32Array:
+			rhs := *(*[]int32)(right.UnsafePtr)
+			if len(lhs) != len(rhs) {
+				return false
+			}
+			for i, v := range rhs {
+				if lhs[i].IntVal != int64(v) {
+					return false
+				}
+			}
+			return true
+		case TypeIntArray:
+			rhs := *(*[]int64)(right.UnsafePtr)
+			if len(lhs) != len(rhs) {
+				return false
+			}
+			for i, v := range rhs {
+				if lhs[i].IntVal != v {
+					return false
+				}
+			}
+			return true
+		default:
+			rhs := *(*[]Value)(right.UnsafePtr)
+			if len(lhs) != len(rhs) {
+				return false
+			}
+			for i := range lhs {
+				if lhs[i].IntVal != rhs[i].IntVal {
+					return false
+				}
+			}
+			return true
+		}
+	}
+}
+
 func ArrayValues(arr Value) []Value {
-	if arr.Type == TypeIntArray {
+	if arr.Type != TypeInt32Array && arr.Type != TypeIntArray {
 		if arr.UnsafePtr == nil {
 			return nil
 		}
-		src := *(*[]int64)(arr.UnsafePtr)
-		out := make([]Value, len(src))
-		for i, v := range src {
-			out[i] = Int(v)
-		}
-		return out
+		return *(*[]Value)(arr.UnsafePtr)
 	}
+	return arrayValuesSlow(arr)
+}
+
+func arrayValuesSlow(arr Value) []Value {
 	if arr.UnsafePtr == nil {
 		return nil
 	}
-	return *(*[]Value)(arr.UnsafePtr)
+	if arr.Type == TypeInt32Array {
+		src := *(*[]int32)(arr.UnsafePtr)
+		out := make([]Value, len(src))
+		for i, v := range src {
+			out[i] = Int(int64(v))
+		}
+		return out
+	}
+	src := *(*[]int64)(arr.UnsafePtr)
+	out := make([]Value, len(src))
+	for i, v := range src {
+		out[i] = Int(v)
+	}
+	return out
 }
 
 func UnboxIntArray(arr Value) []int64 {
+	if arr.Type == TypeInt32Array {
+		if arr.UnsafePtr == nil {
+			return make([]int64, 0)
+		}
+		src := *(*[]int32)(arr.UnsafePtr)
+		out := make([]int64, len(src))
+		for i, v := range src {
+			out[i] = int64(v)
+		}
+		return out
+	}
 	if arr.Type == TypeIntArray {
 		if arr.UnsafePtr == nil {
 			return make([]int64, 0)
@@ -744,6 +904,18 @@ func UnboxIntArray(arr Value) []int64 {
 		out[i] = v.IntVal
 	}
 	return out
+}
+
+// BorrowIntArray returns a read-only []int64 view for pure PureScript workers
+// without copying when the boxed value already holds a []int64 backing slice.
+func BorrowIntArray(arr Value) []int64 {
+	if arr.Type == TypeIntArray {
+		if arr.UnsafePtr == nil {
+			return make([]int64, 0)
+		}
+		return *(*[]int64)(arr.UnsafePtr)
+	}
+	return UnboxIntArray(arr)
 }
 
 func (v Value) PtrVal() any {
@@ -766,7 +938,7 @@ func (v Value) AnyVal() any {
 		return v.IntVal != 0
 	case TypeArray:
 		return *(*[]Value)(v.UnsafePtr)
-	case TypeIntArray:
+	case TypeIntArray, TypeInt32Array:
 		return ArrayValues(v)
 	case TypeRecord:
 		return *(*map[string]Value)(v.UnsafePtr)
@@ -1695,6 +1867,16 @@ func FunctionData[T any](function Value) (T, bool) {
 	return zero, false
 }
 
+// IntActionFromInt64 exposes a zero-argument func() int64 action as func() int
+// without a per-call trampoline closure on 64-bit targets, where int and int64
+// share identical width and register ABI. 32-bit targets adapt cleanly.
+func IntActionFromInt64(fn func() int64) func() int {
+	if ^uint(0)>>63 == 1 {
+		return *(*func() int)(unsafe.Pointer(&fn))
+	}
+	return func() int { return int(fn()) }
+}
+
 func Apply(f Value, arg Value) Value {
 	if f.UnsafePtr == nil {
 		panic(fmt.Sprintf("PANIC in Apply: f.Type = %v, f.UnsafePtr is nil", f.Type))
@@ -1877,6 +2059,9 @@ func Apply5(f Value, arg1, arg2, arg3, arg4, arg5 Value) Value {
 }
 
 func ArrayAccess(arr Value, index int) Value {
+	if arr.Type == TypeInt32Array {
+		return Int(int64((*(*[]int32)(arr.UnsafePtr))[index]))
+	}
 	if arr.Type == TypeIntArray {
 		return Int((*(*[]int64)(arr.UnsafePtr))[index])
 	}
@@ -1884,6 +2069,9 @@ func ArrayAccess(arr Value, index int) Value {
 }
 
 func ArrayLength(arr Value) int {
+	if arr.Type == TypeInt32Array {
+		return len(*(*[]int32)(arr.UnsafePtr))
+	}
 	if arr.Type == TypeIntArray {
 		return len(*(*[]int64)(arr.UnsafePtr))
 	}
@@ -2077,6 +2265,17 @@ func Unbox[T any](v any) T {
 	case []int64:
 		return any(UnboxIntArray(val)).(T)
 	case []any:
+		if val.Type == TypeInt32Array {
+			var src []int32
+			if val.UnsafePtr != nil {
+				src = *(*[]int32)(val.UnsafePtr)
+			}
+			res := make([]any, len(src))
+			for i, v2 := range src {
+				res[i] = Int(int64(v2))
+			}
+			return any(res).(T)
+		}
 		if val.Type == TypeIntArray {
 			var src []int64
 			if val.UnsafePtr != nil {
@@ -2554,6 +2753,12 @@ func foreignDataContainerKey(input any) (foreignDataKey, bool) {
 				ints = *(*[]int64)(value.UnsafePtr)
 			}
 			return foreignDataKey{kind: 5, pointer: unsafe.Pointer(unsafe.SliceData(ints)), length: len(ints)}, true
+		case TypeInt32Array:
+			var ints []int32
+			if value.UnsafePtr != nil {
+				ints = *(*[]int32)(value.UnsafePtr)
+			}
+			return foreignDataKey{kind: 6, pointer: unsafe.Pointer(unsafe.SliceData(ints)), length: len(ints)}, true
 		case TypeRecord, TypeRecord1, TypeRecord2, TypeRecord3, TypeRecord4, TypeRecord5, TypeRecordData:
 			return foreignDataKey{kind: value.Type + 100, pointer: value.UnsafePtr}, true
 		}
@@ -2604,7 +2809,7 @@ func (graph *foreignDataGraph) scan(input any, parent *foreignDataNode) {
 				values = *(*[]Value)(value.UnsafePtr)
 			}
 			node.source = values
-		} else if value.Type == TypeIntArray {
+		} else if value.Type == TypeIntArray || value.Type == TypeInt32Array {
 			node.source = ArrayValues(value)
 		} else {
 			node.source = RecordToMap(value)
@@ -2652,7 +2857,7 @@ func (graph *foreignDataGraph) convert(input any) any {
 			return graph.convert(*(*any)(value.UnsafePtr))
 		case TypeRecord0:
 			return map[string]any{}
-		case TypeArray, TypeIntArray, TypeRecord, TypeRecord1, TypeRecord2, TypeRecord3, TypeRecord4, TypeRecord5, TypeRecordData:
+		case TypeArray, TypeIntArray, TypeInt32Array, TypeRecord, TypeRecord1, TypeRecord2, TypeRecord3, TypeRecord4, TypeRecord5, TypeRecordData:
 			// Containers use the graph below, including their cycles.
 		default:
 			panic("FFI Foreign: functions and algebraic constructors require an explicit PureScript conversion to native data")

@@ -62,32 +62,14 @@ emit translate context@{ codegenStateRef, modNameStr } nextId fn args = do
     intArrayFastPath = if scalarType == TypeInt64 && not bothNative then
       case left.elementType, right.elementType of
         TypeInt64, TypeValue ->
-          [ GoIfElse (rawGo "arrayEq_rightValue.Type == gopurs_runtime.TypeIntArray")
-              [ GoReturn (GoCall equalIntSlices [ GoVar "arrayEq_leftValue", rawGo "*(*[]int64)(arrayEq_rightValue.UnsafePtr)" ]) ] [] ]
+          [ GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "EqualIntArrayWithValue") [ GoVar "arrayEq_leftValue", GoVar "arrayEq_rightValue" ]) ]
         TypeValue, TypeInt64 ->
-          [ GoIfElse (rawGo "arrayEq_leftValue.Type == gopurs_runtime.TypeIntArray")
-              [ GoReturn (GoCall equalIntSlices [ rawGo "*(*[]int64)(arrayEq_leftValue.UnsafePtr)", GoVar "arrayEq_rightValue" ]) ] [] ]
+          [ GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "EqualIntArrayWithValue") [ GoVar "arrayEq_rightValue", GoVar "arrayEq_leftValue" ]) ]
         TypeValue, TypeValue ->
-          [ GoIfElse (rawGo "arrayEq_leftValue.Type == gopurs_runtime.TypeIntArray")
-              [ GoIfElse (rawGo "arrayEq_rightValue.Type == gopurs_runtime.TypeIntArray")
-                  [ GoReturn (GoCall equalIntSlices [ rawGo "*(*[]int64)(arrayEq_leftValue.UnsafePtr)", rawGo "*(*[]int64)(arrayEq_rightValue.UnsafePtr)" ]) ]
-                  [ GoAssign "arrayEq_li" (rawGo "*(*[]int64)(arrayEq_leftValue.UnsafePtr)")
-                  , GoAssign "arrayEq_rv" (rawGo "*(*[]gopurs_runtime.Value)(arrayEq_rightValue.UnsafePtr)")
-                  , GoIfElse (rawGo "len(arrayEq_li) != len(arrayEq_rv)") [ GoReturn (rawGo "false") ] []
-                  , GoForRange "i, v := range arrayEq_li"
-                      [ GoIfElse (rawGo "v != arrayEq_rv[i].IntVal") [ GoReturn (rawGo "false") ] [] ]
-                  , GoReturn (rawGo "true")
-                  ]
-              ]
-              [ GoIfElse (rawGo "arrayEq_rightValue.Type == gopurs_runtime.TypeIntArray")
-                  [ GoAssign "arrayEq_lv" (rawGo "*(*[]gopurs_runtime.Value)(arrayEq_leftValue.UnsafePtr)")
-                  , GoAssign "arrayEq_ri" (rawGo "*(*[]int64)(arrayEq_rightValue.UnsafePtr)")
-                  , GoIfElse (rawGo "len(arrayEq_lv) != len(arrayEq_ri)") [ GoReturn (rawGo "false") ] []
-                  , GoForRange "i, v := range arrayEq_ri"
-                      [ GoIfElse (rawGo "arrayEq_lv[i].IntVal != v") [ GoReturn (rawGo "false") ] [] ]
-                  , GoReturn (rawGo "true")
-                  ] []
-              ]
+          [ GoIfElse (rawGo "arrayEq_leftValue.Type == gopurs_runtime.TypeInt32Array && arrayEq_rightValue.Type == gopurs_runtime.TypeInt32Array")
+              [ GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "EqualInt32Array")
+                  [ rawGo "*(*[]int32)(arrayEq_leftValue.UnsafePtr)", rawGo "*(*[]int32)(arrayEq_rightValue.UnsafePtr)" ]) ]
+              [ GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "EqualIntArrayValues") [ GoVar "arrayEq_leftValue", GoVar "arrayEq_rightValue" ]) ]
           ]
         _, _ -> []
       else []
@@ -96,8 +78,9 @@ emit translate context@{ codegenStateRef, modNameStr } nextId fn args = do
       , right.assignment
       , GoReturn (GoCall nativeEqual [ rawGo left.target, rawGo right.target ])
       ]
+      else if not (Array.null intArrayFastPath) then
+      intArrayFastPath
       else
-      intArrayFastPath <>
       [ left.assignment
       , right.assignment
       , GoIfElse (GoBinOp "!=" (length left) (length right)) [ GoReturn (rawGo "false") ] []

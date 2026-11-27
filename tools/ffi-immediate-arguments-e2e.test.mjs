@@ -61,7 +61,8 @@ test('cached FFI arguments preserve repeated effects, captures, structured value
         emittedFunction(source, `Get_Main_${name}`) + emittedFunction(source, `Call_Main_${name}`)]));
       for (const name of ['literalInt', 'literalText', 'changingWithContinuation', 'nested']) {
         const caller = callers[name];
-        assert.match(caller, /Main_Identity_runEffectWorker\(/, `${profile}: ${name} must invoke the immediate worker`);
+        assert.match(caller, /Main_Identity\(/, `${profile}: ${name} must invoke the direct immediate FFI factory`);
+        assert.doesNotMatch(caller, /Get_Main_identity\(/, `${profile}: ${name} must bypass the boxed wrapper`);
       }
       // PBO turns this final bind/pure into a terminal action invocation,
       // outside the adjacent EffectBind specialization checked above.

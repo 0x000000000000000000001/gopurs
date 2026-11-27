@@ -15,6 +15,7 @@ import Gopurs.ExprAnalysis (executeIfOpaque, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, LocalBinding, StmtTree(..), TranslateExpr, childContext, flattenStmts)
 import Gopurs.GoAst (GoExpr(..), GoType(..), rawGo)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
+import Gopurs.ImmediateFfiEffects as ImmediateFfiEffects
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (Ident, ModuleName(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
@@ -202,9 +203,16 @@ generate translate context@{ codegenStateRef, modNameStr } locals nextId plan =
       in rest { stmts = result.stmts <> StmtLeaf (GoAssign name (scalarBinding result.exprType result.expr)) <> rest.stmts }
   in case plan of
     Pure expression -> pureValue nextId expression
-    Opaque expression ->
-      let result = translate (context { options = { isTail: false, inEffectBlock: true } }) nextId expression
-      in result { expr = executeIfOpaque expression (boxed result), exprType = TypeValue }
+    Opaque expression -> case ImmediateFfiEffects.invokeBoundThunkExpr context expression of
+      Just invoked ->
+        { stmts: StmtEmpty
+        , expr: boxGoExpr codegenStateRef modNameStr invoked.adapted.expr invoked.adapted.exprType
+        , exprType: TypeValue
+        , nextId
+        }
+      Nothing ->
+        let result = translate (context { options = { isTail: false, inEffectBlock: true } }) nextId expression
+        in result { expr = executeIfOpaque expression (boxed result), exprType = TypeValue }
     Bind ident level value body -> continue ident level (generate translate context locals nextId value) body
     LetValue ident level value body -> continue ident level (pureValue nextId value) body
     NewRef level initial body ->

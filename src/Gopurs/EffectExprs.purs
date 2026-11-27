@@ -27,7 +27,9 @@ bindEffect :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> Tco
 bindEffect translate context nextId mbIdent lvl binding body =
   case ImmediateFfiEffects.direct translate context nextId mbIdent lvl binding body of
     Just result -> result
-    Nothing -> ordinaryBind translate context nextId mbIdent lvl binding body
+    Nothing -> case ImmediateFfiEffects.invokeBoundThunk translate context nextId mbIdent lvl binding body of
+      Just result -> result
+      Nothing -> ordinaryBind translate context nextId mbIdent lvl binding body
 
 ordinaryBind :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> TcoExpr -> TcoExpr -> ExprResult
 ordinaryBind translate context@{ codegenStateRef, depth, modNameStr, bound, options: { isTail } } nextId mbIdent lvl binding body =

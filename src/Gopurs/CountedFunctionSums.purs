@@ -39,6 +39,8 @@ data Scalar
   | Sum Scalar Scalar
   | Product Scalar Scalar
 
+derive instance eqScalar :: Eq Scalar
+
 data Value
   = Integer Scalar
   | Closure (Array Ref) NeutralExpr Env (Set Ident) Boolean
@@ -87,14 +89,18 @@ candidate context original@(NeutralExpr syntax) = do
     Integer value | proof.used && closed value -> Just value
     _ -> Nothing
   let
+    counts = Array.nubEq proof.counts
+    nonNegativeInputs = Set.fromFoldable (Array.mapMaybe (case _ of
+      Input ref -> Just ref
+      _ -> Nothing) counts)
     inputGuards = Array.concatMap (\ref ->
-      [ compare Syn.OpGte (reference ref) (integer (-2147483647 - 1))
-      , compare Syn.OpLte (reference ref) (integer 2147483647)
-      ]) (Set.toUnfoldable proof.inputs :: Array Ref)
+      (if Set.member ref nonNegativeInputs then [] else [ compare Syn.OpGte (reference ref) (integer (-2147483647 - 1)) ])
+      <> [ compare Syn.OpLte (reference ref) (integer 2147483647) ]
+      ) (Set.toUnfoldable proof.inputs :: Array Ref)
     emit = do
       countGuards <- traverse (\count -> do
         value <- emitScalar count
-        pure (compare Syn.OpGte value (integer 0))) proof.counts
+        pure (compare Syn.OpGte value (integer 0))) counts
       resultExpr <- emitScalar scalar
       let conditions = inputGuards <> countGuards
       pure case NEA.fromArray conditions of

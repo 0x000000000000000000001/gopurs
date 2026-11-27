@@ -8,22 +8,24 @@ import Prelude hiding (add)
 import Control.Alternative (guard)
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
-import Data.Foldable (foldMap, foldl)
+import Data.Foldable (foldMap, foldl, foldr)
+import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
-import Data.Tuple (Tuple(..), fst)
+import Data.Tuple (Tuple(..), fst, snd)
 import Gopurs.CallAnalysis (collectGoSpine, getGoSpineArgs)
 import Gopurs.ExprAnalysis (unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, TranslateExpr, childContext, flattenStmts)
-import Gopurs.GoAst (GoExpr(..), GoType(..))
+import Gopurs.GoAst (GoExpr(..), GoType(..), rawGo)
 import Gopurs.GoConversions (coerceGoExpr)
 import Gopurs.GoFunctions (Parameters, iterationBindings)
+import Gopurs.GoSymbol (GoReference)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
-import PureScript.Backend.Optimizer.CoreFn (ExprType(Int), Ident(..), Qualified(..))
+import PureScript.Backend.Optimizer.CoreFn (ExprType(Int), Ident(..), Literal(..), Qualified(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
-import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendOperator2(..), BackendOperatorNum(..), BackendSyntax(..), Pair(..))
+import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendSyntax(..), Pair(..))
 
 data Plan
   = Finish TcoExpr
@@ -40,7 +42,16 @@ worker translate context name params resultType source = do
     acc = prefix <> "acc"
     used = prefix <> "used"
     label = prefix <> "loop"
-    emitted = emit translate context params { prefix, acc, used, label } 0 plan
+    baseCases = extractBaseCases (map fst params) plan
+    unfoldStep = extractPureStep context.modNameStr name (map fst params) plan
+    guardInfo =
+      if not (Array.null baseCases) && hasLeftSelfCall context.modNameStr name (Array.length params) plan then
+        case Map.lookup name context.moduleFunctions of
+          Just info | info.arity == Array.length params && info.fArgs == map snd params && info.fRet == TypeInt64 ->
+            Just { owner: context.modNameStr, name, ref: info.reference, baseCases, unfoldStep }
+          _ -> Nothing
+      else Nothing
+    emitted = emit translate context params { prefix, acc, used, label, guardInfo } 0 plan
   pure $ GoBlock
     [ GoAssign acc (GoCall (GoVar "int64") [ GoInt 0 ])
     , GoAssign used (GoVar "false")
@@ -69,8 +80,92 @@ hasStep = case _ of
   Choice branches fallback -> Array.any (hasStep <<< \(Tuple _ body) -> body) branches || hasStep fallback
   Finish _ -> false
 
-type Names = { prefix :: String, acc :: String, used :: String, label :: String }
+hasLeftSelfCall :: String -> String -> Int -> Plan -> Boolean
+hasLeftSelfCall owner name arity = go
+  where
+  go = case _ of
+    Step left _ -> case selfCallArgs owner name arity left of
+      Just _ -> true
+      Nothing -> false
+    Choice branches fallback -> Array.any (go <<< \(Tuple _ body) -> body) branches || go fallback
+    Finish _ -> false
+
+type BaseCase = { cond :: TcoExpr, leaf :: TcoExpr }
+type PureStep = { leftArgs :: Array TcoExpr, rightArgs :: Array TcoExpr }
+type GuardInfo = { owner :: String, name :: String, ref :: GoReference, baseCases :: Array BaseCase, unfoldStep :: Maybe PureStep }
+type Names = { prefix :: String, acc :: String, used :: String, label :: String, guardInfo :: Maybe GuardInfo }
 type Emitted = { statements :: Array GoExpr, nextId :: Int }
+
+extractPureStep :: String -> String -> Array String -> Plan -> Maybe PureStep
+extractPureStep owner name paramNames = go 0
+  where
+  go count (Choice branches fallback) =
+    if count + Array.length branches > 4 then Nothing
+    else if Array.all (\(Tuple cond body) -> case body of
+      Finish leaf -> pureScalarExpr paramNames cond && pureScalarExpr paramNames leaf
+      _ -> false) branches
+    then go (count + Array.length branches) fallback
+    else Nothing
+  go count (Step left rightArgs) | count > 0 && count <= 4 =
+    case selfCallArgs owner name (Array.length paramNames) left of
+      Just leftArgs | Array.all (pureScalarExpr paramNames) leftArgs && Array.all (pureScalarExpr paramNames) rightArgs ->
+        Just { leftArgs, rightArgs }
+      _ -> Nothing
+  go _ _ = Nothing
+
+extractBaseCases :: Array String -> Plan -> Array BaseCase
+extractBaseCases paramNames = go
+  where
+  go (Choice branches fallback) =
+    let taken = takePure branches
+    in if taken.allBase then taken.cases <> go fallback else taken.cases
+  go _ = []
+
+  takePure arr = case Array.uncons arr of
+    Nothing -> { cases: [], allBase: true }
+    Just { head: Tuple cond (Finish leaf), tail } | pureScalarExpr paramNames cond && pureScalarExpr paramNames leaf ->
+      let rest = takePure tail
+      in { cases: Array.cons { cond, leaf } rest.cases, allBase: rest.allBase }
+    _ -> { cases: [], allBase: false }
+
+pureScalarExpr :: Array String -> TcoExpr -> Boolean
+pureScalarExpr paramNames = go
+  where
+  go expr = case unwrapTcoExpr expr of
+    Lit (LitInt _) -> true
+    Lit (LitBoolean _) -> true
+    Local mbIdent level -> Array.elem (localId mbIdent level) paramNames
+    PrimOp (Op1 op inner) ->
+      (op == OpIntNegate || op == OpIntBitNot || op == OpBooleanNot) && go inner
+    PrimOp (Op2 op a b) -> totalOp op && go a && go b
+    _ -> false
+
+  totalOp = case _ of
+    OpIntNum OpAdd -> true
+    OpIntNum OpSubtract -> true
+    OpIntNum OpMultiply -> true
+    OpIntOrd _ -> true
+    OpBooleanOrd _ -> true
+    OpBooleanAnd -> true
+    OpBooleanOr -> true
+    OpIntBitAnd -> true
+    OpIntBitOr -> true
+    OpIntBitXor -> true
+    OpIntBitShiftLeft -> true
+    OpIntBitShiftRight -> true
+    OpIntBitZeroFillShiftRight -> true
+    _ -> false
+
+selfCallArgs :: String -> String -> Int -> TcoExpr -> Maybe (Array TcoExpr)
+selfCallArgs owner name arity expr =
+  let Tuple callee spine = collectGoSpine expr
+      args = getGoSpineArgs spine
+  in case unwrapTcoExpr callee of
+    Var (Qualified moduleName (Ident ident))
+      | ident == name && Array.length args == arity
+        && (moduleName == Nothing || map (String.replaceAll (Pattern ".") (Replacement "_") <<< unwrap) moduleName == Just owner) ->
+          Just args
+    _ -> Nothing
 
 emit :: TranslateExpr -> ExprContext -> Parameters -> Names -> Int -> Plan -> Emitted
 emit translate context@{ codegenStateRef, modNameStr } params names nextId = case _ of
@@ -99,8 +194,67 @@ emit translate context@{ codegenStateRef, modNameStr } params names nextId = cas
       }
   Step left args ->
     let
-      first = translate (childContext context (Just Int)) nextId left
-      leftName = names.prefix <> "left_" <> show first.nextId
+      emitGuardedSelf evalCtx startId info argExprs buildFallback =
+        let
+          evalArgs = foldl (\current (Tuple (Tuple _ ty) argument) ->
+            let result = translate (childContext evalCtx Nothing) current.nextId argument
+                argName = names.prefix <> "larg_" <> show result.nextId
+            in { statements: current.statements <> flattenStmts result.stmts <>
+                   [ GoAssign argName (native ty (coerceGoExpr codegenStateRef modNameStr result.expr result.exprType ty)) ]
+               , argNames: Array.snoc current.argNames argName
+               , nextId: result.nextId + 1
+               })
+            { statements: [], argNames: [], nextId: startId } (Array.zip params argExprs)
+          targetName = names.prefix <> "left_" <> show evalArgs.nextId
+          rebound = foldl (\b (Tuple (Tuple p ty) argName) -> Map.insert p { name: argName, goType: ty } b)
+            evalCtx.bound (Array.zip params evalArgs.argNames)
+          innerCtx = evalCtx { bound = rebound }
+          elseBranch = buildFallback innerCtx evalArgs.argNames targetName (evalArgs.nextId + 1)
+          chain = foldr (\bc accBranch ->
+            let
+              cRes = translate (childContext innerCtx Nothing) accBranch.nextId bc.cond
+              lRes = translate (childContext innerCtx (Just Int)) cRes.nextId bc.leaf
+              condExpr = coerceGoExpr codegenStateRef modNameStr cRes.expr cRes.exprType TypeBool
+              leafExpr = native TypeInt64 (coerceGoExpr codegenStateRef modNameStr lRes.expr lRes.exprType TypeInt64)
+            in { stmts: flattenStmts cRes.stmts <>
+                   [ GoIfElse condExpr (flattenStmts lRes.stmts <> [ GoMutate targetName leafExpr ]) accBranch.stmts ]
+               , nextId: lRes.nextId
+               }) elseBranch info.baseCases
+        in { statements: evalArgs.statements <> [ rawGo ("var " <> targetName <> " int64") ] <> chain.stmts
+           , leftName: targetName
+           , nextId: chain.nextId
+           }
+      directCallFallback info _ argNames targetName id =
+        { stmts: [ GoMutate targetName (GoCall (GoRef info.ref) (map GoVar argNames)) ], nextId: id }
+      emitLeft = case names.guardInfo of
+        Just info -> case selfCallArgs info.owner info.name (Array.length params) left of
+          Just leftArgs ->
+            -- Capture left self-call arguments in source order, check leading
+            -- pure base cases, and for pure binary recurrences inline one step
+            -- (with base-case guards on both subcalls) before recursing.
+            let
+              fallback = case info.unfoldStep of
+                Just step -> \innerCtx _ targetName id ->
+                  let
+                    firstSub = emitGuardedSelf innerCtx id info step.leftArgs (directCallFallback info)
+                    secondSub = emitGuardedSelf innerCtx firstSub.nextId info step.rightArgs (directCallFallback info)
+                  in { stmts: firstSub.statements <> secondSub.statements <>
+                         [ GoMutate targetName (GoBinOp "+" (GoVar firstSub.leftName) (GoVar secondSub.leftName)) ]
+                     , nextId: secondSub.nextId
+                     }
+                Nothing -> directCallFallback info
+            in emitGuardedSelf context nextId info leftArgs fallback
+          Nothing -> ordinaryLeft
+        Nothing -> ordinaryLeft
+      ordinaryLeft =
+        let
+          first = translate (childContext context (Just Int)) nextId left
+          leftName = names.prefix <> "left_" <> show first.nextId
+        in { statements: flattenStmts first.stmts <>
+               [ GoAssign leftName (native TypeInt64 (coerceGoExpr codegenStateRef modNameStr first.expr first.exprType TypeInt64)) ]
+           , leftName
+           , nextId: first.nextId + 1
+           }
       captured = foldl (\current (Tuple (Tuple _ ty) argument) ->
         let result = translate (childContext context Nothing) current.nextId argument
             argName = names.prefix <> "arg_" <> show result.nextId
@@ -109,15 +263,15 @@ emit translate context@{ codegenStateRef, modNameStr } params names nextId = cas
            , values: Array.snoc current.values (GoVar argName)
            , nextId: result.nextId + 1
            })
-        { statements: flattenStmts first.stmts <>
-            [ GoAssign leftName (native TypeInt64 (coerceGoExpr codegenStateRef modNameStr first.expr first.exprType TypeInt64)) ]
+        { statements: emitLeft.statements
         , values: []
-        , nextId: first.nextId + 1
+        , nextId: emitLeft.nextId
         } (Array.zip params args)
       updates = Array.zipWith (\(Tuple param _) value -> GoMutate (param <> "_loop") value) params captured.values
     in
       { statements: captured.statements <>
-          [ GoMutate names.acc (add (GoVar names.acc) (GoVar leftName))
+          -- Accumulate in raw wrapping int64; Final IntAdd narrows once mod 2^32.
+          [ GoMutate names.acc (GoBinOp "+" (GoVar names.acc) (GoVar emitLeft.leftName))
           , GoMutate names.used (GoVar "true")
           ] <> updates <> [ GoContinue names.label ]
       , nextId: captured.nextId

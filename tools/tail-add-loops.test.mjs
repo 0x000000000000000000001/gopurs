@@ -6,7 +6,9 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { Just, Nothing } from '../output/Data.Maybe/index.js';
 import { Tuple } from '../output/Data.Tuple/index.js';
-import { empty as emptyMap } from '../output/Data.Map/index.js';
+import { empty as emptyMap, singleton as singletonMap, lookup as lookupMap } from '../output/Data.Map/index.js';
+import { ordString } from '../output/Data.Ord/index.js';
+import { LocalReference } from '../output/Gopurs.GoSymbol/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import * as S from '../output/PureScript.Backend.Optimizer.Syntax/index.js';
 import { TcoExpr } from '../output/PureScript.Backend.Optimizer.Codegen.Tco/index.js';
@@ -157,4 +159,88 @@ func main(){
       assert.deepEqual(trace,Array.from({length:n},(_,i)=>[100+n-i,200+n-i-1]).flat().concat(300));
     }
   } finally {rmSync(path,{recursive:true,force:true});}
+});
+
+test('pure binary self-recursion unfolds one step with base-case guards and matches exact Int32 overflow', () => {
+  const eq = (a, b) => typed(C.Boolean.value, expr(new S.PrimOp(new S.Op2(new S.OpIntOrd(S.OpEq.value), a, b))));
+  const fibBody = branch(eq(local('n'), lit(0)), lit(0),
+    branch(eq(local('n'), lit(1)), lit(1),
+      add(call('fib', [sub(local('n'), lit(1))]), call('fib', [sub(local('n'), lit(2))]))));
+  const scaledBody = branch(eq(local('n'), lit(0)), local('base', 1),
+    branch(eq(local('n'), lit(1)), lit(2147483647),
+      add(call('scaled', [sub(local('n'), lit(1)), local('base', 1)]),
+          call('scaled', [sub(local('n'), lit(2)), local('base', 1)]))));
+  const goWithBound = (bound, value) => {
+    const syntax = unwrap(value);
+    if (syntax instanceof S.Lit) return new G.GoInt(syntax.value0.value0);
+    if (syntax instanceof S.Local) {
+      const id = `${syntax.value0.value0}_${syntax.value1}`;
+      const hit = lookupMap(ordString)(id)(bound);
+      return new G.GoVar(hit instanceof Just ? hit.value0.name : id);
+    }
+    if (syntax instanceof S.Var) return new G.GoVar(syntax.value0.value1);
+    if (syntax instanceof S.App) return new G.GoCall(goWithBound(bound, syntax.value0), syntax.value1.map(a => goWithBound(bound, a)));
+    if (syntax instanceof S.PrimOp) {
+      const op = syntax.value0;
+      if (op.value0 instanceof S.OpIntOrd) {
+        return new G.GoBinOp('==', goWithBound(bound, op.value1), goWithBound(bound, op.value2));
+      }
+      const name = op.value0.value0 instanceof S.OpAdd ? 'IntAdd' : 'IntSub';
+      return new G.GoCall(new G.GoSelector(new G.GoVar('gopurs_runtime'), name), [goWithBound(bound, op.value1), goWithBound(bound, op.value2)]);
+    }
+    throw new Error(`unsupported test translator ${syntax.constructor.name}`);
+  };
+  const translateBound = ctx => nextId => value => ({
+    stmts: StmtEmpty.value,
+    expr: goWithBound(ctx.bound, value),
+    exprType: value.value1 instanceof S.Typed && value.value1.value0 === C.Boolean.value ? G.TypeBool.value : G.TypeInt64.value,
+    nextId
+  });
+  const mkCtx = (fnName, fArgs) => ({
+    ...baseContext,
+    moduleFunctions: singletonMap(fnName)({
+      arity: fArgs.length,
+      fArgs,
+      fRet: G.TypeInt64.value,
+      reference: new LocalReference(fnName)
+    })
+  });
+  const fibCode = printGoExpr(worker(translateBound)(mkCtx('fib', [G.TypeInt64.value]))('fib')(params([['n', 0]]))(G.TypeInt64.value)(fibBody).value0);
+  const scaledCode = printGoExpr(worker(translateBound)(mkCtx('scaled', [G.TypeInt64.value, G.TypeInt64.value]))('scaled')(params([['n', 0], ['base', 1]]))(G.TypeInt64.value)(scaledBody).value0);
+  // Confirm 1-step unfold generated two recursive call sites (ll and lr) inside the guarded branch.
+  assert.equal((fibCode.match(/fib\(__gopurs_tail_add_0_larg_/g) || []).length, 2);
+  const path = mkdtempSync(join(tmpdir(), 'gopurs-tail-add-bin-'));
+  try {
+    const source = `package main
+import "fmt"
+var gopurs_runtime = struct{ IntAdd, IntSub func(int64, int64) int64 }{
+  func(a, b int64) int64 { return int64(int32(a + b)) },
+  func(a, b int64) int64 { return int64(int32(a - b)) },
+}
+var fibCalls int
+func fib(n_0_loop int64) int64 { fibCalls++; ${fibCode} }
+func scaled(n_0_loop, base_1_loop int64) int64 { ${scaledCode} }
+func refFib(n int64) int64 { if n == 0 { return 0 }; if n == 1 { return 1 }; return gopurs_runtime.IntAdd(refFib(n-1), refFib(n-2)) }
+func refScaled(n, base int64) int64 { if n == 0 { return base }; if n == 1 { return 2147483647 }; return gopurs_runtime.IntAdd(refScaled(n-1, base), refScaled(n-2, base)) }
+func main() {
+  for n := int64(0); n <= 20; n++ {
+    if got, want := fib(n), refFib(n); got != want { panic(fmt.Sprintf("fib(%d)=%d want %d", n, got, want)) }
+  }
+  fibCalls = 0
+  if got := fib(3); got != 2 || fibCalls != 1 { panic(fmt.Sprintf("fib(3) got=%d calls=%d", got, fibCalls)) }
+  fibCalls = 0
+  if got := fib(10); got != 55 || fibCalls > 34 { panic(fmt.Sprintf("fib(10) got=%d calls=%d", got, fibCalls)) }
+  for _, base := range []int64{0, 1, -1, 2147483647, -2147483648, 1099511627779, -1099511627779} {
+    for n := int64(0); n <= 12; n++ {
+      if got, want := scaled(n, base), refScaled(n, base); got != want {
+        panic(fmt.Sprintf("scaled(%d,%d)=%d want %d", n, base, got, want))
+      }
+    }
+  }
+}
+`;
+    writeFileSync(join(path, 'main.go'), source);
+    const run = spawnSync('go', ['run', 'main.go'], { cwd: path, encoding: 'utf8', timeout: 30000 });
+    assert.equal(run.status, 0, run.stdout + run.stderr);
+  } finally { rmSync(path, { recursive: true, force: true }); }
 });

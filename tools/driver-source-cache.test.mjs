@@ -88,7 +88,7 @@ test("source edits, ABI layouts, specialization retraction and renames equal fre
       if (entry.name.startsWith(".")) continue;
       const file = join(path, entry.name), name = prefix + entry.name;
       if (entry.isDirectory()) Object.assign(result, generated(file, name + "/"));
-      else if (name.endsWith(".go")) result[name] = hash(readFileSync(file));
+      else if (name.endsWith(".go") || name.endsWith(".s")) result[name] = hash(readFileSync(file));
     }
     return result;
   }

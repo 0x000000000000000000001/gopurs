@@ -210,8 +210,10 @@ func adaptInt64(arg0 gopurs_runtime.Value)func()int64{${adapter('int64')};return
 func adaptAny(arg0 gopurs_runtime.Value)func()any{${adapter('any', new C.TypeVar('a'))};return go_arg0}
 func TestEntries(t *testing.T){
  first,second:=create(10),create(100)
- if _,ok:=gopurs_runtime.FunctionData[func()int64](first);!ok{t.Fatal("missing metadata")}
+ directInt64,ok:=gopurs_runtime.FunctionData[func()int64](first)
+ if !ok{t.Fatal("missing int64 metadata")}
  a,b:=adaptInt(first),adaptInt64(second)
+ if ^uint(0)>>63==1 && reflect.ValueOf(a).Pointer()!=reflect.ValueOf(directInt64).Pointer(){t.Fatal("adaptInt wrapped direct func() int64 in a trampoline")}
  if len(trace)!=0||counter!=0{t.Fatal("eager action",trace,counter)}
  for _,step:=range []struct{call func()int64;want int64}{
   {func()int64{return int64(a())},11},{b,102},

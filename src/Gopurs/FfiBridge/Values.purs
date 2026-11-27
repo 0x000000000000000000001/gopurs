@@ -124,7 +124,7 @@ fromValue _ (TFunc [] (Just (TNamed native))) (Just (ADT "Effect.Effect" _ [ Int
   | native == "int" || native == "int64" =
       let
         fast = if native == "int64" then "__gopurs_native_action"
-          else "func() int { return int(__gopurs_native_action()) }"
+          else "gopurs_runtime.IntActionFromInt64(__gopurs_native_action)"
       in
         "func(__gopurs_action gopurs_runtime.Value) func() " <> native <> " {\n"
           <> "\t\tif __gopurs_native_action, ok := gopurs_runtime.FunctionData[func() int64](__gopurs_action); ok { return " <> fast <> " }\n"

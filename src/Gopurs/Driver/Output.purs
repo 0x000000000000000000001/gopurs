@@ -30,6 +30,7 @@ import Gopurs.FfiSupport (prepareFfi, shareRecordShapesImpl, optimizeGeneratedSo
 import Gopurs.FfiTypes (FfiDecl)
 import Gopurs.GoSource (PackageRequest, PackageResult, PackageFilesResult, packageSources, packageFiles)
 import Gopurs.GoSymbol (GoSymbol, generated)
+import Gopurs.Runtime.Simd (runtimeSimdFiles)
 import Gopurs.Runtime.Source (runtimeGoCode)
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
@@ -153,6 +154,8 @@ writeRuntime :: String -> Aff Unit
 writeRuntime output = do
   FS.mkdir (output <> "/gopurs_runtime")
   FS.writeTextFile UTF8 (output <> "/gopurs_runtime/runtime.go") runtimeGoCode
+  for_ runtimeSimdFiles \file ->
+    FS.writeTextFile UTF8 (output <> "/gopurs_runtime/" <> file.name) file.content
   FS.mkdir (output <> "/purescript")
 
 writeEntryPoints :: String -> Array String -> Aff Unit

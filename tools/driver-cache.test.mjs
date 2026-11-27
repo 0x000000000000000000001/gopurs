@@ -31,7 +31,7 @@ function generated(output) {
       if (entry.name.startsWith(".")) continue;
       const name = prefix + entry.name, path = join(directory, entry.name);
       if (entry.isDirectory()) visit(path, name + "/");
-      else if (name.endsWith(".go") || name === "go.mod") {
+      else if (name.endsWith(".go") || name.endsWith(".s") || name === "go.mod") {
         const data = readFileSync(path), digest = hash(data);
         files[name] = digest;
         if (name.endsWith("/0_gopurs_package.go")) sectionsByHash.set(digest, packageSourceSections(data.toString("utf8")).sections);
