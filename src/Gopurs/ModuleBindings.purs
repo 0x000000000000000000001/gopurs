@@ -76,7 +76,7 @@ prepare metadata modNameStr mod =
 
 boxedSignature :: String -> String -> FunctionInfo
 boxedSignature modNameStr name =
-  { reference: SymbolReference (generated modNameStr ("Call_" <> modNameStr <> "_" <> sanitizeName name)), fArgs: [], fRet: TypeValue, arity: 0 }
+  { arrayFold: Nothing, codePointFold: Nothing, reference: SymbolReference (generated modNameStr ("Call_" <> modNameStr <> "_" <> sanitizeName name)), fArgs: [], fRet: TypeValue, arity: 0 }
 
 -- Syntax fixes worker arity. A computation between lambdas leaves a boxed
 -- function result; fully consumed native sums use their specialized ABI.

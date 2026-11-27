@@ -1,6 +1,6 @@
 -- Collapse pure countdown recurrences over immutable native records. The
 -- complete update tree is proved before changing the number of iterations.
-module Gopurs.RecordAffineLoops (wrap) where
+module Gopurs.RecordAffineLoops (wrap, hot) where
 
 import Prelude
 
@@ -10,7 +10,7 @@ import Data.Array.NonEmpty as NEA
 import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..), fst)
-import Gopurs.GoAst (GoExpr(..), GoType(..))
+import Gopurs.GoAst (GoExpr(..), GoType(..), recordFieldName)
 import Gopurs.GoFunctions (Parameters)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (Literal(..), Prop(..))
@@ -32,6 +32,31 @@ wrap self params result body original = case recognize self params result body o
           (GoBinOp "<=" counter (integer top))
     in GoBlock [ GoIfElse admitted [ GoReturn (emit counter record recurrence.changes) ] [], original ]
   Nothing -> original
+
+-- A small native wrapper can inline at its callers while the complete old
+-- worker remains the cold fallback. Only one flat field and a cheap constant
+-- delta are admitted; nested updates and larger expressions keep their layout.
+-- The proof of the recurrence is shared with wrap, not reconstructed from Go.
+hot :: (TcoExpr -> Boolean) -> Parameters -> GoType -> TcoExpr -> GoExpr -> Maybe GoExpr
+hot self params result body fallback = do
+  recurrence <- recognize self params result body
+  Tuple field delta <- case recurrence.changes of
+    Fields _ [ Tuple field (Add (Constant delta)) ] | delta >= (-1) && delta <= 1 -> Just (Tuple field delta)
+    _ -> Nothing
+  let counter = GoVar (recurrence.counter <> "_loop")
+      recordName = recurrence.record <> "_loop"
+      record = GoVar recordName
+      previous = GoRecordFieldAccess record field
+      value = if delta == 0 then previous else GoBinOp (if delta == 1 then "+" else "-") previous counter
+      -- For all signed Int64 inputs this unsigned interval is exactly 1..top.
+      -- Addition/subtraction modulo 2^64 followed by Int32 narrowing preserves
+      -- the original low 32 bits, including noncanonical FFI field values.
+      -- Even delta zero must narrow on n>0; n=0 takes the unchanged fallback.
+      admitted = GoBinOp "<" (GoBinOp "-" (GoCall (GoVar "uint64") [ counter ]) (GoInt 1)) (GoInt top)
+  pure (GoBlock
+    [ GoIfElse admitted [ GoMutate (recordName <> "." <> recordFieldName field) (narrow value), GoReturn record ] []
+    , GoReturn fallback
+    ])
 
 recognize :: (TcoExpr -> Boolean) -> Parameters -> GoType -> TcoExpr -> Maybe Recurrence
 recognize self params result body = do

@@ -1,6 +1,7 @@
 module Gopurs.ControlExprs
   ( failure
   , branch
+  , branchWith
   , booleanAnd
   , booleanOr
   ) where
@@ -34,15 +35,20 @@ failure { metadata, modNameStr, mbExpectedExprType, mbExpectedGoType } nextId tc
     { stmts: StmtEmpty, expr: rawGo ("func() " <> expectedGoTypeStr <> " { panic(" <> printGoExpr (GoString msg) <> ") }()"), exprType: expectedGoType, nextId }
 
 branch :: TranslateExpr -> ExprContext -> Int -> NonEmptyArray (Pair TcoExpr) -> TcoExpr -> ExprResult
-branch translate context@{ codegenStateRef, depth, modNameStr, mbExpectedGoType, options: { isTail } } nextId branches def =
+branch translate = branchWith translate translate
+
+-- Conditions always use the ordinary translator. A consumer which is already
+-- executing the selected result may supply a distinct translator for bodies.
+branchWith :: TranslateExpr -> TranslateExpr -> ExprContext -> Int -> NonEmptyArray (Pair TcoExpr) -> TcoExpr -> ExprResult
+branchWith translate translateBody context@{ codegenStateRef, depth, modNameStr, mbExpectedGoType, options: { isTail } } nextId branches def =
   let
-    resDef = translate (context { depth = (depth + 1), tcoIdent = Nothing, options = { isTail, inEffectBlock: false } }) nextId def
+    resDef = translateBody (context { depth = (depth + 1), tcoIdent = Nothing, options = { isTail, inEffectBlock: false } }) nextId def
 
     computedBranches = foldl
       ( \acc (Pair condExpr bodyExpr) ->
           let
             resCond = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) acc.nextId condExpr
-            resBody = translate (context { depth = (depth + 1), tcoIdent = Nothing, options = { isTail, inEffectBlock: false } }) resCond.nextId bodyExpr
+            resBody = translateBody (context { depth = (depth + 1), tcoIdent = Nothing, options = { isTail, inEffectBlock: false } }) resCond.nextId bodyExpr
           in
             { nextId: resBody.nextId, results: acc.results <> [ { cond: resCond, body: resBody } ] }
       )

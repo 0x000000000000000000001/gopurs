@@ -1,4 +1,4 @@
-module Gopurs.ArrayIndexedFold (emit, readOnlyScalar, integerCallback) where
+module Gopurs.ArrayIndexedFold (emit, readOnlyScalar, integerCallback, scalarType) where
 
 import Prelude
 

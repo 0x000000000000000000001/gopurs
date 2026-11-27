@@ -1,4 +1,4 @@
-module Gopurs.ArrayTraverseTotal (emit, totalIntegerMaybe) where
+module Gopurs.ArrayTraverseTotal (emit, totalIntegerMaybe, totalInt) where
 
 import Prelude
 

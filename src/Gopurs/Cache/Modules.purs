@@ -30,6 +30,9 @@ import Effect.Ref as Ref
 import Gopurs.Cache.HeaderPreload as HeaderPreload
 import Gopurs.Cache.Wire as Wire
 import Gopurs.Cache.BindingCapsule as BindingCapsule
+import Gopurs.ClosedIndexedFolds as ClosedIndexedFolds
+import Gopurs.CodePointFold as CodePointFold
+import Gopurs.GoAst (GoType(..))
 import Gopurs.CodeGen as CodeGen
 import Gopurs.CodegenState (CodegenMetadata)
 import Gopurs.Driver.Cache (FrozenFFI, Session)
@@ -619,6 +622,12 @@ validateWorkers name functions = do
   guard (Array.all (\info -> info.arity >= 0 && case info.reference of
     SymbolReference symbol -> symbol.owner /= "" && symbol.name /= ""
     LocalReference _ -> false) (Array.fromFoldable (Map.values functions)))
+  guard (Array.all (\info -> case info.arrayFold of
+    Nothing -> true
+    Just descriptor -> info.arity == 1 && ClosedIndexedFolds.validDescriptor descriptor) (Array.fromFoldable (Map.values functions)))
+  guard (Array.all (\info -> case info.codePointFold of
+    Nothing -> true
+    Just descriptor -> info.arity == 1 && info.fArgs == [ TypeString ] && info.fRet == TypeInt64 && CodePointFold.validDescriptor descriptor) (Array.fromFoldable (Map.values functions)))
   pure functions
 
 -- Decode only cached owners already visible in the captured emission snapshot.
@@ -635,7 +644,7 @@ warmWorkerSnapshot jobs cache snapshot backends
       unless (Set.isEmpty requested) $ do
         let owners = Set.toUnfoldable requested :: Array String
         for_ owners \name -> case Map.lookup name cache.candidates >>= \memo -> Array.index memo.parts 3 of
-          Just part | part.codec == "gopurs/workers-v2" -> pure unit
+          Just part | part.codec == "gopurs/workers-v4" -> pure unit
           _ -> throwError (error ("incremental cache: unreadable workers for " <> name))
         contributions <- Cache.readParts cache.session owners [ "3" ]
         texts <- foldM (\values entry -> do
@@ -658,7 +667,7 @@ readWorkers cache name = do
     Just value -> pure value
     Nothing -> do
       workers <- case Map.lookup name cache.candidates >>= \memo -> Array.index memo.parts 3 of
-        Just part | part.codec == "gopurs/workers-v2" -> readCachedPart cache name "3"
+        Just part | part.codec == "gopurs/workers-v4" -> readCachedPart cache name "3"
         _ -> pure Nothing
       let value = workers >>= validateWorkers name
       liftEffect (Ref.modify_ (Map.insert name value) cache.priorWorkers)
@@ -717,7 +726,7 @@ emitWithWorkers resolver cache ffi metadata _ optimizedCached coreFnModule backe
       Just candidate -> pure candidate
     part <- case Array.index old.parts 3 of
       Nothing -> throwError (error ("Missing cached workers for " <> name))
-      Just value | value.codec == "gopurs/workers-v2" -> pure value
+      Just value | value.codec == "gopurs/workers-v4" -> pure value
       _ -> throwError (error ("incremental cache: invalid worker codec for " <> name))
     functions <- case resolver of
       Just _ -> pure (Just Map.empty)

@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { empty as emptyMap } from '../output/Data.Map/index.js';
 import { empty as emptySet } from '../output/Data.Set/index.js';
 import { Just, Nothing } from '../output/Data.Maybe/index.js';
@@ -166,5 +170,55 @@ test('reserves helper names against existing bindings and emits the guarded bitm
   assert.match(code, /for value := lower; value <= upper; value\+\+/);
   assert.match(code, /multiple := value \+ value/);
   assert.match(code, /int64\(int32\(/);
-  assert.doesNotMatch(code, /value \* value|pool|Constructor|IntMod/);
+  assert.match(code, /lower\) == \(int64\(2\)\)/);
+  assert.match(code, /prime\*prime/);
+  assert.match(code, /var local \[512\]bool/);
+  assert.doesNotMatch(code, /pool|Constructor|IntMod/);
+});
+
+test('generated prefix and general kernels agree with ordered elimination and retain bounded scratch allocations', () => {
+  const code = printGoFile({ packageName: 'probe', imports: [], declarationGroups: [prepare(fixture()).declarations] });
+  const folder = mkdtempSync(join(tmpdir(), 'gopurs-progression-kernel-'));
+  try {
+    writeFileSync(join(folder, 'go.mod'), 'module probe\n\ngo 1.27\n');
+    writeFileSync(join(folder, 'kernel.go'), code);
+    writeFileSync(join(folder, 'kernel_test.go'), `package probe
+import("testing";"math/rand")
+var sink int64
+func oracle(lower,upper,seed int64) int64 {
+ heads:=[]int64{};total:=seed
+ for value:=lower;value<=upper;value++ {
+  keep:=true;for _,head:=range heads {if value%head==0 {keep=false;break}}
+  if keep {heads=append(heads,value);total=int64(int32(total+value))}
+ }
+ return total
+}
+func TestGenerated(t *testing.T) {
+ count:=0
+ check:=func(lower,upper,seed int64) {
+  got:=Call_ProgressionProbe___gopurs_list_progression_fold_0(lower,upper,seed)
+  if want:=oracle(lower,upper,seed);got!=want {t.Fatalf("%d..%d seed%d got%d want%d",lower,upper,seed,got,want)}
+  count++
+ }
+ for _,upper:=range []int64{2,3,4,9,24,25,26,48,49,50,500,1022,1023,1024,1025,2048,20000} {
+  for _,seed:=range []int64{-2147483648,-17,0,23,2147483647} {check(2,upper,seed)}
+ }
+ rng:=rand.New(rand.NewSource(53819))
+ for i:=0;i<1000;i++ {
+  lower:=int64(2+rng.Intn(100));if i%3==0 {lower=2};if i%7==0 {lower=2147482000+int64(rng.Intn(600))}
+  check(lower,lower+int64(rng.Intn(1000)),int64(int32(rng.Uint32())))
+ }
+ for _,c:=range []struct{lower,upper int64;allocations float64}{{2,2,0},{2,500,0},{2,1023,0},{2,1024,0},{2,1025,1},{4,20,1},{1000,2023,1}} {
+  got:=testing.AllocsPerRun(100,func(){sink=Call_ProgressionProbe___gopurs_list_progression_fold_0(c.lower,c.upper,0)})
+  // Recent Go versions may also stack-allocate a short dynamic fallback slice.
+  if got>c.allocations {t.Fatalf("%+v allocated %g",c,got)}
+ }
+ t.Logf("%d independent ordered-elimination cases and 7 allocation cases",count)
+}
+`);
+    const result = spawnSync('go', ['test', '-v', './...'], { cwd: folder, encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+  } finally {
+    rmSync(folder, { recursive: true, force: true });
+  }
 });

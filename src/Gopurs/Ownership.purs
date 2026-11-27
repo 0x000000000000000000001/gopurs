@@ -52,7 +52,7 @@ validateCandidates metadata moduleName candidates =
 
 functionSignatures :: String -> Array Candidate -> Map.Map String FunctionInfo
 functionSignatures unit = Map.fromFoldable <<< map (\fn -> Tuple (sanitizeName $ unwrap fn.worker)
-  { reference: SymbolReference (generated unit fn.native), fArgs: fn.argTypes, fRet: fn.spec.goType, arity: Array.length fn.args })
+  { arrayFold: Nothing, codePointFold: Nothing, reference: SymbolReference (generated unit fn.native), fArgs: fn.argTypes, fRet: fn.spec.goType, arity: Array.length fn.args })
 
 -- Every tree argument must be fresh on entry. Scalar arguments retain their
 -- ordinary evaluation; only the closed constructor trees need this proof.

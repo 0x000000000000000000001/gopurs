@@ -3,6 +3,8 @@
 -- @inline Main.rounds never
 -- @inline Main.effectRounds never
 -- @inline Main.localRounds never
+-- @inline Main.moduloRounds never
+-- @inline Main.localModuloRounds never
 module Main where
 
 -- @dependencies: prelude effect console refs
@@ -46,6 +48,19 @@ localRounds offset count seed =
       | otherwise = repeat (remaining - 1) (total + (snapshot 11).value)
   in offset + repeat count seed
 
+moduloRounds :: Int -> Int -> Int
+moduloRounds remaining total
+  | remaining == 0 = total
+  | otherwise = moduloRounds (remaining - 1) (total + (remaining `mod` 7))
+
+localModuloRounds :: Int -> Int -> Int -> Int
+localModuloRounds offset count seed =
+  let
+    repeat remaining total
+      | remaining == 0 = total
+      | otherwise = repeat (remaining - 1) (total + (remaining `mod` 3))
+  in offset + repeat count seed
+
 main :: Effect Unit
 main = do
   repetitions <- Ref.new 20
@@ -55,3 +70,5 @@ main = do
   logShow [ rounds 0 maxInt, rounds 1 0, rounds count 0, rounds 5 (-40), rounds 2 maxInt ]
   logShow [ localRounds 3 count 0, localRounds 3 0 (-17), localRounds 0 2 maxInt ]
   logShow [ effectRounds 0 maxInt, effectRounds count 2, effectRounds 2 maxInt ]
+  logShow [ moduloRounds 0 maxInt, moduloRounds count 0, moduloRounds 1 (-17), moduloRounds count maxInt ]
+  logShow [ localModuloRounds 3 count 0, localModuloRounds 0 0 (-17) ]

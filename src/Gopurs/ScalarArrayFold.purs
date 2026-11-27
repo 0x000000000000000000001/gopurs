@@ -4,6 +4,7 @@ import Prelude
 
 import Control.Alternative (guard)
 import Data.Array as Array
+import Data.Foldable (foldl)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..))
 import Gopurs.ArrayIntrinsics.Source (arraySource)
@@ -41,11 +42,9 @@ emit translate context@{ codegenStateRef, modNameStr } nextId fn args = do
     expr = if scalar == TypeInt64 then
       GoCall (GoFuncLit []
         (common <>
-          [ GoAssign "scalarFold_result" initial
-          , GoForRange ("_, scalarFold_value := range " <> source.target)
-              [ GoMutate "scalarFold_result" (GoCall (GoSelector (GoVar "gopurs_runtime") "IntAdd")
-                  [ GoVar "scalarFold_result", element ]) ]
-          ]) (GoVar "scalarFold_result") scalar) []
+          integerSum source.target initial element
+            (\value -> coerceGoExpr codegenStateRef modNameStr value source.elementType scalar))
+        (GoVar "scalarFold_result") scalar) []
       else
         GoCall (GoFuncLit [] common
           (GoCall (GoSelector (GoVar "gopurs_runtime") "ConcatStrings")
@@ -53,6 +52,40 @@ emit translate context@{ codegenStateRef, modNameStr } nextId fn args = do
             , GoFuncLit [ Tuple "scalarFold_value" source.elementType ] [] element TypeString
             ]) TypeString) []
   pure { stmts: captured.stmts, expr, exprType: scalar, nextId: captured.nextId }
+
+-- IntAdd is addition modulo 2^32. Independent accumulators may therefore use
+-- wrapping int64 additions and narrow once after a nonempty fold. Small inputs
+-- keep the original loop, including returning a wide seed unchanged when empty.
+-- This applies only to the canonical callback selected above, not user folds.
+integerSum :: String -> GoExpr -> GoExpr -> (GoExpr -> GoExpr) -> Array GoExpr
+integerSum source initial element unbox =
+  [ GoAssign "scalarFold_result" initial
+  , GoAssign values (rawGo source)
+  , GoIfElse (GoBinOp "<" (GoCall (GoVar "len") [ GoVar values ]) (GoInt 8))
+      [ GoForRange ("_, scalarFold_value := range " <> values)
+          [ GoMutate "scalarFold_result" (GoCall (GoSelector (GoVar "gopurs_runtime") "IntAdd")
+              [ GoVar "scalarFold_result", element ]) ]
+      , GoReturn (GoVar "scalarFold_result")
+      ] []
+  ] <>
+  map (\lane -> GoAssign (accumulator lane) (GoCall (GoVar "int64") [ GoInt 0 ])) lanes <>
+  [ GoAssign index (GoInt 0)
+  , GoForRange ("; " <> index <> " + 8 <= len(" <> values <> "); " <> index <> " += 8")
+      ([ GoAssign chunk (rawGo (values <> "[" <> index <> ":" <> index <> "+8]")) ] <>
+        map (\lane -> GoMutate (accumulator lane)
+          (GoBinOp "+" (GoVar (accumulator lane)) (unbox (GoIndex (GoVar chunk) (GoInt lane))))) lanes)
+  , GoForRange ("; " <> index <> " < len(" <> values <> "); " <> index <> "++")
+      [ GoMutate (accumulator 0)
+          (GoBinOp "+" (GoVar (accumulator 0)) (unbox (GoIndex (GoVar values) (GoVar index)))) ]
+  , GoMutate "scalarFold_result" (GoCall (GoVar "int64")
+      [ GoCall (GoVar "int32") [ foldl (GoBinOp "+") (GoVar "scalarFold_result") (map (GoVar <<< accumulator) lanes) ] ])
+  ]
+  where
+  lanes = Array.range 0 7
+  values = "scalarFold_items"
+  index = "scalarFold_index"
+  chunk = "scalarFold_chunk"
+  accumulator lane = "scalarFold_acc" <> show lane
 
 named :: String -> String -> TcoExpr -> Boolean
 named moduleName name expression = case qualifiedTarget expression of

@@ -19,6 +19,7 @@ import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), rawGo, goTypeToStr)
 import Gopurs.GoSymbol (GoReference(..), generated)
 import Data.Newtype (unwrap)
 import Gopurs.Ownership.Analysis (continuationPaths, disjoint, leaves, overlap, pathExpr, pathValue, prefix, prefixes, scalar, strip, treeTerm)
+import Gopurs.Ownership.Continuations as Continuations
 import Gopurs.Ownership.Types (Argument(..), Candidate, Candidates, Context, Env, LocalRef, Path(..), TreeSpec, TreeTerm(..), Value(..))
 import PureScript.Backend.Optimizer.CoreFn (ModuleName)
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr)
@@ -39,7 +40,14 @@ declarations metadata moduleName candidates fn = do
       params = Array.mapWithIndex (\index ty -> Tuple ("__arg" <> show index) ty) fn.argTypes
       env = Map.fromFoldable $ Array.zipWith (\ref (Tuple name ty) -> Tuple ref
         (if ty == fn.spec.goType then Tree (Path name []) else Scalar { expr: GoVar name, goType: ty, reads: [] })) fn.args params
-  body <- evalStateT (emitBody context env fn.body) 0
+  let terminal expression = evalStateT (emitBody context env expression) 0
+      condition expression = do
+        value <- scalar context env expression
+        guard (value.goType == TypeBool)
+        pure value.expr
+  body <- case Continuations.share condition terminal fn.body of
+    Just shared -> Just shared
+    Nothing -> terminal fn.body
   pure
     [ GoFunctionDecl { name: generated owner fn.consume, params: params <> [ Tuple "__donor" fn.spec.goType ]
         , result: fn.spec.goType, body: GoFor "__owned_loop" body }

@@ -46,7 +46,7 @@ const metadata = withReboxFields({
   globalTypes: Map.empty, globalFunctions: Map.empty, classDeclsFields: Map.empty,
 });
 const worker = (unit, name) => new SymbolReference(generated(unit)(name));
-const info = { reference: worker("Producer", "Call_Producer_f"), fArgs: [G.TypeInt64.value], fRet: G.TypeInt64.value, arity: 1 };
+const info = { arrayFold: Nothing.value, codePointFold: Nothing.value, reference: worker("Producer", "Call_Producer_f"), fArgs: [G.TypeInt64.value], fRet: G.TypeInt64.value, arity: 1 };
 const insert = Map.insert(ordString);
 const present = insert("Producer.f")(info)(Map.empty);
 
@@ -54,7 +54,7 @@ test("emission keys cover referenced worker signatures and absences without unre
   const directory = mkdtempSync(join(tmpdir(), "gopurs-emitter-worker-keys-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const keys = { prepared: hash("prepared"), optimizerEnvironment: hash("optimizer"), callerDemands: hash("callers") };
-  const codecs = ["pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v2"];
+  const codecs = ["pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v4"];
   async function emit(label, globalFunctions, previous, metadataKey = "source-metadata", sourceBackend = backend, sourceMetadata = metadata, workerSnapshot, headerSafe = false) {
     const stage = join(directory, label), output = join(stage, "output");
     for (const child of ["modules", "prior/Consumer", "output/purescript"]) mkdirSync(join(stage, child), { recursive: true });
@@ -180,7 +180,7 @@ test("emission keys cover referenced worker signatures and absences without unre
     )))),
   ] }] };
   const borrowingMetadata = { ...metadata, globalTypes: globalTypesFromMap(insert(helper)(helperType)(Map.empty)) };
-  const helperInfo = { reference: worker("Data_Argonaut_Decode_Internal_Record", "Call_Data_Argonaut_Decode_Internal_Record_borrowObject"), fArgs: [G.TypeValue.value, G.TypeValue.value], fRet: G.TypeValue.value, arity: 2 };
+  const helperInfo = { arrayFold: Nothing.value, codePointFold: Nothing.value, reference: worker("Data_Argonaut_Decode_Internal_Record", "Call_Data_Argonaut_Decode_Internal_Record_borrowObject"), fArgs: [G.TypeValue.value, G.TypeValue.value], fRet: G.TypeValue.value, arity: 2 };
   const helperPresent = insert(helper)(helperInfo)(Map.empty);
   const prepared = CodeGen.prepareModule({ ...borrowingMetadata, globalFunctions: helperPresent })(borrowingBackend);
   assert.equal(Map.member(ordString)(helper)(CodeGen.workerInputs(helperPresent)(borrowingBackend)), false);

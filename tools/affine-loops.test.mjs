@@ -27,6 +27,7 @@ const variable = (name = 'repeat', owner = 'Probe') => expr(new S.Var(new C.Qual
 const binary = (operator, left, right, type = int) => typed(type, expr(new S.PrimOp(new S.Op2(operator, left, right))));
 const add = (left, right) => binary(new S.OpIntNum(S.OpAdd.value), left, right);
 const subtract = (left, right) => binary(new S.OpIntNum(S.OpSubtract.value), left, right);
+const modulo = (left, right) => binary(new S.OpIntNum(S.OpMod.value), left, right);
 const condition = binary(new S.OpIntOrd(S.OpEq.value), counter, integer(0), C.Boolean.value);
 const call = (target, args) => typed(int, expr(new S.App(target, args)));
 const sentinel = new Go.GoReturn(new Go.GoInt(-98));
@@ -87,6 +88,28 @@ test('affine admission rejects calls, effects, changing increments and altered r
     assert.equal(optimize(fixture(), [...params, new Tuple('extra', i64)]), sentinel);
     assert.equal(optimize(fixture(), [new Tuple(counterName, Go.TypeFloat64.value), params[1]]), sentinel);
     assert.equal(optimize(fixture(), params, Go.TypeValue.value), sentinel);
+});
+
+test('remainder periods require the same counter and a positive canonical literal divisor', () => {
+    for (const divisor of [1, 2, 3, 7, 65537, 2147483647]) {
+        const result = optimize(fixture({update:add(accumulator,modulo(counter,integer(divisor)))}));
+        assert.notEqual(result,sentinel);
+        assert.equal(result.value0.at(-1),sentinel);
+        assert.doesNotMatch(Printer.printGoExpr(result),/IntMul/);
+        assert.notEqual(optimize(fixture({update:add(modulo(counter,integer(divisor)),accumulator)})),sentinel);
+    }
+    for (const value of [modulo(counter,integer(0)),modulo(counter,integer(-3)),
+        modulo(counter,integer(2147483648)),modulo(accumulator,integer(3)),
+        modulo(subtract(counter,integer(1)),integer(3)),modulo(counter,accumulator),
+        modulo(counter,call(variable('divisor'),[integer(3)]))]) {
+        assert.equal(optimize(fixture({update:add(accumulator,value)})),sentinel);
+    }
+    const stepped=letRead('first',2,call(variable(),[subtract(counter,integer(1)),
+        add(accumulator,letRead('second',3,modulo(counter,integer(7))))]));
+    const code=Printer.printGoExpr(optimize(fixture({step:stepped}),params,i64,self,sentinel,translateRead));
+    assert.ok(code.indexOf('GetFirst()')<code.indexOf('GetSecond()'));
+    assert.equal((code.match(/GetFirst\(\)/g)??[]).length,1);
+    assert.equal((code.match(/GetSecond\(\)/g)??[]).length,1);
 });
 
 const selfStep = () => call(variable(), [subtract(counter, integer(1)), add(accumulator, integer(60))]);
@@ -245,4 +268,43 @@ func TestAffine(t *testing.T) {
     assert.ifError(run.error);
     assert.equal(run.status, 0, run.stdout + run.stderr);
     if (process.env.GOPURS_AFFINE_TEST_OUTPUT) writeFileSync(join(directory, 'go-test.log'), run.stdout + run.stderr);
+});
+
+test('generated remainder sums agree with iterative and BigInt floor-sum oracles', t => {
+    const directory=mkdtempSync(join(tmpdir(),'gopurs-affine-modulo-'));
+    t.after(()=>rmSync(directory,{recursive:true,force:true}));
+    const definitions=[],cases=[],guards=[];
+    const n=counterName+'_loop',a=accumulatorName+'_loop';
+    const print=(name,body)=>Printer.printGoDecl(new Go.GoFunctionDecl({
+        name:{owner:'generated/Modulo',name},params:params.map(p=>new Tuple(p.value0+'_loop',p.value1)),result:i64,body}));
+    const seeds=[-2147483648n,-1n,0n,2147483647n,2147483648n,9223372036854775807n,-9223372036854775808n];
+    for(const [index,d] of [1,2,3,7,65537,1073741824,2147483647].entries()) {
+        const expression=fixture({update:add(accumulator,modulo(counter,integer(d)))});
+        const fallback=Go.rawGo(`for ${n}!=0 { value:=${n}%int64(${d});if value<0 {value+=int64(${d})};${n}=int64(int32(${n}-1));${a}=int64(int32(${a}+value)) };return ${a}`);
+        definitions.push(print('Run'+index,optimize(expression,params,i64,self,fallback)));
+        definitions.push(print('Guard'+index,optimize(expression)));
+        for(const count of [0n,1n,2n,3n,7n,31n,1000n,10000n,4294967297n,-4294967295n])for(const seed of seeds) {
+            let k=count,value=seed,steps=0;
+            while(k!==0n){assert.ok(steps++<10001);const rem=(k%BigInt(d)+BigInt(d))%BigInt(d);k=BigInt.asIntN(32,k-1n);value=BigInt.asIntN(32,value+rem);}
+            cases.push(`{Run${index},${count},${seed},${value}}`);
+        }
+        for(const count of [2147483646n,2147483647n])for(const seed of seeds.slice(0,4)) {
+            const divisor=BigInt(d),q=count/divisor;
+            // Independent identity: sum(k) - d*sum(floor(k/d)), using BigInt.
+            const floors=q*(count+1n)-divisor*q*(q+1n)/2n;
+            const want=BigInt.asIntN(32,seed+count*(count+1n)/2n-divisor*floors);
+            cases.push(`{Run${index},${count},${seed},${want}}`);
+        }
+        for(const [count,seed] of [[0,0],[-1,0],[-2147483648,0],[2147483648,0],[4294967297,0],[1,2147483648]])guards.push(`{Guard${index},${count},${seed},-98}`);
+    }
+    writeFileSync(join(directory,'go.mod'),'module moduloprobe\n\ngo 1.27\n');
+    writeFileSync(join(directory,'modulo.go'),'package moduloprobe\n'+definitions.join('\n'));
+    writeFileSync(join(directory,'modulo_test.go'),`package moduloprobe
+import "testing"
+func TestModulo(t *testing.T){for i,c:=range []struct{f func(int64,int64)int64;n,a,want int64}{${[...cases,...guards].join(',\n')}} {
+if got:=c.f(c.n,c.a);got!=c.want{t.Fatalf("case%d n%d seed%d got%d want%d",i,c.n,c.a,got,c.want)}
+};t.Log("${cases.length} semantic cases and ${guards.length} guard refusals")}
+`);
+    const run=spawnSync('go',['test','-count=1','-v','.'],{cwd:directory,encoding:'utf8',timeout:60000,env:{...process.env,GOWORK:'off'}});
+    assert.ifError(run.error);assert.equal(run.status,0,run.stdout+run.stderr);
 });

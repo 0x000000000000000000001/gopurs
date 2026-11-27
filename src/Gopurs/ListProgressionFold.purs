@@ -60,7 +60,7 @@ prepareRecognized mod sieves =
   in { module: mod { bindings = groups }
      , declarations: if changed then [ declaration symbol ] else []
      , functions: if changed then Map.singleton (sanitizeName (unwrap helper))
-         { reference: SymbolReference symbol, fArgs: [ TypeInt64, TypeInt64, TypeInt64 ], fRet: TypeInt64, arity: 3 }
+         { arrayFold: Nothing, codePointFold: Nothing, reference: SymbolReference symbol, fArgs: [ TypeInt64, TypeInt64, TypeInt64 ], fRet: TypeInt64, arity: 3 }
        else Map.empty
      }
 
@@ -75,14 +75,16 @@ reserveName mod = choose 0
 
 -- Bounds are guarded in the source IR. Wider Go intermediates make 2*p and
 -- the final increment safe even near MaxInt32. The sum retains Int32 wrapping.
--- Start at 2*p, never p*p: heads may be composite when the lower bound is >2.
+-- A prefix starting at 2 is a prime sieve, so its odd bitmap can start marking
+-- at p*p. Other lower bounds may select composite heads and retain 2*p below.
 declaration :: GoSymbol -> GoDecl
 declaration symbol = GoFunctionDecl
   { name: symbol
   , params: [ Tuple "lower" TypeInt64, Tuple "upper" TypeInt64, Tuple "seed" TypeInt64 ]
   , result: TypeInt64
   , body: GoBlock
-      [ GoAssign "rejected" (rawGo "make([]bool, upper-lower+1)")
+      [ GoIfElse (GoBinOp "==" (GoVar "lower") (rawGo "int64(2)")) primePrefix []
+      , GoAssign "rejected" (rawGo "make([]bool, upper-lower+1)")
       , GoAssign "total" (GoVar "seed")
       , GoForRange "value := lower; value <= upper; value++"
           [ GoIfElse (GoIndex (GoVar "rejected") (GoBinOp "-" (GoVar "value") (GoVar "lower")))
@@ -94,6 +96,32 @@ declaration symbol = GoFunctionDecl
       , GoReturn (GoVar "total")
       ]
   }
+
+-- The existing admission guard bounds this prefix to at most 1,048,577.
+-- Its positive sum and Int32 seed therefore fit Int64 before the final wrap.
+-- Even values are excluded by 2; entry i represents the odd value 2*i+1.
+-- The local scratch buffer is per invocation and never escapes or aliases.
+primePrefix :: Array GoExpr
+primePrefix =
+  [ rawGo "var local [512]bool"
+  , rawGo "var rejected []bool"
+  , GoAssign "size" (rawGo "(upper+1)/2")
+  , GoIfElse (rawGo "size <= int64(len(local))")
+      [ GoMutate "rejected" (rawGo "local[:size]") ]
+      [ GoMutate "rejected" (rawGo "make([]bool, size)") ]
+  , GoForRange "prime := int64(3); prime*prime <= upper; prime += 2"
+      [ GoIfElse (rawGo "!rejected[prime/2]")
+          [ GoForRange "multiple := prime*prime; multiple <= upper; multiple += prime+prime"
+              [ GoMutate "rejected[multiple/2]" (GoVar "true") ]
+          ] []
+      ]
+  , GoAssign "total" (rawGo "seed+2")
+  , GoForRange "value := int64(3); value <= upper; value += 2"
+      [ GoIfElse (rawGo "!rejected[value/2]")
+          [ GoMutate "total" (GoBinOp "+" (GoVar "total") (GoVar "value")) ] []
+      ]
+  , GoReturn (rawGo "int64(int32(total))")
+  ]
 
 strip :: NeutralExpr -> BackendSyntax NeutralExpr
 strip (NeutralExpr syntax) = case syntax of

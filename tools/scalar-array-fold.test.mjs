@@ -65,7 +65,7 @@ var trace []int
 func callback() r.Value { trace=append(trace,0);return r.Value{} }
 ${functions.join('\n')}`);
     writeFileSync(join(dir, 'fold_test.go'), `package fold
-import ("testing"; "reflect"; r "gopurs/output/gopurs_runtime")
+import ("testing"; "reflect"; "math/big"; "math/rand"; r "gopurs/output/gopurs_runtime")
 func TestFold(t *testing.T) {
  for _,xs:=range [][]int64{nil,{1,2,3},{2147483647,1},{-2147483648,-1}} {
   want:=int64(7);values:=make([]r.Value,len(xs));for i,v:=range xs {want=r.IntAdd(want,v);values[i]=r.Int(v)}
@@ -87,7 +87,27 @@ func TestFold(t *testing.T) {
   }
  }
 }
+func TestAssociativeIntegerSum(t *testing.T) {
+ rng:=rand.New(rand.NewSource(77));count:=0
+ for _,n:=range []int{0,1,2,3,4,5,6,7,8,9,15,16,17,31,32,33,63,64,65,999,1000,1001,10000} {
+  for mode:=0;mode<5;mode++ {
+   xs:=make([]int64,n);values:=make([]r.Value,n)
+   for i:=range xs {switch mode {case 0:xs[i]=int64(i);case 1:xs[i]=2147483647;case 2:xs[i]=-2147483648;case 3:xs[i]=int64(rng.Uint64());default:xs[i]=int64(rng.Int31())-1073741824};values[i]=r.Int(xs[i])}
+   for _,initial:=range []int64{0,1,-1,2147483647,-2147483648,4294967295,1<<62,-1<<63} {
+    exact:=big.NewInt(initial);for _,v:=range xs {exact.Add(exact,big.NewInt(v))};exact.Mod(exact,big.NewInt(1<<32));want:=int64(int32(exact.Int64()));if n==0 {want=initial}
+    for _,boxed:=range []bool{false,true} {
+     trace=nil;seed:=func()r.Value{trace=append(trace,1);return r.Int(initial)};var got int64
+     if boxed {got=sumBoxed(seed,func()r.Value{trace=append(trace,2);return r.Array(values)})}else{got=sumNative(seed,func()[]int64{trace=append(trace,2);return xs})}
+     if got!=want || !reflect.DeepEqual(trace,[]int{0,1,2}) {t.Fatalf("n%d mode%d seed%d boxed%v got%d want%d trace%v",n,mode,initial,boxed,got,want,trace)}
+     for i,v:=range xs {if values[i].IntVal!=v {t.Fatal("mutated input")}};count++
+    }
+   }
+  }
+ }
+ t.Logf("%d generated Go / independent BigInt comparisons",count)
+}
 `);
-    const run = spawnSync('go', ['test', './...'], { cwd: dir, encoding: 'utf8', env: { ...process.env, GOWORK: 'off' } });
+    const run = spawnSync('go', ['test', '-v', '-count=1', './...'], { cwd: dir, encoding: 'utf8', env: { ...process.env, GOWORK: 'off' } });
     assert.equal(run.status, 0, run.stdout + run.stderr);
+    assert.match(run.stdout, /1840 generated Go \/ independent BigInt comparisons/);
 });

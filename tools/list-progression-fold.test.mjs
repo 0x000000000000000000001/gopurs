@@ -62,6 +62,8 @@ const parseResults = (stdout) => stdout.trim().split("\n").map((line) => JSON.pa
 
 const positiveCases = [
   ...cases.filter(([lower, upper]) => lower >= 2 && upper >= lower),
+  [2, 48, 17], [2, 49, -17], [2, 50, 2147483647],
+  [2, 1023, 17], [2, 1024, -17], [2, 1025, -2147483648],
   [4, 1027, 17], [4, 1028, -17], [1000, 2023, 2147483647], [1000, 2024, -2147483648],
   [2147482624, 2147483647, 17], [2147482623, 2147483647, -17],
 ].map(([lower, upper, seed]) => [lower, upper, seed,

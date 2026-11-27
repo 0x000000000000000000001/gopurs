@@ -42,7 +42,7 @@ workerName modName name = "Call_local_" <> modName <> "_" <> name
 
 signature :: ExprContext -> String -> Parameters -> GoType -> FunctionInfo
 signature { modNameStr } name params result =
-  { reference: LocalReference (workerName modNameStr name), fArgs: map snd params, fRet: result, arity: Array.length params }
+  { arrayFold: Nothing, codePointFold: Nothing, reference: LocalReference (workerName modNameStr name), fArgs: map snd params, fRet: result, arity: Array.length params }
 
 -- Inspect the current TCO expression, not usage annotations from an earlier
 -- IR. Saturated curried calls use the published native worker directly.

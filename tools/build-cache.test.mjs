@@ -69,7 +69,7 @@ func main() { b, err := io.ReadAll(os.Stdin); if err != nil { panic(err) }; fmt.
     modules: [{
       name: "Main", prepared: key("prepared"), optimizerEnvironment: key("optimizer"),
       emitterEnvironment: key("emitter"), callerDemands: key("callers"),
-      parts: ["pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v2"]
+      parts: ["pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v4"]
         .map(codec => ({ codec, source: "stage/unit.json" })),
       sources: [{ kind: "module", source: "stage/module.go" }],
     }],

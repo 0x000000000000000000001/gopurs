@@ -22,7 +22,8 @@ import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax, Pair(..))
 import PureScript.Backend.Optimizer.Syntax as Syn
 
-type Recurrence = { counter :: String, accumulator :: String, increment :: Int, reads :: Array TcoExpr }
+data Increment = Constant Int | Remainders Int
+type Recurrence = { counter :: String, accumulator :: String, increment :: Increment, reads :: Array TcoExpr }
 
 -- Match the complete pure recurrence before changing its execution count. The
 -- original loop remains the fallback for zero, negative and wide entry values.
@@ -41,10 +42,11 @@ wrap translate context self params result body original = case recognize self pa
       bounded = GoBinOp "<=" counter (integer top)
       signed = GoBinOp "==" accumulator (cast "int64" (cast "int32" accumulator))
       admitted = GoBinOp "&&" (GoBinOp "&&" positive bounded) signed
-      -- Both factors are signed 32-bit, with a positive counter. Their product
-      -- plus the signed accumulator fits int64. IntMul intentionally has JS
+      -- The counter, constant/divisor and seed fit signed Int32. Both the
+      -- constant sum and positive remainder-period products fit Int64.
+      -- IntMul intentionally has JS
       -- Number rounding semantics, so it cannot implement this exact sum.
-      total = GoBinOp "+" accumulator (GoBinOp "*" counter (integer recurrence.increment))
+      total = GoBinOp "+" accumulator (incrementSum counter recurrence.increment)
       value = cast "int64" (cast "int32" total)
     in GoBlock [ GoIfElse admitted (emitReads translate context recurrence.reads <> [ GoReturn value ]) [], original ]
   _ -> RecordAffineLoops.wrap self params result body
@@ -79,18 +81,38 @@ recognize self params body = do
   guard (case syntax nextCounter of
     Syn.PrimOp (Syn.Op2 (Syn.OpIntNum Syn.OpSubtract) left right) -> local counter left && literal 1 right
     _ -> false)
-  constant <- case syntax nextAccumulator of
+  operand <- case syntax nextAccumulator of
     Syn.PrimOp (Syn.Op2 (Syn.OpIntNum Syn.OpAdd) left right)
       | local accumulator left -> Just right
       | local accumulator right -> Just left
     _ -> Nothing
-  -- Closed scalar evaluation may retain strict reads inside the constant
+  -- Closed scalar evaluation may retain strict reads inside the increment
   -- operand. The other operand and counter update are already proven pure;
   -- these demands therefore follow the step prefix in either argument order.
-  suffix <- strictReads (64 - Array.length prefix.reads) constant
-  increment <- intLiteral suffix.body
-  guard (increment >= bottom && increment <= top)
+  suffix <- strictReads (64 - Array.length prefix.reads) operand
+  increment <- case syntax suffix.body of
+    Syn.PrimOp (Syn.Op2 (Syn.OpIntNum Syn.OpMod) value divisor) | local counter value -> do
+      modulus <- intLiteral divisor
+      guard (modulus > 0 && modulus <= top)
+      pure (Remainders modulus)
+    _ -> do
+      constant <- intLiteral suffix.body
+      guard (constant >= bottom && constant <= top)
+      pure (Constant constant)
   pure { counter, accumulator, increment, reads: prefix.reads <> suffix.reads }
+
+incrementSum :: GoExpr -> Increment -> GoExpr
+incrementSum counter = case _ of
+  Constant value -> GoBinOp "*" counter (integer value)
+  Remainders modulus ->
+    let divisor = integer modulus
+        quotient = GoBinOp "/" counter divisor
+        remainder = GoBinOp "%" counter divisor
+        cycles = GoBinOp "/" (GoBinOp "*" (GoBinOp "*" quotient divisor) (integer (modulus - 1))) (integer 2)
+        suffix = GoBinOp "/" (GoBinOp "*" remainder (GoBinOp "+" remainder (integer 1))) (integer 2)
+    -- Sum k mod d for k=1..n, with n,d positive: whole periods then 1..r.
+    -- q*d*(d-1) and r*(r+1) are at most MaxInt32*(MaxInt32-1).
+    in GoBinOp "+" cycles suffix
 
 -- Match the whole suffix, including every local level, before discarding a
 -- binding. Locals, projections and arbitrary initializers keep the old loop.

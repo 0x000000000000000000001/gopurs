@@ -67,7 +67,7 @@ test("concurrent manifest sidecar writers publish complete values from private s
     { name: "ffi digests", file: "ffi-digests-v1.json", write: Manifest.writeFfiDigests, read: Manifest.readFfiDigests,
       payload: index => map([["Module", `digest-${index}`], ["Other", `other-${index}`]]), normalize: entries },
     { name: "global functions", file: "global-functions-v1.json", write: Manifest.writeGlobalFunctions, read: Manifest.readGlobalFunctions,
-      payload: index => map([[`Writer${index}.value`, { reference: new LocalReference(`value${index}`),
+      payload: index => map([[`Writer${index}.value`, { arrayFold: Nothing.value, codePointFold: Nothing.value, reference: new LocalReference(`value${index}`),
         fArgs: [TypeInt64.value], fRet: TypeInt64.value, arity: 1 }]]), normalize: entries },
   ];
   for (const { name, file, write, read, payload, normalize } of cases) await t.test(name, async () => {

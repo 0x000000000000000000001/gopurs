@@ -2,6 +2,7 @@ module Gopurs.ModuleWorkers (declaration) where
 
 import Prelude
 import Data.Array as Array
+import Data.Foldable (any)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..), fst, snd)
@@ -12,11 +13,12 @@ import Gopurs.ExprContext (ExprContext, TranslateExpr, bindParameters, flattenSt
 import Gopurs.ArrayIndexedFold as ArrayIndexedFold
 import Gopurs.CallAnalysis (collectGoSpine, getGoSpineArgs)
 import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..))
-import Gopurs.GoSymbol (GoReference(..), generated)
+import Gopurs.GoSymbol (GoReference(..), generated, referenceName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoFunctions (Parameters, curriedFunction, iterationBindings, loopParameters, namedParameters)
 import Gopurs.Int32Loops as Int32Loops
 import Gopurs.AffineLoops as AffineLoops
+import Gopurs.RecordAffineLoops as RecordAffineLoops
 import Gopurs.ArraySnoc as ArraySnoc
 import Gopurs.ListFilter as ListFilter
 import Gopurs.TailAddLoops as TailAddLoops
@@ -82,15 +84,25 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
         (body true)
       else
         let
-          worker = GoFunctionDecl
-            { name: generated modNameStr ("Call_" <> modNameStr <> "_" <> fn.ident)
-            , params: loopParameters params
-            , result: resultType
-            , body: body false
-            }
+          workerName = "Call_" <> modNameStr <> "_" <> fn.ident
+          coldIdent = "__gopurs_affine_cold_" <> fn.ident
+          coldName = "Call_" <> modNameStr <> "_" <> coldIdent
+          reserved = Map.member coldIdent moduleFunctions
+            || any (\signature -> referenceName signature.reference == coldName) context.metadata.ffiFunctions
+          coldCall = GoCall (GoRef (SymbolReference (generated modNameStr coldName)))
+            (map (GoVar <<< fst) (loopParameters params))
+          hot = if isSelfRecursive && not reserved then
+            RecordAffineLoops.hot (AffineLoops.globalTarget modNameStr fn.ident) params resultType fn.body coldCall
+            else Nothing
+          original = body false
+          declare name workerBody = GoFunctionDecl
+            { name: generated modNameStr name, params: loopParameters params, result: resultType, body: workerBody }
+          workers = case hot of
+            Just fast -> [ declare coldName original, declare workerName fast ]
+            Nothing -> [ declare workerName original ]
         in
           unsafePerformEffect do
-            Ref.modify_ (\state -> state { declarations = Array.snoc state.declarations worker }) codegenStateRef
+            Ref.modify_ (\state -> state { declarations = state.declarations <> workers }) codegenStateRef
             pure (case indexedWrapper translate context params fn.body of
               Just wrapper -> wrapper
               Nothing -> boxedWrapper context fn.ident params resultType)

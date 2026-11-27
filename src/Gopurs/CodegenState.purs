@@ -5,9 +5,12 @@ module Gopurs.CodegenState
   , SharedMetadataRow
   , CodegenState
   , FunctionInfo
+  , ArrayFoldDescriptor
+  , CodePointFoldDescriptor
   ) where
 
 import Data.Map (Map)
+import Data.Maybe (Maybe)
 import Data.Set (Set)
 import Data.Set as Set
 import Data.Tuple (Tuple)
@@ -19,12 +22,21 @@ import Gopurs.GoAst (GoDecl, GoType)
 import Gopurs.GoSymbol (GoReference)
 import Gopurs.ReboxMetadata (ReboxFieldIndex)
 import PureScript.Backend.Optimizer.CoreFn (ExprType)
+import PureScript.Backend.Optimizer.Semantics (NeutralExpr)
+
+-- A closed scalar indexed fold can consume a producer without materializing it.
+-- The callback is serialized with the worker signature, so changes invalidate callers.
+type ArrayFoldDescriptor = { callback :: NeutralExpr, seed :: Int }
+
+type CodePointFoldDescriptor = { callback :: NeutralExpr, seed :: Int }
 
 type FunctionInfo =
   { reference :: GoReference
   , fArgs :: Array GoType
   , fRet :: GoType
   , arity :: Int
+  , arrayFold :: Maybe ArrayFoldDescriptor
+  , codePointFold :: Maybe CodePointFoldDescriptor
   }
 
 -- Prepared metadata is shared by the generator and value conversions.

@@ -70,7 +70,7 @@ console.log(JSON.stringify(mode==="integrity-error"?{status:"error",reason:"corr
   function fixture(mode) {
     const stage = join(directory, mode); mkdirSync(stage);
     for (const owner of ["Alpha", "Beta", "Late"]) { mkdirSync(join(stage, "prior", owner), { recursive: true }); writeFileSync(join(stage, "prior", owner, "3.json"), payloads[owner]); }
-    const parts = [{}, {}, {}, { codec: mode === "old-codec" ? "gopurs/workers-v1" : "gopurs/workers-v2" }];
+    const parts = [{}, {}, {}, { codec: mode === "old-codec" ? "gopurs/workers-v1" : "gopurs/workers-v4" }];
     return { session: { stage }, lazyContributions: true, priorWorkers: Ref.new(Map.empty)(), priorHeaderDirectives: Map.empty, priorPartTexts: Map.empty, candidates: table(["Alpha", "Beta", "Late"].map(owner => [owner, { parts }])) };
   }
   const requests = cache => existsSync(join(cache.session.stage, "requests.jsonl")) ? readFileSync(join(cache.session.stage, "requests.jsonl"), "utf8").trim().split("\n").map(JSON.parse) : [];

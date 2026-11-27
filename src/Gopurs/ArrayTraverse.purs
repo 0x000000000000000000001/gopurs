@@ -1,5 +1,6 @@
 module Gopurs.ArrayTraverse
   ( emit
+  , recognizeMaybe
   ) where
 
 import Prelude
@@ -46,6 +47,14 @@ type ApplicativePlan =
   }
 
 type Traversal = { indexed :: Boolean, callbackOffset :: Int, args :: Array TcoExpr, plan :: ApplicativePlan }
+
+-- Consumers reuse the exact canonical dictionary proof, not the spelling of a
+-- traversal method alone. They impose their own saturation/phase restrictions.
+recognizeMaybe :: TcoExpr -> Array TcoExpr -> Maybe { indexed :: Boolean, callbackOffset :: Int, args :: Array TcoExpr }
+recognizeMaybe fn args = do
+  traversal <- recognize fn args
+  guard (traversal.plan.moduleName == "Data.Maybe")
+  pure { indexed: traversal.indexed, callbackOffset: traversal.callbackOffset, args: traversal.args }
 
 -- These are the canonical library constructors, never inferred from a custom
 -- dictionary's shape. The regular ADT emitter handles nullable Maybe layouts.

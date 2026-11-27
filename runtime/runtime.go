@@ -1970,7 +1970,13 @@ func Box[T any](val T) Value {
 	if v, ok := any(val).(Value); ok {
 		return v
 	}
-	switch v := any(val).(type) {
+	return boxSlow(any(val))
+}
+
+// Keep Value identity small enough to inline at generated FFI boundaries.
+// All other representations retain the same conversion and closure behavior.
+func boxSlow(val any) Value {
+	switch v := val.(type) {
 	case int32:
 		return Int(int64(v))
 	case int64:

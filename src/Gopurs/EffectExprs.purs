@@ -17,6 +17,7 @@ import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..),
 import Gopurs.GoAst (GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr)
 import Gopurs.ImmediateFfiEffects as ImmediateFfiEffects
+import Gopurs.ImmediateEffectBranches as ImmediateEffectBranches
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident)
 import PureScript.Backend.Optimizer.FreeVars (localId)
@@ -42,9 +43,15 @@ ordinaryBind translate context@{ codegenStateRef, depth, modNameStr, bound, opti
     name = originalName <> "_" <> show nextId
     newBound = Map.insert originalName { name, goType: TypeValue } bound
     resBinding = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) (nextId + 1) realBinding
-    resBody = translate (context { depth = (depth + 1), bound = newBound, tcoIdent = Nothing, options = { isTail, inEffectBlock: true } }) resBinding.nextId body
+    bodyContext = context { depth = (depth + 1), bound = newBound, tcoIdent = Nothing, options = { isTail, inEffectBlock: true } }
+    executedBody = ImmediateEffectBranches.emit translate bodyContext resBinding.nextId body
+    resBody = case executedBody of
+      Just result -> result
+      Nothing -> translate bodyContext resBinding.nextId body
     bindingExpr = if wasStripped then boxGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType else executeIfOpaque realBinding (boxGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType)
-    bodyExpr = executeIfOpaque body resBody.expr
+    bodyExpr = case executedBody of
+      Just _ -> resBody.expr
+      Nothing -> executeIfOpaque body resBody.expr
   in
     { stmts: resBinding.stmts <> StmtLeaf (GoAssign name bindingExpr) <> resBody.stmts, expr: bodyExpr, exprType: resBody.exprType, nextId: resBody.nextId }
 

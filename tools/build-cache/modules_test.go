@@ -346,41 +346,45 @@ func TestBackendCodecUpgradePreservesOwnedOutputs(t *testing.T) {
 }
 
 func TestWorkerCodecUpgradePreservesOwnedOutputs(t *testing.T) {
-	f := newFixture(t)
-	put(t, filepath.Join(f.root, "stage/workers.json"), `["unit"]`)
-	mod := StagedModule{Name: "Main", Prepared: Key("prepared"), OptimizerEnvironment: Key("optimizer"), EmitterEnvironment: Key("emitter"), CallerDemands: Key("callers")}
-	for i, codec := range moduleCodecs {
-		if i == 3 {
-			codec = "gopurs/workers-v1"
-		}
-		mod.Parts = append(mod.Parts, StagedArtifact{Codec: codec, Source: "stage/workers.json"})
+	for _, previous := range []string{"gopurs/workers-v1", "gopurs/workers-v2", "gopurs/workers-v3"} {
+		t.Run(previous, func(t *testing.T) {
+			f := newFixture(t)
+			put(t, filepath.Join(f.root, "stage/workers.json"), `["unit"]`)
+			mod := StagedModule{Name: "Main", Prepared: Key("prepared"), OptimizerEnvironment: Key("optimizer"), EmitterEnvironment: Key("emitter"), CallerDemands: Key("callers")}
+			for i, codec := range moduleCodecs {
+				if i == 3 {
+					codec = previous
+				}
+				mod.Parts = append(mod.Parts, StagedArtifact{Codec: codec, Source: "stage/workers.json"})
+			}
+			f.req.Modules = []StagedModule{mod}
+			publish(t, f)
+			lookup(t, f, "hit")
+			before, err := os.Stat(filepath.Join(f.s.cache, "write.lock"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			put(t, filepath.Join(f.root, "compiler"), "compiler using fold descriptors workers-v3")
+			// This body differs from the old output: migration must use the readable
+			// ownership journal, rather than treating it as an unowned legacy file.
+			put(t, filepath.Join(f.root, "stage/Main.go"), "package purescript\n// owned worker\n")
+			f.req.Modules[0].Parts[3].Codec = "gopurs/workers-v4"
+			lookup(t, f, "miss")
+			result := publish(t, f)
+			if result.Manifest.Modules[0].Parts[3].Codec != "gopurs/workers-v4" {
+				t.Fatal("worker codec upgrade was not committed")
+			}
+			lookup(t, f, "hit")
+			after, err := os.Stat(filepath.Join(f.s.cache, "write.lock"))
+			if err != nil || !os.SameFile(before, after) {
+				t.Fatalf("worker migration replaced the stable lock: %v", err)
+			}
+			f.req.Modules[0].Parts[3].Codec = "gopurs/workers-v5"
+			f.req.Operation, f.req.ExpectedKey = "publish", result.Snapshot.Key
+			if _, err := execute(f.req); err == nil {
+				t.Fatal("unknown worker version was accepted")
+			}
+			lookup(t, f, "hit")
+		})
 	}
-	f.req.Modules = []StagedModule{mod}
-	publish(t, f)
-	lookup(t, f, "hit")
-	before, err := os.Stat(filepath.Join(f.s.cache, "write.lock"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	put(t, filepath.Join(f.root, "compiler"), "compiler using owned workers-v2")
-	// This body differs from the old output: migration must use the readable
-	// ownership journal, rather than treating it as an unowned legacy file.
-	put(t, filepath.Join(f.root, "stage/Main.go"), "package purescript\n// owned worker\n")
-	f.req.Modules[0].Parts[3].Codec = "gopurs/workers-v2"
-	lookup(t, f, "miss")
-	result := publish(t, f)
-	if result.Manifest.Modules[0].Parts[3].Codec != "gopurs/workers-v2" {
-		t.Fatal("worker codec upgrade was not committed")
-	}
-	lookup(t, f, "hit")
-	after, err := os.Stat(filepath.Join(f.s.cache, "write.lock"))
-	if err != nil || !os.SameFile(before, after) {
-		t.Fatalf("worker migration replaced the stable lock: %v", err)
-	}
-	f.req.Modules[0].Parts[3].Codec = "gopurs/workers-v3"
-	f.req.Operation, f.req.ExpectedKey = "publish", result.Snapshot.Key
-	if _, err := execute(f.req); err == nil {
-		t.Fatal("unknown worker version was accepted")
-	}
-	lookup(t, f, "hit")
 }

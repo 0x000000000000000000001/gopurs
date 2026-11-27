@@ -52,7 +52,7 @@ signature owner declaration tast = do
   _ <- candidate declaration tast
   let callTast = fromMaybe tast (tastForArity (Array.length declaration.args) tast)
   pure
-    { reference: SymbolReference (foreignSymbol owner (workerName declaration))
+    { arrayFold: Nothing, codePointFold: Nothing, reference: SymbolReference (foreignSymbol owner (workerName declaration))
     , fArgs: Array.mapWithIndex (argumentType callTast) declaration.args
     , fRet: TypeValue
     , arity: Array.length declaration.args

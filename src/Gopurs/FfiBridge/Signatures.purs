@@ -75,7 +75,7 @@ functionInfo unit { declaration, tast, requiresWorker, callName } = do
     Just _ | requiresWorker -> boxedResult
     Just t -> typeNodeToGoType t
     Nothing -> boxedResult
-  pure { reference: SymbolReference (foreignSymbol unit callName), fArgs: args, fRet: ret, arity: Array.length declaration.args }
+  pure { arrayFold: Nothing, codePointFold: Nothing, reference: SymbolReference (foreignSymbol unit callName), fArgs: args, fRet: ret, arity: Array.length declaration.args }
   where
   argumentType (TFunc _ _) | requiresWorker = Just TypeValue
   argumentType t | requiresWorker && isPointerNode t = Just TypeValue

@@ -17,6 +17,8 @@ const expected = [
   [2147483647, 7, 140, -5, -2147483635],
   [223, -14, -2147483627],
   [2147483647, 102, -2147483639],
+  [2147483647, 63, -16, -2147483586],
+  [24, -17],
 ];
 const parse = stdout => stdout.trim().split("\n").map(line => JSON.parse(line));
 
@@ -44,6 +46,16 @@ function assertFastPaths(directory) {
     assert.ok(guard >= 0 && read > guard && formula > read,
       `${name}: a positive guarded formula retains its strict global demand`);
     assert.ok(body.includes("int64(2147483647)") && body.includes("for {"), `${name}: bounded path and original loop`);
+  }
+  for (const [name, divisor] of [["moduloRounds",7],["localModuloRounds",3]]) {
+    const declaration=`func Call_Main_${name}(`;
+    const source=sources.find(value=>value.includes(declaration));
+    assert.ok(source,`${name}: generated worker exists`);
+    const start=source.indexOf("{",source.indexOf(declaration));let end=start+1,depth=1;
+    for(;depth>0&&end<source.length;end++){if(source[end]==="{")depth++;if(source[end]==="}")depth--;}
+    const body=source.slice(start,end);
+    assert.ok(body.includes(`% (int64(${divisor}))`)&&body.includes(`/ (int64(${divisor}))`),`${name}: complete remainder periods`);
+    assert.ok(body.includes("int64(2147483647)")&&body.includes("for {"),`${name}: guarded fast path and original loop`);
   }
 }
 

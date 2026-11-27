@@ -23,6 +23,7 @@ import Gopurs.GoTypes (exprTypeToGoType, isCompositeGoType, printExprType)
 import Gopurs.GoFunctions (loopParameters)
 import Gopurs.LocalWorkers as LocalWorkers
 import Gopurs.ImmediateFfiEffects as ImmediateFfiEffects
+import Gopurs.ArrayTraverseFold as ArrayTraverseFold
 import Gopurs.Printer (printGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (Ident(..))
@@ -31,9 +32,11 @@ import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Local), Level)
 
 nonRecursive :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> TcoExpr -> TcoExpr -> ExprResult
 nonRecursive translate context nextId mbIdent lvl binding body =
-  case ImmediateFfiEffects.translate translate context nextId mbIdent lvl binding body of
+  case ArrayTraverseFold.emit translate context nextId mbIdent lvl binding body of
     Just result -> result
-    Nothing -> nonRecursiveBinding translate context nextId mbIdent lvl binding body
+    Nothing -> case ImmediateFfiEffects.translate translate context nextId mbIdent lvl binding body of
+      Just result -> result
+      Nothing -> nonRecursiveBinding translate context nextId mbIdent lvl binding body
 
 nonRecursiveBinding :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> TcoExpr -> TcoExpr -> ExprResult
 nonRecursiveBinding translate context@{ metadata, codegenStateRef, depth, modNameStr, moduleFunctions, bound } nextId mbIdent lvl binding body =

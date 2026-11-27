@@ -570,3 +570,85 @@ test('mutually recursive consuming workers retain the selected subtree and termi
     if purescript.${native}(nil) != nil { panic("the empty mutual traversal must stay empty") }
 `, ['walkA', 'walkB']);
 });
+
+test('shared consuming continuations preserve branch results, snapshots and donor selection', t => {
+    const retain = cell(literal(9), field(local(), 1), field(local(), 2));
+    const swap = cell(literal(13), field(local(), 2), field(local(), 1));
+    let decisions = retain;
+    for (let key = 7; key >= 0; key--) {
+        decisions = chooseTree(equalInt(field(local(), 0), literal(key)), key % 2 ? swap : retain, decisions);
+    }
+    const bindings = [
+        ['dispatch', lambda(branch(decisions))],
+        ['fresh', freshCaller(call('dispatch', freshTree()))],
+    ];
+    const generated = CodeGen.translate(metadata)(moduleOf(bindings));
+    assert.match(generated, /goto __owned_continuation_/);
+    assert.equal((generated.match(/__owned_continuation_\d+: \{/g) ?? []).length, 3,
+        'two reconstruction bodies and the empty branch must remain distinct');
+    runCellPoolFixture(t, bindings, (native, consume) => `
+    for key := int64(-2); key <= 10; key++ {
+        for mode := 0; mode < 2; mode++ {
+            left, right := &tree{Rc: 1, V0: 11}, &tree{Rc: 1, V0: 22}
+            input := &tree{Rc: 1, V0: key, V1: left, V2: right}
+            original := inputCellSet(input)
+            var donor *tree
+            if mode != 0 { donor = &tree{Rc: 1, V0: -777} }
+            result := purescript.${consume}(input, donor)
+            want := "9(11(E)(E))(22(E)(E))"
+            if key >= 0 && key <= 7 && key % 2 != 0 { want = "13(22(E)(E))(11(E)(E))" }
+            checkCellTree(result, want, original)
+            if result != input { panic("shared continuation changed known-cell priority") }
+            if donor != nil && donor.V0 != -777 { panic("unused donor changed") }
+        }
+    }
+    if purescript.${native}(nil) != nil { panic("empty branch changed") }
+`);
+});
+
+test('shared tail continuations re-enter the owned loop without leaking scoped temporaries', t => {
+    const loopType = new C.Func([C.Int.value, tree], tree);
+    const remaining = typed(C.Int.value, expr(new S.Local(new Just('remaining'), 0)));
+    const input = local(1);
+    const loopCall = (count, value) => typed(tree, expr(new S.App(
+        typed(loopType, expr(new S.Var(qualified('repeatKeep')))), [count, value])));
+    const next = typed(C.Int.value, expr(new S.PrimOp(new S.Op2(
+        new S.OpIntNum(S.OpSubtract.value), remaining, literal(1)))));
+    const repeat = loopCall(next, input);
+    let decisions = repeat;
+    for (let count = 8; count >= 1; count--) {
+        decisions = chooseTree(equalInt(remaining, literal(count)), repeat, decisions);
+    }
+    const loop = typed(loopType, expr(new S.Abs([
+        new Tuple(new Just('remaining'), 0), new Tuple(new Just('input'), 1),
+    ], chooseTree(equalInt(remaining, literal(0)), input, decisions))));
+    const bindings = [
+        ['repeatKeep', loop], ['fresh', freshCaller(loopCall(literal(3), freshTree()))],
+    ];
+    assert.match(CodeGen.translate(metadata)(moduleOf(bindings)), /goto __owned_continuation_/);
+    runCellPoolFixture(t, bindings, (native, consume) => `
+    for count := int64(0); count <= 12; count++ {
+        input := &tree{Rc: 1, V0: 10, V1: &tree{Rc: 1, V0: 20}}
+        donor := &tree{Rc: 1, V0: -777}
+        result := purescript.${consume}(count, input, donor)
+        if result != input || donor.V0 != -777 { panic("tail continuation changed root/donor") }
+        checkCellTree(result, "10(20(E)(E))(E)", inputCellSet(input))
+        if purescript.${native}(count, nil) != nil { panic("nil tail input changed") }
+    }
+`, ['repeatKeep']);
+});
+
+test('an intervening scalar binding remains a lexical boundary for continuation sharing', () => {
+    const scalar = typed(C.Int.value, expr(new S.Local(new Just('value'), 1)));
+    const rebuilt = cell(scalar, field(local(), 1), field(local(), 2));
+    let decisions = rebuilt;
+    for (let key = 7; key >= 0; key--) {
+        decisions = chooseTree(equalInt(scalar, literal(key)), rebuilt, decisions);
+    }
+    const body = branch(typed(tree, expr(new S.Let(new Just('value'), 1,
+        field(local(), 0), decisions))));
+    const generated = CodeGen.translate(metadata)(moduleOf([
+        ['change', lambda(body)], ['fresh', freshCaller(call('change', freshTree()))],
+    ]));
+    assert.doesNotMatch(generated, /goto __owned_continuation_/);
+});

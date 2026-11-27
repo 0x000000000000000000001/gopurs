@@ -13,6 +13,7 @@ import Data.Newtype (unwrap)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
+import Gopurs.ArrayProducerFold as ArrayProducerFold
 import Gopurs.ArrayIntrinsics as ArrayIntrinsics
 import Gopurs.ArrayConcat as ArrayConcat
 import Gopurs.ArrayIntrinsics.Callback as Callback
@@ -22,6 +23,8 @@ import Gopurs.ArrayEquality as ArrayEquality
 import Gopurs.ScalarArrayFold as ScalarArrayFold
 import Gopurs.ArrayRangeFold as ArrayRangeFold
 import Gopurs.CodePointFold as CodePointFold
+import Gopurs.CodePointTakeFold as CodePointTakeFold
+import Gopurs.StringConcatFold as StringConcatFold
 import Gopurs.ArraySort as ArraySort
 import Gopurs.ObjectTraverse as ObjectTraverse
 import Gopurs.TailRecEffect as TailRecEffect
@@ -58,7 +61,26 @@ application translate context nextId expression =
             Just result -> result
             Nothing -> regularApplication fn args
   where
-  regularApplication fn args = case ArraySort.emit translate context nextId fn args of
+  regularApplication fn args = case producerFold fn args of
+    Just result -> result
+    Nothing -> sortedApplication fn args
+
+  producerFold fn args = if not (ArrayProducerFold.onlyCurried expression) then Nothing else case args of
+    [ producer ] | getExprType producer == Array Int -> do
+      info <- directFunction context (curriedTarget context.bound fn) 1
+      descriptor <- info.arrayFold
+      ArrayProducerFold.emit translate context nextId descriptor producer
+    [ producer ] | getExprType producer == String -> do
+      info <- directFunction context (curriedTarget context.bound fn) 1
+      if info.arity == 1 && info.fArgs == [ TypeString ] && info.fRet == TypeInt64 && CodePointFold.compatibleT (Func [ String ] Int) fn then do
+        descriptor <- info.codePointFold
+        case CodePointTakeFold.emit translate context nextId descriptor producer of
+          Just result -> Just result
+          Nothing -> StringConcatFold.emit translate context nextId descriptor producer
+        else Nothing
+    _ -> Nothing
+
+  sortedApplication fn args = case ArraySort.emit translate context nextId fn args of
     Just result -> result
     Nothing -> scalarApplication fn args
 

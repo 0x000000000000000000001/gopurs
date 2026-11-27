@@ -1,4 +1,4 @@
-module Gopurs.CodePointFold (optimize, emit) where
+module Gopurs.CodePointFold (optimize, emit, emitBounded, describe, validDescriptor, compatibleT, primitiveCallback) where
 
 import Prelude
 
@@ -9,9 +9,10 @@ import Data.Foldable (all, foldM)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Tuple (Tuple(..))
-import Gopurs.ArrayIndexedFold (readOnlyScalar)
+import Gopurs.ArrayIndexedFold (readOnlyScalar, scalarType)
 import Gopurs.CallAnalysis (collectCurriedAbs, collectGoSpine, getGoSpineArgs, qualifiedTarget)
 import Gopurs.CallArguments as CallArguments
+import Gopurs.CodegenState (CodePointFoldDescriptor)
 import Gopurs.ExprAnalysis (unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, bindParameters, childContext, flattenStmts)
 import Gopurs.GoAst (GoExpr(..), GoType(..), rawGo)
@@ -44,6 +45,7 @@ expand original = do
   guard (compatible (Func [ String ] (Array Int)) conversion && compatible (Func [ Array Int ] Int) folder)
   let folding = application folder
   guard (namedN "Data.Foldable" "foldlArray" folding.head)
+  guard (compatible (Func [ Func [ Int, Int ] Int, Int, Array Int ] Int) folding.head)
   Tuple callback seed <- case folding.args of
     [ callback, seed ] -> Just (Tuple callback seed)
     _ -> Nothing
@@ -77,6 +79,18 @@ emit translate context nextId fn args = do
     _ -> Nothing
   grouped <- primitiveCallback callback
   guard (compatibleT Int seed && compatibleT String input && compatibleT (Array Int) converted)
+  pure (emitLoop translate context nextId callback seed input Nothing grouped)
+
+-- The take consumer preserves the callback and seed proof and supplies a count
+-- captured before the string. The ordinary unbounded path remains unchanged.
+emitBounded :: TranslateExpr -> ExprContext -> Int -> Tco.TcoExpr -> Tco.TcoExpr -> Tco.TcoExpr -> Tco.TcoExpr -> Maybe ExprResult
+emitBounded translate context nextId callback seed count input = do
+  guard (Array.null context.recVars && compatibleT Int seed && compatibleT Int count && compatibleT String input)
+  grouped <- primitiveCallback callback
+  pure (emitLoop translate context nextId callback seed input (Just count) grouped)
+
+emitLoop :: TranslateExpr -> ExprContext -> Int -> Tco.TcoExpr -> Tco.TcoExpr -> Tco.TcoExpr -> Maybe Tco.TcoExpr -> { args :: NEA.NonEmptyArray (Tuple (Maybe Ident) Level), body :: Tco.TcoExpr } -> ExprResult
+emitLoop translate context nextId callback seed input limit grouped =
   let
     params = map (\(Tuple name level) -> Tuple (localId name level) TypeInt64) (NEA.toArray grouped.args)
     callbackContext = context
@@ -88,14 +102,24 @@ emit translate context nextId fn args = do
       in { stmts: StmtEmpty, expr: GoFuncLit params (flattenStmts callbackBody.stmts) (integer callbackBody.expr callbackBody.exprType) TypeInt64
          , exprType: TypeFunc [ TypeInt64, TypeInt64 ] TypeInt64, nextId: callbackBody.nextId }
       else translate (childContext context Nothing) currentId value
-    captured = CallArguments.capture { prefix: "codePointFold_arg_", markUsed: true } capture nextId [ callback, seed, input ]
+    captured = CallArguments.capture { prefix: if isJust limit then "codePointTake_arg_" else "codePointFold_arg_", markUsed: true } capture nextId
+      (case limit of
+        Just count -> [ callback, seed, count, input ]
+        Nothing -> [ callback, seed, input ])
     arg index = fromMaybe (rawGo "nil") (Array.index captured.exprs index)
     argType index = fromMaybe TypeValue (Array.index captured.exprTypes index)
-    str = coerceGoExpr context.codegenStateRef context.modNameStr (arg 2) (argType 2) TypeString
+    inputIndex = if isJust limit then 3 else 2
+    str = coerceGoExpr context.codegenStateRef context.modNameStr (arg inputIndex) (argType inputIndex) TypeString
+    preparation = if isJust limit then
+      [ GoAssign "codePointTake_limit" (integer (arg 2) (argType 2)), GoAssign "codePointFold_offset" (GoInt 0) ] else []
+    loopHeader = if isJust limit then
+      "codePointTake_count := int64(0); codePointTake_count < codePointTake_limit && codePointFold_offset < len(codePointFold_input); codePointTake_count++"
+      else "codePointFold_offset := 0; codePointFold_offset < len(codePointFold_input);"
     body =
       [ GoAssign "codePointFold_input" str
       , GoAssign "codePointFold_result" (integer (arg 1) (argType 1))
-      , GoForRange "codePointFold_offset := 0; codePointFold_offset < len(codePointFold_input);"
+      ] <> preparation <>
+      [ GoForRange loopHeader
           [ GoAssign "codePointFold_value" (GoCall (GoVar "rune")
               [ GoIndex (GoVar "codePointFold_input") (GoVar "codePointFold_offset") ])
           , GoAssign "codePointFold_width" (GoInt 1)
@@ -110,7 +134,7 @@ emit translate context nextId fn args = do
           , GoMutate "codePointFold_offset" (GoBinOp "+" (GoVar "codePointFold_offset") (GoVar "codePointFold_width"))
           ]
       ]
-  pure { stmts: captured.stmts, expr: GoCall (GoFuncLit [] body (GoVar "codePointFold_result") TypeInt64) []
+  in { stmts: captured.stmts, expr: GoCall (GoFuncLit [] body (GoVar "codePointFold_result") TypeInt64) []
        , exprType: TypeInt64, nextId: captured.nextId }
   where
   integer expression from = coerceGoExpr context.codegenStateRef context.modNameStr expression from TypeInt64
@@ -122,7 +146,9 @@ primitiveCallback callback = do
     Abs args body -> do
       let grouped = collectCurriedAbs args body
       guard (NEA.length grouped.args == 2)
-      guard (readOnlyScalar (map (\(Tuple _ level) -> level) (NEA.toArray grouped.args)) grouped.body)
+      let levels = map (\(Tuple _ level) -> level) (NEA.toArray grouped.args)
+      guard (readOnlyScalar levels grouped.body)
+      guard (scalarAnnotations (Map.fromFoldable (map (\level -> Tuple level Int) levels)) grouped.body)
       pure grouped
     _ -> Nothing
 
@@ -209,3 +235,49 @@ strip (NeutralExpr syntax) = case syntax of
   Typed _ expression -> strip expression
   TypeApp expression _ -> strip expression
   _ -> syntax
+
+-- Cache descriptors are stricter than immediate folds: a replayed worker must
+-- neither capture another scope nor move any callback/seed creation effects.
+describe :: NeutralExpr -> Maybe CodePointFoldDescriptor
+describe original = do
+  guard (compatible (Func [ String ] Int) original)
+  Tuple level body <- case strip original of
+    Abs parameters body | NEA.length parameters == 1 -> Just (Tuple (case NEA.head parameters of Tuple _ level -> level) body)
+    _ -> Nothing
+  guard (compatible Int body)
+  let folding = application body
+  guard (namedN "Data.Foldable" "foldlArray" folding.head)
+  guard (compatible (Func [ Func [ Int, Int ] Int, Int, Array Int ] Int) folding.head)
+  descriptor <- case folding.args of
+    [ callback, seed, converted ] -> do
+      guard (compatible Int seed && compatible (Array Int) converted)
+      initial <- case strip seed of
+        Lit (LitInt value) -> Just value
+        _ -> Nothing
+      let conversion = application converted
+      guard (namedN "Data.String.CodePoints" "toCodePointArray" conversion.head)
+      guard (compatible (Func [ String ] (Array Int)) conversion.head)
+      case conversion.args of
+        [ input ] -> do
+          guard (compatible String input)
+          guard (case strip input of
+            Local _ found -> found == level
+            _ -> false)
+        _ -> Nothing
+      pure { callback, seed: initial }
+    _ -> Nothing
+  guard (validDescriptor descriptor)
+  pure descriptor
+
+validDescriptor :: CodePointFoldDescriptor -> Boolean
+validDescriptor descriptor = closed [] descriptor.callback && isJust (primitiveCallback (Tco.analyze [] descriptor.callback))
+
+-- Inspect all Typed layers rather than allowing an outer Int to hide an inner
+-- contradiction. Captures still use the existing scalar annotation proof for
+-- an immediate fold; exported descriptors additionally require closure.
+scalarAnnotations :: Map.Map Level ExprType -> Tco.TcoExpr -> Boolean
+scalarAnnotations locals value@(Tco.TcoExpr _ syntax) = isJust (scalarType locals value) && case syntax of
+  Let _ level initial body -> case scalarType locals initial of
+    Just ty -> scalarAnnotations locals initial && scalarAnnotations (Map.insert level ty locals) body
+    Nothing -> false
+  _ -> all (scalarAnnotations locals) syntax

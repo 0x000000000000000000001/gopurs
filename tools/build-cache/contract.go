@@ -181,7 +181,7 @@ var floatPattern = regexp.MustCompile(`^[0-9a-f]{16}$`)
 var integerPattern = regexp.MustCompile(`^(0|-?[1-9][0-9]*)$`)
 var tagPattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_./-]*$`)
 
-var moduleCodecs = []string{"pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v2"}
+var moduleCodecs = []string{"pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v4"}
 
 const moduleReadsCodec = "gopurs/reads-owners-v1"
 
@@ -278,7 +278,7 @@ func validateManifest(m Manifest) error {
 			// Keep legacy manifests readable for ownership and recovery. The typed
 			// producer only reuses a backend whose business codec it understands.
 			legacyBody := i == 0 && part.Codec == "pbo/backend-v1"
-			legacyWorkers := i == 3 && part.Codec == "gopurs/workers-v1"
+			legacyWorkers := i == 3 && (part.Codec == "gopurs/workers-v1" || part.Codec == "gopurs/workers-v2" || part.Codec == "gopurs/workers-v3")
 			if (part.Codec != moduleCodecs[i] && !legacyBody && !legacyWorkers) || !validObject(part.Object) {
 				return fmt.Errorf("module-codec")
 			}

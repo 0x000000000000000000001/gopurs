@@ -173,7 +173,15 @@ translatePreparedWithFunctions sourceMetadata prepared =
     ffiLocalFunctions = Map.fromFoldable $ Array.mapMaybe
       (\(Tuple (Ident name) _) -> map (Tuple (sanitizeName name)) (Map.lookup name metadata.ffiFunctions))
       (Map.toUnfoldable mod.foreign)
-    moduleFunctions = Map.union (Map.union prepared.functions preparedBindings.functions) ffiLocalFunctions
+    foldDescriptors = Map.fromFoldable (Array.concatMap (\group -> if group.recursive then [] else
+      map (\(Tuple (Ident name) value) -> Tuple (sanitizeName name) (ClosedIndexedFolds.describe value)) group.bindings) mod.bindings)
+    codePointDescriptors = Map.fromFoldable (Array.concatMap (\group -> if group.recursive then [] else
+      map (\(Tuple (Ident name) value) -> Tuple (sanitizeName name) (CodePointFold.describe value)) group.bindings) mod.bindings)
+    describedFunctions = Map.fromFoldable (map (\(Tuple name info) -> Tuple name (info
+      { arrayFold = if info.fArgs == [ TypeNativeArray TypeInt64 ] && info.fRet == TypeInt64 && info.arity == 1 then fromMaybe Nothing (Map.lookup name foldDescriptors) else Nothing
+      , codePointFold = if info.fArgs == [ TypeString ] && info.fRet == TypeInt64 && info.arity == 1 then fromMaybe Nothing (Map.lookup name codePointDescriptors) else Nothing
+      })) (Map.toUnfoldable preparedBindings.functions :: Array (Tuple String FunctionInfo)))
+    moduleFunctions = Map.union (Map.union prepared.functions describedFunctions) ffiLocalFunctions
     normalFunctions = Map.fromFoldable $ Array.concatMap
       (\group -> Array.mapMaybe
         (\(Tuple (Ident name) _) -> do
