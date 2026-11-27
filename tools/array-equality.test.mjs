@@ -71,7 +71,10 @@ test('generated equality preserves scalar semantics, input order and lengths', t
     writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
     writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), readFileSync(new URL('../runtime/runtime.go', import.meta.url)));
     writeFileSync(join(directory, 'equality.go'), `package equality
-import "gopurs/output/gopurs_runtime"
+import (
+	"slices"
+	"gopurs/output/gopurs_runtime"
+)
 var trace []int
 func dict() gopurs_runtime.Value { trace = append(trace, 0); return gopurs_runtime.Value{} }
 ${definitions.join('\n')}
@@ -82,9 +85,9 @@ func boxed[A any](xs []A) r.Value { values:=make([]r.Value,len(xs)); for i,x:=ra
 func check[A any](t *testing.T, xs,ys []A,want bool, native func(func()[]A,func()[]A)bool, dynamic func(func()r.Value,func()r.Value)bool) {
   t.Helper(); trace=nil
   got:=native(func()[]A{trace=append(trace,1);return xs},func()[]A{trace=append(trace,2);return ys})
-  if got!=want || !reflect.DeepEqual(trace,[]int{0,1,2}) {t.Fatalf("native got %v trace %v",got,trace)}
+  if got!=want || !reflect.DeepEqual(trace,[]int{1,2}) {t.Fatalf("native got %v trace %v",got,trace)}
   trace=nil; got=dynamic(func()r.Value{trace=append(trace,1);return boxed(xs)},func()r.Value{trace=append(trace,2);return boxed(ys)})
-  if got!=want || !reflect.DeepEqual(trace,[]int{0,1,2}) {t.Fatalf("boxed got %v trace %v",got,trace)}
+  if got!=want || !reflect.DeepEqual(trace,[]int{1,2}) {t.Fatalf("boxed got %v trace %v",got,trace)}
 }
 func TestEquality(t *testing.T) {
  for _,mode:=range []bool{false,true} {

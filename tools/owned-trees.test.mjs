@@ -652,3 +652,70 @@ test('an intervening scalar binding remains a lexical boundary for continuation 
     ]));
     assert.doesNotMatch(generated, /goto __owned_continuation_/);
 });
+
+test('constructor-shaped leaf workers inline into callers with affinity reuse and handle argument swaps soundly', t => {
+    const rebalanceType = new C.Func(fields, tree);
+    const key = typed(C.Int.value, expr(new S.Local(new Just('k'), 0)));
+    const left = local(1);
+    const right = local(2);
+    const rebalanceBody = chooseTree(equalInt(key, literal(0)),
+        chooseTree(cellPoolIsCell(left),
+            cell(field(left, 0), field(left, 1), cell(key, field(left, 2), right)),
+            cell(key, left, right)),
+        cell(key, left, right));
+    const rebalance = typed(rebalanceType, expr(new S.Abs([
+        new Tuple(new Just('k'), 0), new Tuple(new Just('input'), 1), new Tuple(new Just('input'), 2),
+    ], rebalanceBody)));
+    const callRebalance = (k, l, r) => typed(tree, expr(new S.App(
+        typed(rebalanceType, expr(new S.Var(qualified('rebalance')))), [k, l, r])));
+    const updateType = new C.Func([C.Int.value, tree], tree);
+    const mode = typed(C.Int.value, expr(new S.Local(new Just('mode'), 0)));
+    const node = local(1);
+    const updateBody = chooseTree(cellPoolIsCell(node),
+        chooseTree(equalInt(mode, literal(0)),
+            callRebalance(field(node, 0), call('step', field(node, 1)), field(node, 2)),
+            // Swap left and right while keeping key unchanged: must snapshot before writing!
+            callRebalance(field(node, 0), field(node, 2), field(node, 1))),
+        empty());
+    const update = typed(updateType, expr(new S.Abs([
+        new Tuple(new Just('mode'), 0), new Tuple(new Just('input'), 1),
+    ], updateBody)));
+    const step = lambda(chooseTree(cellPoolIsCell(local()),
+        cell(literal(0), field(local(), 1), field(local(), 2)), empty()));
+    const callUpdate = (m, n) => typed(tree, expr(new S.App(
+        typed(updateType, expr(new S.Var(qualified('update')))), [m, n])));
+    const bindings = [
+        ['rebalance', rebalance],
+        ['step', step],
+        ['update', update],
+        ['fresh', freshCaller(callUpdate(literal(0), freshTree()))],
+    ];
+    const generated = CodeGen.translate(metadata)(moduleOf(bindings));
+    assert.match(generated, /goto __owned_inline_rebalance/);
+    runCellPoolFixture(t, bindings, () => `
+    // Mode 0: left child updated by step, then rotated by inlined rebalance when root key == 0.
+    input0 := &tree{Rc: 1, V0: 0,
+        V1: &tree{Rc: 1, V0: 10, V1: &tree{Rc: 1, V0: 20}, V2: &tree{Rc: 1, V0: 30}},
+        V2: &tree{Rc: 1, V0: 40}}
+    orig0 := inputCellSet(input0)
+    res0 := purescript.Call_OwnershipFixture___gopurs_owned_update_0(0, input0)
+    checkCellTree(res0, "0(20(E)(E))(0(30(E)(E))(40(E)(E)))", orig0)
+
+    // Mode 0 without rotation (root key != 0): fast no-write path returns root cell.
+    input1 := &tree{Rc: 1, V0: 5,
+        V1: &tree{Rc: 1, V0: 10},
+        V2: &tree{Rc: 1, V0: 40}}
+    orig1 := inputCellSet(input1)
+    res1 := purescript.Call_OwnershipFixture___gopurs_owned_update_0(0, input1)
+    if res1 != input1 { panic("no-rotation inline path must return same root") }
+    checkCellTree(res1, "5(0(E)(E))(40(E)(E))", orig1)
+
+    // Mode 1: swaps left and right before entering inlined rebalance.
+    input2 := &tree{Rc: 1, V0: 7,
+        V1: &tree{Rc: 1, V0: 11},
+        V2: &tree{Rc: 1, V0: 22}}
+    orig2 := inputCellSet(input2)
+    res2 := purescript.Call_OwnershipFixture___gopurs_owned_update_0(1, input2)
+    checkCellTree(res2, "7(22(E)(E))(11(E)(E))", orig2)
+`);
+});

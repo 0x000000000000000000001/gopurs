@@ -16,7 +16,7 @@ import Gopurs.GoTypes (exprTypeToGenericGoType, exprTypeToGoType, instantiateGen
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), Prop(..))
 import PureScript.Backend.Optimizer.FfiSupport (hashString)
-import PureScript.Backend.Optimizer.Syntax (BackendSyntax(CtorSaturated, Let, LetRec, Lit, Local, Typed))
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Branch, CtorSaturated, Let, LetRec, Lit, Local, Typed))
 
 annotated :: TranslateExpr -> ExprContext -> Int -> ExprType -> TcoExpr -> ExprResult
 annotated translate context@{ metadata, modNameStr, mbExpectedExprType, mbExpectedGoType } nextId type_ expression =
@@ -62,6 +62,7 @@ annotated translate context@{ metadata, modNameStr, mbExpectedExprType, mbExpect
       constructorExpected = case unwrapTcoExpr value, expectedGoType of
         CtorSaturated _ _ _ (Ident "Tuple") _, TypeStructPointer pointer
           | pointer.fullName == "Data.Tuple.Tuple" -> Just expectedGoType
+        Branch _ _, TypeInt64 -> Just TypeInt64
         _, _ -> mbExpectedGoType
     in
       translate (context { mbExpectedExprType = Just type_, mbExpectedGoType = constructorExpected }) nextId value

@@ -144,7 +144,7 @@ func Call_Probe_fold(a,v int64) int64 { trace=append(trace,v); return a*10+v }
 var callback_map = gopurs_runtime.Func(func(v gopurs_runtime.Value) gopurs_runtime.Value {return gopurs_runtime.Int(Call_Probe_map(v.IntVal))})
 var callback_filter = gopurs_runtime.Func(func(v gopurs_runtime.Value) gopurs_runtime.Value {return gopurs_runtime.Bool(Call_Probe_filter(v.IntVal))})
 var callback_fold = gopurs_runtime.Func2(func(a,v gopurs_runtime.Value) gopurs_runtime.Value {return gopurs_runtime.Int(Call_Probe_fold(a.IntVal,v.IntVal))})
-func values(v gopurs_runtime.Value) []int64 { a:=*(*[]gopurs_runtime.Value)(v.UnsafePtr);out:=make([]int64,len(a));for i,x:=range a{out[i]=x.IntVal};return out }
+func values(v gopurs_runtime.Value) []int64 { return gopurs_runtime.UnboxIntArray(v) }
 ${declarations.join('\n')}
 func main() {
     for _,input:=range [][]int64{nil,{-1,0,2,3}} {
@@ -160,7 +160,7 @@ func main() {
                 trace=nil;result:=probe();if !slices.Equal(trace,input){panic(fmt.Sprintf("%s/%d callback order: %v",kind,mode,trace))}
                 if kind=="fold"{if result.IntVal!=fold{panic("left fold")};continue}
                 if !slices.Equal(values(result),expected){panic(fmt.Sprintf("%s/%d values: %v",kind,mode,values(result)))}
-                repeated:=probe();if len(expected)>0{(*(*[]gopurs_runtime.Value)(result.UnsafePtr))[0]=gopurs_runtime.Int(99)}
+                repeated:=probe();if len(expected)>0{if result.Type==gopurs_runtime.TypeIntArray{(*(*[]int64)(result.UnsafePtr))[0]=99}else{(*(*[]gopurs_runtime.Value)(result.UnsafePtr))[0]=gopurs_runtime.Int(99)}}
                 if !slices.Equal(values(repeated),expected)||!slices.Equal(values(array),input){panic("array alias")}
             }
         }

@@ -1,6 +1,7 @@
 package gopurs_runtime
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
@@ -199,6 +200,7 @@ const (
 	TypeRecordData   = 25
 	TypeFunc11       = 26
 	TypeFunctionData = 27
+	TypeIntArray     = 28
 )
 
 // We do not add FloatVal or BoolVal fields to keep the struct size minimal.
@@ -395,16 +397,41 @@ tail:
 // byte and yield RuneError, matching Data.String.CodePoints.toCodePointArray.
 // The empty input follows utf8.DecodeRuneInString: RuneError with width zero.
 func DecodeStringCodePoint(s string) (rune, int) {
-	r, width := utf8.DecodeRuneInString(s)
-	if r == utf8.RuneError && width == 1 && len(s) >= 3 && s[0] == 0xED && s[1] >= 0xA0 && s[1] <= 0xBF && s[2]&0xC0 == 0x80 {
-		r = rune(int64(s[0]&0x0F)<<12 | int64(s[1]&0x3F)<<6 | int64(s[2]&0x3F))
-		width = 3
-		if r <= 0xDBFF && len(s) >= 6 && s[3] == 0xED && s[4] >= 0xB0 && s[4] <= 0xBF && s[5]&0xC0 == 0x80 {
-			low := rune(int64(s[3]&0x0F)<<12 | int64(s[4]&0x3F)<<6 | int64(s[5]&0x3F))
-			return 0x10000 + (r-0xD800)*0x400 + low - 0xDC00, 6
+	if len(s) == 0 {
+		return utf8.RuneError, 0
+	}
+	b0 := s[0]
+	if b0 < utf8.RuneSelf {
+		return rune(b0), 1
+	}
+	if b0 < 0xC2 {
+		return utf8.RuneError, 1
+	}
+	if b0 < 0xE0 {
+		if len(s) >= 2 && s[1]&0xC0 == 0x80 {
+			return rune(b0&0x1F)<<6 | rune(s[1]&0x3F), 2
+		}
+		return utf8.RuneError, 1
+	}
+	if b0 < 0xF0 {
+		if len(s) >= 3 && s[1]&0xC0 == 0x80 && s[2]&0xC0 == 0x80 && (b0 != 0xE0 || s[1] >= 0xA0) {
+			r := rune(b0&0x0F)<<12 | rune(s[1]&0x3F)<<6 | rune(s[2]&0x3F)
+			if b0 == 0xED && s[1] >= 0xA0 && s[1] <= 0xAF &&
+				len(s) >= 6 && s[3] == 0xED && s[4] >= 0xB0 && s[4] <= 0xBF && s[5]&0xC0 == 0x80 {
+				low := rune(s[3]&0x0F)<<12 | rune(s[4]&0x3F)<<6 | rune(s[5]&0x3F)
+				return 0x10000 + (r-0xD800)*0x400 + low - 0xDC00, 6
+			}
+			return r, 3
+		}
+		return utf8.RuneError, 1
+	}
+	if b0 <= 0xF4 {
+		if len(s) >= 4 && s[1]&0xC0 == 0x80 && s[2]&0xC0 == 0x80 && s[3]&0xC0 == 0x80 &&
+			(b0 != 0xF0 || s[1] >= 0x90) && (b0 != 0xF4 || s[1] <= 0x8F) {
+			return rune(b0&0x07)<<18 | rune(s[1]&0x3F)<<12 | rune(s[2]&0x3F)<<6 | rune(s[3]&0x3F), 4
 		}
 	}
-	return r, width
+	return utf8.RuneError, 1
 }
 
 // CountStringCodeUnits scans a native string using PureScript UTF-16 semantics.
@@ -664,6 +691,61 @@ func Array(v []Value) Value {
 	return Value{Type: TypeArray, UnsafePtr: unsafe.Pointer(ptr)}
 }
 
+func IntArray(v []int64) Value {
+	ptr := new([]int64)
+	*ptr = v
+	return Value{Type: TypeIntArray, UnsafePtr: unsafe.Pointer(ptr)}
+}
+
+func EqualIntArray(a, b []int64) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	if len(a) == 0 {
+		return true
+	}
+	return bytes.Equal(
+		unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(a))), len(a)*8),
+		unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(b))), len(b)*8),
+	)
+}
+
+func ArrayValues(arr Value) []Value {
+	if arr.Type == TypeIntArray {
+		if arr.UnsafePtr == nil {
+			return nil
+		}
+		src := *(*[]int64)(arr.UnsafePtr)
+		out := make([]Value, len(src))
+		for i, v := range src {
+			out[i] = Int(v)
+		}
+		return out
+	}
+	if arr.UnsafePtr == nil {
+		return nil
+	}
+	return *(*[]Value)(arr.UnsafePtr)
+}
+
+func UnboxIntArray(arr Value) []int64 {
+	if arr.Type == TypeIntArray {
+		if arr.UnsafePtr == nil {
+			return make([]int64, 0)
+		}
+		src := *(*[]int64)(arr.UnsafePtr)
+		out := make([]int64, len(src))
+		copy(out, src)
+		return out
+	}
+	src := *(*[]Value)(arr.UnsafePtr)
+	out := make([]int64, len(src))
+	for i, v := range src {
+		out[i] = v.IntVal
+	}
+	return out
+}
+
 func (v Value) PtrVal() any {
 	return *(*any)(v.UnsafePtr)
 }
@@ -684,6 +766,8 @@ func (v Value) AnyVal() any {
 		return v.IntVal != 0
 	case TypeArray:
 		return *(*[]Value)(v.UnsafePtr)
+	case TypeIntArray:
+		return ArrayValues(v)
 	case TypeRecord:
 		return *(*map[string]Value)(v.UnsafePtr)
 	case TypeAny:
@@ -785,9 +869,37 @@ func RecordFieldLabel(name string) (string, bool) {
 	return text, RecordFieldName(text) == name
 }
 
-type RecordData struct {
+// RecordShape is canonical immutable key-order metadata for >5-field records.
+// Only compiler-generated shapes and updates preserving immutable Keys carry
+// it; hand-constructed RecordDict records leave Shape nil so caller mutations
+// to Keys are always caught by fallback key comparisons.
+type RecordShape struct {
 	Keys []string
-	Vals []Value
+}
+
+var recordShapeCache sync.Map // string -> *RecordShape
+
+func InternRecordShape(keys ...string) *RecordShape {
+	var sb strings.Builder
+	for _, k := range keys {
+		sb.WriteString(fmt.Sprintf("%d:", len(k)))
+		sb.WriteString(k)
+	}
+	cacheKey := sb.String()
+	if existing, ok := recordShapeCache.Load(cacheKey); ok {
+		return existing.(*RecordShape)
+	}
+	copied := make([]string, len(keys))
+	copy(copied, keys)
+	shape := &RecordShape{Keys: copied}
+	actual, _ := recordShapeCache.LoadOrStore(cacheKey, shape)
+	return actual.(*RecordShape)
+}
+
+type RecordData struct {
+	Keys  []string
+	Vals  []Value
+	Shape *RecordShape
 }
 
 // JSONObject is an immutable, compact JSON object supplied by the parser.
@@ -873,7 +985,13 @@ func (object JSONObjectView) Keys() []string {
 }
 
 func RecordDict(keys []string, vals []Value) Value {
-	r := &RecordData{keys, vals}
+	r := &RecordData{Keys: keys, Vals: vals}
+	return Value{Type: TypeRecordData, UnsafePtr: unsafe.Pointer(r)}
+}
+
+func RecordDictInterned(keys []string, vals []Value) Value {
+	shape := InternRecordShape(keys...)
+	r := &RecordData{Keys: shape.Keys, Vals: vals, Shape: shape}
 	return Value{Type: TypeRecordData, UnsafePtr: unsafe.Pointer(r)}
 }
 
@@ -1290,7 +1408,7 @@ func RecordSet(orig Value, key string, value Value) Value {
 			if field == key {
 				vals := append([]Value(nil), r.Vals...)
 				vals[i] = value
-				return RecordDict(r.Keys, vals)
+				return Value{Type: TypeRecordData, UnsafePtr: unsafe.Pointer(&RecordData{Keys: r.Keys, Vals: vals, Shape: r.Shape})}
 			}
 		}
 		keys := make([]string, len(r.Keys)+1)
@@ -1401,7 +1519,7 @@ func RecordUpdateDict(orig Value, keys []string, vals []Value) Value {
 				}
 			}
 		}
-		newR := RecordData{Keys: r.Keys, Vals: newVals}
+		newR := RecordData{Keys: r.Keys, Vals: newVals, Shape: r.Shape}
 		return Value{Type: TypeRecordData, UnsafePtr: unsafe.Pointer(&newR)}
 	}
 	m := RecordToMap(orig)
@@ -1759,10 +1877,16 @@ func Apply5(f Value, arg1, arg2, arg3, arg4, arg5 Value) Value {
 }
 
 func ArrayAccess(arr Value, index int) Value {
+	if arr.Type == TypeIntArray {
+		return Int((*(*[]int64)(arr.UnsafePtr))[index])
+	}
 	return (*(*[]Value)(arr.UnsafePtr))[index]
 }
 
 func ArrayLength(arr Value) int {
+	if arr.Type == TypeIntArray {
+		return len(*(*[]int64)(arr.UnsafePtr))
+	}
 	return len(*(*[]Value)(arr.UnsafePtr))
 }
 
@@ -1948,7 +2072,22 @@ func Unbox[T any](v any) T {
 			res[k] = v2
 		}
 		return any(res).(T)
+	case []Value:
+		return any(ArrayValues(val)).(T)
+	case []int64:
+		return any(UnboxIntArray(val)).(T)
 	case []any:
+		if val.Type == TypeIntArray {
+			var src []int64
+			if val.UnsafePtr != nil {
+				src = *(*[]int64)(val.UnsafePtr)
+			}
+			res := make([]any, len(src))
+			for i, v2 := range src {
+				res[i] = Int(v2)
+			}
+			return any(res).(T)
+		}
 		arr := *(*[]Value)(val.UnsafePtr)
 		res := make([]any, len(arr))
 		for i, v2 := range arr {
@@ -2409,6 +2548,12 @@ func foreignDataContainerKey(input any) (foreignDataKey, bool) {
 				values = *(*[]Value)(value.UnsafePtr)
 			}
 			return foreignDataContainerKey(values)
+		case TypeIntArray:
+			var ints []int64
+			if value.UnsafePtr != nil {
+				ints = *(*[]int64)(value.UnsafePtr)
+			}
+			return foreignDataKey{kind: 5, pointer: unsafe.Pointer(unsafe.SliceData(ints)), length: len(ints)}, true
 		case TypeRecord, TypeRecord1, TypeRecord2, TypeRecord3, TypeRecord4, TypeRecord5, TypeRecordData:
 			return foreignDataKey{kind: value.Type + 100, pointer: value.UnsafePtr}, true
 		}
@@ -2459,6 +2604,8 @@ func (graph *foreignDataGraph) scan(input any, parent *foreignDataNode) {
 				values = *(*[]Value)(value.UnsafePtr)
 			}
 			node.source = values
+		} else if value.Type == TypeIntArray {
+			node.source = ArrayValues(value)
 		} else {
 			node.source = RecordToMap(value)
 		}
@@ -2505,7 +2652,7 @@ func (graph *foreignDataGraph) convert(input any) any {
 			return graph.convert(*(*any)(value.UnsafePtr))
 		case TypeRecord0:
 			return map[string]any{}
-		case TypeArray, TypeRecord, TypeRecord1, TypeRecord2, TypeRecord3, TypeRecord4, TypeRecord5, TypeRecordData:
+		case TypeArray, TypeIntArray, TypeRecord, TypeRecord1, TypeRecord2, TypeRecord3, TypeRecord4, TypeRecord5, TypeRecordData:
 			// Containers use the graph below, including their cycles.
 		default:
 			panic("FFI Foreign: functions and algebraic constructors require an explicit PureScript conversion to native data")

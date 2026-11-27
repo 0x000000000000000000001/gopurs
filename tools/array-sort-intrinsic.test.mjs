@@ -8,6 +8,7 @@ import { empty as emptyMap, insert } from '../output/Data.Map/index.js';
 import { Just, Nothing } from '../output/Data.Maybe/index.js';
 import { ordString } from '../output/Data.Ord/index.js';
 import { empty as emptySet, insert as insertSet } from '../output/Data.Set/index.js';
+import { Tuple } from '../output/Data.Tuple/index.js';
 import * as Ref from '../output/Effect.Ref/index.js';
 import { emit } from '../output/Gopurs.ArraySort/index.js';
 import { StmtLeaf, flattenStmts } from '../output/Gopurs.ExprContext/index.js';
@@ -85,4 +86,69 @@ func main(){
 `);
     const run=spawnSync('go',['run','.'],{cwd:directory,encoding:'utf8',timeout:60000,env:{...process.env,GOWORK:'off'}});
     assert.ifError(run.error);assert.equal(run.status,0,run.stdout+run.stderr);assert.match(run.stdout,/stable Int sort, custom conversion order/);
+});
+
+test('static Ordering -> Int lambdas specialize without per-element comparison closures', t => {
+    const tagCond = (name, level) => new TcoExpr(null, new S.PrimOp(new S.Op1(
+        new S.OpIsTag(new C.Qualified(new Just('Data.Ordering'), name)),
+        new TcoExpr(null, new S.Local(new Just('o'), level)))));
+    const intLit = n => new TcoExpr(null, new S.Lit(new C.LitInt(n)));
+    const staticLambda = (lt, eq, gt) => new TcoExpr(null, new S.Abs([new Tuple(new Just('o'), 7)],
+        new TcoExpr(null, new S.Branch([
+            new S.Pair(tagCond('GT', 7), intLit(gt)),
+            new S.Pair(tagCond('EQ', 7), intLit(eq)),
+            new S.Pair(tagCond('LT', 7), intLit(lt)),
+        ], new TcoExpr(null, new S.Fail('Failed pattern match'))))));
+    const specs = [
+        { name: 'asc', lt: -1, eq: 0, gt: 1, expectNoCompare: true },
+        { name: 'desc', lt: 1, eq: 0, gt: -1, expectNoCompare: true },
+        { name: 'zero', lt: 0, eq: 0, gt: 0, expectNoCompare: false },
+    ];
+    const declarations = [];
+    for (const spec of specs) {
+        const supplied = [comparator(), staticLambda(spec.lt, spec.eq, spec.gt), variable('Probe', 'array')];
+        const translate = _ctx => nextId => expr => {
+            if (expr === supplied[1]) throw Error('static conversion lambda must not be translated');
+            const isArray = expr === supplied[2];
+            return { stmts: new StmtLeaf(Go.rawGo(`trace=append(trace,"${isArray ? 'array' : 'comparator'}")`)),
+                expr: Go.rawGo(isArray ? 'array' : 'r.Value{}'),
+                exprType: isArray ? new Go.TypeNativeArray(Go.TypeInt64.value) : Go.TypeValue.value, nextId };
+        };
+        const result = emit(translate)(context())(0)(fn)(supplied);
+        assert.ok(result instanceof Just);
+        const body = [...flattenStmts(result.value0.stmts), new Go.GoReturn(result.value0.expr)].map(printGoExpr).join('\n');
+        if (spec.expectNoCompare) assert.doesNotMatch(body, /arraySort_compare/);
+        assert.match(body, /copy\(arraySort_output/);
+        declarations.push(`func sort_${spec.name}(array []int64) []int64 {\n${body}\n}`);
+    }
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-sort-static-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'gopurs_runtime'));
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), runtimeGoCode);
+    writeFileSync(join(directory, 'main.go'), `package main
+import("fmt";"slices";r "gopurs/output/gopurs_runtime")
+var trace []string
+${declarations.join('\n')}
+func main() {
+    cases := [][]int64{{}, {1}, {2,1}, {1,2}, {3,2,2}, {2,2,1}, {1,2,2,3}, {5,4,3,2,1}, {2,1,2,0,1,2}, {0,0,0,0}}
+    for _, input := range cases {
+        orig := append([]int64{}, input...)
+        trace = nil; gotAsc := sort_asc(input)
+        wantAsc := append([]int64{}, input...); slices.Sort(wantAsc)
+        if !slices.Equal(gotAsc, wantAsc) { panic(fmt.Sprint("asc mismatch", input, gotAsc, wantAsc)) }
+        if len(trace) != 2 || trace[0] != "comparator" || trace[1] != "array" { panic(fmt.Sprint("trace", trace)) }
+        gotDesc := sort_desc(input)
+        wantDesc := append([]int64{}, wantAsc...); slices.Reverse(wantDesc)
+        if !slices.Equal(gotDesc, wantDesc) { panic(fmt.Sprint("desc mismatch", input, gotDesc, wantDesc)) }
+        gotZero := sort_zero(input)
+        if !slices.Equal(gotZero, orig) { panic(fmt.Sprint("zero mismatch", input, gotZero, orig)) }
+        if !slices.Equal(input, orig) { panic("mutated") }
+    }
+    fmt.Println("static ordering specialization: ok")
+}
+`);
+    const run = spawnSync('go', ['run', '.'], { cwd: directory, encoding: 'utf8', timeout: 60000, env: { ...process.env, GOWORK: 'off' } });
+    assert.ifError(run.error); assert.equal(run.status, 0, run.stdout + run.stderr);
+    assert.match(run.stdout, /static ordering specialization: ok/);
 });

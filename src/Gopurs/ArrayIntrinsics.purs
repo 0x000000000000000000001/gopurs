@@ -126,8 +126,8 @@ curriedFold { depth } accArgs =
     loopBody = GoMutate resGoName (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply2") [ fExpr, GoVar resGoName, GoVar vName ])
     iifeBody = GoBlock
       [ GoAssign resGoName initExpr
-      , GoAssign arrGoName (GoCall (rawGo "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar arrValName) "UnsafePtr" ])
-      , GoForRange ("_, " <> vName <> " := range *" <> arrGoName) [ loopBody ]
+      , GoAssign arrGoName (GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayValues") [ GoVar arrValName ])
+      , GoForRange ("_, " <> vName <> " := range " <> arrGoName) [ loopBody ]
       , GoReturn (GoVar resGoName)
       ]
   in GoIIFE arrValName arrExpr iifeBody

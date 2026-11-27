@@ -80,8 +80,9 @@ guardedIntProduct translate context nextId operator lhs rhs = do
       (unboxGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType TypeInt64)
     cast name argument = GoCall (GoVar name) [ argument ]
     limit = GoBinOp "<<" (cast "int64" (GoInt 1)) (GoInt (53 - checked.bits))
+    doubleLimit = GoBinOp "<<" (cast "uint64" (GoInt 2)) (GoInt (53 - checked.bits))
     value = GoVar checked.name
-    within = GoBinOp "&&" (GoBinOp ">=" value (GoPrefixOp "-" limit)) (GoBinOp "<=" value limit)
+    within = GoBinOp "<=" (cast "uint64" (GoBinOp "+" value limit)) doubleLimit
     a = GoVar "guardedLeft"
     b = GoVar "guardedRight"
     function = GoFuncBlock [ Tuple "guardedLeft" TypeInt64, Tuple "guardedRight" TypeInt64 ]

@@ -284,8 +284,10 @@ test('workers preserve factory/thunk order, saved action replay, native fallback
   const dynamic = renderBody(emitArgument(local('changing'), ctx));
   const declarations = ctx.codegenStateRef.value.declarations;
   const getters = declarations.map(declaration => 'Get_' + declaration.value0.identifier.name + '()');
-  writeFileSync(join(directory, 'bridge.go'), 'package main\nimport("sync";"math";"gopurs/output/gopurs_runtime")\n' +
-    prepared.content + '\n' + wrappers + '\n' + workers + '\n' + declarations.map(printGoDecl).join('\n') + '\n' +
+  const printedDeclarations = declarations.map(printGoDecl).join('\n');
+  const syncImport = printedDeclarations.includes('sync.Once') ? '"sync";' : '';
+  writeFileSync(join(directory, 'bridge.go'), `package main\nimport(${syncImport}"math";"gopurs/output/gopurs_runtime")\n` +
+    prepared.content + '\n' + wrappers + '\n' + workers + '\n' + printedDeclarations + '\n' +
     cached.map((body, index) => `func cached${index}() gopurs_runtime.Value { ${body} }`).join('\n') +
     `\nfunc dynamic(input int64) gopurs_runtime.Value { ${dynamic} }`);
   writeFileSync(join(directory, 'bridge_test.go'), `package main

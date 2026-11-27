@@ -11,7 +11,7 @@ import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.ImmediateApplications.Scope (occurrences, substitute)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
-import PureScript.Backend.Optimizer.CoreFn (ExprType(Int, Boolean), Ident(..), Literal(..), ModuleName(..), Prop(..), Qualified(..))
+import PureScript.Backend.Optimizer.CoreFn (ExprType(ADT, Int, Boolean), Ident(..), Literal(..), ModuleName(..), Prop(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
 import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendEffect(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendOperator(..), BackendOperator2(..), BackendSyntax(..), Level, Pair(..))
 
@@ -75,9 +75,10 @@ region context runST original action = do
         LastWrite limit ->
           let bound = parameter limit
               result = pureResult (choose (ord OpGt seed bound) initial bound)
+              regionType = if runST then Int else ADT "Effect.Effect" [ "Effect", "Effect" ] [ Int ]
           -- Inclusive upward Int32 loops do not terminate at maxBound: keep
           -- the original allocation/action and all its looping behavior there.
-          in choose (ord OpLt bound (integer 2147483647)) result original
+          in NeutralExpr (Typed regionType (choose (ord OpLt bound (integer 2147483647)) result original))
     _ -> Nothing
 
 type Allocation = { st :: Boolean, reference :: Level, initial :: NeutralExpr, body :: NeutralExpr }

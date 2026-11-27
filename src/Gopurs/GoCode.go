@@ -102,10 +102,16 @@ func knownPackage(name string) (string, bool) {
 		return "gopurs/output/gopurs_runtime", true
 	case "math":
 		return "math", true
+	case "slices":
+		return "slices", true
+	case "strings":
+		return "strings", true
 	case "sync":
 		return "sync", true
 	case "unsafe":
 		return "unsafe", true
+	case "utf8":
+		return "unicode/utf8", true
 	}
 	return "", false
 }

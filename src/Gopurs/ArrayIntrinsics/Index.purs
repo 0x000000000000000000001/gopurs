@@ -43,26 +43,31 @@ emitSafeIndex translate context@{ codegenStateRef, modNameStr } nextId { justArg
     argType n = fromMaybe TypeValue (Array.index captured.exprTypes n)
     boxed n = boxGoExpr codegenStateRef modNameStr (arg n) (argType n)
     arrayName = "arrayIndex_source_" <> show captured.nextId
-    -- The captured argument is a variable, so this binding cannot repeat
-    -- evaluation or traverse the array.
+    -- Native arrays index directly; boxed arrays use O(1) ArrayLength/ArrayAccess
+    -- so both TypeArray and TypeIntArray avoid copying the container.
+    isNative = case argType 2 of
+      TypeNativeArray _ -> true
+      _ -> false
     source = arraySource "arrayIndex_value" arrayName (argType 2)
     elementType = selectedType context arrayArg source.elementType
     index = coerceGoExpr codegenStateRef modNameStr (arg 3) (argType 3) TypeInt64
-    element = GoIndex (rawGo ("(" <> source.target <> ")")) index
+    element = if isNative then GoIndex (rawGo ("(" <> source.target <> ")")) index
+      else GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ GoVar "arrayIndex_value", GoCall (GoVar "int") [ index ] ]
     converted = coerceGoExpr codegenStateRef modNameStr element source.elementType elementType
     selected = boxGoExpr codegenStateRef modNameStr converted elementType
     onFound = case argType 0 of
       TypeFunc [ inputType ] outputType -> boxGoExpr codegenStateRef modNameStr
         (GoCall (arg 0) [ coerceGoExpr codegenStateRef modNameStr converted elementType inputType ]) outputType
       _ -> applyBoxed (boxed 0) [ selected ]
+    arrayLen = if isNative then GoCall (GoVar "len") [ rawGo source.target ]
+      else GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayLength") [ GoVar "arrayIndex_value" ]
     inBounds = GoBinOp "&&"
       (GoBinOp ">=" index (rawGo "0"))
-      (GoBinOp "<" index (GoCall (GoVar "int64") [ GoCall (GoVar "len") [ rawGo source.target ] ]))
+      (GoBinOp "<" index (GoCall (GoVar "int64") [ arrayLen ]))
+    setupStmts = if isNative then [ GoAssign "arrayIndex_value" (arg 2), source.assignment ]
+      else [ GoAssign "arrayIndex_value" (arg 2) ]
     expr = GoCall (GoFuncLit []
-      [ GoAssign "arrayIndex_value" (arg 2)
-      , source.assignment
-      , GoIfElse inBounds [ GoReturn onFound ] []
-      ] (boxed 1) TypeValue) []
+      (setupStmts <> [ GoIfElse inBounds [ GoReturn onFound ] [] ]) (boxed 1) TypeValue) []
   in
     { stmts: captured.stmts, expr, exprType: TypeValue, nextId: captured.nextId }
 
@@ -75,16 +80,20 @@ unsafeIndex translate context@{ codegenStateRef, modNameStr } nextId arrayArg in
     array = translate child nextId (withoutArrayAnnotation arrayArg)
     arrayName = "arrayUnsafe_value_" <> show array.nextId
     sourceName = "arrayUnsafe_source_" <> show array.nextId
+    isNative = case array.exprType of
+      TypeNativeArray _ -> true
+      _ -> false
     source = arraySource arrayName sourceName array.exprType
     index = translate child (array.nextId + 1) indexArg
     indexName = "arrayUnsafe_index_" <> show index.nextId
     elementType = selectedType context arrayArg source.elementType
-    selected = GoIndex (rawGo ("(" <> source.target <> ")")) (GoVar indexName)
+    selected = if isNative then GoIndex (rawGo ("(" <> source.target <> ")")) (GoVar indexName)
+      else GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ GoVar arrayName, GoCall (GoVar "int") [ GoVar indexName ] ]
     converted = coerceGoExpr codegenStateRef modNameStr selected source.elementType elementType
   in
     { stmts: array.stmts
         <> StmtLeaf (GoAssign arrayName array.expr)
-        <> StmtLeaf source.assignment
+        <> (if isNative then StmtLeaf source.assignment else StmtEmpty)
         <> index.stmts
         <> StmtLeaf (GoAssign indexName (coerceGoExpr codegenStateRef modNameStr index.expr index.exprType TypeInt64))
     , expr: boxGoExpr codegenStateRef modNameStr converted elementType

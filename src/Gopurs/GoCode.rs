@@ -35,7 +35,8 @@ pub fn Gopurs_GoCode_referencedImportsImpl(_fallback: Func1<String, Value>, text
                 if bytes.get(index) == Some(&b'.') {
                     let path = match &text[start..index] {
                         "gopurs_runtime" => Some("gopurs/output/gopurs_runtime"),
-                        "math" => Some("math"), "sync" => Some("sync"), "unsafe" => Some("unsafe"),
+                        "math" => Some("math"), "slices" => Some("slices"), "strings" => Some("strings"),
+                        "sync" => Some("sync"), "unsafe" => Some("unsafe"), "utf8" => Some("unicode/utf8"),
                         _ => None,
                     };
                     if let Some(path) = path { imports.insert(path); }

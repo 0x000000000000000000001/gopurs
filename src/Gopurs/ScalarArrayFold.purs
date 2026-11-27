@@ -39,12 +39,22 @@ emit translate context@{ codegenStateRef, modNameStr } nextId fn args = do
     initial = coerceGoExpr codegenStateRef modNameStr (arg 1) (argType 1) scalar
     element = coerceGoExpr codegenStateRef modNameStr (GoVar "scalarFold_value") source.elementType scalar
     common = [ GoAssign "scalarFold_input" (arg 2), source.assignment ]
+    intBody = case argType 2 of
+      TypeNativeArray _ ->
+        common <> [ GoAssign "scalarFold_result" initial ] <>
+          integerSumBody source.target element
+            (\value -> coerceGoExpr codegenStateRef modNameStr value source.elementType TypeInt64)
+      _ ->
+        [ GoAssign "scalarFold_input" (arg 2)
+        , GoAssign "scalarFold_result" initial
+        , GoIfElse (rawGo "scalarFold_input.Type == gopurs_runtime.TypeIntArray")
+            ([ GoAssign "scalarFold_ints" (rawGo "*(*[]int64)(scalarFold_input.UnsafePtr)") ] <>
+              integerSumBody "scalarFold_ints" (GoVar "scalarFold_value") identity)
+            ([ GoAssign "scalarFold_values" (rawGo "*(*[]gopurs_runtime.Value)(scalarFold_input.UnsafePtr)") ] <>
+              integerSumBody "scalarFold_values" (GoSelector (GoVar "scalarFold_value") "IntVal") (\value -> GoSelector value "IntVal"))
+        ]
     expr = if scalar == TypeInt64 then
-      GoCall (GoFuncLit []
-        (common <>
-          integerSum source.target initial element
-            (\value -> coerceGoExpr codegenStateRef modNameStr value source.elementType scalar))
-        (GoVar "scalarFold_result") scalar) []
+      GoCall (GoFuncLit [] intBody (GoVar "scalarFold_result") scalar) []
       else
         GoCall (GoFuncLit [] common
           (GoCall (GoSelector (GoVar "gopurs_runtime") "ConcatStrings")
@@ -57,10 +67,9 @@ emit translate context@{ codegenStateRef, modNameStr } nextId fn args = do
 -- wrapping int64 additions and narrow once after a nonempty fold. Small inputs
 -- keep the original loop, including returning a wide seed unchanged when empty.
 -- This applies only to the canonical callback selected above, not user folds.
-integerSum :: String -> GoExpr -> GoExpr -> (GoExpr -> GoExpr) -> Array GoExpr
-integerSum source initial element unbox =
-  [ GoAssign "scalarFold_result" initial
-  , GoAssign values (rawGo source)
+integerSumBody :: String -> GoExpr -> (GoExpr -> GoExpr) -> Array GoExpr
+integerSumBody source element unbox =
+  [ GoAssign values (rawGo source)
   , GoIfElse (GoBinOp "<" (GoCall (GoVar "len") [ GoVar values ]) (GoInt 8))
       [ GoForRange ("_, scalarFold_value := range " <> values)
           [ GoMutate "scalarFold_result" (GoCall (GoSelector (GoVar "gopurs_runtime") "IntAdd")

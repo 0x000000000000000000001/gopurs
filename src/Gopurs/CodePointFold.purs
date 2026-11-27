@@ -120,15 +120,34 @@ emitLoop translate context nextId callback seed input limit grouped =
       , GoAssign "codePointFold_result" (integer (arg 1) (argType 1))
       ] <> preparation <>
       [ GoForRange loopHeader
-          [ GoAssign "codePointFold_value" (GoCall (GoVar "rune")
-              [ GoIndex (GoVar "codePointFold_input") (GoVar "codePointFold_offset") ])
-          , GoAssign "codePointFold_width" (GoInt 1)
-          -- ASCII is exactly one code point of width one. Keep the more
-          -- complex decoder off this common path; every other byte retains
-          -- the complete UTF-8/WTF-8 and replacement-character semantics.
-          , GoIfElse (GoBinOp ">=" (GoVar "codePointFold_value") (GoInt 128))
-              [ GoMutate "codePointFold_value, codePointFold_width"
-                  (GoCall (GoSelector (GoVar "gopurs_runtime") "DecodeStringCodePoint") [ rawGo "codePointFold_input[codePointFold_offset:]" ]) ] []
+          [ GoAssign "codePointFold_b0" (GoIndex (GoVar "codePointFold_input") (GoVar "codePointFold_offset"))
+          , rawGo "var codePointFold_value rune"
+          , rawGo "var codePointFold_width int"
+          -- Inline valid ASCII and 2/3/4-byte UTF-8 decoding to keep common
+          -- Unicode characters off the slow call path. Surrogates (0xED) and
+          -- malformed sequences still delegate to DecodeStringCodePoint.
+          , GoIfElse (rawGo "codePointFold_b0 < 0x80")
+              [ GoMutate "codePointFold_value" (rawGo "rune(codePointFold_b0)")
+              , GoMutate "codePointFold_width" (GoInt 1)
+              ]
+              [ GoIfElse (rawGo "codePointFold_b0 >= 0xC2 && codePointFold_b0 < 0xE0 && codePointFold_offset+1 < len(codePointFold_input) && codePointFold_input[codePointFold_offset+1]&0xC0 == 0x80")
+                  [ GoMutate "codePointFold_value" (rawGo "rune(codePointFold_b0&0x1F)<<6 | rune(codePointFold_input[codePointFold_offset+1]&0x3F)")
+                  , GoMutate "codePointFold_width" (GoInt 2)
+                  ]
+                  [ GoIfElse (rawGo "codePointFold_b0 >= 0xE0 && codePointFold_b0 < 0xF0 && codePointFold_b0 != 0xED && codePointFold_offset+2 < len(codePointFold_input) && codePointFold_input[codePointFold_offset+1]&0xC0 == 0x80 && codePointFold_input[codePointFold_offset+2]&0xC0 == 0x80 && (codePointFold_b0 != 0xE0 || codePointFold_input[codePointFold_offset+1] >= 0xA0)")
+                      [ GoMutate "codePointFold_value" (rawGo "rune(codePointFold_b0&0x0F)<<12 | rune(codePointFold_input[codePointFold_offset+1]&0x3F)<<6 | rune(codePointFold_input[codePointFold_offset+2]&0x3F)")
+                      , GoMutate "codePointFold_width" (GoInt 3)
+                      ]
+                      [ GoIfElse (rawGo "codePointFold_b0 >= 0xF0 && codePointFold_b0 <= 0xF4 && codePointFold_offset+3 < len(codePointFold_input) && codePointFold_input[codePointFold_offset+1]&0xC0 == 0x80 && codePointFold_input[codePointFold_offset+2]&0xC0 == 0x80 && codePointFold_input[codePointFold_offset+3]&0xC0 == 0x80 && (codePointFold_b0 != 0xF0 || codePointFold_input[codePointFold_offset+1] >= 0x90) && (codePointFold_b0 != 0xF4 || codePointFold_input[codePointFold_offset+1] <= 0x8F)")
+                          [ GoMutate "codePointFold_value" (rawGo "rune(codePointFold_b0&0x07)<<18 | rune(codePointFold_input[codePointFold_offset+1]&0x3F)<<12 | rune(codePointFold_input[codePointFold_offset+2]&0x3F)<<6 | rune(codePointFold_input[codePointFold_offset+3]&0x3F)")
+                          , GoMutate "codePointFold_width" (GoInt 4)
+                          ]
+                          [ GoMutate "codePointFold_value, codePointFold_width"
+                              (GoCall (GoSelector (GoVar "gopurs_runtime") "DecodeStringCodePoint") [ rawGo "codePointFold_input[codePointFold_offset:]" ])
+                          ]
+                      ]
+                  ]
+              ]
           , GoMutate "codePointFold_result" (GoCall (arg 0)
               [ GoVar "codePointFold_result", GoCall (GoVar "int64") [ GoVar "codePointFold_value" ] ])
           , GoMutate "codePointFold_offset" (GoBinOp "+" (GoVar "codePointFold_offset") (GoVar "codePointFold_width"))

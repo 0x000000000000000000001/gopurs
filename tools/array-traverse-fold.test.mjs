@@ -128,13 +128,73 @@ func Get_Data_Maybe_applicativeMaybe()r.Value{trace=append(trace,"applicative");
 func Call_Factories_input(xs []int64)[]int64{trace=append(trace,"input");if len(xs)>0{xs[0]=r.IntAdd(xs[0],17)};return xs}
 func expected(xs []int64,mode int)int64{acc:=int64(17);for i,v:=range xs{if mode<2{delta:=int64(1);if mode==1{delta=int64(i)};v=r.IntAdd(v,delta)};acc=r.IntSub(r.IntMul(acc,3),r.IntAdd(int64(i),r.IntMul(v,3)))};return acc}
 func main(){checks:=0;values:=[]int64{0,1,-1,math.MaxInt32,math.MinInt32,1<<52,(1<<52)+1,-(1<<52)-1,math.MaxInt64,math.MinInt64};for n:=0;n<37;n++{for offset:=range values{xs:=make([]int64,n);for i:=range xs{xs[i]=values[(i+offset)%len(values)]};before:=make([]int64,n);copy(before,xs)
-trace=nil;if got,want:=Call_TraverseFoldFixture_direct(xs),expected(xs,0);got!=want{panic(fmt.Sprint("direct",n,offset,got,want))};if !reflect.DeepEqual(trace,[]string{"traversable","applicative"})||!reflect.DeepEqual(xs,before){panic("direct order or mutation")};checks++
-trace=nil;if got,want:=Call_TraverseFoldFixture_indexed(xs),expected(xs,1);got!=want{panic(fmt.Sprint("indexed",n,offset,got,want))};if !reflect.DeepEqual(trace,[]string{"indexed","applicative"})||!reflect.DeepEqual(xs,before){panic("indexed order or mutation")};checks++
-trace=nil;if got,want:=Call_TraverseFoldFixture_identity(xs),expected(xs,2);got!=want{panic(fmt.Sprint("identity wide multiply",n,offset,got,want))};if !reflect.DeepEqual(trace,[]string{"traversable","applicative"})||!reflect.DeepEqual(xs,before){panic("identity order or mutation")};checks++
-changed:=make([]int64,n);copy(changed,xs);if n>0{changed[0]=r.IntAdd(changed[0],17)};trace=nil;if got,want:=Call_TraverseFoldFixture_factory(xs),expected(changed,0);got!=want{panic(fmt.Sprint("factory",n,offset,got,want))};if !reflect.DeepEqual(trace,[]string{"traversable","applicative","input"})||!reflect.DeepEqual(xs,changed){panic("factory phase or mutation")};checks++
+trace=nil;if got,want:=Call_TraverseFoldFixture_direct(xs),expected(xs,0);got!=want{panic(fmt.Sprint("direct",n,offset,got,want))};if len(trace)!=0||!reflect.DeepEqual(xs,before){panic("direct order or mutation")};checks++
+trace=nil;if got,want:=Call_TraverseFoldFixture_indexed(xs),expected(xs,1);got!=want{panic(fmt.Sprint("indexed",n,offset,got,want))};if len(trace)!=0||!reflect.DeepEqual(xs,before){panic("indexed order or mutation")};checks++
+trace=nil;if got,want:=Call_TraverseFoldFixture_identity(xs),expected(xs,2);got!=want{panic(fmt.Sprint("identity wide multiply",n,offset,got,want))};if len(trace)!=0||!reflect.DeepEqual(xs,before){panic("identity order or mutation")};checks++
+changed:=make([]int64,n);copy(changed,xs);if n>0{changed[0]=r.IntAdd(changed[0],17)};trace=nil;if got,want:=Call_TraverseFoldFixture_factory(xs),expected(changed,0);got!=want{panic(fmt.Sprint("factory",n,offset,got,want))};if !reflect.DeepEqual(trace,[]string{"input"})||!reflect.DeepEqual(xs,changed){panic("factory phase or mutation")};checks++
 }};fmt.Println(checks,"traverse fold controls passed")}
 `);
     const result = spawnSync('go', ['run', '.'], { cwd: directory, encoding: 'utf8', env: { ...process.env, GOWORK: 'off' } });
     assert.equal(result.status, 0, result.stdout + result.stderr);
     assert.equal(result.stdout.trim(), '1480 traverse fold controls passed');
+});
+
+test('fallible total traverse Maybe + case fuses without intermediate array allocation', t => {
+    const nothing = typed(maybe(C.Int.value), n(new S.CtorSaturated(qual('Data.Maybe', 'Nothing'), C.SumType.value, 'Maybe', 'Nothing', [])));
+    const eqInt = (a, b) => typed(C.Boolean.value, n(new S.PrimOp(new S.Op2(new S.OpIntOrd(S.OpEq.value), a, b))));
+    const fallibleMapper = lambda([31], maybe(C.Int.value),
+        typed(maybe(C.Int.value), n(new S.Branch([
+            new S.Pair(eqInt(local(31), local(21)), nothing),
+        ], just(arithmetic(S.OpAdd.value, local(31), int(1)))))));
+    const source = CodeGen.translate(metadata())({
+        name: 'TraverseFallibleFixture',
+        bindings: [{ recursive: false, bindings: [
+            new Tuple('consume', consumer),
+            new Tuple('fallible', lambda([20, 21], C.Int.value,
+                whole(producer(fallibleMapper, false, local(20, array)), branch(payload(), ref('TraverseFallibleFixture', 'consume'))),
+                [array, C.Int.value])),
+        ] }],
+        comments: [], imports: emptySet, exports: emptySet, reExports: emptySet,
+        dataTypes: emptyMap, dataDecls: [], classDecls: [], foreign: emptyMap, implementations: emptyMap, directives: emptyMap,
+    });
+    const worker = source.slice(source.indexOf('func Call_TraverseFallibleFixture_fallible('));
+    assert.match(worker, /traverseFold_fail_/);
+    assert.doesNotMatch(worker, /traverseTotal_output_|make\(\[\]int64/);
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-traverse-fallible-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'gopurs_runtime'));
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), runtimeGoCode);
+    writeFileSync(join(directory, 'fixture.go'), source.replace('package purescript', 'package main'));
+    writeFileSync(join(directory, 'main.go'), `package main
+import ("fmt"; "testing"; r "gopurs/output/gopurs_runtime")
+var sink int64
+func expected(xs []int64, bad int64) int64 {
+    acc := int64(17)
+    for i, v := range xs {
+        if v == bad { return -1 }
+        acc = r.IntSub(r.IntMul(acc, 3), r.IntAdd(int64(i), r.IntMul(r.IntAdd(v, 1), 3)))
+    }
+    return acc
+}
+func main() {
+    for _, n := range []int{0, 1, 2, 7, 16, 100} {
+        xs := make([]int64, n)
+        for i := range xs { xs[i] = int64(i + 1) }
+        for _, bad := range []int64{-99, 1, int64(n/2 + 1), int64(n)} {
+            if got, want := Call_TraverseFallibleFixture_fallible(xs, bad), expected(xs, bad); got != want {
+                panic(fmt.Sprintf("n=%d bad=%d got=%d want=%d", n, bad, got, want))
+            }
+        }
+    }
+    big := make([]int64, 1000)
+    for i := range big { big[i] = int64(i + 1) }
+    allocs := testing.AllocsPerRun(50, func() { sink = Call_TraverseFallibleFixture_fallible(big, 1000) })
+    if allocs != 0 { panic(fmt.Sprintf("expected 0 allocs, got %v", allocs)) }
+    fmt.Println("fallible traverse fold ok (allocs=0)")
+}
+`);
+    const result = spawnSync('go', ['run', '.'], { cwd: directory, encoding: 'utf8', env: { ...process.env, GOWORK: 'off' } });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stdout, /fallible traverse fold ok \(allocs=0\)/);
 });

@@ -236,7 +236,7 @@ emitLoop { metadata, codegenStateRef, modNameStr } { indexed, callbackOffset, ar
     , nextId: captured.nextId + 1
     }
   where
-  rawArray input = GoPrefixOp "*" (GoCall (rawGo "(*[]gopurs_runtime.Value)") [ GoSelector input "UnsafePtr" ])
+  rawArray input = GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayValues") [ input ]
 
 -- This callback is consumed only by the known traversal, so it needs no boxed
 -- function ABI. Adjacent lambdas are values: capturing them here preserves the

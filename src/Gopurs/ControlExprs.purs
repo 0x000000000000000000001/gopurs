@@ -109,10 +109,11 @@ booleanAnd translate context@{ codegenStateRef, depth, modNameStr } nextId e1 e2
     else
       let
         tmpVar = "__t_and_" <> show res2.nextId
-        declTmp = StmtLeaf (rawGo ("var " <> tmpVar <> " bool = false\nif " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) <> " {\n"))
-        assignTmp = StmtLeaf (rawGo (tmpVar <> " = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool) <> "\n}"))
+        declTmp = StmtLeaf (rawGo ("var " <> tmpVar <> " bool = false"))
+        guardIf = StmtLeaf (GoIfElse (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool)
+          (flattenStmts res2.stmts <> [ GoMutate tmpVar (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool) ]) [])
       in
-        { expr: rawGo tmpVar, exprType: TypeBool, stmts: res1.stmts <> declTmp <> res2.stmts <> assignTmp, nextId: res2.nextId + 1 }
+        { expr: GoVar tmpVar, exprType: TypeBool, stmts: res1.stmts <> declTmp <> guardIf, nextId: res2.nextId + 1 }
 
 booleanOr :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> ExprResult
 booleanOr translate context@{ codegenStateRef, depth, modNameStr } nextId e1 e2 =
@@ -125,10 +126,11 @@ booleanOr translate context@{ codegenStateRef, depth, modNameStr } nextId e1 e2 
     else
       let
         tmpVar = "__t_or_" <> show res2.nextId
-        declTmp = StmtLeaf (rawGo ("var " <> tmpVar <> " bool = true\nif !(" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) <> ") {\n"))
-        assignTmp = StmtLeaf (rawGo (tmpVar <> " = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool) <> "\n}"))
+        declTmp = StmtLeaf (rawGo ("var " <> tmpVar <> " bool = true"))
+        guardIf = StmtLeaf (GoIfElse (GoPrefixOp "!" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool))
+          (flattenStmts res2.stmts <> [ GoMutate tmpVar (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool) ]) [])
       in
-        { expr: rawGo tmpVar, exprType: TypeBool, stmts: res1.stmts <> declTmp <> res2.stmts <> assignTmp, nextId: res2.nextId + 1 }
+        { expr: GoVar tmpVar, exprType: TypeBool, stmts: res1.stmts <> declTmp <> guardIf, nextId: res2.nextId + 1 }
 
 isEmptyStmts :: StmtTree -> Boolean
 isEmptyStmts StmtEmpty = true

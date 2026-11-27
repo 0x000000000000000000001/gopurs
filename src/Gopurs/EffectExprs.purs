@@ -56,8 +56,27 @@ ordinaryBind translate context@{ codegenStateRef, depth, modNameStr, bound, opti
     { stmts: resBinding.stmts <> StmtLeaf (GoAssign name bindingExpr) <> resBody.stmts, expr: bodyExpr, exprType: resBody.exprType, nextId: resBody.nextId }
 
 pureValue :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> ExprResult
-pureValue translate context@{ depth } nextId binding =
-  translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId binding
+pureValue translate context@{ depth, mbExpectedExprType } nextId binding =
+  let
+    expectedInnerInt = case mbExpectedExprType of
+      Just (ADT "Effect.Effect" _ [ ADT "Effect.Effect" _ [ Int ] ]) -> true
+      _ -> false
+    expectedScalarInt = case mbExpectedExprType of
+      Just (ADT "Effect.Effect" _ [ Int ]) -> true
+      _ -> false
+    innerContext = context
+      { depth = (depth + 1), tcoIdent = Nothing, loopCtx = []
+      , options = { isTail: false, inEffectBlock: false }
+      , mbExpectedExprType = if expectedScalarInt then Just Int else Nothing
+      , mbExpectedGoType = if expectedScalarInt then Just TypeInt64 else Nothing
+      }
+    wrapped = if expectedInnerInt && isEffectNode binding then
+      Just (wrapIntAction translate (innerContext { mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId binding)
+      else wrapCachedInt translate (innerContext { mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId binding
+  in
+    case wrapped of
+      Just result -> result
+      Nothing -> translate innerContext nextId binding
 
 defer :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> ExprResult
 defer translate context@{ codegenStateRef, depth, modNameStr } nextId binding =
@@ -111,7 +130,10 @@ primitive translate context@{ codegenStateRef, depth, modNameStr } nextId eff =
 wrap :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> ExprResult
 wrap translate context nextId tcoExpr =
   let
-    res = translate (context { options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId tcoExpr
+    expectedEffect = case context.mbExpectedExprType of
+      Just ty@(ADT "Effect.Effect" _ [ ADT "Effect.Effect" _ [ Int ] ]) -> Just ty
+      _ -> Nothing
+    res = translate (context { options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = expectedEffect, mbExpectedGoType = Nothing }) nextId tcoExpr
   in
     { stmts: StmtEmpty, expr: boxedAction context res, exprType: TypeValue, nextId: res.nextId }
 
@@ -124,8 +146,13 @@ wrapCachedInt translate context nextId expression = do
     ADT "Effect.Effect" _ [ Int ] -> pure unit
     _ -> Nothing
   guard (isEffectNode expression)
+  pure (wrapIntAction translate context nextId expression)
+
+wrapIntAction :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> ExprResult
+wrapIntAction translate context nextId expression =
   let
-    result = translate (context { options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId expression
+    effectIntType = ADT "Effect.Effect" [ "Effect", "Effect" ] [ Int ]
+    result = translate (context { options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Just effectIntType, mbExpectedGoType = Nothing }) nextId expression
     -- Translate once, retaining the original boxed body as an independent
     -- entry point. Each invocation executes exactly one of these bodies.
     nativeResult = case result.exprType, result.expr of
@@ -139,7 +166,7 @@ wrapCachedInt translate context nextId expression = do
       -- Boxed dynamic results retain the FFI's complete Unbox semantics.
       -- Reuse this translation even when it cannot provide a native entry.
       Nothing -> boxedAction context result
-  pure { stmts: StmtEmpty, expr: action, exprType: TypeValue, nextId: result.nextId }
+  in { stmts: StmtEmpty, expr: action, exprType: TypeValue, nextId: result.nextId }
 
 boxedAction :: ExprContext -> ExprResult -> GoExpr
 boxedAction { codegenStateRef, modNameStr } result =

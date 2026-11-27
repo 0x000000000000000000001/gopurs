@@ -102,6 +102,8 @@ fromValue dataDecls t (Just tast) valName depth
   | Structured.needsConversion t tast = Structured.fromValue (\go ps value -> fromValue dataDecls go (Just ps) value depth) t tast valName
 -- Nested native arrays require element conversion at every level. A slice of
 -- boxed Values cannot be reinterpreted as a slice of scalar Go elements.
+fromValue _ (TArray (TNamed "int64")) mbTast valName _
+  | not (isOpaqueType mbTast) = "gopurs_runtime.UnboxIntArray(" <> valName <> ")"
 fromValue dataDecls array@(TArray item) mbTast valName depth
   | not (isOpaqueType mbTast) && not (isRuntimeValueNode item) =
       let
@@ -246,6 +248,7 @@ toValue dataDecls (TFunc args ret) mbTast valName =
             Nothing -> genInnerArg valName "gopurs_runtime.Value{}" argUnwrap
             Just r -> genInnerArg ("inner_res := " <> valName) (toValue dataDecls r (mbTast >>= getTastReturnType) "inner_res") argUnwrap
 toValue _ (TArray _) mbTast valName | isOpaqueType mbTast = "gopurs_runtime.Any(" <> valName <> ")"
+toValue _ (TArray (TNamed "int64")) _ valName = "gopurs_runtime.IntArray(" <> valName <> ")"
 toValue dataDecls (TArray elem) mbTast valName | printTypeNode elem /= "gopurs_runtime.Value" =
   let
     itemTast = case mbTast of
@@ -341,6 +344,8 @@ workerReturn dataDecls tast = case _ of
         indented = String.replaceAll (Pattern "\n") (Replacement "\n\t") wrapped
       in
         [ "\treturn " <> indented ]
+    TArray (TNamed "int64") ->
+      [ "\treturn gopurs_runtime.IntArray(go_res)" ]
     TArray elem | not (isRuntimeValueNode elem) ->
       [ "\tout := make([]gopurs_runtime.Value, len(go_res))"
       , "\tfor i, v := range go_res { out[i] = gopurs_runtime.Box(v) }"

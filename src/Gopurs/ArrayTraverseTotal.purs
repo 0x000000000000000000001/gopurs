@@ -12,7 +12,7 @@ import Gopurs.AdtExprs as AdtExprs
 import Gopurs.CallAnalysis (collectCurriedAbs)
 import Gopurs.CallArguments as CallArguments
 import Gopurs.ExprAnalysis (extractFuncType, getExprType, unwrapTcoExpr)
-import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, bindParameters, childContext, flattenStmts)
+import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, bindParameters, childContext, flattenStmts)
 import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, rawGo)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoTypes (exprTypeToGoType)
@@ -76,22 +76,22 @@ emit translate context nextId indexed callbackOffset args = do
 emitTotal :: TranslateExpr -> ExprContext -> Int -> Int -> Array TcoExpr -> Array (Tuple (Maybe Ident) Level) -> TcoExpr -> ExprResult
 emitTotal translate context nextId callbackOffset args parameters result =
   let
-    -- The admitted callback is an adjacent lambda, so constructing it has no
-    -- evaluation. Other arguments still run in their original order and stage.
+    -- The admitted dictionaries are pure canonical stdlib instances and the
+    -- callback is an adjacent lambda; neither has observable evaluation.
+    -- Capture only the array operand.
+    inputArg = Array.slice (callbackOffset + 1) (callbackOffset + 2) args
     captured = CallArguments.capture { prefix: "traverseTotal_arg_", markUsed: true }
-      (\index currentId arg -> if index == callbackOffset then
-        { stmts: StmtEmpty, expr: rawGo "true", exprType: TypeBool, nextId: currentId }
-        else translate (childContext context Nothing) currentId arg) nextId args
+      (\_ currentId arg -> translate (childContext context Nothing) currentId arg) nextId inputArg
     suffix = show captured.nextId
     valuesName = "traverseTotal_values_" <> suffix
     outputName = "traverseTotal_output_" <> suffix
     indexName = "traverseTotal_index_" <> suffix
     valueName = "traverseTotal_value_" <> suffix
-    input = fromMaybe (rawGo "nil") (Array.index captured.exprs (callbackOffset + 1))
-    inputType = fromMaybe TypeValue (Array.index captured.exprTypes (callbackOffset + 1))
+    input = fromMaybe (rawGo "nil") (Array.index captured.exprs 0)
+    inputType = fromMaybe TypeValue (Array.index captured.exprTypes 0)
     source = case inputType of
       TypeNativeArray inputElementType -> { expr: input, elementType: inputElementType }
-      _ -> { expr: GoPrefixOp "*" (GoCall (rawGo "(*[]gopurs_runtime.Value)") [ GoSelector input "UnsafePtr" ]), elementType: TypeValue }
+      _ -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayValues") [ input ], elementType: TypeValue }
     parameterNames = map (\(Tuple name level) -> localId name level) parameters
     parameterTypes = map (const TypeInt64) parameters
     parameterValues = if Array.length parameters == 2 then

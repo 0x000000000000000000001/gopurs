@@ -6,7 +6,7 @@ import Data.Either (Either)
 import Data.Set (Set)
 import Data.Set as Set
 import Data.Tuple (Tuple(..))
-import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..))
+import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), isPureConstantExpr)
 import Gopurs.GoCode (referencedImports, BoundGoCode)
 import Gopurs.GoCode as GoCode
 import Gopurs.GoSymbol (RenderContext)
@@ -45,7 +45,9 @@ referenced = many add <<< referencedImports
 
 declImports :: GoDecl -> Imports -> Imports
 declImports decl imports = case decl of
-  GoCachedValue binding -> imports # runtime # add "sync" # typeImports binding.goType # exprImports binding.expression
+  GoCachedValue binding ->
+    let withSync = if isPureConstantExpr binding.expression then imports else add "sync" imports
+    in withSync # runtime # typeImports binding.goType # exprImports binding.expression
   GoStructDecl fields -> imports # fieldTypes fields.typeParams # fieldTypes fields.fields
   GoFunctionDecl fn -> imports # fieldTypes fn.params # typeImports fn.result # exprImports fn.body
   GoInitDecl _ body -> exprImports body imports

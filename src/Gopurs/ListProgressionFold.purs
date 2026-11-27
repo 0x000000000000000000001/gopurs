@@ -105,20 +105,40 @@ primePrefix :: Array GoExpr
 primePrefix =
   [ rawGo "var local [512]bool"
   , rawGo "var rejected []bool"
-  , GoAssign "size" (rawGo "(upper+1)/2")
-  , GoIfElse (rawGo "size <= int64(len(local))")
+  , GoAssign "size" (rawGo "int((upper+1)/2)")
+  , GoIfElse (rawGo "size <= len(local)")
       [ GoMutate "rejected" (rawGo "local[:size]") ]
       [ GoMutate "rejected" (rawGo "make([]bool, size)") ]
-  , GoForRange "prime := int64(3); prime*prime <= upper; prime += 2"
-      [ GoIfElse (rawGo "!rejected[prime/2]")
-          [ GoForRange "multiple := prime*prime; multiple <= upper; multiple += prime+prime"
-              [ GoMutate "rejected[multiple/2]" (GoVar "true") ]
+  , GoAssign "limit" (rawGo "uint(len(rejected))")
+  , GoForRange "primeIdx := uint(1); primeIdx < limit; primeIdx++"
+      [ GoAssign "prime" (rawGo "uint64(primeIdx)*2 + 1")
+      , GoAssign "start" (rawGo "(prime*prime) >> 1")
+      , GoIfElse (rawGo "start >= uint64(limit)") [ rawGo "break" ] []
+      , GoIfElse (rawGo "!rejected[primeIdx]")
+          [ GoAssign "step" (rawGo "uint(prime)")
+          , GoForRange "mark := uint(start); mark < limit; mark += step"
+              [ GoMutate "rejected[mark]" (GoVar "true") ]
           ] []
       ]
   , GoAssign "total" (rawGo "seed+2")
-  , GoForRange "value := int64(3); value <= upper; value += 2"
-      [ GoIfElse (rawGo "!rejected[value/2]")
-          [ GoMutate "total" (GoBinOp "+" (GoVar "total") (GoVar "value")) ] []
+  , GoAssign "idx" (GoInt 1)
+  , GoForRange "; idx+8 <= len(rejected); idx += 8"
+      [ GoAssign "chunk" (rawGo "rejected[idx : idx+8]")
+      , GoAssign "value" (rawGo "int64(idx*2 + 1)")
+      , rawGo "var t0, t1, t2, t3, t4, t5, t6, t7 int64"
+      , GoIfElse (rawGo "!chunk[0]") [ GoMutate "t0" (GoVar "value") ] []
+      , GoIfElse (rawGo "!chunk[1]") [ GoMutate "t1" (rawGo "value + 2") ] []
+      , GoIfElse (rawGo "!chunk[2]") [ GoMutate "t2" (rawGo "value + 4") ] []
+      , GoIfElse (rawGo "!chunk[3]") [ GoMutate "t3" (rawGo "value + 6") ] []
+      , GoIfElse (rawGo "!chunk[4]") [ GoMutate "t4" (rawGo "value + 8") ] []
+      , GoIfElse (rawGo "!chunk[5]") [ GoMutate "t5" (rawGo "value + 10") ] []
+      , GoIfElse (rawGo "!chunk[6]") [ GoMutate "t6" (rawGo "value + 12") ] []
+      , GoIfElse (rawGo "!chunk[7]") [ GoMutate "t7" (rawGo "value + 14") ] []
+      , GoMutate "total" (rawGo "total + (((t0 + t1) + (t2 + t3)) + ((t4 + t5) + (t6 + t7)))")
+      ]
+  , GoForRange "; idx < len(rejected); idx++"
+      [ GoIfElse (rawGo "!rejected[idx]")
+          [ GoMutate "total" (rawGo "total + int64(idx*2 + 1)") ] []
       ]
   , GoReturn (rawGo "int64(int32(total))")
   ]

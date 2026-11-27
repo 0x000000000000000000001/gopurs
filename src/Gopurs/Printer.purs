@@ -5,7 +5,7 @@ import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Data.Tuple (Tuple(..))
-import Gopurs.GoAst (GoExpr(..), GoDecl(..), GoBinding, GoFile, GoType(..), goTypeToStr, recordFieldName, recordLabelUnits)
+import Gopurs.GoAst (GoExpr(..), GoDecl(..), GoBinding, GoFile, GoType(..), goTypeToStr, isPureConstantExpr, recordFieldName, recordLabelUnits)
 import Gopurs.Printer.Builder (Out, emit, emitMany, withOut)
 import Gopurs.GoCode (BoundGoCode, renderBoundCode)
 import Gopurs.GoSymbol (GoSymbol, RenderContext, referenceName)
@@ -123,7 +123,7 @@ writeGoExpr out goExpr = case goExpr of
           _ ->
             let
               keysStr = String.joinWith ", " (map (\(Tuple k _) -> quoteGoString k) props)
-              out1 = emitMany out [ "gopurs_runtime.RecordDict([]string{", keysStr, "}, []gopurs_runtime.Value{" ]
+              out1 = emitMany out [ "gopurs_runtime.RecordDictInterned([]string{", keysStr, "}, []gopurs_runtime.Value{" ]
               out2 = writeExprArray out1 (map (\(Tuple _ v) -> v) props)
             in
               emit out2 "})"
@@ -204,7 +204,7 @@ writeGoExpr out goExpr = case goExpr of
           out4 = writeFallback out3
           out5 = emitMany out4 [ "\n}\nr := (*", structName, ")(origVal.UnsafePtr)\nnewVals := make([]gopurs_runtime.Value, len(r.Vals))\ncopy(newVals, r.Vals)\n" ]
           out6 = emitMany (writeUpdates true out5) [ "\n" ]
-          out7 = emitMany out6 [ "newR := gopurs_runtime.RecordData{Keys: r.Keys, Vals: newVals}\nreturn gopurs_runtime.Value{Type: ", typeVal, ", UnsafePtr: unsafe.Pointer(&newR)}\n}()" ]
+          out7 = emitMany out6 [ "newR := gopurs_runtime.RecordData{Keys: r.Keys, Vals: newVals, Shape: r.Shape}\nreturn gopurs_runtime.Value{Type: ", typeVal, ", UnsafePtr: unsafe.Pointer(&newR)}\n}()" ]
         in
           out7
       else if size == 2 then
@@ -321,13 +321,9 @@ writeGoExpr out goExpr = case goExpr of
   GoBoxStructPointer tag expr ->
     emit (writeGoExpr (emitMany out [ "gopurs_runtime.Value{Type: 9, IntVal: ", tag, ", UnsafePtr: unsafe.Pointer(" ]) expr) ")}"
   GoBoxIntArray expr ->
-    let out1 = emitMany out [ "func() gopurs_runtime.Value {\n\t\t\t\t\tarr := " ]
-    in
-      emitMany (writeGoExpr out1 expr) [ "\n\t\t\t\t\tboxed := make([]gopurs_runtime.Value, len(arr))\n\t\t\t\t\tfor i, v := range arr { boxed[i] = gopurs_runtime.Int(v) }\n\t\t\t\t\treturn gopurs_runtime.Array(boxed)\n\t\t\t\t}()" ]
+    emit (writeGoExpr (emit out "gopurs_runtime.IntArray(") expr) ")"
   GoUnboxIntArray expr ->
-    let out1 = emitMany out [ "func() []int64 {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" ]
-    in
-      emitMany (writeGoExpr out1 expr) [ ".UnsafePtr)\n\t\t\t\t\tunboxed := make([]int64, len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = v.IntVal }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()" ]
+    emit (writeGoExpr (emit out "gopurs_runtime.UnboxIntArray(") expr) ")"
   GoFreshFilterArray expr ->
     writeGoExpr out expr
   GoRaw code ->
@@ -373,14 +369,23 @@ writeGoDeclVar out { identifier: symbol, expression, goType } =
   let
     identifier = symbol.name
     typeStr = goTypeToStr goType
-    out1 = emitMany out
-      [ "var cache_", identifier, " ", typeStr
-      , "\nvar once_", identifier, " sync.Once\nfunc Get_", identifier, "() ", typeStr
-      , " {\n\tonce_", identifier, ".Do(func() {\n\t\tcache_", identifier, " = "
-      ]
-    out2 = writeGoExpr out1 expression
   in
-    emitMany out2 [ "\n\t})\n\treturn cache_", identifier, "\n}" ]
+    if isPureConstantExpr expression then
+      let
+        out1 = emitMany out [ "var cache_", identifier, " ", typeStr, " = " ]
+        out2 = writeGoExpr out1 expression
+      in
+        emitMany out2 [ "\nfunc Get_", identifier, "() ", typeStr, " {\n\treturn cache_", identifier, "\n}" ]
+    else
+      let
+        out1 = emitMany out
+          [ "var cache_", identifier, " ", typeStr
+          , "\nvar once_", identifier, " sync.Once\nfunc Get_", identifier, "() ", typeStr
+          , " {\n\tonce_", identifier, ".Do(func() {\n\t\tcache_", identifier, " = "
+          ]
+        out2 = writeGoExpr out1 expression
+      in
+        emitMany out2 [ "\n\t})\n\treturn cache_", identifier, "\n}" ]
 
 printGoDecl :: GoDecl -> String
 printGoDecl decl = withOut (\out -> writeGoDecl out decl)
@@ -427,8 +432,9 @@ declaredSymbols :: GoFile -> Array GoSymbol
 declaredSymbols file = Array.concatMap (Array.concatMap symbols) file.declarationGroups
   where
   symbols = case _ of
-    GoCachedValue { identifier } -> map
-      (\prefix -> identifier { name = prefix <> identifier.name }) [ "cache_", "once_", "Get_" ]
+    GoCachedValue { identifier, expression } ->
+      let prefixes = if isPureConstantExpr expression then [ "cache_", "Get_" ] else [ "cache_", "once_", "Get_" ]
+      in map (\prefix -> identifier { name = prefix <> identifier.name }) prefixes
     GoStructDecl { name } -> [ name ]
     GoFunctionDecl { name } -> [ name ]
     GoForeignGetter { name } -> [ name ]

@@ -7,7 +7,7 @@ import Data.Array as Array
 import Data.Array.NonEmpty as NEA
 import Data.Foldable (foldl, all)
 import Data.Map as Map
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.String as String
 import Data.String.Pattern (Pattern(..))
 import Data.Tuple (Tuple(..), snd)
@@ -93,6 +93,12 @@ emit plans translate context nextId ident level binding body = do
   let
     -- The fallback is translated through the ordinary Let path, not this hook.
     fallback = BindingExprs.nonRecursive translate context nextId ident level binding body
+    unwrappedFallback = case fallback.exprType, fallback.expr of
+      TypeInt64, expr -> Just expr
+      TypeValue, GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ expr ] -> Just expr
+      _, _ -> Nothing
+    resultType = if isJust unwrappedFallback then TypeInt64 else fallback.exprType
+    fallbackReturn = fromMaybe fallback.expr unwrappedFallback
     prefix = fresh ("recordConsumer_" <> show nextId) (map (\(Tuple _ value) -> value.name) (Map.toUnfoldable context.bound :: Array (Tuple String { name :: String, goType :: GoType })))
     record = prefix <> "_input"
     counter = if countBound.goType == TypeValue then GoSelector (GoVar countBound.name) "IntVal" else GoVar countBound.name
@@ -101,14 +107,17 @@ emit plans translate context nextId ident level binding body = do
           subtotal = GoVar (prefix <> "_sum")
           total = GoBinOp "+" (GoBinOp "+" subtotal subtotal) (RecordAffineLoops.additiveTotal counter plan.deltas)
           result = "int64(int32(" <> printGoExpr total <> "))"
-      in prefix <> "_sum := " <> printGoExpr sum <> "\nreturn " <> (if fallback.exprType == TypeValue then "gopurs_runtime.Int(" <> result <> ")" else result)
+      in prefix <> "_sum := " <> printGoExpr sum <> "\nreturn " <> (if resultType == TypeValue then "gopurs_runtime.Int(" <> result <> ")" else result)
     admitted = GoBinOp "<" (GoBinOp "-" (GoCall (GoVar "uint64") [ counter ]) (GoInt 1)) (GoInt 2147483647)
+    mbShape = if Array.length keys > 5 then
+      Just (RecordShapeGuard.internShapeExpr context.codegenStateRef context.modNameStr keys)
+      else Nothing
     statements = [ GoAssign record (GoVar inputBound.name)
-      , GoIfElse admitted [ rawGo (RecordShapeGuard.integerReads prefix record keys fast) ] []
-      ] <> flattenStmts fallback.stmts <> [ GoReturn fallback.expr ]
+      , GoIfElse admitted [ rawGo (RecordShapeGuard.integerReadsWithShape mbShape prefix record keys fast) ] []
+      ] <> flattenStmts fallback.stmts <> [ GoReturn fallbackReturn ]
   -- The proved primitive result is Int64 or its existing Value boxing. No
   -- admission check follows fallback translation, which may allocate IDs.
-  pure { stmts: StmtEmpty, expr: GoCall (GoFuncBlock [] statements fallback.exprType) [], exprType: fallback.exprType, nextId: fallback.nextId }
+  pure { stmts: StmtEmpty, expr: GoCall (GoFuncBlock [] statements resultType) [], exprType: resultType, nextId: fallback.nextId }
 
 local :: TcoExpr -> Maybe String
 local value = case unwrapTcoExpr value of

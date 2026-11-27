@@ -172,8 +172,11 @@ referencedImportsPS text = Array.sort (scan 0 [])
                   case CodeUnits.fromCharArray (map charAt (Array.range index (end - 1))) of
                     "gopurs_runtime" -> Just "gopurs/output/gopurs_runtime"
                     "math" -> Just "math"
+                    "slices" -> Just "slices"
+                    "strings" -> Just "strings"
                     "sync" -> Just "sync"
                     "unsafe" -> Just "unsafe"
+                    "utf8" -> Just "unicode/utf8"
                     _ -> Nothing
                   else Nothing
                 nextImports = case dependency of

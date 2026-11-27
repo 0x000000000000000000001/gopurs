@@ -1,4 +1,4 @@
-module Gopurs.ArrayTraverseFold (emit, justMapper) where
+module Gopurs.ArrayTraverseFold (emit, justMapper, annotated) where
 
 import Prelude
 
@@ -6,14 +6,13 @@ import Control.Alternative (guard)
 import Control.Monad.State (evalState)
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
-import Data.Foldable (foldM)
+import Data.Foldable (any, foldM, foldr)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Newtype (unwrap)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
-import Data.Tuple (Tuple(..))
-import Gopurs.ArrayIntrinsics.Source (arraySource)
+import Data.Tuple (Tuple(..), snd)
 import Gopurs.IndexedAddLanes as IndexedAddLanes
 import Gopurs.ArrayProducerFold (onlyCurried)
 import Gopurs.ArrayTraverse (recognizeMaybe)
@@ -23,7 +22,7 @@ import Gopurs.CallArguments as CallArguments
 import Gopurs.ClosedIndexedFolds (closedPrimitiveCallback, validDescriptor)
 import Gopurs.CodegenState (ArrayFoldDescriptor)
 import Gopurs.ExprAnalysis (extractFuncType, unwrapTcoExpr)
-import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, bindParameters, childContext, flattenStmts)
+import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, bindParameters, childContext, flattenStmts)
 import Gopurs.GoAst (GoExpr(..), GoType(..), rawGo)
 import Gopurs.GoConversions (coerceGoExpr)
 import Gopurs.ImmediateApplications.Scope (freshen, maximumLevel)
@@ -123,7 +122,6 @@ emit translate context nextId mbIdent level producer continuation = do
   input <- Array.index traversal.args (traversal.callbackOffset + 1)
   guard (annotated (Array Int) input)
   guard (annotated (ADT "Data.Maybe.Maybe" [ "Data", "Maybe", "Maybe" ] [ Array Int ]) producer)
-  mapper <- justMapper (if traversal.indexed then 2 else 1) callback
   branch <- case unwrapTcoExpr continuation of
     EffectPure value -> do
       -- Do not move traversal work into or out of a deferred effect value.
@@ -131,9 +129,39 @@ emit translate context nextId mbIdent level producer continuation = do
       guard (annotated (ADT "Effect.Effect" [ "Effect", "Effect" ] [ Int ]) continuation)
       pure value
     _ -> pure continuation
-  descriptor <- consumedArray context level branch
+  consumed <- consumedArray context level branch
   let whole = NeutralExpr (Let mbIdent level (neutral producer) (neutral continuation))
-  pure (emitLoop translate context nextId traversal mapper descriptor (maximumLevel whole))
+      arity = if traversal.indexed then 2 else 1
+  case justMapper arity callback of
+    Just mapper ->
+      pure (emitLoop translate context nextId traversal mapper consumed.descriptor (maximumLevel whole))
+    Nothing -> do
+      totalCb <- fallibleTotalMapper arity callback
+      guard (not (usesLevel level consumed.failure))
+      pure (emitFallibleLoop translate context nextId traversal totalCb consumed.descriptor consumed.failure (maximumLevel whole))
+
+fallibleTotalMapper :: Int -> TcoExpr -> Maybe { parameters :: Array (Tuple (Maybe Ident) Level), body :: TcoExpr }
+fallibleTotalMapper arity callback = do
+  signature <- extractFuncType callback
+  guard (signature.fArgs == Array.replicate arity Int && signature.fRet == maybeInt)
+  case unwrapTcoExpr callback of
+    Abs parameters body -> do
+      let grouped = collectCurriedAbs parameters body
+          params = NEA.toArray grouped.args
+      guard (Array.length params == arity && totalIntegerMaybe (map snd params) grouped.body)
+      pure { parameters: params, body: grouped.body }
+    _ -> Nothing
+
+usesLevel :: Level -> TcoExpr -> Boolean
+usesLevel target (TcoExpr _ syntax) = case syntax of
+  Local _ level -> level == target
+  _ -> any (usesLevel target) syntax
+
+hasNothing :: TcoExpr -> Boolean
+hasNothing expression = case unwrapTcoExpr expression of
+  CtorSaturated _ _ _ (Ident "Nothing") [] -> true
+  Branch branches otherwise -> any (\(Pair _ result) -> hasNothing result) branches || hasNothing otherwise
+  _ -> false
 
 directTraversal :: TcoExpr -> Boolean
 directTraversal function = case unwrapTcoExpr function of
@@ -143,18 +171,18 @@ directTraversal function = case unwrapTcoExpr function of
     Just { mbMod: Just (ModuleName "Data.TraversableWithIndex"), name } -> name == "traverseWithIndex" || name == "traverseWithIndexDefault"
     _ -> false
 
-consumedArray :: ExprContext -> Level -> TcoExpr -> Maybe ArrayFoldDescriptor
+consumedArray :: ExprContext -> Level -> TcoExpr -> Maybe { descriptor :: ArrayFoldDescriptor, failure :: TcoExpr }
 consumedArray context level expression = do
   guard (annotated Int expression)
-  success <- case unwrapTcoExpr expression of
+  { success, failure } <- case unwrapTcoExpr expression of
     Branch branches otherwise -> do
       guard (case unwrapTcoExpr otherwise of
         Fail _ -> true
         _ -> false)
       case NEA.toArray branches of
         [ Pair first firstResult, Pair second secondResult ]
-          | tagged "Nothing" first && tagged "Just" second -> Just secondResult
-          | tagged "Just" first && tagged "Nothing" second -> Just firstResult
+          | tagged "Nothing" first && tagged "Just" second -> Just { success: secondResult, failure: firstResult }
+          | tagged "Just" first && tagged "Nothing" second -> Just { success: firstResult, failure: secondResult }
         _ -> Nothing
     _ -> Nothing
   guard (annotated Int success && onlyCurried success)
@@ -175,7 +203,7 @@ consumedArray context level expression = do
   guard (info.arity == 1 && info.fArgs == [ TypeNativeArray TypeInt64 ] && info.fRet == TypeInt64)
   descriptor <- info.arrayFold
   guard (validDescriptor descriptor)
-  pure descriptor
+  pure { descriptor, failure }
   where
   sameLocal object = annotated (ADT "Data.Maybe.Maybe" [ "Data", "Maybe", "Maybe" ] [ Array Int ]) object
     && case unwrapTcoExpr object of
@@ -202,40 +230,196 @@ emitLoop translate context nextId traversal mapper descriptor lastLevel =
           result = translate callbackContext currentId grouped.body
         in { expr: GoFuncLit params (flattenStmts result.stmts) (integer result.expr result.exprType) TypeInt64, nextId: result.nextId }
       _ -> { expr: rawGo "nil", nextId: currentId }
+    -- Canonical dictionaries and the adjacent closed mapper are pure and unused
+    -- at runtime. Capture only the array operand.
+    inputArg = Array.slice (traversal.callbackOffset + 1) (traversal.callbackOffset + 2) traversal.args
     captured = CallArguments.capture { prefix: "traverseFold_arg_", markUsed: true }
-      (\position currentId argument -> if position == traversal.callbackOffset then
-        { stmts: StmtEmpty, expr: rawGo "true", exprType: TypeBool, nextId: currentId }
-        else translate (childContext context Nothing) currentId argument) nextId traversal.args
+      (\_ currentId argument -> translate (childContext context Nothing) currentId argument) nextId inputArg
     mapResult = native captured.nextId mapped
     foldResult = native mapResult.nextId folded
-    suffix = show foldResult.nextId
+    contribResult = if IndexedAddLanes.eligible mapped folded then
+      case IndexedAddLanes.extractContribution folded of
+        Just info ->
+          let
+            params = map (\(Tuple name level) -> Tuple (localId name level) TypeInt64) [ info.index, info.value ]
+            cbCtx = context { depth = context.depth + 1, bound = bindParameters params context.bound
+              , tcoIdent = Nothing, loopCtx = [], options = { isTail: true, inEffectBlock: false }
+              , mbExpectedExprType = Just Int, mbExpectedGoType = Just TypeInt64 }
+            res = translate cbCtx foldResult.nextId info.body
+          in Just { expr: GoFuncLit params (flattenStmts res.stmts) (integer res.expr res.exprType) TypeInt64, nextId: res.nextId }
+        Nothing -> Nothing
+      else Nothing
+    nextAfterContrib = case contribResult of
+      Just c -> c.nextId
+      Nothing -> foldResult.nextId
+    suffix = show nextAfterContrib
     variable label = "traverseFold_" <> label <> "_" <> suffix
     arg position = fromMaybe (rawGo "nil") (Array.index captured.exprs position)
-    source = arraySource (case arg (traversal.callbackOffset + 1) of
+    inputName = case arg 0 of
       GoVar name -> name
-      _ -> "") (variable "source") (fromMaybe TypeValue (Array.index captured.exprTypes (traversal.callbackOffset + 1)))
+      _ -> ""
+    inputType = fromMaybe TypeValue (Array.index captured.exprTypes 0)
     index = GoCall (GoVar "int64") [ GoVar (variable "index") ]
-    value = integer (GoVar (variable "value")) source.elementType
-    mappedValue = GoCall (GoVar (variable "map")) (if traversal.indexed then [ index, value ] else [ value ])
-    ordinary = GoForRange (variable "index" <> ", " <> variable "value" <> " := range " <> source.target)
-      [ GoMutate (variable "result") (GoCall (GoVar (variable "fold")) [ index, GoVar (variable "result"), mappedValue ]) ]
-    loop = if IndexedAddLanes.eligible mapped folded then
-      IndexedAddLanes.emit { source: source.target, prefix: variable "lane", result: variable "result" }
-        (\i accumulator item ->
-          let current = GoCall (GoVar "int64") [ i ]
-              produced = GoCall (GoVar (variable "map")) (if traversal.indexed then [ current, integer item source.elementType ] else [ integer item source.elementType ])
-          in GoCall (GoVar (variable "fold")) [ current, accumulator, produced ]) ordinary
-      else ordinary
+    emitForSource src =
+      let
+        value = integer (GoVar (variable "value")) src.elementType
+        mappedValue = GoCall (GoVar (variable "map")) (if traversal.indexed then [ index, value ] else [ value ])
+        ordinary = GoForRange (variable "index" <> ", " <> variable "value" <> " := range " <> src.target)
+          [ GoMutate (variable "result") (GoCall (GoVar (variable "fold")) [ index, GoVar (variable "result"), mappedValue ]) ]
+      in case contribResult of
+        Just _ ->
+          [ IndexedAddLanes.emitContribution { source: src.target, prefix: variable "lane", result: variable "result", offset: Nothing }
+              (\i item ->
+                let current = GoCall (GoVar "int64") [ i ]
+                    produced = GoCall (GoVar (variable "map")) (if traversal.indexed then [ current, integer item src.elementType ] else [ integer item src.elementType ])
+                in GoCall (GoVar (variable "contrib")) [ current, produced ]) ordinary ]
+        Nothing -> [ ordinary ]
+    loopStmts = case inputType of
+      TypeNativeArray inner ->
+        [ GoAssign (variable "source") (GoVar inputName) ] <> emitForSource { target: variable "source", elementType: inner }
+      _ ->
+        [ GoIfElse (rawGo (inputName <> ".Type == gopurs_runtime.TypeIntArray"))
+            ([ GoAssign (variable "source_i") (rawGo ("*(*[]int64)(" <> inputName <> ".UnsafePtr)")) ]
+              <> emitForSource { target: variable "source_i", elementType: TypeInt64 })
+            ([ GoAssign (variable "source_v") (rawGo ("*(*[]gopurs_runtime.Value)(" <> inputName <> ".UnsafePtr)")) ]
+              <> emitForSource { target: variable "source_v", elementType: TypeValue })
+        ]
+    contribDecl = case contribResult of
+      Just c -> [ GoAssign (variable "contrib") c.expr ]
+      Nothing -> []
     body =
-      [ GoAssign (variable "map") mapResult.expr, GoAssign (variable "fold") foldResult.expr
-      , GoAssign (variable "result") (GoCall (GoVar "int64") [ GoInt descriptor.seed ])
-      , source.assignment
-      , loop
-      ]
+      [ GoAssign (variable "map") mapResult.expr, GoAssign (variable "fold") foldResult.expr ] <> contribDecl <>
+      [ GoAssign (variable "result") (GoCall (GoVar "int64") [ GoInt descriptor.seed ]) ] <> loopStmts
   in { stmts: captured.stmts, expr: GoCall (GoFuncLit [] body (GoVar (variable "result")) TypeInt64) []
-     , exprType: TypeInt64, nextId: foldResult.nextId + 1 }
+     , exprType: TypeInt64, nextId: nextAfterContrib + 1 }
   where
   integer value from = coerceGoExpr context.codegenStateRef context.modNameStr value from TypeInt64
 
 neutral :: TcoExpr -> NeutralExpr
 neutral (TcoExpr _ syntax) = NeutralExpr (map neutral syntax)
+
+-- Fuse a fallible total Maybe traversal directly into its immediate array fold
+-- consumer. Because the callback is proved total and side-effect-free,
+-- short-circuiting on Nothing without allocating the intermediate array is
+-- observationally identical to traversing and discarding on Nothing.
+emitFallibleLoop
+  :: TranslateExpr
+  -> ExprContext
+  -> Int
+  -> { indexed :: Boolean, callbackOffset :: Int, args :: Array TcoExpr }
+  -> { parameters :: Array (Tuple (Maybe Ident) Level), body :: TcoExpr }
+  -> ArrayFoldDescriptor
+  -> TcoExpr
+  -> Int
+  -> ExprResult
+emitFallibleLoop translate context nextId traversal totalCb descriptor failureExpr lastLevel =
+  let
+    start = max lastLevel (maximumLevel descriptor.callback) + nextId + 1
+    folded = Tco.analyze [] (evalState (freshen descriptor.callback) start)
+    inputArg = Array.slice (traversal.callbackOffset + 1) (traversal.callbackOffset + 2) traversal.args
+    captured = CallArguments.capture { prefix: "traverseFold_arg_", markUsed: true }
+      (\_ currentId argument -> translate (childContext context Nothing) currentId argument) nextId inputArg
+    contribInfo = IndexedAddLanes.extractContribution folded
+    foldLambda = case contribInfo of
+      Just info ->
+        let
+          params = map (\(Tuple name level) -> Tuple (localId name level) TypeInt64) [ info.index, info.value ]
+          cbCtx = context { depth = context.depth + 1, bound = bindParameters params context.bound
+            , tcoIdent = Nothing, loopCtx = [], options = { isTail: true, inEffectBlock: false }
+            , mbExpectedExprType = Just Int, mbExpectedGoType = Just TypeInt64 }
+          res = translate cbCtx captured.nextId info.body
+        in { expr: GoFuncLit params (flattenStmts res.stmts) (integer res.expr res.exprType) TypeInt64, nextId: res.nextId, isContrib: true }
+      Nothing -> case unwrapTcoExpr folded of
+        Abs parameters callbackBody ->
+          let
+            grouped = collectCurriedAbs parameters callbackBody
+            params = map (\(Tuple name level) -> Tuple (localId name level) TypeInt64) (NEA.toArray grouped.args)
+            cbCtx = context { depth = context.depth + 1, bound = bindParameters params context.bound
+              , tcoIdent = Nothing, loopCtx = [], options = { isTail: true, inEffectBlock: false }
+              , mbExpectedExprType = Just Int, mbExpectedGoType = Just TypeInt64 }
+            res = translate cbCtx captured.nextId grouped.body
+          in { expr: GoFuncLit params (flattenStmts res.stmts) (integer res.expr res.exprType) TypeInt64, nextId: res.nextId, isContrib: false }
+        _ -> { expr: rawGo "nil", nextId: captured.nextId, isContrib: false }
+    suffix = show foldLambda.nextId
+    variable label = "traverseFold_" <> label <> "_" <> suffix
+    arg0 = fromMaybe (rawGo "nil") (Array.index captured.exprs 0)
+    inputName = case arg0 of
+      GoVar name -> name
+      _ -> ""
+    inputType = fromMaybe TypeValue (Array.index captured.exprTypes 0)
+    indexName = variable "index"
+    valueName = variable "value"
+    resultName = variable "result"
+    foldName = variable "fold"
+    failLabel = variable "fail"
+    parameterNames = map (\(Tuple name level) -> localId name level) totalCb.parameters
+    parameterTypes = map (const TypeInt64) totalCb.parameters
+    bindingsFor elemType = Array.zipWith GoAssign parameterNames
+      (if Array.length totalCb.parameters == 2 then
+        [ GoCall (GoVar "int64") [ GoVar indexName ], integer (GoVar valueName) elemType ]
+        else [ integer (GoVar valueName) elemType ])
+    boundContext = (childContext context (Just Int))
+      { bound = bindParameters (Array.zip parameterNames parameterTypes) context.bound }
+    canFail = hasNothing totalCb.body
+    stepUpdate valExpr =
+      if foldLambda.isContrib then
+        GoMutate resultName (GoBinOp "+" (GoVar resultName)
+          (GoCall (GoVar foldName) [ GoCall (GoVar "int64") [ GoVar indexName ], valExpr ]))
+      else
+        GoMutate resultName (GoCall (GoVar foldName)
+          [ GoCall (GoVar "int64") [ GoVar indexName ], GoVar resultName, valExpr ])
+    emitStep ctx id expr = case unwrapTcoExpr expr of
+      CtorSaturated _ _ _ (Ident "Nothing") [] -> { stmts: [ rawGo ("goto " <> failLabel) ], nextId: id }
+      CtorSaturated _ _ _ (Ident "Just") [ Tuple _ payload ] ->
+        let translated = translate ctx id payload
+        in { stmts: flattenStmts translated.stmts <> [ stepUpdate (integer translated.expr translated.exprType) ]
+           , nextId: translated.nextId }
+      Branch branches otherwise ->
+        foldr (\(Pair condition branchResult) remaining ->
+          let
+            test = translate (childContext ctx (Just Boolean)) remaining.nextId condition
+            yes = emitStep ctx test.nextId branchResult
+          in { stmts: flattenStmts test.stmts <> [ GoIfElse test.expr yes.stmts remaining.stmts ], nextId: yes.nextId })
+          (emitStep ctx id otherwise) branches
+      _ -> { stmts: [], nextId: id }
+    loopStep = emitStep boundContext (foldLambda.nextId + 1) totalCb.body
+    failureTranslated = if canFail then
+      Just (translate ((childContext context (Just Int)) { mbExpectedGoType = Just TypeInt64 }) loopStep.nextId failureExpr)
+      else Nothing
+    finalNextId = case failureTranslated of
+      Just f -> f.nextId
+      Nothing -> loopStep.nextId
+    normalizeFor target = if foldLambda.isContrib then
+      [ GoIfElse (GoBinOp ">" (GoCall (GoVar "len") [ rawGo target ]) (GoInt 0))
+          [ GoMutate resultName (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoVar resultName ] ]) ] [] ]
+      else []
+    emitFallibleSource target elemType =
+      [ GoForRange (indexName <> ", " <> valueName <> " := range " <> target)
+          ([ GoMutate "_" (GoVar indexName) ] <> bindingsFor elemType <> loopStep.stmts)
+      ] <> normalizeFor target
+    sourceStmts = case inputType of
+      TypeNativeArray inner ->
+        [ GoAssign (variable "source") (GoVar inputName) ] <> emitFallibleSource (variable "source") inner
+      _ ->
+        [ GoIfElse (rawGo (inputName <> ".Type == gopurs_runtime.TypeIntArray"))
+            ([ GoAssign (variable "source_i") (rawGo ("*(*[]int64)(" <> inputName <> ".UnsafePtr)")) ]
+              <> emitFallibleSource (variable "source_i") TypeInt64)
+            ([ GoAssign (variable "source_v") (rawGo ("*(*[]gopurs_runtime.Value)(" <> inputName <> ".UnsafePtr)")) ]
+              <> emitFallibleSource (variable "source_v") TypeValue)
+        ]
+    failBlock = case failureTranslated of
+      Just f ->
+        [ GoReturn (GoVar resultName)
+        , rawGo (failLabel <> ":")
+        ] <> flattenStmts f.stmts <> [ GoReturn (integer f.expr f.exprType) ]
+      Nothing -> [ GoReturn (GoVar resultName) ]
+    body =
+      [ GoAssign foldName foldLambda.expr
+      , GoAssign resultName (GoCall (GoVar "int64") [ GoInt descriptor.seed ])
+      ] <> sourceStmts <> failBlock
+  in { stmts: captured.stmts
+     , expr: GoCall (GoFuncBlock [] body TypeInt64) []
+     , exprType: TypeInt64
+     , nextId: finalNextId + 1 }
+  where
+  integer value from = coerceGoExpr context.codegenStateRef context.modNameStr value from TypeInt64

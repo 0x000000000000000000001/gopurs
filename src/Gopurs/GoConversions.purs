@@ -170,9 +170,8 @@ unboxValue stateRef moduleName expr desiredType = case desiredType of
   TypeInterface _ -> expr
   TypeNamed _ -> GoCall (GoTypeApply (GoSelector (GoVar "gopurs_runtime") "Unbox") [ desiredType ]) [ expr ]
   TypePointer _ -> GoCall (GoTypeApply (GoSelector (GoVar "gopurs_runtime") "Unbox") [ desiredType ]) [ expr ]
-  -- Value arrays borrow their immutable slice; boxing []Value also shares it.
-  TypeNativeArray TypeValue -> GoPrefixOp "*"
-    (GoCall (rawGo "(*[]gopurs_runtime.Value)") [ GoSelector expr "UnsafePtr" ])
+  -- Value arrays borrow their immutable slice; IntArray materializes on demand.
+  TypeNativeArray TypeValue -> GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayValues") [ expr ]
   TypeNativeArray TypeInt64 -> case expr of
     GoBoxIntArray source -> GoCall copyIntArray [ source ]
     _ -> GoUnboxIntArray expr
@@ -200,8 +199,8 @@ unboxValue stateRef moduleName expr desiredType = case desiredType of
 -- proven runtime Array. Unknown Values retain the original tag normalization.
 boxValueArray :: GoExpr -> GoExpr
 boxValueArray expression = case expression of
-  GoPrefixOp "*" (GoCall cast [ GoSelector source "UnsafePtr" ])
-    | cast == rawGo "(*[]gopurs_runtime.Value)" && constructedArray source -> source
+  GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayValues") [ source ]
+    | constructedArray source -> source
   _ -> GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expression ]
   where
   constructedArray (GoBoxIntArray _) = true
@@ -237,7 +236,7 @@ boxRecord boxField expr fields =
     boxedRecord = case Array.length fields of
       0 -> "gopurs_runtime.RecordDict0()"
       size | size <= 5 -> "gopurs_runtime.RecordDict" <> show size <> "(" <> keysStr <> ", " <> valsStr <> ")"
-      _ -> "gopurs_runtime.RecordDict([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
+      _ -> "gopurs_runtime.RecordDictInterned([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
   in
     rawGo ("func() gopurs_runtime.Value {\n\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t_ = orig\n\t\t\t\treturn " <> boxedRecord <> "\n\t\t\t\t}()")
 
@@ -269,7 +268,7 @@ boxArray boxElement expr inner =
 unboxArray :: (GoExpr -> GoType -> GoType -> GoExpr) -> GoExpr -> GoType -> GoExpr
 unboxArray coerceElement expr inner =
   let arrayType = goTypeToStr (TypeNativeArray inner)
-  in rawGo ("func() " <> arrayType <> " {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" <> printGoExpr expr <> ".UnsafePtr)\n\t\t\t\t\tunboxed := make(" <> arrayType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (coerceElement (GoVar "v") TypeValue inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
+  in rawGo ("func() " <> arrayType <> " {\n\t\t\t\t\tarr := gopurs_runtime.ArrayValues(" <> printGoExpr expr <> ")\n\t\t\t\t\tunboxed := make(" <> arrayType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (coerceElement (GoVar "v") TypeValue inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
 
 -- Field rendering re-enters this converter with the same module-local state.
 -- Rebox owns request tracking, naming and the transitive emission loop.

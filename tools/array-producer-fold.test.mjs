@@ -35,7 +35,12 @@ const foldCallback = lambda([0, 1, 2], [C.Int.value, C.Int.value, C.Int.value], 
 const foldRef = ref('Data.FoldableWithIndex', 'foldlWithIndexImpl');
 const consumer = (seed = integer(17), cb = foldCallback, values = local(4, array)) => lambda([4], [array], C.Int.value, apply(foldRef, [cb, seed, values], C.Int.value));
 const mapper = lambda([10], [C.Int.value], C.Int.value, arithmetic(S.OpAdd.value, local(10), integer(1)));
+const evenPred = lambda([11], [C.Int.value], C.Boolean.value,
+  typed(C.Boolean.value, n(new S.PrimOp(new S.Op2(new S.OpIntOrd(S.OpEq.value),
+    typed(C.Int.value, n(new S.PrimOp(new S.Op2(S.OpIntBitAnd.value, local(11), integer(1))))), integer(0))))));
 const mapProducer = (callback = mapper, owner = 'Data.Functor', values = local(20, array)) => apply(ref(owner, 'arrayMap'), [callback, values], array);
+const filterProducer = (predicate = evenPred, values = local(20, array)) => apply(ref('Data.Array', 'filter'), [predicate, values], array);
+const filterImplProducer = (predicate = evenPred, values = local(20, array)) => typed(array, n(new S.UncurriedApp(ref('Data.Array', 'filterImpl'), [predicate, values])));
 const concatProducer = (left = local(20, array), right = local(21, array)) => apply(ref('Data.Semigroup', 'concatArray'), [left, right], array);
 const factoryInfo = name => ({ arrayFold: Nothing.value, codePointFold: Nothing.value, reference: new SymbolReference(generated('Factories')(`Call_Factories_${name}`)), fArgs: [new G.TypeNativeArray(G.TypeInt64.value)], fRet: new G.TypeNativeArray(G.TypeInt64.value), arity: 1 });
 const factories = insert(ordString)('Factories.right')(factoryInfo('right'))(insert(ordString)('Factories.left')(factoryInfo('left'))(emptyMap));
@@ -49,6 +54,8 @@ export function generatedFixture() {
     return CodeGen.translate(metadata())(module([
         new Tuple('consume', consumer()),
         new Tuple('mapped', lambda([20], [array], C.Int.value, consume(mapProducer()))),
+        new Tuple('filtered', lambda([20], [array], C.Int.value, consume(filterProducer()))),
+        new Tuple('filteredImpl', lambda([20], [array], C.Int.value, consume(filterImplProducer()))),
         new Tuple('joined', lambda([20, 21], [array, array], C.Int.value, consume(concatProducer()))),
         new Tuple('factoryJoined', lambda([20, 21], [array, array], C.Int.value, consume(concatProducer(
             apply(ref('Factories', 'left'), [local(20, array)], array), apply(ref('Factories', 'right'), [local(21, array)], array))))),
@@ -102,6 +109,9 @@ func Call_Factories_right(ys []int64)[]int64{factoryTrace=append(factoryTrace,"r
 func expected(xs []int64)int64{acc:=int64(17);for i,v:=range xs{acc=r.IntSub(r.IntMul(acc,3),r.IntAdd(int64(i),r.IntMul(v,3)))};return acc}
 func main(){checks:=0;values:=[]int64{0,1,-1,math.MaxInt32,math.MinInt32,1<<52,(1<<52)+1,-(1<<52)-1,math.MaxInt64,math.MinInt64};for n:=0;n<37;n++{for offset:=range values{xs:=make([]int64,n);for i:=range xs{xs[i]=values[(i+offset)%len(values)]};before:=make([]int64,n);copy(before,xs);mapped:=make([]int64,n);for i,v:=range xs{mapped[i]=r.IntAdd(v,1)}
 if got,want:=Call_ArrayProducerFixture_mapped(xs),expected(mapped);got!=want{panic(fmt.Sprint("map",n,offset,got,want))};checks++
+var filtered []int64;for _,v:=range xs{if (v&1)==0{filtered=append(filtered,v)}}
+if got,want:=Call_ArrayProducerFixture_filtered(xs),expected(filtered);got!=want{panic(fmt.Sprint("filter",n,offset,got,want))};checks++
+if got,want:=Call_ArrayProducerFixture_filteredImpl(xs),expected(filtered);got!=want{panic(fmt.Sprint("filterImpl",n,offset,got,want))};checks++
 for _,split:=range []int{0,n/2,n}{if got,want:=Call_ArrayProducerFixture_joined(xs[:split],xs[split:]),expected(xs);got!=want{panic(fmt.Sprint("append",n,split,got,want))};checks++};if !reflect.DeepEqual(xs,before){panic("input mutation")}
 aliased:=make([]int64,n);copy(aliased,xs);wantAlias:=make([]int64,n);copy(wantAlias,xs);if n>0{wantAlias[0]=r.IntAdd(wantAlias[0],17)};wantJoined:=append(append([]int64{},wantAlias...),wantAlias...);factoryTrace=nil
 if got,want:=Call_ArrayProducerFixture_factoryJoined(aliased,aliased),expected(wantJoined);got!=want{panic(fmt.Sprint("factory alias",n,offset,got,want))};if !reflect.DeepEqual(aliased,wantAlias)||!reflect.DeepEqual(factoryTrace,[]string{"left","right"}){panic("factory phase order or alias")};checks++
@@ -109,5 +119,5 @@ if got,want:=Call_ArrayProducerFixture_factoryJoined(aliased,aliased),expected(w
 `);
     const result = spawnSync('go', ['run', '.'], { cwd: directory, encoding: 'utf8', env: { ...process.env, GOWORK: 'off' } });
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    assert.equal(result.stdout.trim(), '1850 fused producer controls passed');
+    assert.equal(result.stdout.trim(), '2590 fused producer controls passed');
 });

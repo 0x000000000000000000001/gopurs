@@ -278,3 +278,35 @@ getStructName modNameStr mbMod ctorName =
       Nothing -> modNameStr
   in
     (constructorNames modNamePart ctorName).baseStructName
+
+-- Pure constant expressions have no side effects, no cross-module ordering
+-- dependencies, and cannot panic. They can initialize a package-level var
+-- eagerly instead of guarding every read with sync.Once.
+isPureConstantExpr :: GoExpr -> Boolean
+isPureConstantExpr = case _ of
+  GoInt _ -> true
+  GoString _ -> true
+  GoPrefixOp "-" inner -> isPureConstantExpr inner
+  GoRaw { text, imports } -> Array.null imports && (text == "true" || text == "false" || isNumericLiteral text)
+  GoCall (GoVar name) [ arg ] | name == "int64" || name == "float64" -> isPureConstantExpr arg
+  GoCall (GoSelector (GoVar "gopurs_runtime") fn) args -> case fn, args of
+    "Int", [ a ] -> isPureConstantExpr a
+    "Bool", [ a ] -> isPureConstantExpr a
+    "Float", [ a ] -> isPureConstantExpr a
+    "Str", [ a ] -> isPureConstantExpr a
+    "StrWithCodeUnits", [ a, b ] -> isPureConstantExpr a && isPureConstantExpr b
+    "NegativeZero", [] -> true
+    "InternRecordShape", xs -> Array.all isPureConstantExpr xs
+    _, _ -> false
+  GoCall (GoSelector (GoVar "math") fn) args -> case fn, args of
+    "NaN", [] -> true
+    "Inf", [ a ] -> isPureConstantExpr a
+    _, _ -> false
+  _ -> false
+  where
+  isNumericLiteral text =
+    let len = String.length text
+    in len > 0 && Array.all (\c -> (c >= 48 && c <= 57) || c == 46 || c == 45 || c == 43 || c == 101 || c == 69)
+      (map fromEnum (CodePoints.toCodePointArray text)) && case Array.head (map fromEnum (CodePoints.toCodePointArray text)) of
+        Just first -> (first >= 48 && first <= 57) || first == 45
+        Nothing -> false
