@@ -28,11 +28,11 @@ import Gopurs.GoConversions (coerceGoExpr)
 import Gopurs.ImmediateApplications.Scope (freshen, maximumLevel)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.Codegen.Tco as Tco
-import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), ModuleName(..), ProperName(..), Qualified(..))
+import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), ModuleName(..), ProperName(..), Qualified(..))
 import PureScript.Backend.Optimizer.CoreFn as CoreFn
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
-import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Level, Pair(..))
+import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendOperator(..), BackendOperator1(..), BackendSyntax(..), Level, Pair(..))
 import PureScript.Backend.Optimizer.Syntax as Syntax
 
 maybeInt :: ExprType
@@ -249,7 +249,6 @@ emitLoop translate context nextId traversal mapper descriptor lastLevel =
           in Just { expr: GoFuncLit params (flattenStmts res.stmts) (integer res.expr res.exprType) TypeInt64, nextId: res.nextId }
         Nothing -> Nothing
       else Nothing
-    affineParity = IndexedAddLanes.extractAffineParity (Just mapped) folded
     nextAfterContrib = case contribResult of
       Just c -> c.nextId
       Nothing -> foldResult.nextId
@@ -268,17 +267,14 @@ emitLoop translate context nextId traversal mapper descriptor lastLevel =
         mappedValue = GoCall (GoVar (variable "map")) (if traversal.indexed then [ index, value ] else [ value ])
         ordinary = GoForRange (variable "index" <> ", " <> variable "value" <> " := range " <> src.target)
           [ GoMutate (variable "result") (GoCall (GoVar (variable "fold")) [ index, GoVar (variable "result"), mappedValue ]) ]
-      in case src.isInt32, affineParity of
-        true, Just aff ->
-          IndexedAddLanes.emitAffineSimdCall src.target (variable "result") aff false
-        _, _ -> case contribResult of
-          Just _ ->
-            [ IndexedAddLanes.emitContribution { source: src.target, prefix: variable "lane", result: variable "result", offset: Nothing }
-                (\i item ->
-                  let current = GoCall (GoVar "int64") [ i ]
-                      produced = GoCall (GoVar (variable "map")) (if traversal.indexed then [ current, valueExpr item ] else [ valueExpr item ])
-                  in GoCall (GoVar (variable "contrib")) [ current, produced ]) ordinary ]
-          Nothing -> [ ordinary ]
+      in case contribResult of
+        Just _ ->
+          [ IndexedAddLanes.emitContribution { source: src.target, prefix: variable "lane", result: variable "result", offset: Nothing }
+              (\i item ->
+                let current = GoCall (GoVar "int64") [ i ]
+                    produced = GoCall (GoVar (variable "map")) (if traversal.indexed then [ current, valueExpr item ] else [ valueExpr item ])
+                in GoCall (GoVar (variable "contrib")) [ current, produced ]) ordinary ]
+        Nothing -> [ ordinary ]
     loopStmts = case inputType of
       TypeNativeArray inner ->
         [ GoAssign (variable "source") (GoVar inputName) ] <> emitForSource { target: variable "source", elementType: inner, isInt32: false }
@@ -359,7 +355,6 @@ emitFallibleLoop translate context nextId traversal totalCb descriptor failureEx
     indexName = variable "index"
     valueName = variable "value"
     resultName = variable "result"
-    acc32Name = variable "acc32"
     foldName = variable "fold"
     failLabel = variable "fail"
     parameterNames = map (\(Tuple name level) -> localId name level) totalCb.parameters
@@ -372,120 +367,42 @@ emitFallibleLoop translate context nextId traversal totalCb descriptor failureEx
     boundContext = (childContext context (Just Int))
       { bound = bindParameters (Array.zip parameterNames parameterTypes) context.bound }
     canFail = hasNothing totalCb.body
-    valParamLevel = map snd (Array.last totalCb.parameters)
-    eqRejectAffine = extractEqRejectAffine totalCb folded
-    fallibleAffine = case IndexedAddLanes.extractAffineParity Nothing folded of
-      Just aff | allPayloadsInt32 valParamLevel totalCb.body -> Just aff
-      _ -> Nothing
-    stepUpdate mbAff valExpr = case mbAff of
-      Just (Tuple aff (Just isEven)) ->
-        IndexedAddLanes.emitAffineStep32Fixed acc32Name isEven (GoCall (GoVar "int32") [ valExpr ]) aff
-      Just (Tuple aff Nothing) ->
-        IndexedAddLanes.emitAffineStep32 acc32Name (GoVar indexName) (GoCall (GoVar "int32") [ valExpr ]) aff
-      Nothing ->
-        if foldLambda.isContrib then
-          GoMutate resultName (GoBinOp "+" (GoVar resultName)
-            (GoCall (GoVar foldName) [ GoCall (GoVar "int64") [ GoVar indexName ], valExpr ]))
-        else
-          GoMutate resultName (GoCall (GoVar foldName)
-            [ GoCall (GoVar "int64") [ GoVar indexName ], GoVar resultName, valExpr ])
-    emitStep mbAff ctx id expr = case unwrapTcoExpr expr of
+    stepUpdate valExpr =
+      if foldLambda.isContrib then
+        GoMutate resultName (GoBinOp "+" (GoVar resultName)
+          (GoCall (GoVar foldName) [ GoCall (GoVar "int64") [ GoVar indexName ], valExpr ]))
+      else
+        GoMutate resultName (GoCall (GoVar foldName)
+          [ GoCall (GoVar "int64") [ GoVar indexName ], GoVar resultName, valExpr ])
+    emitStep ctx id expr = case unwrapTcoExpr expr of
       CtorSaturated _ _ _ (Ident "Nothing") [] -> { stmts: [ rawGo ("goto " <> failLabel) ], nextId: id }
       CtorSaturated _ _ _ (Ident "Just") [ Tuple _ payload ] ->
         let translated = translate ctx id payload
-        in { stmts: flattenStmts translated.stmts <> [ stepUpdate mbAff (integer translated.expr translated.exprType) ]
+        in { stmts: flattenStmts translated.stmts <> [ stepUpdate (integer translated.expr translated.exprType) ]
            , nextId: translated.nextId }
       Branch branches otherwise ->
         foldr (\(Pair condition branchResult) remaining ->
           let
             test = translate (childContext ctx (Just Boolean)) remaining.nextId condition
-            yes = emitStep mbAff ctx test.nextId branchResult
+            yes = emitStep ctx test.nextId branchResult
           in { stmts: flattenStmts test.stmts <> [ GoIfElse test.expr yes.stmts remaining.stmts ], nextId: yes.nextId })
-          (emitStep mbAff ctx id otherwise) branches
+          (emitStep ctx id otherwise) branches
       _ -> { stmts: [], nextId: id }
-    loopStep = emitStep Nothing boundContext (foldLambda.nextId + 1) totalCb.body
-    eqRejectTranslated = case eqRejectAffine of
-      Just info ->
-        let res = translate ((childContext context (Just Int)) { mbExpectedGoType = Just TypeInt64 }) loopStep.nextId info.rejected
-        in Just { rejected: res, affine: info.affine }
-      Nothing -> Nothing
-    nextAfterEqReject = case eqRejectTranslated of
-      Just e -> e.rejected.nextId
-      Nothing -> loopStep.nextId
-    loopStepAffine = case eqRejectTranslated, fallibleAffine of
-      Nothing, Just aff ->
-        let
-          evenStep = emitStep (Just (Tuple aff (Just true))) boundContext nextAfterEqReject totalCb.body
-          oddStep = emitStep (Just (Tuple aff (Just false))) boundContext evenStep.nextId totalCb.body
-          singleStep = emitStep (Just (Tuple aff (Just true))) boundContext oddStep.nextId totalCb.body
-        in Just { aff, evenStep, oddStep, singleStep, nextId: singleStep.nextId }
-      _, _ -> Nothing
-    nextAfterSteps = case loopStepAffine of
-      Just s -> s.nextId
-      Nothing -> nextAfterEqReject
+    loopStep = emitStep boundContext (foldLambda.nextId + 1) totalCb.body
     failureTranslated = if canFail then
-      Just (translate ((childContext context (Just Int)) { mbExpectedGoType = Just TypeInt64 }) nextAfterSteps failureExpr)
+      Just (translate ((childContext context (Just Int)) { mbExpectedGoType = Just TypeInt64 }) loopStep.nextId failureExpr)
       else Nothing
     finalNextId = case failureTranslated of
       Just f -> f.nextId
-      Nothing -> nextAfterSteps
+      Nothing -> loopStep.nextId
     normalizeFor target = if foldLambda.isContrib then
       [ GoIfElse (GoBinOp ">" (GoCall (GoVar "len") [ rawGo target ]) (GoInt 0))
           [ GoMutate resultName (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoVar resultName ] ]) ] [] ]
       else []
-    bindingsMutate isInt32 elemType = Array.zipWith GoMutate parameterNames
-      (let valExpr = if isInt32 then GoCall (GoVar "int64") [ GoVar valueName ] else integer (GoVar valueName) elemType
-       in if Array.length totalCb.parameters == 2 then
-         [ GoCall (GoVar "int64") [ GoVar indexName ], valExpr ]
-         else [ valExpr ])
-    emitFallibleSource target isInt32 elemType = case isInt32, eqRejectTranslated, loopStepAffine of
-      true, Just eqRej, _ ->
-        let
-          rejName = variable "rej"
-          rej32Name = variable "rej32"
-        in
-          [ GoIfElse (GoBinOp ">" (GoCall (GoVar "len") [ rawGo target ]) (GoInt 0))
-              (flattenStmts eqRej.rejected.stmts
-                <> [ GoAssign rejName (integer eqRej.rejected.expr eqRej.rejected.exprType)
-                   , GoAssign rej32Name (GoCall (GoVar "int32") [ GoVar rejName ])
-                   , GoIfElse (GoBinOp "&&"
-                       (GoBinOp "==" (GoCall (GoVar "int64") [ GoVar rej32Name ]) (GoVar rejName))
-                       (GoCall (GoSelector (GoVar "gopurs_runtime") "ContainsInt32") [ rawGo target, GoVar rej32Name ]))
-                       [ rawGo ("goto " <> failLabel) ] []
-                   ]
-                <> IndexedAddLanes.emitAffineSimdCall target resultName eqRej.affine false)
-              []
-          ]
-      true, Nothing, Just affineSteps ->
-        let
-          nName = variable "len"
-          pairIdxName = variable "pairIdx"
-        in
-          [ GoAssign acc32Name (rawGo "int32(0)")
-          , GoAssign nName (GoCall (GoVar "len") [ rawGo target ])
-          , GoAssign pairIdxName (GoInt 0)
-          , GoForRange ("; " <> pairIdxName <> " <= " <> nName <> "-2; " <> pairIdxName <> " += 2")
-              ([ GoAssign indexName (GoVar pairIdxName)
-               , GoMutate "_" (GoVar indexName)
-               , GoAssign valueName (GoIndex (rawGo target) (GoVar pairIdxName))
-               ] <> bindingsFor true TypeInt64 <> affineSteps.evenStep.stmts
-                 <> [ GoMutate indexName (GoBinOp "+" (GoVar pairIdxName) (GoInt 1))
-                    , GoMutate "_" (GoVar indexName)
-                    , GoMutate valueName (GoIndex (rawGo target) (GoVar indexName))
-                    ] <> bindingsMutate true TypeInt64 <> affineSteps.oddStep.stmts)
-          , GoIfElse (GoBinOp "<" (GoVar pairIdxName) (GoVar nName))
-              ([ GoAssign indexName (GoVar pairIdxName)
-               , GoMutate "_" (GoVar indexName)
-               , GoAssign valueName (GoIndex (rawGo target) (GoVar pairIdxName))
-               ] <> bindingsFor true TypeInt64 <> affineSteps.singleStep.stmts)
-              []
-          , GoIfElse (GoBinOp ">" (GoVar nName) (GoInt 0))
-              [ GoMutate resultName (GoCall (GoVar "int64") [ GoBinOp "+" (GoCall (GoVar "int32") [ GoVar resultName ]) (GoVar acc32Name) ]) ] []
-          ]
-      _, _, _ ->
-        [ GoForRange (indexName <> ", " <> valueName <> " := range " <> target)
-            ([ GoMutate "_" (GoVar indexName) ] <> bindingsFor isInt32 elemType <> loopStep.stmts)
-        ] <> normalizeFor target
+    emitFallibleSource target isInt32 elemType =
+      [ GoForRange (indexName <> ", " <> valueName <> " := range " <> target)
+          ([ GoMutate "_" (GoVar indexName) ] <> bindingsFor isInt32 elemType <> loopStep.stmts)
+      ] <> normalizeFor target
     sourceStmts = case inputType of
       TypeNativeArray inner ->
         [ GoAssign (variable "source") (GoVar inputName) ] <> emitFallibleSource (variable "source") false inner
@@ -516,78 +433,3 @@ emitFallibleLoop translate context nextId traversal totalCb descriptor failureEx
      , nextId: finalNextId + 1 }
   where
   integer value from = coerceGoExpr context.codegenStateRef context.modNameStr value from TypeInt64
-
-allPayloadsInt32 :: Maybe Level -> TcoExpr -> Boolean
-allPayloadsInt32 valLevel expr = case unwrapTcoExpr expr of
-  CtorSaturated _ _ _ (Ident "Nothing") [] -> true
-  CtorSaturated _ _ _ (Ident "Just") [ Tuple _ payload ] -> isNormalizedInt32 valLevel payload
-  Branch branches otherwise ->
-    Array.all (\(Pair _ branchResult) -> allPayloadsInt32 valLevel branchResult) (NEA.toArray branches)
-      && allPayloadsInt32 valLevel otherwise
-  _ -> false
-
-isNormalizedInt32 :: Maybe Level -> TcoExpr -> Boolean
-isNormalizedInt32 valLevel expr = case unwrapTcoExpr expr of
-  Lit (LitInt _) -> true
-  Local _ level -> Just level == valLevel
-  PrimOp (Op1 OpIntNegate _) -> true
-  PrimOp (Op1 OpIntBitNot _) -> true
-  PrimOp (Op2 (OpIntNum OpAdd) _ _) -> true
-  PrimOp (Op2 (OpIntNum OpSubtract) _ _) -> true
-  PrimOp (Op2 (OpIntNum OpMultiply) _ _) -> true
-  PrimOp (Op2 OpIntBitAnd _ _) -> true
-  PrimOp (Op2 OpIntBitOr _ _) -> true
-  PrimOp (Op2 OpIntBitXor _ _) -> true
-  PrimOp (Op2 OpIntBitShiftLeft _ _) -> true
-  PrimOp (Op2 OpIntBitShiftRight _ _) -> true
-  _ -> false
-
-extractEqRejectAffine
-  :: { parameters :: Array (Tuple (Maybe Ident) Level), body :: TcoExpr }
-  -> TcoExpr
-  -> Maybe { rejected :: TcoExpr, affine :: IndexedAddLanes.AffineParity }
-extractEqRejectAffine totalCb folded = case totalCb.parameters of
-  [ param@(Tuple _ valLevel) ] -> do
-    { rejected, payload } <- matchEqReject valLevel totalCb.body
-    let syntheticMapper = Tco.analyze [] (NeutralExpr (Typed (Func [ Int ] Int) (NeutralExpr (Abs (NEA.singleton param) (neutral payload)))))
-    affine <- IndexedAddLanes.extractAffineParity (Just syntheticMapper) folded
-    pure { rejected, affine }
-  _ -> Nothing
-
-matchEqReject :: Level -> TcoExpr -> Maybe { rejected :: TcoExpr, payload :: TcoExpr }
-matchEqReject valLevel expr = case unwrapTcoExpr expr of
-  Branch branches otherwise -> case NEA.toArray branches of
-    [ Pair cond branchRes ] -> case isNothingCtor branchRes, matchJustPayload otherwise of
-      true, Just payload -> do
-        rejected <- matchEqAgainst valLevel OpEq cond
-        pure { rejected, payload }
-      _, _ -> case matchJustPayload branchRes, isNothingCtor otherwise of
-        Just payload, true -> do
-          rejected <- matchEqAgainst valLevel OpNotEq cond
-          pure { rejected, payload }
-        _, _ -> Nothing
-    _ -> Nothing
-  _ -> Nothing
-
-isNothingCtor :: TcoExpr -> Boolean
-isNothingCtor expr = case unwrapTcoExpr expr of
-  CtorSaturated (Qualified (Just (ModuleName "Data.Maybe")) (Ident "Nothing")) _ (ProperName "Maybe") (Ident "Nothing") [] -> true
-  _ -> false
-
-matchJustPayload :: TcoExpr -> Maybe TcoExpr
-matchJustPayload expr = case unwrapTcoExpr expr of
-  CtorSaturated (Qualified (Just (ModuleName "Data.Maybe")) (Ident "Just")) _ (ProperName "Maybe") (Ident "Just") [ Tuple _ payload ] -> Just payload
-  _ -> Nothing
-
-matchEqAgainst :: Level -> BackendOperatorOrd -> TcoExpr -> Maybe TcoExpr
-matchEqAgainst valLevel expectedOp expr = case unwrapTcoExpr expr of
-  PrimOp (Op2 (OpIntOrd op) left right) | op == expectedOp ->
-    if isLocalLevel valLevel left && not (usesLevel valLevel right) then Just right
-    else if isLocalLevel valLevel right && not (usesLevel valLevel left) then Just left
-    else Nothing
-  _ -> Nothing
-
-isLocalLevel :: Level -> TcoExpr -> Boolean
-isLocalLevel target expr = case unwrapTcoExpr expr of
-  Local _ level -> level == target
-  _ -> false

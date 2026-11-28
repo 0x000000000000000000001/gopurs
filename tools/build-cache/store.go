@@ -866,7 +866,7 @@ func (s store) readOwnership() ([]OwnedOutput, error) {
 		return nil, fmt.Errorf("ownership journal is incompatible/corrupt")
 	}
 	for _, out := range journal.Outputs {
-		if !outputPath(out.Kind, out.Module, out.Path) || !validObject(out.Object) {
+		if !legacyOwnedOutputPath(out.Kind, out.Module, out.Path) || !validObject(out.Object) {
 			return nil, fmt.Errorf("ownership journal has an invalid output")
 		}
 	}

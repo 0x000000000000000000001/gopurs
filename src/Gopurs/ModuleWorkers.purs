@@ -21,7 +21,6 @@ import Gopurs.GoFunctions (Parameters, curriedFunction, loopParameters, namedPar
 import Gopurs.Printer (printGoExpr)
 import Gopurs.Int32Loops as Int32Loops
 import Gopurs.AffineLoops as AffineLoops
-import Gopurs.FilteredSumLoops as FilteredSumLoops
 import Gopurs.RecordAffineLoops as RecordAffineLoops
 import Gopurs.ArraySnoc as ArraySnoc
 import Gopurs.ListFilter as ListFilter
@@ -112,10 +111,8 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
                   else RecordAffineLoops.hot target params resultType fn.body (makeColdCall recordColdName)) of
               Just fast -> Just { coldName: recordColdName, fast, extra: [] }
               Nothing -> case (if isReserved scalarColdIdent scalarColdName then Nothing
-                else case AffineLoops.hot translate workerContext target params resultType fn.body (makeColdCall scalarColdName) of
-                  Just fast -> Just { coldName: scalarColdName, fast, extra: [] }
-                  Nothing -> map (\fast -> { coldName: scalarColdName, fast, extra: [] })
-                    (FilteredSumLoops.hot target params resultType fn.body (makeColdCall scalarColdName))) of
+                else map (\fast -> { coldName: scalarColdName, fast, extra: [] })
+                  (AffineLoops.hot translate workerContext target params resultType fn.body (makeColdCall scalarColdName))) of
                 Just found -> Just found
                 Nothing -> if isReserved i32RecColdIdent i32RecColdName || isReserved i32RecWorkerIdent i32RecWorkerName then Nothing
                   else map (\p -> { coldName: i32RecColdName, fast: p.fast, extra: [ p.worker ] })

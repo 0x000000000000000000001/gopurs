@@ -149,44 +149,7 @@ recursive translate context@{ metadata, depth, modNameStr, recVars, moduleFuncti
             { functions: moduleFunctions, bound: allocated.newBound }
             workers
 
-          zeroSeedShortcut = case workers of
-            [ worker ] ->
-              let
-                { oldName, newName, params } = worker
-                keepWrapper = LocalWorkers.needsWrapper oldName (Array.length params) body
-                  || Array.any (\peer -> LocalWorkers.needsWrapper oldName (Array.length params) peer.val) fns
-              in
-                if keepWrapper then Nothing
-                else
-                  let
-                    currentLoopCtx = [ { ident: newName, loopParams: map fst (loopParameters params), goTypes: map snd params } ]
-                    loopBound = bindParameters params published.bound
-                    resBodyMut = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = published.functions, bound = loopBound, tcoIdent = (Just newName), loopCtx = currentLoopCtx, options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = worker.expectedReturn, mbExpectedGoType = Just worker.resultType }) allocated.nextId worker.body
-                  in
-                    case LocalWorkers.emitZeroSeed translate (context { bound = published.bound }) oldName newName params worker.body body resBodyMut of
-                      Just { coldRef, counterArg } ->
-                        let
-                          argRes = translate (context { depth = (depth + 1), recVars = combinedRecVars, tcoIdent = Nothing, mbExpectedExprType = Nothing, mbExpectedGoType = Just TypeInt64 }) resBodyMut.nextId counterArg
-                          coercedArg = coerceGoExpr context.codegenStateRef modNameStr argRes.expr argRes.exprType TypeInt64
-                        in case coercedArg of
-                          GoVar varName ->
-                            let
-                              admitted = GoBinOp "<" (GoCall (GoVar "uint64") [ GoBinOp "-" (GoVar varName) (GoInt 2) ]) (GoInt (top - 1))
-                              fastBranch =
-                                [ rawGo (varName <> " >>= 1")
-                                , GoReturn (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "*" (GoVar varName) (GoBinOp "+" (GoVar varName) (GoInt 1)) ] ])
-                                ]
-                              coldCall = GoCall (GoRef coldRef) [ GoVar varName ]
-                              fastExpr = GoCall (GoFuncBlock [] [ GoIfElse admitted fastBranch [], GoReturn coldCall ] TypeInt64) []
-                            in
-                              Just { stmts: argRes.stmts, expr: fastExpr, exprType: TypeInt64, nextId: argRes.nextId }
-                          _ -> Nothing
-                      Nothing -> Nothing
-            _ -> Nothing
         in
-          case zeroSeedShortcut of
-            Just shortcut -> shortcut
-            Nothing ->
               let
                 translatedWorkers = foldl
                   ( \acc worker ->

@@ -44,10 +44,10 @@ const self = Affine.globalTarget('Renamed')('step');
 
 function fixture(options = {}) {
   const increment = integer(options.increment ?? 3);
-  const remainder = mod(n, integer(options.modulus ?? 5));
+  const nestedInc = integer(options.nestedIncrement ?? 7);
   const changes = options.changes ?? update(record, [
     ['sum', options.sum ?? (options.commute ? add(increment, sum) : add(sum, increment))],
-    ['nested', update(nested, [['value', options.value ?? (options.commute ? add(remainder, value) : add(value, remainder))]])],
+    ['nested', update(nested, [['value', options.value ?? (options.commute ? add(nestedInc, value) : add(value, nestedInc))]])],
   ]);
   const args = options.args ?? (options.reversed ? [changes, sub(n, integer(1))] : [sub(n, integer(1)), changes]);
   const step = options.step ?? (options.uncurried ? expr(new S.UncurriedApp(variable(), args)) : call(options.target ?? variable(), args));
@@ -64,7 +64,7 @@ function optimize(body, options = {}) {
 }
 
 test('recognizes renamed nested records and equivalent parameter/operator orders', () => {
-  for (const options of [{}, {commute:true}, {uncurried:true}, {reversed:true}, {modulus:1}, {modulus:2147483647}, {increment:-2147483648}]) {
+  for (const options of [{}, {commute:true}, {uncurried:true}, {reversed:true}, {nestedIncrement:0}, {nestedIncrement:2147483647}, {increment:-2147483648}]) {
     const result = optimize(fixture(options), {params:options.reversed ? [...params].reverse() : params, hook:true});
     assert.notEqual(result, fallback);
     assert.equal(result.value0.at(-1), fallback);
@@ -109,9 +109,8 @@ test('rejects effectful or opaque work even in otherwise ignored updates', () =>
   assert.equal(optimize(wrapped), fallback);
 });
 
-test('rejects unsupported moduli, operations and captured increments', () => {
-  for (const modulus of [-2147483648,-5,0]) assert.equal(optimize(fixture({modulus})), fallback);
-  for (const candidate of [add(value,mod(n,sum)), sub(value,integer(2)), add(value,mod(add(n,integer(1)),integer(5)))]) {
+test('rejects modulo/non-constant operations and captured increments', () => {
+  for (const candidate of [add(value,mod(n,integer(5))), add(value,mod(n,sum)), sub(value,integer(2)), add(value,mod(add(n,integer(1)),integer(5)))]) {
     assert.equal(optimize(fixture({value:candidate})), fallback);
   }
   assert.equal(optimize(fixture({sum:add(sum,local('capture',7))})), fallback);
@@ -128,19 +127,18 @@ test('emitted Go matches the loop and preserves wide seeds, borrowed fields and 
   const directory = process.env.GOPURS_RECORD_AFFINE_TEST_OUTPUT ?? mkdtempSync(join(tmpdir(),'record-affine-'));
   mkdirSync(directory,{recursive:true});
   if (!process.env.GOPURS_RECORD_AFFINE_TEST_OUTPUT) t.after(() => rmSync(directory,{recursive:true,force:true}));
-  const definitions = [], configs = [{increment:3,modulus:5},{increment:0,modulus:1},{increment:-7,modulus:7},{increment:2147483647,modulus:2147483647},{increment:-2147483648,modulus:2}];
+  const definitions = [], configs = [{increment:3,nestedIncrement:5},{increment:0,nestedIncrement:1},{increment:-7,nestedIncrement:7},{increment:2147483647,nestedIncrement:-2147483648}];
   const count = nName+'_loop', state = recordName+'_loop';
   const print = (name,body) => printGoDecl(new Go.GoFunctionDecl({name:{owner:'generated/Probe',name},params:params.map(p=>new Tuple(p.value0+'_loop',p.value1)),result:recordType,body}));
   for (const [i,config] of configs.entries()) {
-    const raw = Go.rawGo(`for ${count} != 0 { ${state}.sum=int64(int32(${state}.sum+${config.increment})); rem:=${count}%${config.modulus}; if rem<0 { rem+=${config.modulus} }; ${state}.nested.value=int64(int32(${state}.nested.value+rem)); ${count}=int64(int32(${count}-1)) }; return ${state}`);
+    const raw = Go.rawGo(`for ${count} != 0 { ${state}.sum=int64(int32(${state}.sum+${config.increment})); ${state}.nested.value=int64(int32(${state}.nested.value+${config.nestedIncrement})); ${count}=int64(int32(${count}-1)) }; return ${state}`);
     definitions.push(print('Run'+i,optimize(fixture(config),{fallback:raw})));
     definitions.push(print('Guard'+i,optimize(fixture(config))));
   }
   const large=[];
-  for(const [i,{increment,modulus}] of configs.entries())for(const count of [2147483646,2147483647])for(const seed of [-2147483648,0,2147483647,4294967295]){
-    const n=BigInt(count),d=BigInt(modulus),q=n/d,r=n%d;
-    const amount=q*d*(d-1n)/2n+r*(r+1n)/2n;
-    large.push(`{Run${i},${count},${seed},${BigInt.asIntN(32,BigInt(seed)+n*BigInt(increment))},${BigInt.asIntN(32,BigInt(seed)+amount)}}`);
+  for(const [i,{increment,nestedIncrement}] of configs.entries())for(const count of [2147483646,2147483647])for(const seed of [-2147483648,0,2147483647,4294967295]){
+    const n=BigInt(count);
+    large.push(`{Run${i},${count},${seed},${BigInt.asIntN(32,BigInt(seed)+n*BigInt(increment))},${BigInt.asIntN(32,BigInt(seed)+n*BigInt(nestedIncrement))}}`);
   }
   writeFileSync(join(directory,'go.mod'),'module recordaffineprobe\n\ngo 1.22\n');
   writeFileSync(join(directory,'record.go'),`package recordaffineprobe\n${definitions.join('\n')}`);
@@ -149,10 +147,10 @@ import ("testing";"reflect")
 type state = ${Go.goTypeToStr(recordType)}
 func TestEmitted(t *testing.T) {
  cases:=0
- configs:=[]struct{f,g func(int64,state)state; increment,modulus int64}{${configs.map((c,i)=>`{Run${i},Guard${i},${c.increment},${c.modulus}}`).join(',')}}
+ configs:=[]struct{f,g func(int64,state)state; increment,nestedIncrement int64}{${configs.map((c,i)=>`{Run${i},Guard${i},${c.increment},${c.nestedIncrement}}`).join(',')}}
  for _,c:=range configs { for _,n:=range []int64{0,1,2,4,5,6,7,30,1000,10000,4294967297,4294967303} { for _,seed:=range []int64{-9223372036854775808,-2147483648,-1,0,2147483647,2147483648,4294967295,9223372036854775807} {
   input:=state{sum:seed,nested:struct{value int64}{seed},tag:"retained",borrowed:[]int64{7,11}};want:=input
-  for k:=n;k!=0;k=int64(int32(k-1)){want.sum=int64(int32(want.sum+c.increment));r:=k%c.modulus;if r<0{r+=c.modulus};want.nested.value=int64(int32(want.nested.value+r))}
+  for k:=n;k!=0;k=int64(int32(k-1)){want.sum=int64(int32(want.sum+c.increment));want.nested.value=int64(int32(want.nested.value+c.nestedIncrement))}
   got:=c.f(n,input); if !reflect.DeepEqual(got,want)||input.sum!=seed||input.nested.value!=seed||&got.borrowed[0]!=&input.borrowed[0]{t.Fatalf("n=%d seed=%d got=%v want=%v",n,seed,got,want)};cases++
  } } }
  for _,c:=range []struct{f func(int64,state)state;n,seed,a,b int64}{${large.join(',')}}{input:=state{sum:c.seed,nested:struct{value int64}{c.seed}};got:=c.f(c.n,input);if got.sum!=c.a||got.nested.value!=c.b{t.Fatalf("large n=%d got=%v want=%d/%d",c.n,got,c.a,c.b)};cases++}

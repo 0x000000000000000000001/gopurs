@@ -3,7 +3,6 @@ module Gopurs.LocalWorkers
   , signature
   , needsWrapper
   , emit
-  , emitZeroSeed
   ) where
 
 import Prelude
@@ -18,11 +17,10 @@ import Data.String.Pattern (Pattern(..))
 import Data.Tuple (Tuple(..), fst, snd)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
-import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.CallAnalysis (collectGoSpine, getGoSpineArgs)
+import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.ExprAnalysis (extractExprFuncType, getExprType, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, flattenStmts)
-import Gopurs.FilteredSumLoops as FilteredSumLoops
 import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), goTypeToStr, rawGo)
 import Gopurs.GoSymbol (GoReference(..), generated)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
@@ -31,7 +29,6 @@ import Gopurs.Int32Loops as Int32Loops
 import Gopurs.AffineLoops as AffineLoops
 import Gopurs.GoTypes (exprTypeToGoType)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
-import PureScript.Backend.Optimizer.CoreFn (Literal(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..))
 
@@ -139,9 +136,7 @@ emit translate context@{ codegenStateRef, modNameStr, bound } name params keepWr
                     pure (Just (SymbolReference (generated modNameStr hotName)))
                   Nothing -> pure Nothing
         in
-          case makeSplit FilteredSumLoops.hot of
-            Just ref -> Just ref
-            Nothing -> makeSplit (AffineLoops.hot translate context)
+          makeSplit (AffineLoops.hot translate context)
       _ -> Nothing
     functionBody = case loopBody of
       Just source -> AffineLoops.wrap translate context (AffineLoops.localTarget bound name) params resultType source looped
@@ -181,86 +176,6 @@ emit translate context@{ codegenStateRef, modNameStr, bound } name params keepWr
           <> if keepWrapper then [ GoMutate name wrapper ] else []
   in
     { declarations, assignments, hoisted: hoistedHot }
-
--- Specialize a standalone closed FilteredSumLoops local worker when the entire
--- outer LetRec body is a single saturated call passing literal 0 as the seed.
--- Emits a 1-arg cold loop helper and returns an inlineable fast block (Go
--- inline cost <= 79 when unwrapped by ModuleWorkers.flattenTailReturn).
-emitZeroSeed
-  :: TranslateExpr
-  -> ExprContext
-  -> String
-  -> String
-  -> Parameters
-  -> TcoExpr
-  -> TcoExpr
-  -> ExprResult
-  -> Maybe { coldRef :: GoReference, counterArg :: TcoExpr }
-emitZeroSeed translate context@{ codegenStateRef, modNameStr, bound } oldName newName params loopBody outerBody result =
-  let
-    resultType = result.exprType
-    allowed = Set.fromFoldable (map fst params)
-    free = freeLocalsIn allowed loopBody
-    isSelfKey k = case Map.lookup k bound of
-      Just b -> b.name == newName
-      Nothing -> false
-    isClosed = Array.all (\k -> isSelfKey k || Set.member k allowed) (Array.fromFoldable free)
-    callArgs = case unwrapTcoExpr outerBody of
-      App _ _ ->
-        let Tuple fn spine = collectGoSpine outerBody
-        in case unwrapTcoExpr fn of
-          Local ident level | localId ident level == oldName -> Just (getGoSpineArgs spine)
-          _ -> Nothing
-      UncurriedApp fn args -> case unwrapTcoExpr fn of
-        Local ident level | localId ident level == oldName -> Just args
-        _ -> Nothing
-      _ -> Nothing
-  in
-    if not isClosed then Nothing
-    else case callArgs of
-      Just [ a0, a1 ] ->
-        let
-          selfTarget = AffineLoops.localTarget bound newName
-          body = flattenStmts result.stmts <> [ GoReturn result.expr ]
-          looped = Int32Loops.loop newName params resultType body
-          coldInner = AffineLoops.wrap translate context selfTarget params resultType loopBody looped
-        in
-          case FilteredSumLoops.hotZero selfTarget params resultType loopBody of
-            Just hz ->
-              let
-                accArg = if hz.accIdx == 0 then a0 else a1
-                counterArg = if hz.counterIdx == 0 then a0 else a1
-                accIsZero = case unwrapTcoExpr accArg of
-                  Lit (LitInt 0) -> true
-                  _ -> false
-                counterIsLocal = case unwrapTcoExpr counterArg of
-                  Local _ _ -> true
-                  _ -> false
-                counterMentionsSelf = Set.member oldName (freeLocalsIn Set.empty counterArg)
-              in
-                if accIsZero && counterIsLocal && not counterMentionsSelf then
-                  unsafePerformEffect do
-                    state <- Ref.read codegenStateRef
-                    let
-                      coldName = "Call_" <> modNameStr <> "___gopurs_cold_local_" <> show state.globalId
-                      coldDecl = GoFunctionDecl
-                        { name: generated modNameStr coldName
-                        , params: [ Tuple hz.counterParam TypeInt64 ]
-                        , result: resultType
-                        , body: GoBlock
-                            [ GoAssign hz.accParam (GoCall (GoVar "int64") [ GoInt 0 ])
-                            , rawGo ("_ = " <> hz.accParam)
-                            , coldInner
-                            ]
-                        }
-                    Ref.modify_ (\current -> current
-                      { globalId = current.globalId + 1
-                      , declarations = current.declarations <> [ coldDecl ]
-                      }) codegenStateRef
-                    pure (Just { coldRef: SymbolReference (generated modNameStr coldName), counterArg })
-                else Nothing
-            Nothing -> Nothing
-      _ -> Nothing
 
 mentionsName :: String -> GoExpr -> Boolean
 mentionsName target = go

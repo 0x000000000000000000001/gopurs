@@ -38,7 +38,6 @@ import PureScript.Backend.Optimizer.FreeVars (localId)
 import Gopurs.ThunkFusion (optimizeThunkProducers)
 import Gopurs.FunctionFusion (optimizeFunctionProducers)
 import Gopurs.ListFusion as ListFusion
-import Gopurs.ListProgressionFold as ListProgressionFold
 import Gopurs.ImmediateApplications (optimizeImmediateApplications)
 import Gopurs.RegexMatchProjection as RegexMatchProjection
 import Gopurs.Ownership as Ownership
@@ -94,15 +93,14 @@ prepareModule :: CodegenMetadata -> BackendModule -> PreparedModule
 prepareModule metadata inputMod =
   let
     projected = ListFusion.optimize (RegexMatchProjection.optimize metadata (CodePointFold.optimize (ClosedIndexedFolds.optimize inputMod)))
-    progressions = ListProgressionFold.prepare projected
-    constants = ClosedScalar.optimize (RefLoopRegions.optimize progressions.module)
+    constants = ClosedScalar.optimize (RefLoopRegions.optimize projected)
     constructors = ConstructorFold.optimize constants
     schemas = specializeDecoderSchemas metadata (borrowReadOnlyObjects metadata (cacheClosedDictionaries metadata (optimizeImmediateApplications (optimizeFunctionProducers (optimizeThunkProducers constructors)))))
     owned = Ownership.prepare metadata schemas.module
   in
     { module: owned.module
-    , declarations: owned.declarations <> schemas.declarations <> progressions.declarations
-    , functions: Map.union owned.functions progressions.functions
+    , declarations: owned.declarations <> schemas.declarations
+    , functions: owned.functions
     , workers: workerInputs metadata.globalFunctions owned.module
     }
 

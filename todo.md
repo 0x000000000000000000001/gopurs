@@ -159,6 +159,7 @@ Objectif : passer `string/cp-take-unicode-1500` (`1.87x`), `string/cp-length-uni
 | Round 4 (pairé 37/37) | `1.65 ms` (`0.19x`) | `0.85x` | `0.75x` | `2.57x` | `0.39x` | `0.87x` | `RBTree` `1.64 ms` (`0.19x/C`), `filter` `1.34 μs` (`0.29x/C`), `cp-take` `0.45 μs` (`0.70x/C`) |
 | **Campagne officielle finale (`measure.py`, 3 proc., `gopurs-native`, 37/37)** | **`1.62 ms` (`0.18x`)** | **`0.85x`** | **`0.76x`** | **`2.42x`** | **`0.39x`** | **`0.87x`** | **34 Stable** (`0.0039 ms`, `0.061x/C`, `μ=0.89x`, `Q₂=0.83x`) + **3 WIP** (`1.61 ms`, `0.19x/C`, `μ=0.40x`, `Q₂=0.30x`, `Q₄=0.70x`) ; 37/37 oracles OK |
 | **Audit de généralité + référence C11 idiomatique (`measure.py`, 3 proc., C `3.69 ms`)** | **`1.56 ms` (`0.42x`)** | **`0.90x`** | **`0.93x`** | **`2.32x`** | **`0.47x`** | **`0.84x`** | Suppression `NestedRecursion` (`m==1` jump-threading) et `TailAddLoops.hot`/`LinearOrder2` ($O(\phi^n)\to O(n)$), remplacés par `Int32Recursion.purs` général (`Ackermann` `15.73 μs = 0.96x/C`, `Fib` `0.112 μs = 1.43x/C`). C11 durci (sans SIMD manuel) : `RBTree` itératif `3.62 ms` (`-58%`), `Primes` impair `0.074 μs` (`-35%`), `array/sort` 0-alloc run `2.85 μs` (`-39%`). **33 Stable** + **4 WIP** (`Fibonacci`, `Red-Black Tree`, `array/filter-10000`, `string/cp-take-unicode-1500`). |
+| **Option A — Compilateur de production sobre, 100 % général & zéro ASM (`measure.py`, 3 proc., C `3.69 ms`)** | **`1.96 ms` (`0.53x`)** | **`5572.29x`** | **`1.50x`** | **`205318x`** | **`2.87x`** | **`6.68x`** | Zéro `.s` dans `gopurs_runtime` (`runtime.go` + `simd_generic.go` pur Go portable, corrige `b8x` sur `go1.26.8 linux/arm64`), suppression complète des passes « forme benchmark » (`ListProgressionFold`, `CountedFunctionSums`, `FilteredSumLoops`, `CongruenceSum`, raccourcis parité/ASCII-memo). **25 Stable** (`1.62 ms`, `0.44x/C`, `μ=1.27x`, `Q₂=1.32x`, `Q₄=2.36x`, `G=1.06x`) + **12 WIP** (`0.33 ms`, `8.24x/C`). |
 
 ---
 
@@ -177,4 +178,23 @@ Objectif : passer `string/cp-take-unicode-1500` (`1.87x`), `string/cp-length-uni
   - Campagnes archivées dans `altbak.pub/var/benchmark/c-idiomatic-20261128/` et `altbak.pub/var/benchmark/go-general-20261128/`.
   - Toutes les 13 tables de `altbak.pub/README.md` recalculées sur la nouvelle référence C11 (auto-test aller-retour 0 diff avant mise à jour, `test/benchmark-ratio-statistics.py` 9/9 OK), note explicite sur la référence C11 portable sans SIMD manuel.
   - Go Release : **33 Stable** (`0.019 ms`, `0.30x/C`, `μ/C = 0.93x`, `Q₂/C = 0.96x`, `Q₄/C = 2.32x`, `G/C = 0.46x`, `Q₄/JS = 0.84x`) + **4 WIP** (`Fibonacci` `1.43x/C`, `Red-Black Tree` `0.43x/C`, `array/filter-10000` `0.29x/C`, `string/cp-take-unicode-1500` `0.65x/C` ; Total WIP `1.55 ms`, `0.43x/C`).
+
+---
+
+## Phase 7 — Option A : Compilateur de production sobre, portable & sans ASM (correctif `b8x`)
+
+- [x] **7.1 — Runtime 100 % Go pur portable (zéro fichier `.s`, correctif `VCMGT` sur `b8x`)**
+  - Cause racine sur `b8x` : `simd_arm64.s` utilisait les mnémoniques `VCMGT`/`VCMHI` (Go 1.27+), rejetés par le conteneur `core-api-cli-1` de `b8x` (`go1.26.8 linux/arm64`).
+  - Supprimé `runtime/simd_arm64.s`, `runtime/simd_amd64.s`, `runtime/simd_asm.go`, ainsi que `oddUnmarkedLUT`, `SumOddProgression` et `SumASCIIStringArray` (mémoïsation par pointeur) dans `runtime/runtime.go`.
+  - Conservé uniquement 6 noyaux généraux en Go pur (sans `unsafe`, sans build tag) dans `runtime/simd_generic.go` : `SumInt32`, `IndexByteASCII` (`strings.IndexByte` + test ASCII 8 octets), `IsNonIncreasingInt32`, `IsNonDecreasingInt32`, `ContainsInt32`, `CountUTF8CodePoints` (SWAR ASCII 8 octets + décodeur UTF-8/WTF-8).
+  - Migration incrémentale propre : `Driver/Output.purs` supprime les fichiers `.s`/`simd_asm.go` obsolètes et `tools/build-cache/{contract.go,store.go}` accepte ces chemins hérités dans `.gopurs-ownership.json` (`legacyOwnedOutputPath`) afin que le cache les purge automatiquement sans `-c` (test de régression `TestLegacyRuntimeAssemblyOwnershipCleanup`).
+- [x] **7.2 — Suppression des passes « forme benchmark » (Couche 2)**
+  - Supprimé `ListProgressionFold.purs`, `CountedFunctionSums.purs`, `FilteredSumLoops.purs`, `CongruenceSum.purs` et leurs tests dédiés.
+  - Nettoyé `AffineLoops.purs`, `RecordAffineLoops.purs`, `ModuleWorkers.purs`, `LocalWorkers.purs`, `BindingExprs.purs`, `ArrayRangeFold.purs`, `IndexedAddLanes.purs`, `ArrayProducerFold.purs`, `ArrayTraverseFold.purs`, `CodePointFold.purs`, `StringSplitFold.purs`, `StringConcatFold.purs` (retrait des formes closes de modulo, des checksums affines par parité et des raccourcis `SumCodePoints`/`SumASCIIStringArray`).
+  - Conservé intactes toutes les passes générales (Couche 1) : unboxing TAST, monomorphisation, TCO, `Int32Loops`, `Int32Recursion`, `TailAddLoops`, `AffineLoops`/`RecordAffineLoops` à incrément constant (équivalent SCEV), fusions sans allocation (`ArrayProducerFold`, `ArrayTraverseFold`, `ArrayRangeFold`, `ListFusion`, `StringSplitFold`, `StringConcatFold`, `CodePointFold`, `ConstructorFold`) et `Ownership/{Workers,BalancedLoop}`.
+- [x] **7.3 — Validation complète (`gopurs`, `b8x` Docker `go1.26.8`, campagne officielle `altbak.pub`)**
+  - `npm run build` (0 warning, 0 erreur), `npm run build:native` (566 modules TAST), `117/117` tests unitaires (y compris cross-compile `linux/arm64`, `linux/amd64`, `js/wasm` et `-race`), `tools/build-cache` (`go test ./...`), `test:identity` (8/8), `test:cache` (6/6), `test:ffi` (39/39), `tail-add-loop-e2e` (3/3).
+  - `b8x` (2 711 modules) : build incrémental réussi (nettoyage automatique des `.s` dans `output/gopurs_runtime`), et compilation complète de `./gopurs_runtime` + `./Test.Main/main/main.go` vérifiée directement dans `core-api-cli-1` (`go1.26.8 linux/arm64`).
+  - Campagne officielle 3 processus archivée dans `altbak.pub/var/benchmark/go-clean-20261128/` et publiée dans `altbak.pub/README.md` (`test/benchmark-ratio-statistics.py` 9/9 OK) : **Total 37 cas = `1.96 ms`** (`0.53x/C`, `Q₂/C = 1.50x`), dont **25 Stable** (`1.62 ms`, `0.44x/C`, `μ/C = 1.27x`, `Q₂/C = 1.32x`, `Q₄/C = 2.36x`, `G/C = 1.06x`) et **12 WIP** (`0.33 ms`, `8.24x/C`).
+
 

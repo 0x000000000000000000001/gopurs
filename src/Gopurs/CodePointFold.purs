@@ -206,22 +206,10 @@ emitLoop translate context nextId callback seed input limit grouped =
       [ GoIfElse (rawGo "len(codePointFold_rem) < len(codePointFold_input)")
           [ GoMutate "codePointFold_result" (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "+" (GoVar "codePointFold_result") (GoVar "codePointFold_acc") ] ]) ] []
       ] else []
-    body = if directAdd then
+    body =
       [ GoAssign "codePointFold_input" str
       , GoAssign "codePointFold_result" (integer (arg 1) (argType 1))
-      ] <> (if bounded then
-              [ GoAssign "codePointTake_limit" (integer (arg 2) (argType 2))
-              , rawGo "codePointFold_acc, codePointFold_taken := gopurs_runtime.SumCodePointsLimit(codePointFold_input, codePointTake_limit)"
-              ]
-            else
-              [ rawGo "codePointFold_acc, codePointFold_taken := gopurs_runtime.SumCodePoints(codePointFold_input)" ])
-        <> [ GoIfElse (GoVar "codePointFold_taken")
-               [ GoMutate "codePointFold_result" (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "+" (GoVar "codePointFold_result") (GoVar "codePointFold_acc") ] ]) ] []
-           ]
-      else
-        [ GoAssign "codePointFold_input" str
-        , GoAssign "codePointFold_result" (integer (arg 1) (argType 1))
-        ] <> preparation <> [ mainLoop, tailLoop ] <> finalize
+      ] <> preparation <> [ mainLoop, tailLoop ] <> finalize
   in { stmts: captured.stmts, expr: GoCall (GoFuncLit [] body (GoVar "codePointFold_result") TypeInt64) []
        , exprType: TypeInt64, nextId: captured.nextId }
   where

@@ -19,7 +19,7 @@ import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax, Pair(..))
 import PureScript.Backend.Optimizer.Syntax as Syn
 
-data Delta = Constant Int | Remainders Int
+data Delta = Constant Int
 data Change = Keep | Fields GoType (Array (Tuple String Change)) | Add Delta
 
 type Recurrence = { counter :: String, record :: String, changes :: Change }
@@ -116,12 +116,8 @@ recordChanges counter record path ty expression
       _, _ -> Nothing
 
 increment :: String -> TcoExpr -> Maybe Delta
-increment counter expression = case syntax expression of
+increment _ expression = case syntax expression of
   Syn.Lit (LitInt value) | value >= bottom && value <= top -> Just (Constant value)
-  Syn.PrimOp (Syn.Op2 (Syn.OpIntNum Syn.OpMod) value divisor) | local counter value -> do
-    modulus <- intLiteral divisor
-    guard (modulus > 0 && modulus <= top)
-    pure (Remainders modulus)
   _ -> Nothing
 
 emit :: GoExpr -> GoExpr -> Change -> GoExpr
@@ -136,16 +132,7 @@ emit counter original = case _ of
     narrow (GoBinOp "+" (narrow original) (total counter delta))
 
 total :: GoExpr -> Delta -> GoExpr
-total count = case _ of
-  Constant value -> GoBinOp "*" count (integer value)
-  Remainders modulus ->
-    let divisor = integer modulus
-        quotient = GoBinOp "/" count divisor
-        remainder = GoBinOp "%" count divisor
-        cycles = GoBinOp "/" (GoBinOp "*" (GoBinOp "*" quotient divisor) (integer (modulus - 1))) (integer 2)
-        suffix = GoBinOp "/" (GoBinOp "*" remainder (GoBinOp "+" remainder (integer 1))) (integer 2)
-    -- Sum k mod d for k=1..n: complete periods plus the final 1..remainder.
-    in GoBinOp "+" cycles suffix
+total count (Constant value) = GoBinOp "*" count (integer value)
 
 syntax :: TcoExpr -> BackendSyntax TcoExpr
 syntax (TcoExpr _ value) = case value of

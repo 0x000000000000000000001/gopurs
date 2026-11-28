@@ -714,10 +714,7 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 		return err
 	}
 	for _, extra := range []string{
-		"gopurs_runtime/simd_asm.go",
 		"gopurs_runtime/simd_generic.go",
-		"gopurs_runtime/simd_arm64.s",
-		"gopurs_runtime/simd_amd64.s",
 	} {
 		if err := add("runtime", "", extra, true); err != nil {
 			return err

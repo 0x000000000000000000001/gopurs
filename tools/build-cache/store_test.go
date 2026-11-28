@@ -583,3 +583,36 @@ func TestConcurrentPublishers(t *testing.T) {
 	wg.Wait()
 	lookup(t, f, "hit")
 }
+
+func TestLegacyRuntimeAssemblyOwnershipCleanup(t *testing.T) {
+	f := newFixture(t)
+	publish(t, f)
+	owned, err := f.s.readOwnership()
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacyPaths := []string{
+		"gopurs_runtime/simd_asm.go",
+		"gopurs_runtime/simd_arm64.s",
+		"gopurs_runtime/simd_amd64.s",
+	}
+	for _, rel := range legacyPaths {
+		body := []byte("// legacy runtime " + rel + "\n")
+		put(t, filepath.Join(f.s.root, rel), string(body))
+		owned = append(owned, OwnedOutput{
+			Path:   rel,
+			Kind:   "runtime",
+			Object: Object{SHA256: digest(body), Bytes: int64(len(body))},
+		})
+	}
+	if err := f.s.writeOwnership(owned); err != nil {
+		t.Fatal(err)
+	}
+	f.req.Spec.Options = append(f.req.Spec.Options, Setting{"mode", "portable"})
+	publish(t, f)
+	for _, rel := range legacyPaths {
+		if _, err := os.Stat(filepath.Join(f.s.root, rel)); !os.IsNotExist(err) {
+			t.Fatalf("legacy runtime file %s was not cleaned up during incremental publish", rel)
+		}
+	}
+}

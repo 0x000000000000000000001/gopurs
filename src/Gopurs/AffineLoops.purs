@@ -12,7 +12,6 @@ import Data.Newtype (unwrap)
 import Data.String as String
 import Data.Tuple (Tuple(..))
 import Gopurs.ExprContext (ExprContext, LocalEnv, TranslateExpr, childContext, flattenStmts)
-import Gopurs.FilteredSumLoops as FilteredSumLoops
 import Gopurs.GoAst (GoExpr(..), GoType(..), sanitizeName)
 import Gopurs.GoFunctions (Parameters)
 import Gopurs.RecordAffineLoops as RecordAffineLoops
@@ -22,7 +21,7 @@ import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax, Pair(..))
 import PureScript.Backend.Optimizer.Syntax as Syn
 
-data Increment = Constant Int | Remainders Int
+data Increment = Constant Int
 type Recurrence = { counter :: String, accumulator :: String, increment :: Increment, reads :: Array TcoExpr }
 
 -- Match the complete pure recurrence before changing its execution count. The
@@ -49,8 +48,7 @@ wrap translate context self params result body original = case recognize self pa
       total = GoBinOp "+" accumulator (incrementSum counter recurrence.increment)
       value = cast "int64" (cast "int32" total)
     in GoBlock [ GoIfElse admitted (emitReads translate context recurrence.reads <> [ GoReturn value ]) [], original ]
-  _ -> RecordAffineLoops.wrap self params result body
-    (FilteredSumLoops.wrap self params result body original)
+  _ -> RecordAffineLoops.wrap self params result body original
 
 -- A small constant-increment wrapper stays under Go's inline budget (cost <= 80)
 -- while the complete original loop stays out-of-line as a cold helper. Because
@@ -117,29 +115,12 @@ recognize self params body = do
   -- operand. The other operand and counter update are already proven pure;
   -- these demands therefore follow the step prefix in either argument order.
   suffix <- strictReads (64 - Array.length prefix.reads) operand
-  increment <- case syntax suffix.body of
-    Syn.PrimOp (Syn.Op2 (Syn.OpIntNum Syn.OpMod) value divisor) | local counter value -> do
-      modulus <- intLiteral divisor
-      guard (modulus > 0 && modulus <= top)
-      pure (Remainders modulus)
-    _ -> do
-      constant <- intLiteral suffix.body
-      guard (constant >= bottom && constant <= top)
-      pure (Constant constant)
-  pure { counter, accumulator, increment, reads: prefix.reads <> suffix.reads }
+  constant <- intLiteral suffix.body
+  guard (constant >= bottom && constant <= top)
+  pure { counter, accumulator, increment: Constant constant, reads: prefix.reads <> suffix.reads }
 
 incrementSum :: GoExpr -> Increment -> GoExpr
-incrementSum counter = case _ of
-  Constant value -> GoBinOp "*" counter (integer value)
-  Remainders modulus ->
-    let divisor = integer modulus
-        quotient = GoBinOp "/" counter divisor
-        remainder = GoBinOp "%" counter divisor
-        cycles = GoBinOp "/" (GoBinOp "*" (GoBinOp "*" quotient divisor) (integer (modulus - 1))) (integer 2)
-        suffix = GoBinOp "/" (GoBinOp "*" remainder (GoBinOp "+" remainder (integer 1))) (integer 2)
-    -- Sum k mod d for k=1..n, with n,d positive: whole periods then 1..r.
-    -- q*d*(d-1) and r*(r+1) are at most MaxInt32*(MaxInt32-1).
-    in GoBinOp "+" cycles suffix
+incrementSum counter (Constant value) = GoBinOp "*" counter (integer value)
 
 -- Match the whole suffix, including every local level, before discarding a
 -- binding. Locals, projections and arbitrary initializers keep the old loop.

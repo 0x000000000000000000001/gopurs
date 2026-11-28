@@ -111,29 +111,11 @@ emit translate context nextId descriptor producer = do
             , GoMutate "concatFold_offset" (rawGo "concatFold_offset + concatFold_width")
             ]
         ] finishResult TypeInt64
-    callFinishWith finishName tailExpr remaining accExpr =
-      GoCall (GoVar finishName)
+    callFinish tailExpr remaining =
+      GoCall (GoVar "concatFold_finish")
         ([ tailExpr, remaining ]
-          <> (if directAdd then [ accExpr ] else [])
+          <> (if directAdd then [ GoVar "concatFold_acc" ] else [])
           <> (if trackAny then [ GoVar "concatFold_result" ] else []))
-    callFinish tailExpr remaining = callFinishWith "concatFold_finish" tailExpr remaining (GoVar "concatFold_acc")
-    emitStringSliceDirect valuesVar finishName =
-      [ GoAssign finishName (makeFinish TypeString)
-      , rawGo ("concatFold_acc, concatFold_any, concatFold_failIdx, concatFold_failOff := gopurs_runtime.SumASCIIStringArray(concatFold_initial, " <> valuesVar <> ")")
-      , GoMutate "_" (GoVar "concatFold_any")
-      , GoIfElse (rawGo "concatFold_failIdx >= -1")
-          [ GoIfElse (rawGo "concatFold_failIdx == -1")
-              [ GoReturn (callFinishWith finishName (rawGo "concatFold_initial[concatFold_failOff:]") (GoVar valuesVar)
-                  (if trackAny then GoVar "concatFold_acc" else GoBinOp "+" (GoVar "concatFold_result") (GoVar "concatFold_acc"))) ]
-              [ GoReturn (callFinishWith finishName (rawGo (valuesVar <> "[concatFold_failIdx][concatFold_failOff:]")) (rawGo (valuesVar <> "[concatFold_failIdx+1:]"))
-                  (if trackAny then GoVar "concatFold_acc" else GoBinOp "+" (GoVar "concatFold_result") (GoVar "concatFold_acc"))) ]
-          ] []
-      , if trackAny then
-          GoIfElse (GoVar "concatFold_any")
-            [ GoMutate "concatFold_result" (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "+" (GoVar "concatFold_result") (GoVar "concatFold_acc") ] ]) ] []
-        else
-          GoMutate "concatFold_result" (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "+" (GoVar "concatFold_result") (GoVar "concatFold_acc") ] ])
-      ]
     asciiLoop text remaining =
       GoForRange ("concatFold_offset := 0; concatFold_offset < len(" <> text <> "); concatFold_offset++")
         [ GoAssign "concatFold_b" (rawGo (text <> "[concatFold_offset]"))
@@ -167,8 +149,11 @@ emit translate context nextId descriptor producer = do
       else if directAdd then
         [ GoMutate "concatFold_result" (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoVar "concatFold_acc" ] ]) ]
       else []
-    genericBody =
-      [ source.assignment
+    body =
+      [ GoAssign "concatFold_source" (arg 4)
+      , GoAssign "concatFold_initial" (coerce (arg 3) (argType 3) TypeString)
+      , GoAssign "concatFold_result" (coerce (arg 1) (argType 1) TypeInt64)
+      , source.assignment
       , GoAssign "concatFold_values" (rawGo source.target)
       ] <> accInit <>
       [ GoAssign "concatFold_finish" (makeFinish source.elementType)
@@ -178,26 +163,6 @@ emit translate context nextId descriptor producer = do
           , ascii "concatFold_text" (rawGo "concatFold_values[concatFold_index+1:]")
           ]
       ] <> accFinish
-    body = case argType 4, directAdd of
-      TypeNativeArray TypeString, true ->
-        [ GoAssign "concatFold_source" (arg 4)
-        , GoAssign "concatFold_initial" (coerce (arg 3) (argType 3) TypeString)
-        , GoAssign "concatFold_result" (coerce (arg 1) (argType 1) TypeInt64)
-        ] <> emitStringSliceDirect "concatFold_source" "concatFold_finish"
-      TypeValue, true ->
-        [ GoAssign "concatFold_source" (arg 4)
-        , GoAssign "concatFold_initial" (coerce (arg 3) (argType 3) TypeString)
-        , GoAssign "concatFold_result" (coerce (arg 1) (argType 1) TypeInt64)
-        , GoIfElse (rawGo "concatFold_source.Type == gopurs_runtime.TypeStringArray")
-            ([ GoAssign "concatFold_strs" (rawGo "*(*[]string)(concatFold_source.UnsafePtr)") ]
-              <> emitStringSliceDirect "concatFold_strs" "concatFold_finish_s")
-            genericBody
-        ]
-      _, _ ->
-        [ GoAssign "concatFold_source" (arg 4)
-        , GoAssign "concatFold_initial" (coerce (arg 3) (argType 3) TypeString)
-        , GoAssign "concatFold_result" (coerce (arg 1) (argType 1) TypeInt64)
-        ] <> genericBody
   pure { stmts: captured.stmts, expr: GoCall (GoFuncLit [] body (GoVar "concatFold_result") TypeInt64) []
        , exprType: TypeInt64, nextId: captured.nextId }
 

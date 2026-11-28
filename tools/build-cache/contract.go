@@ -212,7 +212,7 @@ func outputPath(kind, module, path string) bool {
 			return false
 		}
 		switch path {
-		case "gopurs_runtime/runtime.go", "gopurs_runtime/simd_asm.go", "gopurs_runtime/simd_generic.go", "gopurs_runtime/simd_arm64.s", "gopurs_runtime/simd_amd64.s":
+		case "gopurs_runtime/runtime.go", "gopurs_runtime/simd_generic.go":
 			return true
 		}
 		return false
@@ -244,6 +244,21 @@ func outputPath(kind, module, path string) bool {
 	return false
 }
 
+// Legacy runtime assembly files removed in newer compilers remain valid in prior
+// ownership journals and manifests so incremental builds delete them cleanly.
+func legacyOwnedOutputPath(kind, module, path string) bool {
+	if outputPath(kind, module, path) {
+		return true
+	}
+	if kind == "runtime" && module == "" {
+		switch path {
+		case "gopurs_runtime/simd_asm.go", "gopurs_runtime/simd_arm64.s", "gopurs_runtime/simd_amd64.s":
+			return true
+		}
+	}
+	return false
+}
+
 func validObject(obj Object) bool {
 	return digestPattern.MatchString(obj.SHA256) && obj.Bytes >= 0 && obj.Bytes <= 9007199254740991
 }
@@ -261,7 +276,7 @@ func validateManifest(m Manifest) error {
 	seen := map[string]bool{}
 	previous := ""
 	for _, out := range m.Outputs {
-		if !outputPath(out.Kind, out.Module, out.Path) || !validObject(out.Object) || seen[out.Path] || out.Path < previous {
+		if !legacyOwnedOutputPath(out.Kind, out.Module, out.Path) || !validObject(out.Object) || seen[out.Path] || out.Path < previous {
 			return fmt.Errorf("output-inventory")
 		}
 		seen[out.Path] = true

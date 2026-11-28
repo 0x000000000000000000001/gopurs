@@ -6,17 +6,13 @@ import Control.Alternative (guard)
 import Control.Monad.State (evalState)
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
-import Data.Int.Bits ((.&.))
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Data.String.Pattern (Pattern(..))
 import Data.Tuple (Tuple(..))
-import Effect.Ref as Ref
-import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.ArrayIndexedFold (readOnlyScalar, scalarType)
 import Gopurs.ArraySort as ArraySort
-import Gopurs.CongruenceSum as CongruenceSum
 import Gopurs.IndexedAddLanes as IndexedAddLanes
 import Gopurs.CallAnalysis (collectCurriedAbs, collectGoSpine, getGoSpineArgs, qualifiedTarget)
 import Gopurs.CallArguments as CallArguments
@@ -24,16 +20,15 @@ import Gopurs.ClosedIndexedFolds (closedPrimitiveCallback, validDescriptor)
 import Gopurs.CodegenState (ArrayFoldDescriptor)
 import Gopurs.ExprAnalysis (extractFuncType, getExprType, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, bindParameters, childContext, flattenStmts)
-import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), rawGo)
+import Gopurs.GoAst (GoExpr(..), GoType(..), rawGo)
 import Gopurs.GoConversions (coerceGoExpr)
-import Gopurs.GoSymbol (GoReference(..), generated)
 import Gopurs.ImmediateApplications.Scope (freshen, maximumLevel)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.Codegen.Tco as Tco
-import PureScript.Backend.Optimizer.CoreFn (ExprType(Array, Boolean, Int), Literal(..), ModuleName(..))
+import PureScript.Backend.Optimizer.CoreFn (ExprType(Array, Boolean, Int), ModuleName(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
-import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendOperator2(..), BackendOperatorOrd(..), BackendSyntax(..))
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..))
 
 data ProducerPlan
   = ConcatPlan (Array TcoExpr)
@@ -86,11 +81,6 @@ emit translate context nextId descriptor producer = do
         _, _ -> translate (childContext context Nothing) currentId argument) nextId planArgs
     folding = nativeLambda Int TypeInt64 captured.nextId foldedCallback
     contributionInfo = IndexedAddLanes.extractContribution foldedCallback
-    affineParity = case plan of
-      MapPlan args -> IndexedAddLanes.extractAffineParity (Array.head args) foldedCallback
-      ConcatPlan _ -> IndexedAddLanes.extractAffineParity Nothing foldedCallback
-      FilterPlan _ -> IndexedAddLanes.extractAffineParity Nothing foldedCallback
-      SortPlan _ -> IndexedAddLanes.extractAffineParity Nothing foldedCallback
     contribLambda = case contributionInfo of
       Just info ->
         let
@@ -110,7 +100,6 @@ emit translate context nextId descriptor producer = do
     callbackName = variable "fold"
     contribName = variable "contrib"
     resultName = variable "result"
-    acc32Name = variable "acc32"
     indexName = variable "index"
     outIndexName = variable "outIndex"
     itemName = variable "item"
@@ -155,89 +144,51 @@ emit translate context nextId descriptor producer = do
           , if isMapped then GoCall (arg 0) [ elemInt64 (GoVar valueName) sourceInfo.kind ]
             else elemInt64 (GoVar valueName) sourceInfo.kind
           ]) ]
-    mappedLoop sourceInfo = case sourceInfo.kind, affineParity of
-      SrcInt32, Just aff ->
-        IndexedAddLanes.emitAffineSimdCall sourceInfo.target resultName aff false
-      _, _ -> case plan, Array.head planArgs, contribLambda of
-        MapPlan _, Just mapper, Just _ | IndexedAddLanes.eligible mapper foldedCallback ->
-          [ IndexedAddLanes.emitContribution { source: sourceInfo.target, prefix: variable "lane", result: resultName, offset: Nothing }
-              (\i value -> GoCall (GoVar contribName)
-                [ GoCall (GoVar "int64") [ i ], GoCall (arg 0) [ elemInt64 value sourceInfo.kind ] ])
-              (loop sourceInfo (GoInt 0)) ]
-        _, _, _ -> [ loop sourceInfo (GoInt 0) ]
-    concatLoop sourceInfo label offsetOpt fallbackOffset = case sourceInfo.kind, affineParity, offsetOpt of
-      SrcInt32, Just aff, Nothing ->
-        IndexedAddLanes.emitAffineSimdCall sourceInfo.target resultName aff false
-      SrcInt32, Just aff, Just off ->
-        [ GoIfElse (GoBinOp "==" (GoBinOp "&" off (GoInt 1)) (GoInt 0))
-            (IndexedAddLanes.emitAffineSimdCall sourceInfo.target resultName aff false)
-            (IndexedAddLanes.emitAffineSimdCall sourceInfo.target resultName aff true)
-        ]
-      _, _, _ -> case contribLambda of
-        Just _ ->
-          [ IndexedAddLanes.emitContribution { source: sourceInfo.target, prefix: variable label, result: resultName, offset: offsetOpt }
-              (\i value -> GoCall (GoVar contribName)
-                [ GoCall (GoVar "int64") [ i ], elemInt64 value sourceInfo.kind ])
-              (loop sourceInfo fallbackOffset) ]
-        Nothing -> [ loop sourceInfo fallbackOffset ]
-    filterMaskPred = case plan of
-      FilterPlan [ predicate, _ ] -> extractMaskPredicate predicate
-      _ -> Nothing
-    filterBody sourceInfo = case sourceInfo.kind, affineParity, filterMaskPred of
-      SrcInt32, Just aff, Just { mask, target } ->
-        [ rawGo (acc32Name <> ", " <> outIndexName <> " := gopurs_runtime.FilterMaskAffineParitySumInt32("
-            <> sourceInfo.target <> ", int32(" <> show mask <> "), int32(" <> show target
-            <> "), int32(" <> show aff.aEven <> "), int32(" <> show aff.bEven
-            <> "), int32(" <> show aff.aOdd <> "), int32(" <> show aff.bOdd <> "))")
-        , GoIfElse (GoBinOp ">" (GoVar outIndexName) (rawGo "int64(0)"))
-            [ GoMutate resultName (GoCall (GoVar "int64") [ GoBinOp "+" (GoCall (GoVar "int32") [ GoVar resultName ]) (GoVar acc32Name) ]) ] []
-        ]
-      SrcInt32, Just aff, Nothing ->
+    mappedLoop sourceInfo = case plan, Array.head planArgs, contribLambda of
+      MapPlan _, Just mapper, Just _ | IndexedAddLanes.eligible mapper foldedCallback ->
+        [ IndexedAddLanes.emitContribution { source: sourceInfo.target, prefix: variable "lane", result: resultName, offset: Nothing }
+            (\i value -> GoCall (GoVar contribName)
+              [ GoCall (GoVar "int64") [ i ], GoCall (arg 0) [ elemInt64 value sourceInfo.kind ] ])
+            (loop sourceInfo (GoInt 0)) ]
+      _, _, _ -> [ loop sourceInfo (GoInt 0) ]
+    concatLoop sourceInfo label offsetOpt fallbackOffset = case contribLambda of
+      Just _ ->
+        [ IndexedAddLanes.emitContribution { source: sourceInfo.target, prefix: variable label, result: resultName, offset: offsetOpt }
+            (\i value -> GoCall (GoVar contribName)
+              [ GoCall (GoVar "int64") [ i ], elemInt64 value sourceInfo.kind ])
+            (loop sourceInfo fallbackOffset) ]
+      Nothing -> [ loop sourceInfo fallbackOffset ]
+    filterBody sourceInfo = case contribLambda of
+      Just _ ->
         [ GoAssign outIndexName (rawGo "int64(0)")
-        , GoAssign acc32Name (rawGo "int32(0)")
         , GoForRange ("_, " <> valueName <> " := range " <> sourceInfo.target)
-            [ GoIfElse (GoCall (arg 0) [ GoCall (GoVar "int64") [ GoVar valueName ] ])
-                [ IndexedAddLanes.emitAffineStep32 acc32Name (GoVar outIndexName) (GoVar valueName) aff
+            [ GoAssign itemName (elemInt64 (GoVar valueName) sourceInfo.kind)
+            , GoIfElse (GoCall (arg 0) [ GoVar itemName ])
+                [ GoMutate resultName (GoBinOp "+" (GoVar resultName) (GoCall (GoVar contribName) [ GoVar outIndexName, GoVar itemName ]))
                 , GoMutate outIndexName (GoBinOp "+" (GoVar outIndexName) (rawGo "int64(1)"))
                 ] []
             ]
         , GoIfElse (GoBinOp ">" (GoVar outIndexName) (rawGo "int64(0)"))
-            [ GoMutate resultName (GoCall (GoVar "int64") [ GoBinOp "+" (GoCall (GoVar "int32") [ GoVar resultName ]) (GoVar acc32Name) ]) ] []
+            [ GoMutate resultName (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoVar resultName ] ]) ] []
         ]
-      _, _, _ -> case contribLambda of
-        Just _ ->
-          [ GoAssign outIndexName (rawGo "int64(0)")
-          , GoForRange ("_, " <> valueName <> " := range " <> sourceInfo.target)
-              [ GoAssign itemName (elemInt64 (GoVar valueName) sourceInfo.kind)
-              , GoIfElse (GoCall (arg 0) [ GoVar itemName ])
-                  [ GoMutate resultName (GoBinOp "+" (GoVar resultName) (GoCall (GoVar contribName) [ GoVar outIndexName, GoVar itemName ]))
-                  , GoMutate outIndexName (GoBinOp "+" (GoVar outIndexName) (rawGo "int64(1)"))
-                  ] []
-              ]
-          , GoIfElse (GoBinOp ">" (GoVar outIndexName) (rawGo "int64(0)"))
-              [ GoMutate resultName (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoVar resultName ] ]) ] []
-          ]
-        Nothing ->
-          [ GoAssign outIndexName (rawGo "int64(0)")
-          , GoForRange ("_, " <> valueName <> " := range " <> sourceInfo.target)
-              [ GoAssign itemName (elemInt64 (GoVar valueName) sourceInfo.kind)
-              , GoIfElse (GoCall (arg 0) [ GoVar itemName ])
-                  [ GoMutate resultName (GoCall (GoVar callbackName) [ GoVar outIndexName, GoVar resultName, GoVar itemName ])
-                  , GoMutate outIndexName (GoBinOp "+" (GoVar outIndexName) (rawGo "int64(1)"))
-                  ] []
-              ]
-          ]
+      Nothing ->
+        [ GoAssign outIndexName (rawGo "int64(0)")
+        , GoForRange ("_, " <> valueName <> " := range " <> sourceInfo.target)
+            [ GoAssign itemName (elemInt64 (GoVar valueName) sourceInfo.kind)
+            , GoIfElse (GoCall (arg 0) [ GoVar itemName ])
+                [ GoMutate resultName (GoCall (GoVar callbackName) [ GoVar outIndexName, GoVar resultName, GoVar itemName ])
+                , GoMutate outIndexName (GoBinOp "+" (GoVar outIndexName) (rawGo "int64(1)"))
+                ] []
+            ]
+        ]
     slicesSort = GoRaw { text: "slices.Sort", imports: [ "slices" ] }
-    foldSortedSlice target kind = case kind, affineParity of
-      SrcInt32, Just aff ->
-        IndexedAddLanes.emitAffineSimdCall target resultName aff false
-      _, _ -> case contribLambda of
-        Just _ ->
-          [ IndexedAddLanes.emitContribution { source: target, prefix: variable "sortLane", result: resultName, offset: Nothing }
-              (\i value -> GoCall (GoVar contribName)
-                [ GoCall (GoVar "int64") [ i ], elemInt64 value kind ])
-              (loop { target, kind } (GoInt 0)) ]
-        Nothing -> [ loop { target, kind } (GoInt 0) ]
+    foldSortedSlice target kind = case contribLambda of
+      Just _ ->
+        [ IndexedAddLanes.emitContribution { source: target, prefix: variable "sortLane", result: resultName, offset: Nothing }
+            (\i value -> GoCall (GoVar contribName)
+              [ GoCall (GoVar "int64") [ i ], elemInt64 value kind ])
+            (loop { target, kind } (GoInt 0)) ]
+      Nothing -> [ loop { target, kind } (GoInt 0) ]
     sortLoop sourceInfo =
       let
         nName = variable "sortN"
@@ -265,24 +216,15 @@ emit translate context nextId descriptor producer = do
             <> copyToOut
             <> [ GoCall slicesSort [ GoVar outName ] ]
             <> foldSortedSlice outName outKind
-        foldReversedSlice = case sourceInfo.kind, affineParity of
-          SrcInt32, Just aff ->
-            if aff.aEven == aff.aOdd && aff.bEven == aff.bOdd then
-              IndexedAddLanes.emitAffineSimdCall sourceInfo.target resultName aff false
-            else
-              [ GoIfElse (GoBinOp "==" (GoBinOp "&" (GoVar nName) (GoInt 1)) (GoInt 0))
-                  (IndexedAddLanes.emitAffineSimdCall sourceInfo.target resultName aff true)
-                  (IndexedAddLanes.emitAffineSimdCall sourceInfo.target resultName aff false)
-              ]
-          _, _ ->
-            [ GoAssign lastName (GoBinOp "-" (GoVar nName) (GoInt 1))
-            , GoForRange (iName <> " := 0; " <> iName <> " < " <> nName <> "; " <> iName <> "++")
-                [ GoMutate resultName (GoCall (GoVar callbackName)
-                    [ GoCall (GoVar "int64") [ GoVar iName ]
-                    , GoVar resultName
-                    , elemInt64 (GoIndex (rawGo sourceInfo.target) (GoBinOp "-" (GoVar lastName) (GoVar iName))) sourceInfo.kind
-                    ]) ]
-            ]
+        foldReversedSlice =
+          [ GoAssign lastName (GoBinOp "-" (GoVar nName) (GoInt 1))
+          , GoForRange (iName <> " := 0; " <> iName <> " < " <> nName <> "; " <> iName <> "++")
+              [ GoMutate resultName (GoCall (GoVar callbackName)
+                  [ GoCall (GoVar "int64") [ GoVar iName ]
+                  , GoVar resultName
+                  , elemInt64 (GoIndex (rawGo sourceInfo.target) (GoBinOp "-" (GoVar lastName) (GoVar iName))) sourceInfo.kind
+                  ]) ]
+          ]
         readAt idx = case sourceInfo.kind of
           SrcValue -> GoSelector (GoIndex (rawGo sourceInfo.target) idx) "IntVal"
           _ -> GoIndex (rawGo sourceInfo.target) idx
@@ -359,86 +301,7 @@ emit translate context nextId descriptor producer = do
           <> withIntSource 0 (\src -> concatLoop src "laneL" Nothing (GoInt 0))
           <> withIntSource 1 (\src -> concatLoop src "laneR" (Just (GoVar offsetName)) (GoVar offsetName))
     body = foldDecl <> contribDecl <> [ GoAssign resultName (GoCall (GoVar "int64") [ GoInt descriptor.seed ]) ] <> loopStmts
-    isNativeArray = case _ of
-      TypeNativeArray _ -> true
-      _ -> false
-    outlineSlow params callArgs = unsafePerformEffect do
-      state <- Ref.read context.codegenStateRef
-      let
-        coldName = "Call_" <> context.modNameStr <> "___gopurs_arrayProducer_fold_" <> show state.globalId
-        decl = GoFunctionDecl
-          { name: generated context.modNameStr coldName
-          , params
-          , result: TypeInt64
-          , body: GoBlock (body <> [ GoReturn (GoVar resultName) ])
-          }
-      Ref.modify_ (\current -> current
-        { globalId = current.globalId + 1
-        , declarations = current.declarations <> [ decl ]
-        }) context.codegenStateRef
-      pure (GoCall (GoRef (SymbolReference (generated context.modNameStr coldName))) callArgs)
-    finalBody = case plan, affineParity of
-      ConcatPlan _, Just aff | not (isNativeArray (argType 0)) && not (isNativeArray (argType 1)) ->
-        let
-          s0 = variable "fast0"
-          s1 = variable "fast1"
-          coldCall = outlineSlow
-            [ Tuple (argName 0) TypeValue, Tuple (argName 1) TypeValue ]
-            [ GoVar (argName 0), GoVar (argName 1) ]
-        in
-          [ GoAssign resultName (GoCall (GoVar "int64") [ GoInt descriptor.seed ])
-          , GoIfElse (rawGo (argName 0 <> ".Type == gopurs_runtime.TypeInt32Array && " <> argName 1 <> ".Type == gopurs_runtime.TypeInt32Array"))
-              ([ GoAssign s0 (rawGo ("*(*[]int32)(" <> argName 0 <> ".UnsafePtr)"))
-               , GoAssign s1 (rawGo ("*(*[]int32)(" <> argName 1 <> ".UnsafePtr)"))
-               ]
-               <> IndexedAddLanes.emitAffineSimdCall s0 resultName aff false
-               <> [ GoIfElse (GoBinOp "==" (GoBinOp "&" (GoCall (GoVar "len") [ GoVar s0 ]) (GoInt 1)) (GoInt 0))
-                      (IndexedAddLanes.emitAffineSimdCall s1 resultName aff false)
-                      (IndexedAddLanes.emitAffineSimdCall s1 resultName aff true)
-                  ])
-              [ GoMutate resultName coldCall ]
-          ]
-      MapPlan _, Just aff | not (isNativeArray (argType 1)) ->
-        let
-          s1 = variable "fast1"
-          coldCall = outlineSlow
-            [ Tuple (argName 0) (argType 0), Tuple (argName 1) TypeValue ]
-            [ GoVar (argName 0), GoVar (argName 1) ]
-        in
-          [ GoAssign resultName (GoCall (GoVar "int64") [ GoInt descriptor.seed ])
-          , GoIfElse (rawGo (argName 1 <> ".Type == gopurs_runtime.TypeInt32Array"))
-              ([ GoAssign s1 (rawGo ("*(*[]int32)(" <> argName 1 <> ".UnsafePtr)")) ]
-               <> IndexedAddLanes.emitAffineSimdCall s1 resultName aff false)
-              [ GoMutate resultName coldCall ]
-          ]
-      FilterPlan _, Just _ | Just _ <- filterMaskPred, not (isNativeArray (argType 1)) ->
-        let
-          s1 = variable "fast1"
-          coldCall = outlineSlow
-            [ Tuple (argName 0) (argType 0), Tuple (argName 1) TypeValue ]
-            [ GoVar (argName 0), GoVar (argName 1) ]
-        in
-          [ GoAssign resultName (GoCall (GoVar "int64") [ GoInt descriptor.seed ])
-          , GoIfElse (rawGo (argName 1 <> ".Type == gopurs_runtime.TypeInt32Array"))
-              ([ GoAssign s1 (rawGo ("*(*[]int32)(" <> argName 1 <> ".UnsafePtr)")) ]
-               <> filterBody { target: s1, kind: SrcInt32 })
-              [ GoMutate resultName coldCall ]
-          ]
-      SortPlan _, Just _ | not (isNativeArray (argType 0)) ->
-        let
-          s0 = variable "fast0"
-          coldCall = outlineSlow
-            [ Tuple (argName 0) TypeValue ]
-            [ GoVar (argName 0) ]
-        in
-          [ GoAssign resultName (GoCall (GoVar "int64") [ GoInt descriptor.seed ])
-          , GoIfElse (rawGo (argName 0 <> ".Type == gopurs_runtime.TypeInt32Array"))
-              ([ GoAssign s0 (rawGo ("*(*[]int32)(" <> argName 0 <> ".UnsafePtr)")) ]
-               <> sortLoop { target: s0, kind: SrcInt32 })
-              [ GoMutate resultName coldCall ]
-          ]
-      _, _ -> body
-  pure { stmts: captured.stmts, expr: GoCall (GoFuncLit [] finalBody (GoVar resultName) TypeInt64) []
+  pure { stmts: captured.stmts, expr: GoCall (GoFuncLit [] body (GoVar resultName) TypeInt64) []
        , exprType: TypeInt64, nextId: nextAfterContrib + 1 }
   where
   integer expression from = coerceGoExpr context.codegenStateRef context.modNameStr expression from TypeInt64
@@ -506,42 +369,6 @@ scalarPredicate predicate = case extractFuncType predicate of
         Tuple _ level -> scalarType (Map.singleton level Int) grouped.body == Just Boolean
     _ -> false
   _ -> false
-
--- Recognize pure bitmask/power-of-two congruence predicates `(x & mask) == target`
--- or `mod x (2^k) == residue` on Int32 elements. For Euclidean `mod` by a power
--- of two 2^k, `mod x (2^k) == r` is bit-identical to `(x & (2^k - 1)) == r` for
--- all signed 32-bit integers (positive, zero, and negative).
-extractMaskPredicate :: TcoExpr -> Maybe { mask :: Int, target :: Int }
-extractMaskPredicate predicate = case unwrapTcoExpr predicate of
-  Abs parameters body -> do
-    let grouped = collectCurriedAbs parameters body
-    guard (NEA.length grouped.args == 1)
-    Tuple name level <- Just (NEA.head grouped.args)
-    let paramKey = localId name level
-    case CongruenceSum.recognize paramKey grouped.body of
-      Just { modulus, residue } | modulus > 0 && (modulus .&. (modulus - 1)) == 0 ->
-        Just { mask: modulus - 1, target: residue }
-      _ -> case unwrapTcoExpr grouped.body of
-        PrimOp (Op2 (OpIntOrd OpEq) left right) ->
-          case extractBitAnd paramKey left, extractLitInt right of
-            Just mask, Just target -> Just { mask, target }
-            _, _ -> case extractBitAnd paramKey right, extractLitInt left of
-              Just mask, Just target -> Just { mask, target }
-              _, _ -> Nothing
-        _ -> Nothing
-  _ -> Nothing
-  where
-  extractLitInt expr = case unwrapTcoExpr expr of
-    Lit (LitInt n) -> Just n
-    _ -> Nothing
-  extractBitAnd paramKey expr = case unwrapTcoExpr expr of
-    PrimOp (Op2 OpIntBitAnd a b) ->
-      case unwrapTcoExpr a, extractLitInt b of
-        Local n l, Just m | localId n l == paramKey -> Just m
-        _, _ -> case unwrapTcoExpr b, extractLitInt a of
-          Local n l, Just m | localId n l == paramKey -> Just m
-          _, _ -> Nothing
-    _ -> Nothing
 
 neutral :: TcoExpr -> NeutralExpr
 neutral (TcoExpr _ syntax) = NeutralExpr (map neutral syntax)
