@@ -1,9 +1,7 @@
 -- Turn recursion in the right operand of IntAdd into an accumulator loop.
 -- The accumulator is private and IntAdd is total/associative modulo 2^32;
 -- every observable operand and argument retains its original evaluation order.
--- Pure order-2 linear additive recurrences (f(n) = f(n-1) + f(n-2)) also
--- receive a guarded O(n) int32 iterative fast path for 2 <= n <= MaxInt32.
-module Gopurs.TailAddLoops (worker, hot) where
+module Gopurs.TailAddLoops (worker) where
 
 import Prelude hiding (add)
 
@@ -27,18 +25,12 @@ import Gopurs.GoSymbol (GoReference)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(Int), Ident(..), Literal(..), Qualified(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
-import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Pair(..))
+import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendSyntax(..), Pair(..))
 
 data Plan
   = Finish TcoExpr
   | Step TcoExpr (Array TcoExpr)
   | Choice (Array (Tuple TcoExpr Plan)) Plan
-
-type LinearOrder2 =
-  { nParam :: String
-  , c0 :: TcoExpr
-  , c1 :: TcoExpr
-  }
 
 worker :: TranslateExpr -> ExprContext -> String -> Parameters -> GoType -> TcoExpr -> Maybe GoExpr
 worker translate context name params resultType source = do
@@ -52,9 +44,6 @@ worker translate context name params resultType source = do
     label = prefix <> "loop"
     baseCases = extractBaseCases (map fst params) plan
     unfoldStep = extractPureStep context.modNameStr name (map fst params) plan
-    linearFast = case extractLinearOrder2 context.modNameStr name params plan of
-      Just lin -> [ emitLinearOrder2Loop translate context params prefix lin ]
-      Nothing -> []
     guardInfo =
       if not (Array.null baseCases) && hasLeftSelfCall context.modNameStr name (Array.length params) plan then
         case Map.lookup name context.moduleFunctions of
@@ -64,162 +53,10 @@ worker translate context name params resultType source = do
       else Nothing
     emitted = emit translate context params { prefix, acc, used, label, guardInfo } 0 plan
   pure $ GoBlock
-    (linearFast <>
-      [ GoAssign acc (GoCall (GoVar "int64") [ GoInt 0 ])
-      , GoAssign used (GoVar "false")
-      , GoFor label (iterationBindings params <> emitted.statements)
-      ])
-
--- Outlined fast wrapper for pure order-2 linear additive recurrences so the
--- O(n) iterative path stays compact and inlines into call sites while cold
--- inputs (n < 0 or wide int64) delegate to the full fallback worker.
-hot :: TranslateExpr -> ExprContext -> String -> Parameters -> GoType -> TcoExpr -> GoExpr -> Maybe GoExpr
-hot translate context name params resultType source coldCall = do
-  guard (resultType == TypeInt64 && not (Array.null params))
-  let plan = recognize context.modNameStr name (Array.length params) source
-  guard (hasStep plan)
-  lin <- extractLinearOrder2 context.modNameStr name params plan
-  let
-    prefix = freshPrefix (Array.cons name (map fst params) <> bindingNames source)
-    nLoop = lin.nParam <> "_loop"
-    evalCtx = bindLoopParams context params
-    c0Res = translate (childContext evalCtx (Just Int)) 0 lin.c0
-    c1Res = translate (childContext evalCtx (Just Int)) c0Res.nextId lin.c1
-    c0Val = native TypeInt64 (coerceGoExpr context.codegenStateRef context.modNameStr c0Res.expr c0Res.exprType TypeInt64)
-    c1Val = native TypeInt64 (coerceGoExpr context.codegenStateRef context.modNameStr c1Res.expr c1Res.exprType TypeInt64)
-  pure $ GoBlock
-    [ emitLinearOrder2Loop translate context params prefix lin
-    , GoIfElse (GoBinOp "==" (GoVar nLoop) (GoCall (GoVar "int64") [ GoInt 0 ]))
-        (flattenStmts c0Res.stmts <> [ GoReturn c0Val ]) []
-    , GoIfElse (GoBinOp "==" (GoVar nLoop) (GoCall (GoVar "int64") [ GoInt 1 ]))
-        (flattenStmts c1Res.stmts <> [ GoReturn c1Val ]) []
-    , GoReturn coldCall
+    [ GoAssign acc (GoCall (GoVar "int64") [ GoInt 0 ])
+    , GoAssign used (GoVar "false")
+    , GoFor label (iterationBindings params <> emitted.statements)
     ]
-
-bindLoopParams :: ExprContext -> Parameters -> ExprContext
-bindLoopParams context params =
-  context { bound = foldl (\b (Tuple p ty) -> Map.insert p { name: p <> "_loop", goType: ty } b) context.bound params }
-
-emitLinearOrder2Loop :: TranslateExpr -> ExprContext -> Parameters -> String -> LinearOrder2 -> GoExpr
-emitLinearOrder2Loop translate context params prefix lin =
-  let
-    nLoop = lin.nParam <> "_loop"
-    aName = prefix <> "lin_a"
-    bName = prefix <> "lin_b"
-    remName = prefix <> "lin_rem"
-    evalCtx = bindLoopParams context params
-    c0Res = translate (childContext evalCtx (Just Int)) 0 lin.c0
-    c1Res = translate (childContext evalCtx (Just Int)) c0Res.nextId lin.c1
-    c0Val = coerceGoExpr context.codegenStateRef context.modNameStr c0Res.expr c0Res.exprType TypeInt64
-    c1Val = coerceGoExpr context.codegenStateRef context.modNameStr c1Res.expr c1Res.exprType TypeInt64
-    cond = GoBinOp "&&"
-      (GoBinOp ">=" (GoVar nLoop) (GoCall (GoVar "int64") [ GoInt 2 ]))
-      (GoBinOp "<=" (GoVar nLoop) (GoCall (GoVar "int64") [ GoInt 2147483647 ]))
-  in
-    GoIfElse cond
-      (flattenStmts c0Res.stmts <> flattenStmts c1Res.stmts <>
-        [ GoAssign aName (GoCall (GoVar "int32") [ c0Val ])
-        , GoAssign bName (GoCall (GoVar "int32") [ c1Val ])
-        , GoForRange (remName <> " := uint32(" <> nLoop <> " - 1); " <> remName <> " != 0; " <> remName <> "--")
-            [ rawGo (aName <> ", " <> bName <> " = " <> bName <> ", " <> aName <> " + " <> bName) ]
-        , GoReturn (GoCall (GoVar "int64") [ GoVar bName ])
-        ])
-      []
-
-extractLinearOrder2 :: String -> String -> Parameters -> Plan -> Maybe LinearOrder2
-extractLinearOrder2 owner name params plan = do
-  let paramNames = map fst params
-  { branches, leftArgs, rightArgs } <- flattenLinearPlan owner name (Array.length params) plan
-  idx <- findVaryingIndex params leftArgs rightArgs
-  Tuple nParam nTy <- Array.index params idx
-  guard (nTy == TypeInt64)
-  { c0, c1 } <- extractOrder2Bases nParam paramNames branches
-  pure { nParam, c0, c1 }
-
-flattenLinearPlan
-  :: String
-  -> String
-  -> Int
-  -> Plan
-  -> Maybe { branches :: Array BaseCase, leftArgs :: Array TcoExpr, rightArgs :: Array TcoExpr }
-flattenLinearPlan owner name arity = go []
-  where
-  go acc (Choice branches fallback) =
-    if Array.length acc + Array.length branches > 2 then Nothing
-    else case collectFinish branches of
-      Just found -> go (acc <> found) fallback
-      Nothing -> Nothing
-  go acc (Step left rightArgs) | not (Array.null acc) = do
-    leftArgs <- selfCallArgs owner name arity left
-    pure { branches: acc, leftArgs, rightArgs }
-  go _ _ = Nothing
-
-  collectFinish arr = case Array.uncons arr of
-    Nothing -> Just []
-    Just { head: Tuple cond (Finish leaf), tail } -> map (Array.cons { cond, leaf }) (collectFinish tail)
-    _ -> Nothing
-
-findVaryingIndex :: Parameters -> Array TcoExpr -> Array TcoExpr -> Maybe Int
-findVaryingIndex params leftArgs rightArgs =
-  let
-    indices = Array.range 0 (Array.length params - 1)
-    isInvariant j = case Array.index params j, Array.index leftArgs j, Array.index rightArgs j of
-      Just (Tuple p _), Just l, Just r -> isLocalName p l && isLocalName p r
-      _, _, _ -> false
-    isOrder2Step j = case Array.index params j, Array.index leftArgs j, Array.index rightArgs j of
-      Just (Tuple p TypeInt64), Just l, Just r ->
-        (isSubConst p 1 l && isSubConst p 2 r) || (isSubConst p 2 l && isSubConst p 1 r)
-      _, _, _ -> false
-  in
-    Array.find (\i -> isOrder2Step i && Array.all (\j -> j == i || isInvariant j) indices) indices
-
-isLocalName :: String -> TcoExpr -> Boolean
-isLocalName expected expr = case unwrapTcoExpr expr of
-  Local mbIdent level -> localId mbIdent level == expected
-  _ -> false
-
-isSubConst :: String -> Int -> TcoExpr -> Boolean
-isSubConst param k expr = case unwrapTcoExpr expr of
-  PrimOp (Op2 (OpIntNum OpSubtract) left right) -> isLocalName param left && isLitInt k right
-  PrimOp (Op2 (OpIntNum OpAdd) left right) ->
-    (isLocalName param left && isLitInt (-k) right) || (isLitInt (-k) left && isLocalName param right)
-  _ -> false
-
-isLitInt :: Int -> TcoExpr -> Boolean
-isLitInt expected expr = case unwrapTcoExpr expr of
-  Lit (LitInt n) -> n == expected
-  _ -> false
-
-isEqConst :: String -> Int -> TcoExpr -> Boolean
-isEqConst param k expr = case unwrapTcoExpr expr of
-  PrimOp (Op2 (OpIntOrd OpEq) left right) ->
-    (isLocalName param left && isLitInt k right) || (isLitInt k left && isLocalName param right)
-  _ -> false
-
-isLeOne :: String -> TcoExpr -> Boolean
-isLeOne param expr = case unwrapTcoExpr expr of
-  PrimOp (Op2 (OpIntOrd OpLt) left right) -> isLocalName param left && isLitInt 2 right
-  PrimOp (Op2 (OpIntOrd OpGt) left right) -> isLitInt 2 left && isLocalName param right
-  PrimOp (Op2 (OpIntOrd OpLte) left right) -> isLocalName param left && isLitInt 1 right
-  PrimOp (Op2 (OpIntOrd OpGte) left right) -> isLitInt 1 left && isLocalName param right
-  _ -> false
-
-substituteLocalInt :: String -> Int -> TcoExpr -> TcoExpr
-substituteLocalInt target val (TcoExpr analysis syntax) = case syntax of
-  Local mbIdent level | localId mbIdent level == target -> TcoExpr analysis (Lit (LitInt val))
-  _ -> TcoExpr analysis (map (substituteLocalInt target val) syntax)
-
-extractOrder2Bases :: String -> Array String -> Array BaseCase -> Maybe { c0 :: TcoExpr, c1 :: TcoExpr }
-extractOrder2Bases nParam paramNames = case _ of
-  [ { cond, leaf } ] | isLeOne nParam cond && pureScalarExpr paramNames leaf ->
-    Just { c0: substituteLocalInt nParam 0 leaf, c1: substituteLocalInt nParam 1 leaf }
-  [ a, b ] | pureScalarExpr paramNames a.leaf && pureScalarExpr paramNames b.leaf ->
-    if isEqConst nParam 0 a.cond && (isEqConst nParam 1 b.cond || isLeOne nParam b.cond) then
-      Just { c0: substituteLocalInt nParam 0 a.leaf, c1: substituteLocalInt nParam 1 b.leaf }
-    else if isEqConst nParam 1 a.cond && (isEqConst nParam 0 b.cond || isLeOne nParam b.cond) then
-      Just { c0: substituteLocalInt nParam 0 b.leaf, c1: substituteLocalInt nParam 1 a.leaf }
-    else Nothing
-  _ -> Nothing
 
 recognize :: String -> String -> Int -> TcoExpr -> Plan
 recognize owner name arity source = case unwrapTcoExpr source of

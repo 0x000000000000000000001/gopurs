@@ -25,7 +25,7 @@ import Gopurs.FilteredSumLoops as FilteredSumLoops
 import Gopurs.RecordAffineLoops as RecordAffineLoops
 import Gopurs.ArraySnoc as ArraySnoc
 import Gopurs.ListFilter as ListFilter
-import Gopurs.NestedRecursion as NestedRecursion
+import Gopurs.Int32Recursion as Int32Recursion
 import Gopurs.TailAddLoops as TailAddLoops
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 
@@ -103,12 +103,10 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
           recordColdName = "Call_" <> modNameStr <> "_" <> recordColdIdent
           scalarColdIdent = "__gopurs_cold_affine_" <> fn.ident
           scalarColdName = "Call_" <> modNameStr <> "_" <> scalarColdIdent
-          tailAddColdIdent = "__gopurs_cold_tail_add_" <> fn.ident
-          tailAddColdName = "Call_" <> modNameStr <> "_" <> tailAddColdIdent
-          nestedColdIdent = "__gopurs_cold_nested_" <> fn.ident
-          nestedColdName = "Call_" <> modNameStr <> "_" <> nestedColdIdent
-          nestedI32Ident = "__gopurs_i32_" <> fn.ident
-          nestedI32Name = "Call_" <> modNameStr <> "_" <> nestedI32Ident
+          i32RecColdIdent = "__gopurs_cold_i32_" <> fn.ident
+          i32RecColdName = "Call_" <> modNameStr <> "_" <> i32RecColdIdent
+          i32RecWorkerIdent = "__gopurs_i32_" <> fn.ident
+          i32RecWorkerName = "Call_" <> modNameStr <> "_" <> i32RecWorkerIdent
           hot = if isSelfRecursive then
             case (if isReserved recordColdIdent recordColdName then Nothing
                   else RecordAffineLoops.hot target params resultType fn.body (makeColdCall recordColdName)) of
@@ -119,13 +117,9 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
                   Nothing -> map (\fast -> { coldName: scalarColdName, fast, extra: [] })
                     (FilteredSumLoops.hot target params resultType fn.body (makeColdCall scalarColdName))) of
                 Just found -> Just found
-                Nothing -> case (if isReserved tailAddColdIdent tailAddColdName then Nothing
-                  else map (\fast -> { coldName: tailAddColdName, fast, extra: [] })
-                    (TailAddLoops.hot translate workerContext fn.ident params resultType fn.body (makeColdCall tailAddColdName))) of
-                  Just found -> Just found
-                  Nothing -> if isReserved nestedColdIdent nestedColdName || isReserved nestedI32Ident nestedI32Name then Nothing
-                    else map (\p -> { coldName: nestedColdName, fast: p.fast, extra: [ p.worker ] })
-                      (NestedRecursion.plan modNameStr fn.ident params resultType fn.body (generated modNameStr nestedI32Name) (makeColdCall nestedColdName))
+                Nothing -> if isReserved i32RecColdIdent i32RecColdName || isReserved i32RecWorkerIdent i32RecWorkerName then Nothing
+                  else map (\p -> { coldName: i32RecColdName, fast: p.fast, extra: [ p.worker ] })
+                    (Int32Recursion.plan modNameStr fn.ident params resultType fn.body (generated modNameStr i32RecWorkerName) (makeColdCall i32RecColdName))
             else Nothing
           original = body false
           workerParams = if isSelfRecursive then loopParameters params else params
