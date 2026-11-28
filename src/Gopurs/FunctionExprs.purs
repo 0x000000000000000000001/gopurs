@@ -16,12 +16,13 @@ import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CallAnalysis (collectCurriedAbs)
 import Gopurs.ExprAnalysis (FunctionType, extractExprFuncType, extractFuncType, functionResultAfter, getExprType)
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), bindParameters, childContext, flattenStmts)
+import Gopurs.FunctionFusion as FunctionFusion
 import Gopurs.GoAst (rawGo, GoExpr(..), GoDecl(..), GoType(..))
-import Gopurs.GoConversions (boxGoExpr)
+import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoFunctions (Parameters, curriedFunction, hasNativeRecordArgument)
 import Gopurs.GoTypes (exprTypeToGoType)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
-import PureScript.Backend.Optimizer.CoreFn (ExprType, Ident)
+import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident)
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (Level)
 
@@ -88,6 +89,32 @@ abstraction translate context@{ codegenStateRef, metadata, modNameStr, mbExpecte
         expr = GoCall (GoSelector (GoVar "gopurs_runtime") "WithFunctionData") [ funcExpr, nativeFunction ]
       in
         { stmts: StmtEmpty, expr, exprType: TypeValue, nextId: nativeBody.nextId }
+    else if consumed == 1 && nativeTypes == [ TypeInt64 ] && mbBodyType == Just Int then
+      let
+        nativeParams = Array.zipWith Tuple params nativeTypes
+        nativeBody = translate ((closureContext context nativeParams mbBodyType) { mbExpectedGoType = Just TypeInt64 }) resBody.nextId grouped.body
+        nativeFunction = GoFuncLit nativeParams (flattenStmts nativeBody.stmts)
+          (coerceGoExpr codegenStateRef modNameStr nativeBody.expr nativeBody.exprType TypeInt64) TypeInt64
+        expr = GoCall (GoSelector (GoVar "gopurs_runtime") "WithFunctionData") [ funcExpr, nativeFunction ]
+      in
+        { stmts: StmtEmpty, expr, exprType: TypeValue, nextId: nativeBody.nextId }
+    else if consumed == 2 then
+      case FunctionFusion.countedWorkerCallCount context params grouped.body of
+        Just countExpr ->
+          { stmts: StmtEmpty
+          , expr: GoCall (GoSelector (GoVar "gopurs_runtime") "CountedIntIterator") [ countExpr, funcExpr ]
+          , exprType: TypeValue
+          , nextId: resBody.nextId
+          }
+        Nothing -> case FunctionFusion.countedCompositionOperands context params grouped.body of
+          Just (Tuple mExpr nExpr) ->
+            { stmts: StmtEmpty
+            , expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ComposeCountedIntIterators") [ mExpr, nExpr, funcExpr ]
+            , exprType: TypeValue
+            , nextId: resBody.nextId
+            }
+          Nothing ->
+            { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
     else
       { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
 

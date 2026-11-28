@@ -119,12 +119,49 @@ func TestDivModHelpersExact(t *testing.T) {
 			}
 		}
 	}
+
+	// Exhaustive boundary + 200,000 deterministic pseudo-random int32 pairs for Lemire Divisor32.
+	div32Edge := []int32{
+		math.MinInt32, math.MinInt32 + 1, -1000003, -65537, -100, -17, -8, -7, -4, -3, -2, -1,
+		0, 1, 2, 3, 4, 7, 8, 17, 100, 65537, 1000003, math.MaxInt32 - 1, math.MaxInt32,
+	}
+	for _, d := range div32Edge {
+		div := NewDivisor32(d)
+		for _, a := range div32Edge {
+			want := IntMod(int64(a), int64(d)) == 0
+			if got := div.Divides(a); got != want {
+				t.Fatalf("Divisor32(%d).Divides(%d): got %v want %v", d, a, got, want)
+			}
+		}
+	}
+	state := uint32(0x12345678)
+	nextRand := func() int32 {
+		state ^= state << 13
+		state ^= state >> 17
+		state ^= state << 5
+		return int32(state)
+	}
+	for i := 0; i < 200000; i++ {
+		d := nextRand()
+		if i%4 == 0 {
+			// Exercise small divisors heavily as well as full-range random divisors.
+			d = d % 1024
+		}
+		a := nextRand()
+		want := IntMod(int64(a), int64(d)) == 0
+		if got := NewDivisor32(d).Divides(a); got != want {
+			t.Fatalf("random Divisor32(%d).Divides(%d): got %v want %v", d, a, got, want)
+		}
+	}
 }
 `,
   );
 
-  for (const [label, envExtra] of [['arm64 -race', {}], ['amd64 Rosetta', { GOARCH: 'amd64' }]]) {
-    const res = spawnSync('go', ['test', '-count=1', './gopurs_runtime'], {
+  for (const [label, args, envExtra] of [
+    ['arm64 -race', ['test', '-race', '-count=1', './gopurs_runtime'], {}],
+    ['amd64 Rosetta', ['test', '-count=1', './gopurs_runtime'], { GOARCH: 'amd64' }],
+  ]) {
+    const res = spawnSync('go', args, {
       cwd: dir,
       encoding: 'utf8',
       timeout: 60_000,

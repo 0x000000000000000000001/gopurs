@@ -110,11 +110,25 @@ pureConstruction (NeutralExpr syntax) = case syntax of
 
 children :: String -> Schema -> Array (Tuple String Schema)
 children name = case _ of
-  Sequence child -> [ Tuple (name <> "_item") child ]
-  Optional child -> [ Tuple (name <> "_item") child ]
-  ObjectSchema fields -> Array.mapWithIndex (\i (Tuple _ child) -> Tuple (name <> "_field" <> show i) child) fields
-  Derived program -> map (\read -> Tuple read.path read.schema) (programReads name program)
+  Sequence child -> if isInlineScalar child then [] else [ Tuple (name <> "_item") child ]
+  Optional child -> if isInlineScalar child then [] else [ Tuple (name <> "_item") child ]
+  ObjectSchema fields -> Array.catMaybes (Array.mapWithIndex (\i (Tuple _ child) ->
+    if isInlineScalar child then Nothing else Just (Tuple (name <> "_field" <> show i) child)) fields)
+  Derived program -> Array.mapMaybe (\read ->
+    if isInlineScalar read.schema then Nothing else Just (Tuple read.path read.schema)) (programReads name program)
   _ -> []
+
+isInlineScalar :: Schema -> Boolean
+isInlineScalar = case _ of
+  Scalar tag -> Array.elem tag [ "Int", "Number", "String", "Boolean" ]
+  _ -> false
+
+inlineScalarRead :: String -> String -> String
+inlineScalarRead target = case _ of
+  "Int" -> "{ _n, _ok := p.number(); if !_ok { " <> failure <> " }; _i, _ok := intFromNumber(_n); if !_ok { " <> failure <> " }; " <> target <> " = gopurs_runtime.Int(_i) }"
+  "String" -> "{ _v, _ok := p.string(true); if !_ok { " <> failure <> " }; " <> target <> " = gopurs_runtime.Str(_v) }"
+  "Number" -> "{ _v, _ok := p.number(); if !_ok { " <> failure <> " }; " <> target <> " = gopurs_runtime.Float(_v) }"
+  _ -> "{ _v, _ok := p.boolean(); if !_ok { " <> failure <> " }; " <> target <> " = gopurs_runtime.Bool(_v) }"
 
 build :: Rendering -> String -> Schema -> Array GoDecl
 build rendering name schema
@@ -170,12 +184,20 @@ body rendering direct name = case _ of
     in "value, ok := p." <> method <> "; if !ok { " <> failure <> " }; return gopurs_runtime." <> box <> "(value), true"
   Optional child ->
     "if p.peek() == 'n' { if !p.null() { " <> failure <> " }; return plan.mkNothing(), true }\n"
-      <> "value, ok := " <> call (name <> "_item") (if direct || isDerived child then "nil" else "kind.inner")
-      <> "; if !ok { " <> failure <> " }; return plan.mkJust(value), true"
+      <> case child of
+        Scalar tag | isInlineScalar child ->
+          "var value gopurs_runtime.Value\n" <> inlineScalarRead "value" tag <> "\nreturn plan.mkJust(value), true"
+        _ ->
+          "value, ok := " <> call (name <> "_item") (if direct || isDerived child then "nil" else "kind.inner")
+            <> "; if !ok { " <> failure <> " }; return plan.mkJust(value), true"
   Sequence child -> enter "["
-    <> "values := make([]gopurs_runtime.Value, 0)\nif !p.take(']') { for {\n"
-    <> "value, ok := " <> call (name <> "_item") (if direct || isDerived child then "nil" else "kind.inner")
-    <> "; if !ok { " <> failure <> " }\n"
+    <> "var values []gopurs_runtime.Value\nif !p.take(']') { for {\n"
+    <> (case child of
+          Scalar tag | isInlineScalar child ->
+            "var value gopurs_runtime.Value\n" <> inlineScalarRead "value" tag <> "\n"
+          _ ->
+            "value, ok := " <> call (name <> "_item") (if direct || isDerived child then "nil" else "kind.inner")
+              <> "; if !ok { " <> failure <> " }\n")
     <> "if len(values) == 0 { values = make([]gopurs_runtime.Value, 0, 4) }\n"
     <> "values = append(values, value)\nif p.take(']') { break }; if !p.take(',') { " <> failure <> " }\n} }\n"
     <> "p.leave(); return gopurs_runtime.Array(values), true"
@@ -201,8 +223,10 @@ objectBody rendering direct name fields =
   field i (Tuple key child) =
     let index = show i
         kind = if direct || isDerived child then "nil" else "plan.fields[" <> index <> "].kind"
-    in "case " <> quote key <> ":\nif seen[" <> index <> "] { " <> failure <> " }; seen[" <> index <> "] = true\n"
-      <> "value, ok := " <> call (name <> "_field" <> index) kind <> "; if !ok { " <> failure <> " }; value" <> index <> " = value"
+        readStmt = case child of
+          Scalar tag | isInlineScalar child -> inlineScalarRead ("value" <> index) tag
+          _ -> "value, ok := " <> call (name <> "_field" <> index) kind <> "; if !ok { " <> failure <> " }; value" <> index <> " = value"
+    in "case " <> quote key <> ":\nif seen[" <> index <> "] { " <> failure <> " }; seen[" <> index <> "] = true\n" <> readStmt
   absent i (Tuple _ child) =
     let fallback = case child of
           Optional _ -> "value" <> show i <> " = plan.mkNothing()"
@@ -220,7 +244,9 @@ derivedBody rendering fields name program = enter "{"
   count = show (Array.length fields)
   field i read =
     let index = show i
-        decode = "value, ok := " <> call read.path "nil" <> "; if !ok { " <> failure <> " }; values[" <> index <> "] = value"
+        decode = case read.schema of
+          Scalar tag | isInlineScalar read.schema -> inlineScalarRead ("values[" <> index <> "]") tag
+          _ -> "value, ok := " <> call read.path "nil" <> "; if !ok { " <> failure <> " }; values[" <> index <> "] = value"
     in "case " <> quote read.key <> ":\nif seen[" <> index <> "] { " <> failure <> " }; seen[" <> index <> "] = true\n"
       <> if read.nullable then
         "if p.peek() == 'n' { if !p.null() { " <> failure <> " }; nulls[" <> index <> "] = true } else { " <> decode <> " }"

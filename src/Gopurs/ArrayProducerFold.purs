@@ -10,7 +10,7 @@ import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Data.String.Pattern (Pattern(..))
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), snd)
 import Gopurs.ArrayIndexedFold (readOnlyScalar, scalarType)
 import Gopurs.ArraySort as ArraySort
 import Gopurs.IndexedAddLanes as IndexedAddLanes
@@ -114,6 +114,56 @@ emit translate context nextId descriptor producer = do
       SrcInt32 -> GoCall (GoVar "int64") [ expr ]
       SrcInt64 -> expr
       SrcValue -> integer expr TypeValue
+    elemInt32 expr = case _ of
+      SrcInt32 -> expr
+      SrcInt64 -> GoCall (GoVar "int32") [ expr ]
+      SrcValue -> GoCall (GoVar "int32") [ integer expr TypeValue ]
+    inlineContrib32 kind = do
+      info <- contributionInfo
+      let valMags = case kind of
+            SrcInt32 -> Map.singleton (snd info.value) 31
+            _ -> Map.empty
+      -- Probe once to check static int32 safety before returning the lane builder.
+      _ <- IndexedAddLanes.inlineInt32Expr valMags
+        (Map.fromFoldable [ Tuple (snd info.index) (GoVar "__i"), Tuple (snd info.value) (GoVar "__v") ])
+        info.body
+      pure \i value ->
+        let idx32 = GoCall (GoVar "int32") [ i ]
+            val32 = elemInt32 value kind
+        in fromMaybe (rawGo "int32(0)")
+          (IndexedAddLanes.inlineInt32Expr valMags
+            (Map.fromFoldable [ Tuple (snd info.index) idx32, Tuple (snd info.value) val32 ])
+            info.body)
+    inlineMappedContrib32 mapper kind = do
+      info <- contributionInfo
+      guard (IndexedAddLanes.countLocalUses (snd info.value) info.body <= 1)
+      mapArgLevel <- case unwrapTcoExpr mapper of
+        Abs mapArgs mapBody ->
+          let grouped = collectCurriedAbs mapArgs mapBody
+          in case NEA.toArray grouped.args of
+            [ Tuple _ lvl ] | IndexedAddLanes.countLocalUses lvl grouped.body <= 1 ->
+              Just { lvl, body: grouped.body }
+            _ -> Nothing
+        _ -> Nothing
+      let inputMags = case kind of
+            SrcInt32 -> Map.singleton mapArgLevel.lvl 31
+            _ -> Map.empty
+      -- IndexedAddLanes.eligible proves mapper normalizes its result into signed int32.
+      mappedProbe <- IndexedAddLanes.inlineInt32Expr inputMags
+        (Map.singleton mapArgLevel.lvl (GoVar "__v"))
+        mapArgLevel.body
+      _ <- IndexedAddLanes.inlineInt32Expr (Map.singleton (snd info.value) 31)
+        (Map.fromFoldable [ Tuple (snd info.index) (GoVar "__i"), Tuple (snd info.value) mappedProbe ])
+        info.body
+      pure \i value ->
+        let idx32 = GoCall (GoVar "int32") [ i ]
+            val32 = elemInt32 value kind
+            mapped32 = fromMaybe (rawGo "int32(0)")
+              (IndexedAddLanes.inlineInt32Expr inputMags (Map.singleton mapArgLevel.lvl val32) mapArgLevel.body)
+        in fromMaybe (rawGo "int32(0)")
+          (IndexedAddLanes.inlineInt32Expr (Map.singleton (snd info.value) 31)
+            (Map.fromFoldable [ Tuple (snd info.index) idx32, Tuple (snd info.value) mapped32 ])
+            info.body)
     withIntSource index render =
       let
         inputName = argName index
@@ -146,17 +196,26 @@ emit translate context nextId descriptor producer = do
           ]) ]
     mappedLoop sourceInfo = case plan, Array.head planArgs, contribLambda of
       MapPlan _, Just mapper, Just _ | IndexedAddLanes.eligible mapper foldedCallback ->
-        [ IndexedAddLanes.emitContribution { source: sourceInfo.target, prefix: variable "lane", result: resultName, offset: Nothing }
-            (\i value -> GoCall (GoVar contribName)
-              [ GoCall (GoVar "int64") [ i ], GoCall (arg 0) [ elemInt64 value sourceInfo.kind ] ])
-            (loop sourceInfo (GoInt 0)) ]
+        case inlineMappedContrib32 mapper sourceInfo.kind of
+          Just step32 ->
+            [ IndexedAddLanes.emitContribution32 { source: sourceInfo.target, prefix: variable "lane", result: resultName, offset: Nothing }
+                step32 (loop sourceInfo (GoInt 0)) ]
+          Nothing ->
+            [ IndexedAddLanes.emitContribution { source: sourceInfo.target, prefix: variable "lane", result: resultName, offset: Nothing }
+                (\i value -> GoCall (GoVar contribName)
+                  [ GoCall (GoVar "int64") [ i ], GoCall (arg 0) [ elemInt64 value sourceInfo.kind ] ])
+                (loop sourceInfo (GoInt 0)) ]
       _, _, _ -> [ loop sourceInfo (GoInt 0) ]
     concatLoop sourceInfo label offsetOpt fallbackOffset = case contribLambda of
-      Just _ ->
-        [ IndexedAddLanes.emitContribution { source: sourceInfo.target, prefix: variable label, result: resultName, offset: offsetOpt }
-            (\i value -> GoCall (GoVar contribName)
-              [ GoCall (GoVar "int64") [ i ], elemInt64 value sourceInfo.kind ])
-            (loop sourceInfo fallbackOffset) ]
+      Just _ -> case inlineContrib32 sourceInfo.kind of
+        Just step32 ->
+          [ IndexedAddLanes.emitContribution32 { source: sourceInfo.target, prefix: variable label, result: resultName, offset: offsetOpt }
+              step32 (loop sourceInfo fallbackOffset) ]
+        Nothing ->
+          [ IndexedAddLanes.emitContribution { source: sourceInfo.target, prefix: variable label, result: resultName, offset: offsetOpt }
+              (\i value -> GoCall (GoVar contribName)
+                [ GoCall (GoVar "int64") [ i ], elemInt64 value sourceInfo.kind ])
+              (loop sourceInfo fallbackOffset) ]
       Nothing -> [ loop sourceInfo fallbackOffset ]
     filterBody sourceInfo = case contribLambda of
       Just _ ->
@@ -183,11 +242,15 @@ emit translate context nextId descriptor producer = do
         ]
     slicesSort = GoRaw { text: "slices.Sort", imports: [ "slices" ] }
     foldSortedSlice target kind = case contribLambda of
-      Just _ ->
-        [ IndexedAddLanes.emitContribution { source: target, prefix: variable "sortLane", result: resultName, offset: Nothing }
-            (\i value -> GoCall (GoVar contribName)
-              [ GoCall (GoVar "int64") [ i ], elemInt64 value kind ])
-            (loop { target, kind } (GoInt 0)) ]
+      Just _ -> case inlineContrib32 kind of
+        Just step32 ->
+          [ IndexedAddLanes.emitContribution32 { source: target, prefix: variable "sortLane", result: resultName, offset: Nothing }
+              step32 (loop { target, kind } (GoInt 0)) ]
+        Nothing ->
+          [ IndexedAddLanes.emitContribution { source: target, prefix: variable "sortLane", result: resultName, offset: Nothing }
+              (\i value -> GoCall (GoVar contribName)
+                [ GoCall (GoVar "int64") [ i ], elemInt64 value kind ])
+              (loop { target, kind } (GoInt 0)) ]
       Nothing -> [ loop { target, kind } (GoInt 0) ]
     sortLoop sourceInfo =
       let
@@ -227,11 +290,15 @@ emit translate context nextId descriptor producer = do
                     ]) ]
             ]
         foldReversedSlice = case contribLambda of
-          Just _ ->
-            [ IndexedAddLanes.emitContributionReverse { source: sourceInfo.target, prefix: variable "sortRevLane", result: resultName }
-                (\i value -> GoCall (GoVar contribName)
-                  [ GoCall (GoVar "int64") [ i ], elemInt64 value sourceInfo.kind ])
-                foldReversedScalar ]
+          Just _ -> case inlineContrib32 sourceInfo.kind of
+            Just step32 ->
+              [ IndexedAddLanes.emitContributionReverse32 { source: sourceInfo.target, prefix: variable "sortRevLane", result: resultName }
+                  step32 foldReversedScalar ]
+            Nothing ->
+              [ IndexedAddLanes.emitContributionReverse { source: sourceInfo.target, prefix: variable "sortRevLane", result: resultName }
+                  (\i value -> GoCall (GoVar contribName)
+                    [ GoCall (GoVar "int64") [ i ], elemInt64 value sourceInfo.kind ])
+                  foldReversedScalar ]
           Nothing -> [ foldReversedScalar ]
         readAt idx = case sourceInfo.kind of
           SrcValue -> GoSelector (GoIndex (rawGo sourceInfo.target) idx) "IntVal"

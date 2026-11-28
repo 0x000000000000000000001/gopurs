@@ -41,6 +41,7 @@ import Gopurs.ListFusion as ListFusion
 import Gopurs.ImmediateApplications (optimizeImmediateApplications)
 import Gopurs.RegexMatchProjection as RegexMatchProjection
 import Gopurs.Ownership as Ownership
+import Gopurs.LinearList as LinearList
 import Gopurs.GoTypes (exprTypeToGoType)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, generateReboxFunctions)
@@ -97,11 +98,12 @@ prepareModule metadata inputMod =
     constructors = ConstructorFold.optimize constants
     schemas = specializeDecoderSchemas metadata (borrowReadOnlyObjects metadata (cacheClosedDictionaries metadata (optimizeImmediateApplications (optimizeFunctionProducers (optimizeThunkProducers constructors)))))
     owned = Ownership.prepare metadata schemas.module
+    linear = LinearList.prepare metadata owned.module
   in
-    { module: owned.module
-    , declarations: owned.declarations <> schemas.declarations
-    , functions: owned.functions
-    , workers: workerInputs metadata.globalFunctions owned.module
+    { module: linear.module
+    , declarations: linear.declarations <> owned.declarations <> schemas.declarations
+    , functions: Map.union linear.functions owned.functions
+    , workers: workerInputs metadata.globalFunctions linear.module
     }
 
 -- Imported ordinary and immediate-effect workers use qualified Var targets;

@@ -96,8 +96,8 @@ unsafeIndex translate context@{ codegenStateRef, modNameStr } nextId arrayArg in
         <> (if isNative then StmtLeaf source.assignment else StmtEmpty)
         <> index.stmts
         <> StmtLeaf (GoAssign indexName (coerceGoExpr codegenStateRef modNameStr index.expr index.exprType TypeInt64))
-    , expr: boxGoExpr codegenStateRef modNameStr converted elementType
-    , exprType: TypeValue
+    , expr: converted
+    , exprType: elementType
     , nextId: index.nextId + 1
     }
 

@@ -237,18 +237,47 @@ emitLoop translate context nextId traversal mapper descriptor lastLevel =
       (\_ currentId argument -> translate (childContext context Nothing) currentId argument) nextId inputArg
     mapResult = native captured.nextId mapped
     foldResult = native mapResult.nextId folded
-    contribResult = if IndexedAddLanes.eligible mapped folded then
-      case IndexedAddLanes.extractContribution folded of
-        Just info ->
-          let
-            params = map (\(Tuple name level) -> Tuple (localId name level) TypeInt64) [ info.index, info.value ]
-            cbCtx = context { depth = context.depth + 1, bound = bindParameters params context.bound
-              , tcoIdent = Nothing, loopCtx = [], options = { isTail: true, inEffectBlock: false }
-              , mbExpectedExprType = Just Int, mbExpectedGoType = Just TypeInt64 }
-            res = translate cbCtx foldResult.nextId info.body
-          in Just { expr: GoFuncLit params (flattenStmts res.stmts) (integer res.expr res.exprType) TypeInt64, nextId: res.nextId }
-        Nothing -> Nothing
-      else Nothing
+    contribInfo = if IndexedAddLanes.eligible mapped folded then IndexedAddLanes.extractContribution folded else Nothing
+    contribResult = case contribInfo of
+      Just info ->
+        let
+          params = map (\(Tuple name level) -> Tuple (localId name level) TypeInt64) [ info.index, info.value ]
+          cbCtx = context { depth = context.depth + 1, bound = bindParameters params context.bound
+            , tcoIdent = Nothing, loopCtx = [], options = { isTail: true, inEffectBlock: false }
+            , mbExpectedExprType = Just Int, mbExpectedGoType = Just TypeInt64 }
+          res = translate cbCtx foldResult.nextId info.body
+        in Just { expr: GoFuncLit params (flattenStmts res.stmts) (integer res.expr res.exprType) TypeInt64, nextId: res.nextId }
+      Nothing -> Nothing
+    inlineTraverseContrib32 isInt32 elemType = do
+      info <- contribInfo
+      guard (IndexedAddLanes.countLocalUses (snd info.value) info.body <= 1)
+      mapSpec <- case unwrapTcoExpr mapped of
+        Abs mapArgs mapBody ->
+          let grouped = collectCurriedAbs mapArgs mapBody
+          in case NEA.toArray grouped.args of
+            [ Tuple _ valLvl ] | not traversal.indexed && IndexedAddLanes.countLocalUses valLvl grouped.body <= 1 ->
+              Just { idxLvl: Nothing, valLvl, body: grouped.body }
+            [ Tuple _ idxLvl, Tuple _ valLvl ] | traversal.indexed && IndexedAddLanes.countLocalUses valLvl grouped.body <= 1 ->
+              Just { idxLvl: Just idxLvl, valLvl, body: grouped.body }
+            _ -> Nothing
+        _ -> Nothing
+      let inputMags = if isInt32 then Map.singleton mapSpec.valLvl 31 else Map.empty
+          makeMapEnv idx32 val32 = case mapSpec.idxLvl of
+            Just iLvl -> Map.fromFoldable [ Tuple iLvl idx32, Tuple mapSpec.valLvl val32 ]
+            Nothing -> Map.singleton mapSpec.valLvl val32
+      mappedProbe <- IndexedAddLanes.inlineInt32Expr inputMags (makeMapEnv (GoVar "__i") (GoVar "__v")) mapSpec.body
+      _ <- IndexedAddLanes.inlineInt32Expr (Map.singleton (snd info.value) 31)
+        (Map.fromFoldable [ Tuple (snd info.index) (GoVar "__i"), Tuple (snd info.value) mappedProbe ])
+        info.body
+      pure \i item ->
+        let idx32 = GoCall (GoVar "int32") [ i ]
+            val32 = if isInt32 then item else GoCall (GoVar "int32") [ integer item elemType ]
+            mapped32 = fromMaybe (rawGo "int32(0)")
+              (IndexedAddLanes.inlineInt32Expr inputMags (makeMapEnv idx32 val32) mapSpec.body)
+        in fromMaybe (rawGo "int32(0)")
+          (IndexedAddLanes.inlineInt32Expr (Map.singleton (snd info.value) 31)
+            (Map.fromFoldable [ Tuple (snd info.index) idx32, Tuple (snd info.value) mapped32 ])
+            info.body)
     nextAfterContrib = case contribResult of
       Just c -> c.nextId
       Nothing -> foldResult.nextId
@@ -268,12 +297,16 @@ emitLoop translate context nextId traversal mapper descriptor lastLevel =
         ordinary = GoForRange (variable "index" <> ", " <> variable "value" <> " := range " <> src.target)
           [ GoMutate (variable "result") (GoCall (GoVar (variable "fold")) [ index, GoVar (variable "result"), mappedValue ]) ]
       in case contribResult of
-        Just _ ->
-          [ IndexedAddLanes.emitContribution { source: src.target, prefix: variable "lane", result: variable "result", offset: Nothing }
-              (\i item ->
-                let current = GoCall (GoVar "int64") [ i ]
-                    produced = GoCall (GoVar (variable "map")) (if traversal.indexed then [ current, valueExpr item ] else [ valueExpr item ])
-                in GoCall (GoVar (variable "contrib")) [ current, produced ]) ordinary ]
+        Just _ -> case inlineTraverseContrib32 src.isInt32 src.elementType of
+          Just step32 ->
+            [ IndexedAddLanes.emitContribution32 { source: src.target, prefix: variable "lane", result: variable "result", offset: Nothing }
+                step32 ordinary ]
+          Nothing ->
+            [ IndexedAddLanes.emitContribution { source: src.target, prefix: variable "lane", result: variable "result", offset: Nothing }
+                (\i item ->
+                  let current = GoCall (GoVar "int64") [ i ]
+                      produced = GoCall (GoVar (variable "map")) (if traversal.indexed then [ current, valueExpr item ] else [ valueExpr item ])
+                  in GoCall (GoVar (variable "contrib")) [ current, produced ]) ordinary ]
         Nothing -> [ ordinary ]
     loopStmts = case inputType of
       TypeNativeArray inner ->

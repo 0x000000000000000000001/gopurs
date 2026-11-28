@@ -14,6 +14,7 @@ import { unsafeIndex } from '../output/Gopurs.ArrayIntrinsics/index.js';
 import * as CodeGen from '../output/Gopurs.CodeGen/index.js';
 import { StmtLeaf, flattenStmts } from '../output/Gopurs.ExprContext/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
+import { boxGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
 import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import { TcoExpr } from '../output/PureScript.Backend.Optimizer.Codegen.Tco/index.js';
@@ -91,7 +92,9 @@ test('unsafe indexing converts one element, preserves evaluation and allocates c
         };
         const array = typed(new Core.Array(fixture.core), typed(new Core.Array(fixture.core), variable('source')));
         const result = unsafeIndex(translate)(context)(0)(array)(variable('index'));
-        const body = [...flattenStmts(result.stmts), new Go.GoReturn(result.expr)].map(printGoExpr).join('\n');
+        assert.deepEqual(result.exprType, fixture.go, 'unsafeIndex must preserve unboxed element GoType');
+        const boxed = boxGoExpr(context.codegenStateRef)('IndexProbe')(result.expr)(result.exprType);
+        const body = [...flattenStmts(result.stmts), new Go.GoReturn(boxed)].map(printGoExpr).join('\n');
         return `func ${fixture.functionName}(source ${Go.goTypeToStr(fixture.sourceType)}, index int64) gopurs_runtime.Value {\n${body}\n}`;
     });
     const checks = fixtures.map(fixture => {

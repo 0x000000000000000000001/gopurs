@@ -91,3 +91,70 @@ Objectif : attaquer de manière 100 % générale les goulots restants sur `Prime
 | --- | --- | --- | --- | --- |
 | Baseline post-Option A (`go-clean-20261128`, 0 ASM) | `1.96 ms` (`0.53x`) | 25 cas (`1.06x`, `1.31x`, `2.36x`) | 12 cas | Référence précédente dans `altbak.pub/README.md` |
 | **Lots 1–3 : SIMD généraliste Go 1.27+ & peephole `div`/`mod` + reverse lanes** (`go-simd-general-20261128`) | **`1.91 ms` (`0.52x`, `Q₂/C = 1.31x`, `G/C = 2.30x`, `Q₄/JS = 0.86x`)** | **30 cas (`1.66 ms`, `0.45x/C`, `G/C = 0.95x`, `Q₂/C = 1.29x`, `Q₄/C = 2.35x`, `G/JS = 0.0018x`)** | **7 cas (`0.25 ms`)** | 0 hack benchmark, 0 `GOEXPERIMENT`, 5 cas gradués en Stable, 37/37 cas plus rapides que JS |
+
+
+---
+
+# Phase 2 — Plan d'optimisation des 10 cas Go WIP (guidé par `pprof` / `objdump`, 100 % général)
+
+> **État :** **Terminé et validé** (Go 1.27.4 `linux/arm64` dans `b8x` Docker + Go 1.27.0 `darwin/arm64` hôte, campagnes officielles 3 processus publiées dans `altbak.pub/README.md`).
+
+## Baselines officielles de référence (`altbak.pub/README.md`, 28 nov. 2026, Go 1.27.0 `darwin/arm64`)
+
+| Périmètre Go Release (`gopurs`) | Total Go | Total C | `/C` | `/JS` |
+| --- | ---: | ---: | ---: | ---: |
+| **Total Stable (30 cas)** | `1.66 ms` | `3.67 ms` | `0.45x` | `0.015x` |
+| **Total WIP (10 cas)** | `29.40 ms` | `17.87 ms` | `1.65x` | `0.25x` |
+| **Total (40 cas)** | `31.05 ms` | `21.54 ms` | `1.44x` | `0.14x` |
+
+Les 10 cas WIP à attaquer (par masse temporelle & empirisme `pprof`/`objdump`) :
+1. `JSON to Typed AST` (`19733.00 μs`, `1.87x /C`, `0.24x /JS`) — `27.1 MB`/pass, `278k` allocs/pass (`directIndex` `[]directToken` = **38.6 %** des octets, `strings.Clone` = **12.8 %** des objets, `tc_cndJust`/`tc_ntJust` = **17.1 %**, `RecordShape4`/`2` = **16.2 %**, lexer `string`/`space` octet par octet).
+2. `Array Indexing` (`8139.67 μs`, `1.24x /C`, `0.32x /JS` vs Imp. Go FFI `3241.50 μs` = `0.49x /C`) — `objdump` confirme dans la boucle chaude (8,39 M itér.) : 3 tests de tag `ArrayAccess` + rechargement du slice header + reboxing `unsafeIndex` (`Int(...).IntVal`) + `IntAdd(..., 0)` + `index_6` resté `int64` faute de suivi du temporaire de branche `__t2`.
+3. `JSON Decoding` (`1276.75 μs`, `1.94x /C`, `0.14x /JS`) — `2.23 MB`/pass, `33.7k` allocs/pass (`strings.Clone` = **22.1 %** des objets, `RecordShape3`/`5` = **26.9 %** des octets, croissance slice `cap=4` dans `DecoderSchemas/Stream` = **15.1 %** des octets, `Array`/`Just`/`Rebox`, lexer `argonautStreamScanString` octet par octet).
+4. `Church Numerals` (`231.71 μs`, `0.18x /JS`) — **62.5 % flat / 84.7 % cum** dans `gopurs_runtime.Apply` (dispatch de fonctions d'ordre supérieur boxées).
+5. `Prime Sieve` (`15.07 μs`, `0.26x /JS`) — **94.3 %** des objets heap sont des nœuds `Cons` (dont **64.1 %** dans `ListFilter`).
+6. `array/map-10000` (`1.75 μs`, `3.89x /C`, `0.014x /JS`), `array/append-1000` (`0.21 μs`, `2.43x /C`), `foldable/traverse-maybe-1000` (`0.18 μs`, `4.05x /C`) — `objdump` révèle **16 instructions `NOOP`** (`InlMark` Go sur les 2 closures inlinées × 8 voies) + **8× `SXTW` + 4× `SBFIZ`** dus aux accumulateurs `int64` et aux appels de closures dans `emitContribution`.
+7. `List Processing` (`0.40 μs`, `0.047x /JS`) & `Array Processing` (`0.31 μs`, `0.043x /JS`) — déjà >20× plus rapides que JS ; zéro forme close autorisée (`todo.md` principes), gains collatéraux uniquement via passes générales.
+
+---
+
+## Phase 2 — Lot 1 : Passes compilateur générales (LICM `ArrayAccess`, `Int32Loops` temporaires de branche, inlining `int32` des voies scalaires)
+
+- [x] **P2-1.1 — `ArrayIntrinsics/Index.purs` (`unsafeIndex`)** : retourner `converted` avec `exprType: elementType` sans reboxer systématiquement en `TypeValue`.
+- [x] **P2-1.2 — `Int32Loops.purs`** :
+  - Suivi à point fixe des variables locales `int64` normalisées (temporaires de branche `__tN` dont toutes les écritures sont normalisées ou self-préservantes) pour promouvoir les compteurs conditionnels (`index_6`, `total_6`, etc.).
+  - Supprimer l'enrobage `IntAdd(w, int64(0))` dans `narrow` quand `w` est une expression runtime non-constante.
+  - **LICM de représentation de tableau `Value`** : dans les boucles pures indexant une variable `TypeValue` invariante via `ArrayAccess`/`ArrayLength` (directement ou via alias local), hisser le dispatch de représentation (`TypeInt32Array`, `TypeIntArray`, `TypeStringArray`, `TypeArray`, fallback) une seule fois avant la boucle.
+- [x] **P2-1.3 — Propagation d'amplitude `int32` (`PrimitiveExprs`) & inlining `int32` sans closure dans `IndexedAddLanes` / `ArrayProducerFold` / `ArrayTraverseFold`** :
+  - Étendre `PrimitiveExprs.integerMagnitude` (`Let`, `Branch`, `OpIntNegate`, `OpIntBitNot`) et supprimer l'IIFE superflue de `boundedIntProduct`.
+  - Dans `emitContribution32` / `emitContributionReverse32`, accumuler les 8 voies en `int32` et inliner directement l'expression scalaire `int32` prouvée (0 `InlMark` `NOOP`, 0 `SXTW` redondant, préservation exacte du seuil `2^53` IEEE-754 et des graines larges).
+- [x] **P2-1.4 — Tests & mesure empirique** (`int32-loops`, `array-unsafe-index`, `indexed-add-lanes`, `array-producer-fold`, `array-traverse-fold` ; résultats mesurés : `Array Indexing` `8139.67 → 4762.0 μs` = `0.73x /C` plus rapide que C, `array/map-10000` `1.75 → 1.096 μs`, `traverse-maybe-1000` `0.18 → 0.116 μs`, `array/append-1000` `0.21 → 0.175 μs`, `List Processing` `0.40 → 0.323 μs`).
+
+## Phase 2 — Lot 2 : Réduction d'allocations & inlining des décodeurs JSON (`sync.Pool`, arènes `noscan`, `vsChecker` bitset+slab, inlining feuilles scalaires)
+
+- [x] **P2-2.1 — Étude empirique SIMD lexical JSON (rejeté sur preuves)** : testé `ScanJSONString`/`SkipJSONSpace` NEON/SSE2 sur les deux corpus (`JsonTypedAst` : 99,1 % des chaînes < 16 B, moyenne 6,4 B, 0 run d'espaces ≥ 16 ; `JsonDecoding` : 96,6 % < 16 B, moyenne 7,2 B, 0 run ≥ 16). L'appel cross-package cassait l'inlining de `space()`/`take()` (+220 μs sur `JsonDecoding`). Retiré l'ASM inutile pour conserver zéro code mort dans `gopurs_runtime`.
+- [x] **P2-2.2 — `sync.Pool` & arènes `noscan` owned dans `CoreFn.Json.Text`, `CoreFn.Usage` et `gopurs-argonaut-codecs`** :
+  - `directTokenPool` + `ntTableScratchPool` (`refs`, `pending`, `state`, `argsSlab`) + `argonautTextTokenPool` + `unquoteScratch` réutilisable.
+  - Arène `noscan` 4 KB (`directDocument.stringChunk` + `cloneBytesOwned` dans `tc_cndModuleName`, `argonautStreamParser.stringChunk` avec fast-path inliné) éliminant ~100 % des allocs `strings.Clone` et `strings.Join`/`MakeNoZero` tout en préservant l'isolation inter-appels (`owned-reference`).
+  - `CoreFn.Usage` (`vsChecker`) : bitset `[]uint64` + slab `[]vsScope` poolé avec `bindingID` intégré (zéro `origin + "#" + FormatInt`, zéro `map[string]bool`, zéro `&vsIdentity`).
+  - `cndQualified` : suppression des closures `cndTryString` redondantes sur le chemin rapide.
+- [x] **P2-2.3 — `DecoderSchemas/Stream.purs` & `runtime.go`** : inlining des feuilles scalaires (`Int`, `Number`, `String`, `Boolean`) à `cap=4` (validé A/B vs `cap=8` qui ajoutait +240 KB) et singletons vides zéro-alloc dans `runtime.go`.
+- [x] **P2-2.4 — Tests oracles & mesure empirique** : `decoder-stream.test.mjs` (11/11 sous `-race`), `TestPublicModuleParserAndErrorBoundary` (2 025 cas d'erreur sous `-race`), 12 & 17 empreintes SHA-256 vérifiées. Résultats : `JsonTypedAst` **`19733 → 17922 μs`** (`-9,2 %`, allocs régime établi `27,1 → 12,6 MB/pass` = `-53,5 %`), `JsonDecoding` **`1276.75 → 1101.9 μs`** (`-13,7 %`, `0.119x /JS`).
+
+## Phase 2 — Lot 3 : Passes FP générales (HOF unboxés via TAST, composition d'itérations comptées, inlining `ListFilter` & réutilisation linéaire `Cons`)
+
+- [x] **P2-3.1 — HOF monomorphes natifs via TAST (`func(int64) int64`) & composition d'itérations comptées dans `FunctionFusion.purs` / `FunctionExprs.purs` / `ModuleWorkers.purs`** : attachement `WithFunctionData(..., func(int64) int64)` sur les lambdas `Func [Int] Int`, enveloppement `CountedIntIterator` & `ComposeCountedIntIterators` (aplatissement `(g^m)^n = g^(n*m)` avec garde d'overflow `int64` et préservation exacte des effets/panics). Résultat mesuré : `Church Numerals` **`231.71 → 71.99 μs`** (**`3.22×`**, `0.057x /JS`).
+- [x] **P2-3.2 — TRMC linéaire, réutilisation de cellules `Cons` & déforestation de pipelines fermés `fold (transform (range ...))` (`LinearList.purs` + `Divisor32`)** : reconnaissance des listes chaînées `Int` locales (monomorphes ou polymorphes instanciées à `Int`), filtres locaux (inversés ou directs), transformations TRMC linéaires (`__gopurs_linear_*` sur arguments prouvés frais uniquement, préservation stricte des listes partagées), `Divisor32` Lemire hissé hors boucle, et déforestation zéro-allocation des pipelines fermés `fold (linearTransform (range lo hi))` (`__gopurs_linear_fold_*` + suppression des `LetRec` purs devenus morts). Résultat mesuré : `Prime Sieve` **`15.07 → 3.52 μs`** (**`4.28×`**, `0.060x /JS`, `0 allocs/op`).
+- [x] **P2-3.3 — Tests & validation empirique** (`counted-functions.test.mjs`, `divmod-peephole.test.mjs` incluant 200 000 paires `Divisor32` sous `-race` + Rosetta `amd64`, `linear-list.test.mjs` sous `-race` + `AllocsPerRun == 0`, `list-filter-ir.test.mjs`, `list-filter.test.mjs`, `tools/c1c` `go test ./...`).
+
+## Phase 2 — Lot 4 : Validation finale `b8x` (Go 1.27) & campagne officielle `altbak.pub`
+
+- [x] **P2-4.1 — Suites complètes `gopurs` + bootstrap natif + build réel `b8x` (2 711 modules, Docker Go 1.27)** : `npm run build` (0 warning / 0 erreur), `npm run build:native` propre sans ASM mort (567 modules, 362 487 types), `tools/{build-cache,ffi-gen,c1c}` (`go test ./...`), `test:identity` (8/8), `test:cache` (6/6 `-race`), `test:ffi` OK, 109/109 tests compilateur/runtime/e2e (`js` + `native-parallel`), `TestPublicModuleParserAndErrorBoundary` (2 025 cas `-race`), et build complet `b8x` (2 711 modules) validé dans `core-api-cli-1` (`go1.27.4 linux/arm64`, `B8X_PHASE2_GO127_BUILD_OK`).
+- [x] **P2-4.2 — Campagne officielle 3 processus `altbak.pub` (Core/Library + Diagnostics), graduations Stable et mise à jour `altbak.pub/README.md`** : campagne `altbak.pub/var/benchmark/go-phase2-20261128/` (`go1.27.0 darwin/arm64`, `GOGC=800` Core+Lib, `GOGC=100` Diagnostics, `-pgo=off`, zéro `GOEXPERIMENT`), 40/40 oracles & empreintes SHA-256 validés, 4 graduations vers Stable (**34 Stable / 6 WIP** : `Array Indexing`, `array/map-10000`, `array/append-1000`, `foldable/traverse-maybe-1000`), `test/benchmark-ratio-statistics.py` **9/9 OK**.
+
+### Journal de mesures Phase 2 (40 cas, référence `altbak.pub/README.md`)
+
+| Étape | Total 40 cas (`/C`, `/JS`) | Total Stable (`/C`, `G/C`, `Q₂/C`, `Q₄/C`) | Total WIP (nb cas) | Gains clés |
+| --- | --- | --- | --- | --- |
+| Baseline pré-Phase 2 (`28 nov. 2026`, 30 Stable / 10 WIP) | `31.05 ms` (`1.44x /C`, `0.14x /JS`, `G/C = 2.24x`) | 30 cas (`1.66 ms`, `0.45x /C`, `G/C = 0.95x`, `Q₂/C = 1.29x`, `Q₄/C = 2.35x`) | 10 cas (`29.40 ms`, `1.65x /C`, `0.25x /JS`) | Référence officielle `altbak.pub/README.md` |
+| **Phase 2 Lots 1–3 (`go-phase2-20261128`, 34 Stable / 6 WIP)** | **`24.68 ms` (`-20.5%`, `1.15x /C`, `0.11x /JS`, `G/C = 1.99x`, `G/JS = 0.0038x`)** | **34 cas (`6.43 ms`, `0.63x /C`, `G/C = 1.02x`, `Q₂/C = 1.31x`, `Q₄/C = 2.62x`, `0.046x /JS`)** | **6 cas (`18.24 ms`, `1.63x /C`, `0.20x /JS`, `Q₂/JS = 0.058x`)** | `Array Indexing` `-41.2%` (`0.73x /C`), `JSON to Typed AST` `-14.3%` (`1.60x /C`), `Church Numerals` `-69.0%` (`0.057x /JS`), `Prime Sieve` `-77.4%` (`0.059x /JS`, `0 allocs/op`), `array/map-10000` `-37.3%`, `traverse-maybe-1000` `-35.4%`, `List Processing` `-22.6%`, `array/append-1000` `-17.7%`, `array/sort-descending-10000` `-10.7%`, 0 régression |

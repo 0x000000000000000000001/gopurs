@@ -283,6 +283,7 @@ func storesRuntimeValue(source *ffiSource, expression ast.Expr) bool {
 	switch selector.Sel.Name {
 	case "Func", "Func2", "Func3", "Func4", "Func5", "Func6", "Func7",
 		"Func8", "Func9", "Func10", "Func11", "FuncAny", "WithFunctionData",
+		"CountedIntIterator", "ComposeCountedIntIterators",
 		"Wrap0", "Wrap1", "Wrap2", "Wrap3", "Wrap4", "Wrap5",
 		"Any", "AnyToValue", "Box", "Array", "Record", "RecordDict",
 		"RecordDict0", "RecordDict1", "RecordDict2", "RecordDict3", "RecordDict4", "RecordDict5",

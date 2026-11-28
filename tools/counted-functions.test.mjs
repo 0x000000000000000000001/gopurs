@@ -303,3 +303,86 @@ test('generated iterators defer callback failure until the same invocation', t =
     check(calls, 8)
 `);
 });
+
+test('CountedIntIterator, ComposeCountedIntIterators, overflow guard and native int64 callback dispatch', t => {
+    runGenerated(t, `
+    var observed []int64
+    nativeInc := gopurs_runtime.WithFunctionData(
+        gopurs_runtime.Func(func(v gopurs_runtime.Value) gopurs_runtime.Value {
+            observed = append(observed, v.IntVal)
+            return gopurs_runtime.Int(v.IntVal + 1)
+        }),
+        func(x int64) int64 {
+            observed = append(observed, x)
+            return x + 1
+        },
+    )
+    c3 := purescript.Call_CountingFixture_repeat(3)
+    c4 := purescript.Call_CountingFixture_repeat(4)
+    c0 := purescript.Call_CountingFixture_repeat(0)
+    fallbackCalled := false
+    fallback := gopurs_runtime.Func2(func(f, x gopurs_runtime.Value) gopurs_runtime.Value {
+        fallbackCalled = true
+        return gopurs_runtime.Apply2(c3, gopurs_runtime.Apply(c4, f), x)
+    })
+
+    // Flattened composition: (c3 o c4)(nativeInc)(10) == 22 in exact order
+    comp := gopurs_runtime.ComposeCountedIntIterators(c3, c4, fallback)
+    check(gopurs_runtime.Apply2(comp, nativeInc, gopurs_runtime.Int(10)).IntVal, 22)
+    if fallbackCalled { panic("expected flattened composition without fallback") }
+    if len(observed) != 12 || observed[0] != 10 || observed[11] != 21 {
+        panic(fmt.Sprintf("unexpected callback trace: %v", observed))
+    }
+
+    // Nested composition: ((c3 o c4) o c3)(nativeInc)(0) == 36
+    observed = nil
+    comp2 := gopurs_runtime.ComposeCountedIntIterators(comp, c3, fallback)
+    check(gopurs_runtime.Apply2(comp2, nativeInc, gopurs_runtime.Int(0)).IntVal, 36)
+    if len(observed) != 36 { panic(fmt.Sprintf("expected 36 calls, got %d", len(observed))) }
+
+    // Zero composition (0 * 4 and 4 * 0) must not invoke callback
+    never := gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+        panic("zero composition must not invoke callback")
+    })
+    check(gopurs_runtime.Apply2(gopurs_runtime.ComposeCountedIntIterators(c0, c4, fallback), never, gopurs_runtime.Int(99)).IntVal, 99)
+    check(gopurs_runtime.Apply2(gopurs_runtime.ComposeCountedIntIterators(c4, c0, fallback), never, gopurs_runtime.Int(77)).IntVal, 77)
+
+    // Non-counted operand falls back cleanly
+    nonCounted := gopurs_runtime.Func2(func(f, x gopurs_runtime.Value) gopurs_runtime.Value {
+        return gopurs_runtime.Apply(f, gopurs_runtime.Apply(f, x))
+    })
+    fbHit := false
+    fb := gopurs_runtime.Func2(func(f, x gopurs_runtime.Value) gopurs_runtime.Value {
+        fbHit = true
+        return gopurs_runtime.Int(1234)
+    })
+    check(gopurs_runtime.Apply2(gopurs_runtime.ComposeCountedIntIterators(nonCounted, c3, fb), never, gopurs_runtime.Int(0)).IntVal, 1234)
+    if !fbHit { panic("non-counted composition must use fallback") }
+
+    // Overflow guard: (1<<40) * (1<<40) overflows int64 and must delegate to fallback
+    hugeA := gopurs_runtime.CountedIntIterator(1<<40, fallback)
+    hugeB := gopurs_runtime.CountedIntIterator(1<<40, fallback)
+    overflowHit := false
+    overflowFb := gopurs_runtime.Func2(func(f, x gopurs_runtime.Value) gopurs_runtime.Value {
+        overflowHit = true
+        return gopurs_runtime.Int(5678)
+    })
+    check(gopurs_runtime.Apply2(gopurs_runtime.ComposeCountedIntIterators(hugeA, hugeB, overflowFb), never, gopurs_runtime.Int(0)).IntVal, 5678)
+    if !overflowHit { panic("int64 product overflow must use fallback") }
+
+    // Negative count must not attach counted metadata
+    negHit := false
+    negRaw := gopurs_runtime.Func2(func(f, x gopurs_runtime.Value) gopurs_runtime.Value {
+        negHit = true
+        return gopurs_runtime.Int(-1)
+    })
+    negIter := gopurs_runtime.CountedIntIterator(-5, negRaw)
+    negFbHit := false
+    negFb := gopurs_runtime.Func2(func(f, x gopurs_runtime.Value) gopurs_runtime.Value {
+        negFbHit = true
+        return gopurs_runtime.Int(-2)
+    })
+    check(gopurs_runtime.Apply2(gopurs_runtime.ComposeCountedIntIterators(negIter, c3, negFb), never, gopurs_runtime.Int(0)).IntVal, -2)
+    if !negFbHit || negHit { panic("negative count must not attach counted metadata") }
+`);
+});

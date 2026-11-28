@@ -15,22 +15,27 @@ module Gopurs.PrimitiveExprs
 import Prelude
 
 import Control.Alternative (guard)
+import Data.Array as Array
 import Data.Array.NonEmpty as NEA
 import Data.Int.Bits as Bits
+import Data.Map (Map)
+import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.String.CodeUnits as SCU
+import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
+import Data.Foldable (foldl)
 import Effect.Ref (Ref)
 import Gopurs.Cache.LookupTable as LookupTable
 import Gopurs.CallAnalysis (qualifiedTarget)
 import Gopurs.CodegenState (CodegenState)
 import Gopurs.ExprAnalysis (getExprType, unwrapTcoExpr)
-import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, childContext, wrapInStmts)
+import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, childContext, flattenStmts, wrapInStmts)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr, unboxGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Literal(..), ModuleName(..))
-import PureScript.Backend.Optimizer.Syntax (BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..))
+import PureScript.Backend.Optimizer.Syntax (BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Level, Pair(..))
 import PureScript.Backend.Optimizer.Syntax as Syn
 
 type PrimitiveExpr =
@@ -113,16 +118,34 @@ boundedIntProduct translate context nextId operator lhs rhs = do
     child = childContext context (Just Int)
     left = translate child nextId lhs
     right = translate child left.nextId rhs
+    leftVal = unboxGoExpr context.codegenStateRef context.modNameStr left.expr left.exprType TypeInt64
+    rightVal = unboxGoExpr context.codegenStateRef context.modNameStr right.expr right.exprType TypeInt64
     operand result = wrapInStmts context.recVars result.stmts TypeInt64
       (unboxGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType TypeInt64)
     cast name argument = GoCall (GoVar name) [ argument ]
     product = GoBinOp "*" (GoVar "boundedLeft") (GoVar "boundedRight")
-    -- Function parameters avoid Go's overflowing constant conversions. The
-    -- small IIFE is inlinable; its arguments retain strict left-to-right work.
+    -- When operands have no statements and at least one is a runtime value,
+    -- emit direct int64(int32(a * b)) without an IIFE (avoiding Go's InlMark
+    -- NOOP). Constant-only products retain the IIFE to prevent compile-time
+    -- constant conversion overflow.
+    direct = Array.null (flattenStmts left.stmts) && Array.null (flattenStmts right.stmts)
+      && (isRuntimeGoExpr leftVal || isRuntimeGoExpr rightVal)
     function = GoFuncBlock [ Tuple "boundedLeft" TypeInt64, Tuple "boundedRight" TypeInt64 ]
       [ GoReturn (cast "int64" (cast "int32" product)) ] TypeInt64
-  pure { stmts: StmtEmpty, expr: GoCall function [ operand left, operand right ]
+    expr = if direct then cast "int64" (cast "int32" (GoBinOp "*" leftVal rightVal))
+      else GoCall function [ operand left, operand right ]
+  pure { stmts: StmtEmpty, expr
     , exprType: TypeInt64, nextId: right.nextId }
+  where
+  isRuntimeGoExpr = case _ of
+    GoVar _ -> true
+    GoIndex _ _ -> true
+    GoSelector _ _ -> true
+    GoCall (GoVar name) [ arg ] | name == "int64" || name == "int32" || name == "int" -> isRuntimeGoExpr arg
+    GoCall _ _ -> true
+    GoBinOp _ l r -> isRuntimeGoExpr l || isRuntimeGoExpr r
+    GoPrefixOp _ v -> isRuntimeGoExpr v
+    _ -> false
 
 -- A small proved operand makes a cheap exact-integer path useful even when
 -- the other operand is an opaque Int64. With b <= 21, the checked range still
@@ -267,11 +290,26 @@ integerAnnotation expression = case getExprType expression of
 -- Return b only when |value| <= 2^b. These operations normalize their results;
 -- division, unsigned shifts, arbitrary calls and plain locals are not proofs.
 integerMagnitude :: TcoExpr -> Maybe Int
-integerMagnitude (TcoExpr _ syntax) = case syntax of
-  Typed Int inner -> integerMagnitude inner
-  Typed Any inner -> integerMagnitude inner
-  Syn.TypeApp inner _ -> integerMagnitude inner
+integerMagnitude = integerMagnitudeWith Map.empty
+
+integerMagnitudeWith :: Map Level Int -> TcoExpr -> Maybe Int
+integerMagnitudeWith known (TcoExpr _ syntax) = case syntax of
+  Typed Int inner -> integerMagnitudeWith known inner
+  Typed Any inner -> integerMagnitudeWith known inner
+  Syn.TypeApp inner _ -> integerMagnitudeWith known inner
   Lit (LitInt value) -> literalMagnitude value
+  Local _ level -> Map.lookup level known
+  Let _ level rhs body ->
+    let known' = case integerMagnitudeWith known rhs of
+          Just m -> Map.insert level m known
+          Nothing -> known
+    in integerMagnitudeWith known' body
+  Branch branches otherwise -> do
+    defMag <- integerMagnitudeWith known otherwise
+    branchMags <- traverse (\(Pair _ res) -> integerMagnitudeWith known res) (NEA.toArray branches)
+    pure (foldl max defMag branchMags)
+  PrimOp (Syn.Op1 OpIntNegate _) -> Just 31
+  PrimOp (Syn.Op1 OpIntBitNot _) -> Just 31
   PrimOp (Syn.Op2 operation left right) -> case operation of
     OpIntBitAnd -> case integerLiteral left, integerLiteral right of
       Just mask, _ | mask >= 0 -> literalMagnitude mask
@@ -283,8 +321,8 @@ integerMagnitude (TcoExpr _ syntax) = case syntax of
     OpIntBitOr -> Just 31
     OpIntBitXor -> Just 31
     OpIntBitShiftLeft -> Just 31
-    OpIntNum OpAdd -> sumMagnitude left right
-    OpIntNum OpSubtract -> sumMagnitude left right
+    OpIntNum OpAdd -> sumMagnitude known left right
+    OpIntNum OpSubtract -> sumMagnitude known left right
     OpIntNum OpMultiply -> Just 31
     OpIntNum OpMod -> case integerLiteral right of
       Just modulus | modulus > 0 && modulus <= 2147483647 -> literalMagnitude (modulus - 1)
@@ -292,8 +330,8 @@ integerMagnitude (TcoExpr _ syntax) = case syntax of
     _ -> Nothing
   _ -> Nothing
 
-sumMagnitude :: TcoExpr -> TcoExpr -> Maybe Int
-sumMagnitude left right = case integerMagnitude left, integerMagnitude right of
+sumMagnitude :: Map Level Int -> TcoExpr -> TcoExpr -> Maybe Int
+sumMagnitude known left right = case integerMagnitudeWith known left, integerMagnitudeWith known right of
   Just a, Just b -> Just (min 31 (max a b + 1))
   _, _ -> Just 31
 

@@ -23,6 +23,7 @@ import Gopurs.Int32Loops as Int32Loops
 import Gopurs.AffineLoops as AffineLoops
 import Gopurs.RecordAffineLoops as RecordAffineLoops
 import Gopurs.ArraySnoc as ArraySnoc
+import Gopurs.FunctionFusion as FunctionFusion
 import Gopurs.ListFilter as ListFilter
 import Gopurs.Int32Recursion as Int32Recursion
 import Gopurs.TailAddLoops as TailAddLoops
@@ -83,8 +84,12 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
             guardNullableSelfCalls workerName params statements
             else statements
         in if isSelfRecursive then
-          AffineLoops.wrap translate workerContext (AffineLoops.globalTarget modNameStr fn.ident) params resultType fn.body
-            (Int32Loops.loop fn.ident params resultType guardedStatements)
+          let
+            looped = AffineLoops.wrap translate workerContext (AffineLoops.globalTarget modNameStr fn.ident) params resultType fn.body
+              (Int32Loops.loop fn.ident params resultType guardedStatements)
+          in case if boxed then Nothing else FunctionFusion.iteratorWorkerGuard fn.ident params resultType fn.body of
+            Just guardStmt -> GoBlock [ guardStmt, looped ]
+            Nothing -> looped
           else GoBlock (flattenTailReturn statements)
     value = if Array.null fn.args then
       -- A zero-argument abstraction still defers its whole body until called.

@@ -677,6 +677,41 @@ func IntModZero(a, b int64) bool {
 	return b == 0 || a%b == 0
 }
 
+// Divisor32 precomputes the Lemire (2019) reciprocal for a loop-invariant
+// signed 32-bit divisor so repeated exact divisibility tests (x mod d == 0)
+// replace hardware division with one 64-bit multiply and compare. Exact for
+// every int32 pair (x, d), including MinInt32, negative values, and d == 0.
+type Divisor32 struct {
+	c       uint64
+	special uint8 // 0: |d| >= 2, 1: d in {-1, 0, 1}, 2: d == MinInt32
+}
+
+func NewDivisor32(d int32) Divisor32 {
+	if d >= -1 && d <= 1 {
+		return Divisor32{special: 1}
+	}
+	if d == -2147483648 {
+		return Divisor32{special: 2}
+	}
+	u := uint64(d)
+	if d < 0 {
+		u = uint64(-d)
+	}
+	return Divisor32{c: ^uint64(0)/u + 1}
+}
+
+func (d Divisor32) Divides(x int32) bool {
+	if d.special != 0 {
+		if d.special == 1 {
+			return true
+		}
+		return x == 0 || x == -2147483648
+	}
+	m := x >> 31
+	u := uint64(uint32((x ^ m) - m))
+	return u*d.c < d.c
+}
+
 func Float(v float64) Value {
 	return Value{Type: TypeFloat, IntVal: int64(math.Float64bits(v))}
 }
@@ -750,19 +785,34 @@ func BitXor(a Value, b Value) Value {
 	return Int(IntBitXor(a.IntVal, b.IntVal))
 }
 
+var (
+	emptyValueSlice  = []Value{}
+	emptyInt32Slice  = []int32{}
+	emptyStringSlice = []string{}
+)
+
 func Array(v []Value) Value {
+	if len(v) == 0 {
+		return Value{Type: TypeArray, UnsafePtr: unsafe.Pointer(&emptyValueSlice)}
+	}
 	ptr := new([]Value)
 	*ptr = v
 	return Value{Type: TypeArray, UnsafePtr: unsafe.Pointer(ptr)}
 }
 
 func Int32Array(v []int32) Value {
+	if len(v) == 0 {
+		return Value{Type: TypeInt32Array, UnsafePtr: unsafe.Pointer(&emptyInt32Slice)}
+	}
 	ptr := new([]int32)
 	*ptr = v
 	return Value{Type: TypeInt32Array, UnsafePtr: unsafe.Pointer(ptr)}
 }
 
 func StringArray(v []string) Value {
+	if len(v) == 0 {
+		return Value{Type: TypeStringArray, UnsafePtr: unsafe.Pointer(&emptyStringSlice)}
+	}
 	ptr := new([]string)
 	*ptr = v
 	return Value{Type: TypeStringArray, UnsafePtr: unsafe.Pointer(ptr)}
@@ -770,11 +820,7 @@ func StringArray(v []string) Value {
 
 func IntArray(v []int64) Value {
 	if len(v) == 0 {
-		ptr := new([]int32)
-		if v != nil {
-			*ptr = []int32{}
-		}
-		return Value{Type: TypeInt32Array, UnsafePtr: unsafe.Pointer(ptr)}
+		return Value{Type: TypeInt32Array, UnsafePtr: unsafe.Pointer(&emptyInt32Slice)}
 	}
 	compact := make([]int32, len(v))
 	for i, x := range v {
@@ -2045,13 +2091,120 @@ func IntActionFromInt64(fn func() int64) func() int {
 	return func() int { return int(fn()) }
 }
 
+// CountedIntIterator attaches nonnegative repetition metadata to a two-argument
+// iterator function of the form (f, x) -> f^count(x). Negative counts keep the
+// ordinary function unchanged so their divergence/error path stays intact.
+type countedIntIter struct {
+	count int64
+}
+
+type countedIntPartial struct {
+	count int64
+	inner Value
+}
+
+func CountedIntIterator(count int64, fn Value) Value {
+	if count < 0 {
+		return fn
+	}
+	return WithFunctionData(fn, countedIntIter{count: count})
+}
+
+// ComposeCountedIntIterators preserves exact counted-iteration metadata across
+// higher-order iterator composition (\f x -> m (n f) x) by (f^b)^a = f^(a*b)
+// whenever both operands are proven nonnegative counted iterators and a*b fits
+// in int64. Any non-counted operand or overflow retains fallback untouched.
+func ComposeCountedIntIterators(m, n, fallback Value) Value {
+	im, okm := FunctionData[countedIntIter](m)
+	if !okm || im.count < 0 {
+		return fallback
+	}
+	in, okn := FunctionData[countedIntIter](n)
+	if !okn || in.count < 0 {
+		return fallback
+	}
+	if im.count == 0 || in.count == 0 {
+		return CountedIntIterator(0, fallback)
+	}
+	if in.count <= math.MaxInt64/im.count {
+		return CountedIntIterator(im.count*in.count, fallback)
+	}
+	return fallback
+}
+
+func makeCountedIntPartial(count int64, fn Value) Value {
+	if count > 0 {
+		if inner, ok := FunctionData[countedIntPartial](fn); ok && inner.count >= 0 {
+			if inner.count == 0 {
+				count = 0
+				fn = inner.inner
+			} else if inner.count <= math.MaxInt64/count {
+				count *= inner.count
+				fn = inner.inner
+			}
+		}
+	}
+	return WithFunctionData(
+		Func(func(x Value) Value { return Int(CountedIntApply(count, fn, x.IntVal)) }),
+		countedIntPartial{count: count, inner: fn},
+	)
+}
+
+// CountedIntApply evaluates callback^remaining(result) for remaining >= 0.
+// Nested counted-iterator partial applications flatten by (g^m)^n(x) = g^(n*m)(x)
+// when n >= 0, m >= 0 and n*m fits in int64, preserving invocation order,
+// side effects and panic points identically.
+func CountedIntApply(remaining int64, callback Value, result int64) int64 {
+	if remaining == 0 {
+		return result
+	}
+	for remaining > 0 {
+		partial, ok := FunctionData[countedIntPartial](callback)
+		if !ok || partial.count < 0 {
+			break
+		}
+		if partial.count == 0 {
+			return result
+		}
+		if partial.count > math.MaxInt64/remaining {
+			break
+		}
+		remaining *= partial.count
+		callback = partial.inner
+	}
+	if native, ok := FunctionData[func(int64) int64](callback); ok {
+		for ; remaining > 0; remaining-- {
+			result = native(result)
+		}
+		return result
+	}
+	if callback.Type == TypeFunctionData && callback.UnsafePtr != nil {
+		callback = (*functionData)(callback.UnsafePtr).function
+	}
+	if callback.Type == TypeFunc && callback.UnsafePtr != nil {
+		fn := *(*func(Value) Value)(unsafe.Pointer(&callback.UnsafePtr))
+		for ; remaining > 0; remaining-- {
+			result = fn(Int(result)).IntVal
+		}
+		return result
+	}
+	for ; remaining > 0; remaining-- {
+		result = Apply(callback, Int(result)).IntVal
+	}
+	return result
+}
+
 func Apply(f Value, arg Value) Value {
 	if f.UnsafePtr == nil {
 		panic(fmt.Sprintf("PANIC in Apply: f.Type = %v, f.UnsafePtr is nil", f.Type))
 	}
 	switch f.Type {
 	case TypeFunctionData:
-		f = (*functionData)(f.UnsafePtr).function
+		fd := (*functionData)(f.UnsafePtr)
+		if iter, ok := fd.data.(countedIntIter); ok && iter.count >= 0 {
+			return makeCountedIntPartial(iter.count, arg)
+		}
+		f = fd.function
 		if f.Type != TypeFunc || f.UnsafePtr == nil {
 			return Apply(f, arg)
 		}
@@ -2099,7 +2252,11 @@ func Apply(f Value, arg Value) Value {
 func Apply2(f Value, arg1, arg2 Value) Value {
 	switch f.Type {
 	case TypeFunctionData:
-		return Apply2((*functionData)(f.UnsafePtr).function, arg1, arg2)
+		fd := (*functionData)(f.UnsafePtr)
+		if iter, ok := fd.data.(countedIntIter); ok && iter.count >= 0 {
+			return Int(CountedIntApply(iter.count, arg1, arg2.IntVal))
+		}
+		return Apply2(fd.function, arg1, arg2)
 	case TypeFunc2:
 		return (*(*func(Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2)
 	case TypeFunc3:

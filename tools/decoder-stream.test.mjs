@@ -169,7 +169,8 @@ function checkEmitted(result,testCode,constructorCode='',includePortTests=false)
  try {
   mkdirSync(join(work,'output/gopurs_runtime'),{recursive:true});mkdirSync(join(work,'record'));
   writeFileSync(join(work,'go.mod'),'module gopurs\n\ngo 1.22\n');
-  writeFileSync(join(work,'output/gopurs_runtime/runtime.go'),readFileSync(new URL('../runtime/runtime.go',import.meta.url)));
+  for (const rtFile of ['runtime.go', 'simd_asm.go', 'simd_generic.go', 'simd_arm64.s', 'simd_amd64.s'])
+   writeFileSync(join(work, `output/gopurs_runtime/${rtFile}`), readFileSync(new URL(`../runtime/${rtFile}`, import.meta.url)));
   for(const [name,path] of [['record','../../gopurs-argonaut-codecs/src/Data/Argonaut/Decode/Internal/Record.go'],
    ['parser','../../gopurs-argonaut-core/src/Data/Argonaut/Parser.go'],['text','../../gopurs-argonaut-codecs/src/Data/Argonaut/Decode/Parser.go']])
    writeFileSync(join(work,`record/${name}.go`),readFileSync(new URL(path,import.meta.url),'utf8').replace('package Parser','package Record'));

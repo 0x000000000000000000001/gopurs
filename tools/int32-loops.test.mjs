@@ -179,3 +179,93 @@ func TestLoopsAgainstJS(t *testing.T) {
     assert.match(result.stdout, /--- PASS: TestLoopsAgainstJS/);
     if (process.env.GOPURS_INT32_TEST_OUTPUT) writeFileSync(join(directory, 'go-test.log'), result.stdout + result.stderr);
 });
+
+test('Int32Loops promotes branch-temporary slots and hoists invariant Value array representations', t => {
+    const idx = variable('index');
+    const rem = variable('remaining');
+    const acc = variable('checksum');
+    const loopParams = ['remaining', 'index', 'checksum'].map(name => new Tuple(name, i64));
+    const stmts = [
+        new Go.GoIfElse(binary('==', rem, integer(0)), [new Go.GoReturn(acc)], []),
+        Go.rawGo('var __t2 int64'),
+        Go.rawGo('{'),
+        new Go.GoIfElse(binary('==', runtime('IntAdd', idx, integer(1)), variable('size')), [
+            new Go.GoMutate('__t2', integer(0)),
+            Go.rawGo('goto end_branch_2'),
+        ], []),
+        Go.rawGo('}'),
+        Go.rawGo('{'),
+        new Go.GoMutate('__t2', runtime('IntAdd', idx, integer(1))),
+        Go.rawGo('}'),
+        Go.rawGo('end_branch_2:'),
+        new Go.GoAssign('arr_alias', variable('source')),
+        new Go.GoMutate('remaining_loop', runtime('IntSub', rem, integer(1))),
+        new Go.GoMutate('index_loop', variable('__t2')),
+        new Go.GoMutate('checksum_loop', runtime('IntAdd', acc, new Go.GoSelector(runtime('ArrayAccess', variable('arr_alias'), cast('int', idx)), 'IntVal'))),
+        again,
+    ];
+    const code = printGoExpr(loop('again')(loopParams)(i64)(stmts));
+    assert.match(code, /index_loop := int32\(index_loop\)/, 'branch temporary slot must promote index to int32');
+    assert.match(code, /\(source\.Type\) == \(gopurs_runtime\.TypeInt32Array\)/, 'invariant Value array must hoist TypeInt32Array');
+    assert.match(code, /\(source\.Type\) == \(gopurs_runtime\.TypeIntArray\)/, 'invariant Value array must hoist TypeIntArray');
+    assert.match(code, /\(source\.Type\) == \(gopurs_runtime\.TypeArray\)/, 'invariant Value array must hoist TypeArray');
+    assert.match(code, /\(__gopurs_hoisted_source\)\[int\(/, 'hoisted loop must index typed slice directly');
+    assert.doesNotMatch(code, /IntAdd\(\(__gopurs_hoisted_source\)/, 'runtime index load must not wrap in IntAdd(..., 0)');
+
+    // Execute across TypeInt32Array, TypeIntArray, TypeArray, and non-array (count == 0) fallback.
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-int32-hoist-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'gopurs_runtime'), { recursive: true });
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), runtimeGoCode);
+    writeFileSync(join(directory, 'hoist_test.go'), `package hoist
+import ("testing"; "gopurs/output/gopurs_runtime")
+func hoistedSum(source gopurs_runtime.Value, size int64, remaining_loop int64, index_loop int64, checksum_loop int64) int64 {
+${code}
+}
+func refSum(vals []int64, count, start int64) int64 {
+    rem, idx, acc := count, start, int64(0)
+    sz := int64(len(vals))
+    for rem != 0 {
+        next := gopurs_runtime.IntAdd(idx, 1)
+        if next == sz { next = 0 }
+        acc = gopurs_runtime.IntAdd(acc, vals[idx])
+        idx = next
+        rem = gopurs_runtime.IntSub(rem, 1)
+    }
+    return acc
+}
+func TestHoistedArrayReads(t *testing.T) {
+    vals := []int64{0, 1, -1, 2147483647, -2147483648, 42, -99, 1234567}
+    i32 := make([]int32, len(vals))
+    boxed := make([]gopurs_runtime.Value, len(vals))
+    for i, v := range vals { i32[i] = int32(v); boxed[i] = gopurs_runtime.Int(v) }
+    reprs := []gopurs_runtime.Value{
+        gopurs_runtime.Int32Array(i32),
+        gopurs_runtime.IntArray(vals),
+        gopurs_runtime.Array(boxed),
+    }
+    for _, count := range []int64{0, 1, 7, 25, 1000} {
+        for _, start := range []int64{0, 3, 7} {
+            want := refSum(vals, count, start)
+            for k, src := range reprs {
+                if got := hoistedSum(src, int64(len(vals)), count, start, 0); got != want {
+                    t.Fatalf("repr=%d count=%d start=%d: got %d want %d", k, count, start, got, want)
+                }
+            }
+        }
+    }
+    // Non-array value with count == 0 must take fallback without dereferencing UnsafePtr.
+    if got := hoistedSum(gopurs_runtime.Int(99), 8, 0, 0, 77); got != 77 {
+        t.Fatalf("non-array zero-count fallback: got %d want 77", got)
+    }
+}
+`);
+    const res = spawnSync('go', ['test', '-race', '-count=1', '-v', '.'], {
+        cwd: directory, encoding: 'utf8', timeout: 60_000,
+        env: { ...process.env, GOWORK: 'off' },
+    });
+    assert.ifError(res.error);
+    assert.equal(res.status, 0, res.stdout + res.stderr);
+    assert.match(res.stdout, /--- PASS: TestHoistedArrayReads/);
+});

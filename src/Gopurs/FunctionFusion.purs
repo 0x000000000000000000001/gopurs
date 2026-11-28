@@ -1,4 +1,9 @@
-module Gopurs.FunctionFusion (optimizeFunctionProducers) where
+module Gopurs.FunctionFusion
+  ( optimizeFunctionProducers
+  , iteratorWorkerGuard
+  , countedWorkerCallCount
+  , countedCompositionOperands
+  ) where
 
 import Prelude hiding (one)
 
@@ -6,13 +11,24 @@ import Control.Alternative (guard)
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
 import Data.Foldable (foldl)
+import Data.Map as Map
 import Data.Maybe (Maybe(..))
+import Data.Newtype (unwrap)
 import Data.Set (Set)
 import Data.Set as Set
+import Data.String as String
+import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..), snd)
+import Gopurs.CallAnalysis (collectGoSpine, getGoSpineArgs)
+import Gopurs.ExprAnalysis (unwrapTcoExpr)
+import Gopurs.ExprContext (ExprContext)
+import Gopurs.GoAst (GoExpr(..), GoType(..), sanitizeName)
+import Gopurs.GoFunctions (Parameters)
 import Gopurs.WorkerNames as WorkerNames
+import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 import PureScript.Backend.Optimizer.Convert (BackendBindingGroup, BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), ModuleName, Qualified(..))
+import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Abs, App, Branch, Let, Lit, Local, PrimOp, Typed, Var), Level(..), Pair(..))
 import PureScript.Backend.Optimizer.Syntax as Syn
@@ -259,3 +275,110 @@ literal :: Int -> NeutralExpr -> Boolean
 literal value expr = case at Int expr of
   Just (Lit (LitInt found)) -> found == value
   _ -> false
+
+tcoLocalName :: TcoExpr -> Maybe String
+tcoLocalName expr = case unwrapTcoExpr expr of
+  Syn.Local ident level -> Just (localId ident level)
+  _ -> Nothing
+
+tcoIntLiteral :: Int -> TcoExpr -> Boolean
+tcoIntLiteral expected expr = case unwrapTcoExpr expr of
+  Syn.Lit (LitInt found) -> found == expected
+  _ -> false
+
+-- Structural recognition of the counted-function iterator worker so
+-- ModuleWorkers can dispatch nonnegative counts through CountedIntApply while
+-- keeping the original loop intact for negative counts.
+iteratorWorkerGuard :: String -> Parameters -> GoType -> TcoExpr -> Maybe GoExpr
+iteratorWorkerGuard workerIdent params resultType body = do
+  guard (resultType == TypeInt64)
+  { rem, cb, res } <- case params of
+    [ Tuple rem TypeInt64, Tuple cb TypeValue, Tuple res TypeInt64 ]
+      | rem /= cb && rem /= res && cb /= res -> Just { rem, cb, res }
+    _ -> Nothing
+  { cond, base, step } <- case unwrapTcoExpr body of
+    Syn.Branch branches step -> case NEA.toArray branches of
+      [ Pair cond base ] -> Just { cond, base, step }
+      _ -> Nothing
+    _ -> Nothing
+  guard (tcoLocalName base == Just res)
+  guard case unwrapTcoExpr cond of
+    Syn.PrimOp (Syn.Op2 (Syn.OpIntOrd Syn.OpEq) left right) ->
+      (tcoLocalName left == Just rem && tcoIntLiteral 0 right)
+        || (tcoIntLiteral 0 left && tcoLocalName right == Just rem)
+    _ -> false
+  let Tuple head spine = collectGoSpine step
+      args = getGoSpineArgs spine
+  guard case unwrapTcoExpr head of
+    Syn.Var (Qualified _ (Ident target)) -> sanitizeName target == workerIdent
+    _ -> false
+  { dec, cbArg, nextRes } <- case args of
+    [ dec, cbArg, nextRes ] -> Just { dec, cbArg, nextRes }
+    _ -> Nothing
+  guard (tcoLocalName cbArg == Just cb)
+  guard case unwrapTcoExpr dec of
+    Syn.PrimOp (Syn.Op2 (Syn.OpIntNum Syn.OpSubtract) left right) ->
+      tcoLocalName left == Just rem && tcoIntLiteral 1 right
+    _ -> false
+  let Tuple cbHead cbSpine = collectGoSpine nextRes
+      cbArgs = getGoSpineArgs cbSpine
+  guard (tcoLocalName cbHead == Just cb)
+  guard (case cbArgs of
+    [ arg ] -> tcoLocalName arg == Just res
+    _ -> false)
+  let remVar = GoVar (rem <> "_loop")
+      cbVar = GoVar (cb <> "_loop")
+      resVar = GoVar (res <> "_loop")
+  pure $ GoIfElse
+    (GoBinOp ">=" remVar (GoCall (GoVar "int64") [ GoInt 0 ]))
+    [ GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "CountedIntApply") [ remVar, cbVar, resVar ]) ]
+    []
+
+-- Recognize the two-argument closure emitted by compactProducer around a
+-- module-local counted iterator worker so CountedIntIterator can attach its
+-- repetition metadata for partial applications and nested compositions.
+countedWorkerCallCount :: ExprContext -> Array String -> TcoExpr -> Maybe GoExpr
+countedWorkerCallCount context params body = do
+  Tuple fParam xParam <- two params
+  let Tuple head spine = collectGoSpine body
+      args = getGoSpineArgs spine
+  Qualified mbMod (Ident workerName) <- case unwrapTcoExpr head of
+    Syn.Var qualified -> Just qualified
+    _ -> Nothing
+  let isLocal = mbMod == Nothing
+        || map (String.replaceAll (Pattern ".") (Replacement "_") <<< unwrap) mbMod == Just context.modNameStr
+  guard isLocal
+  guard (String.contains (Pattern "__gopurs_counted_function_") workerName)
+  info <- Map.lookup (sanitizeName workerName) context.moduleFunctions
+  guard (info.fArgs == [ TypeInt64, TypeValue, TypeInt64 ] && info.fRet == TypeInt64)
+  { countExpr, fArg, xArg } <- case args of
+    [ countExpr, fArg, xArg ] -> Just { countExpr, fArg, xArg }
+    _ -> Nothing
+  guard (tcoLocalName fArg == Just fParam && tcoLocalName xArg == Just xParam)
+  countKey <- tcoLocalName countExpr
+  binding <- Map.lookup countKey context.bound
+  guard (binding.goType == TypeInt64 && binding.name /= fParam && binding.name /= xParam)
+  pure (GoVar binding.name)
+
+-- Recognize higher-order iterator composition (\f x -> m (n f) x) where m and
+-- n are already-evaluated local values. ComposeCountedIntIterators checks at
+-- runtime whether both carry nonnegative counted-iterator metadata and falls
+-- back to the original closure otherwise.
+countedCompositionOperands :: ExprContext -> Array String -> TcoExpr -> Maybe (Tuple GoExpr GoExpr)
+countedCompositionOperands context params body = do
+  Tuple fParam xParam <- two params
+  let Tuple outerHead outerSpine = collectGoSpine body
+      outerArgs = getGoSpineArgs outerSpine
+  mKey <- tcoLocalName outerHead
+  mBinding <- Map.lookup mKey context.bound
+  guard (mBinding.goType == TypeValue && mBinding.name /= fParam && mBinding.name /= xParam)
+  Tuple innerApp xArg <- two outerArgs
+  guard (tcoLocalName xArg == Just xParam)
+  let Tuple innerHead innerSpine = collectGoSpine innerApp
+      innerArgs = getGoSpineArgs innerSpine
+  nKey <- tcoLocalName innerHead
+  nBinding <- Map.lookup nKey context.bound
+  guard (nBinding.goType == TypeValue && nBinding.name /= fParam && nBinding.name /= xParam)
+  fArg <- one innerArgs
+  guard (tcoLocalName fArg == Just fParam)
+  pure (Tuple (GoVar mBinding.name) (GoVar nBinding.name))
