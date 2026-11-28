@@ -158,3 +158,23 @@ Objectif : passer `string/cp-take-unicode-1500` (`1.87x`), `string/cp-length-uni
 | Rounds 2–3 (pairé 37/37) | `1.91 ms` (`0.22x`) | `0.87x` | `0.85x` | `2.43x` | `0.40x` | `0.87x` | `RBTree` `4.36×` (`0.22x/C`), `AST` `2.66×` (`0.11x/C`), `split` `9.8×` (`0.08x/C`), `indexOf-hit` `1.7×` (`0.87x/JS`, 37/37 `< 1x/JS`) |
 | Round 4 (pairé 37/37) | `1.65 ms` (`0.19x`) | `0.85x` | `0.75x` | `2.57x` | `0.39x` | `0.87x` | `RBTree` `1.64 ms` (`0.19x/C`), `filter` `1.34 μs` (`0.29x/C`), `cp-take` `0.45 μs` (`0.70x/C`) |
 | **Campagne officielle finale (`measure.py`, 3 proc., `gopurs-native`, 37/37)** | **`1.62 ms` (`0.18x`)** | **`0.85x`** | **`0.76x`** | **`2.42x`** | **`0.39x`** | **`0.87x`** | **34 Stable** (`0.0039 ms`, `0.061x/C`, `μ=0.89x`, `Q₂=0.83x`) + **3 WIP** (`1.61 ms`, `0.19x/C`, `μ=0.40x`, `Q₂=0.30x`, `Q₄=0.70x`) ; 37/37 oracles OK |
+| **Audit de généralité + référence C11 idiomatique (`measure.py`, 3 proc., C `3.69 ms`)** | **`1.56 ms` (`0.42x`)** | **`0.90x`** | **`0.93x`** | **`2.32x`** | **`0.47x`** | **`0.84x`** | Suppression `NestedRecursion` (`m==1` jump-threading) et `TailAddLoops.hot`/`LinearOrder2` ($O(\phi^n)\to O(n)$), remplacés par `Int32Recursion.purs` général (`Ackermann` `15.73 μs = 0.96x/C`, `Fib` `0.112 μs = 1.43x/C`). C11 durci (sans SIMD manuel) : `RBTree` itératif `3.62 ms` (`-58%`), `Primes` impair `0.074 μs` (`-35%`), `array/sort` 0-alloc run `2.85 μs` (`-39%`). **33 Stable** + **4 WIP** (`Fibonacci`, `Red-Black Tree`, `array/filter-10000`, `string/cp-take-unicode-1500`). |
+
+---
+
+## Phase 6 — Audit de généralité & durcissement de la référence C11
+
+- [x] **6.1 — Suppression des raccourcis spécifiques au benchmark dans `gopurs`**
+  - Supprimé `src/Gopurs/NestedRecursion.purs` (jump-threading `a + stepA == c0` ciblant Ackermann) et `TailAddLoops.hot`/`extractLinearOrder2` (conversion $O(\phi^n) \to O(n)$ sur Fibonacci).
+  - Remplacé par `src/Gopurs/Int32Recursion.purs` : spécialisation générale en worker `int32` natif pour toute fonction récursive pure `Int -> ... -> Int` contenant au moins un appel non-terminal (TCO `for {}` sur appels terminaux, accumulateur `int32` sur addition droite en position terminale, garde unique d'entrée `int64(int32(p)) == p` avec repli `int64` à froid).
+  - Tests ajoutés (`tools/int32-recursion.test.mjs` : Fib, Ackermann, Tak 3-args, McCarthy 91, `Let`, opérations bit-à-bit, débordements `Int32`, rejets `OpMultiply`/`zshr`/appels externes) + bootstrap complet `npm run build:native` (570 modules) + 97/97 tests verts.
+- [x] **6.2 — Durcissement C11 idiomatique portable (`altbak.pub`, sans intrinsics SIMD)**
+  - `tmp/bench_native.c` (`RBTree`) : insertion itérative avec pile de chemin `path[64]`, sortie rapide sur parent `BLACK`, rotations Okasaki sur place, repli récursif si `depth == 64` (arène toujours allouée/libérée dans `runRBTree`). `8708 μs → 3622.5 μs` (`-58%`).
+  - `tmp/bench_native.c` (`Primes`) : crible d'Ératosthène sur nombres impairs uniquement. `0.114 μs → 0.074 μs` (`-35%`).
+  - `tmp/c-library/arrays.c` (`array_sort`) : détection d'un run monotone unique croissant ou décroissant avant allocation (0 allocation). `4.66 μs → 2.85 μs` (`-39%`).
+  - Validé `-std=c11 -O3 -Wall -Wextra -Werror` + `-fsanitize=address,undefined` (`--verify` 14+23 oracles, 257 tailles d'arbres, `verify-arrays` 2500 variantes, `test-records` 4129 checks, `test-strings` 5424 checks).
+- [x] **6.3 — Campagnes officielles 3 processus & rafraîchissement global `altbak.pub/README.md`**
+  - Campagnes archivées dans `altbak.pub/var/benchmark/c-idiomatic-20261128/` et `altbak.pub/var/benchmark/go-general-20261128/`.
+  - Toutes les 13 tables de `altbak.pub/README.md` recalculées sur la nouvelle référence C11 (auto-test aller-retour 0 diff avant mise à jour, `test/benchmark-ratio-statistics.py` 9/9 OK), note explicite sur la référence C11 portable sans SIMD manuel.
+  - Go Release : **33 Stable** (`0.019 ms`, `0.30x/C`, `μ/C = 0.93x`, `Q₂/C = 0.96x`, `Q₄/C = 2.32x`, `G/C = 0.46x`, `Q₄/JS = 0.84x`) + **4 WIP** (`Fibonacci` `1.43x/C`, `Red-Black Tree` `0.43x/C`, `array/filter-10000` `0.29x/C`, `string/cp-take-unicode-1500` `0.65x/C` ; Total WIP `1.55 ms`, `0.43x/C`).
+
