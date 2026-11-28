@@ -45,6 +45,7 @@ type FFIDecl struct {
 	ValueType     *TypeNode   `json:"valueType,omitempty"`
 	Receiver      *TypeNode   `json:"receiver,omitempty"`
 	Signature     string      `json:"signature,omitempty"`
-	Line          int         `json:"line"`
-	Column        int         `json:"column"`
+	Line                   int         `json:"line"`
+	Column                 int         `json:"column"`
+	StatelessEffectFactory bool        `json:"statelessEffectFactory,omitempty"`
 }

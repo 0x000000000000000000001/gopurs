@@ -5,6 +5,8 @@ import Data.Array as Array
 import Data.Foldable (any)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
+import Data.String as String
+import Data.String.Pattern (Pattern(..))
 import Data.Tuple (Tuple(..), fst, snd)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
@@ -12,15 +14,18 @@ import Gopurs.ExprAnalysis (extractExprFuncType, functionResultAfter, getExprTyp
 import Gopurs.ExprContext (ExprContext, TranslateExpr, bindParameters, flattenStmts)
 import Gopurs.ArrayIndexedFold as ArrayIndexedFold
 import Gopurs.CallAnalysis (collectGoSpine, getGoSpineArgs)
-import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..))
+import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), isPureConstantExpr, rawGo)
 import Gopurs.GoSymbol (GoReference(..), generated, referenceName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
-import Gopurs.GoFunctions (Parameters, curriedFunction, iterationBindings, loopParameters, namedParameters)
+import Gopurs.GoFunctions (Parameters, curriedFunction, loopParameters, namedParameters)
+import Gopurs.Printer (printGoExpr)
 import Gopurs.Int32Loops as Int32Loops
 import Gopurs.AffineLoops as AffineLoops
+import Gopurs.FilteredSumLoops as FilteredSumLoops
 import Gopurs.RecordAffineLoops as RecordAffineLoops
 import Gopurs.ArraySnoc as ArraySnoc
 import Gopurs.ListFilter as ListFilter
+import Gopurs.NestedRecursion as NestedRecursion
 import Gopurs.TailAddLoops as TailAddLoops
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 
@@ -74,10 +79,14 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
           returning = if boxed then boxGoExpr codegenStateRef modNameStr result.expr result.exprType
             else coerceGoExpr codegenStateRef modNameStr result.expr result.exprType resultType
           statements = flattenStmts result.stmts <> [ GoReturn returning ]
+          workerName = "Call_" <> modNameStr <> "_" <> fn.ident
+          guardedStatements = if isSelfRecursive && not boxed then
+            guardNullableSelfCalls workerName params statements
+            else statements
         in if isSelfRecursive then
           AffineLoops.wrap translate workerContext (AffineLoops.globalTarget modNameStr fn.ident) params resultType fn.body
-            (Int32Loops.loop fn.ident params resultType statements)
-          else GoBlock (iterationBindings params <> statements)
+            (Int32Loops.loop fn.ident params resultType guardedStatements)
+          else GoBlock (flattenTailReturn statements)
     value = if Array.null fn.args then
       -- A zero-argument abstraction still defers its whole body until called.
       curriedFunction [ Tuple "_" TypeValue ] TypeValue
@@ -85,20 +94,45 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
       else
         let
           workerName = "Call_" <> modNameStr <> "_" <> fn.ident
-          coldIdent = "__gopurs_affine_cold_" <> fn.ident
-          coldName = "Call_" <> modNameStr <> "_" <> coldIdent
-          reserved = Map.member coldIdent moduleFunctions
-            || any (\signature -> referenceName signature.reference == coldName) context.metadata.ffiFunctions
-          coldCall = GoCall (GoRef (SymbolReference (generated modNameStr coldName)))
-            (map (GoVar <<< fst) (loopParameters params))
-          hot = if isSelfRecursive && not reserved then
-            RecordAffineLoops.hot (AffineLoops.globalTarget modNameStr fn.ident) params resultType fn.body coldCall
+          target = AffineLoops.globalTarget modNameStr fn.ident
+          isReserved ident name = Map.member ident moduleFunctions
+            || any (\signature -> referenceName signature.reference == name) context.metadata.ffiFunctions
+          coldArgs = map (GoVar <<< fst) (loopParameters params)
+          makeColdCall name = GoCall (GoRef (SymbolReference (generated modNameStr name))) coldArgs
+          recordColdIdent = "__gopurs_affine_cold_" <> fn.ident
+          recordColdName = "Call_" <> modNameStr <> "_" <> recordColdIdent
+          scalarColdIdent = "__gopurs_cold_affine_" <> fn.ident
+          scalarColdName = "Call_" <> modNameStr <> "_" <> scalarColdIdent
+          tailAddColdIdent = "__gopurs_cold_tail_add_" <> fn.ident
+          tailAddColdName = "Call_" <> modNameStr <> "_" <> tailAddColdIdent
+          nestedColdIdent = "__gopurs_cold_nested_" <> fn.ident
+          nestedColdName = "Call_" <> modNameStr <> "_" <> nestedColdIdent
+          nestedI32Ident = "__gopurs_i32_" <> fn.ident
+          nestedI32Name = "Call_" <> modNameStr <> "_" <> nestedI32Ident
+          hot = if isSelfRecursive then
+            case (if isReserved recordColdIdent recordColdName then Nothing
+                  else RecordAffineLoops.hot target params resultType fn.body (makeColdCall recordColdName)) of
+              Just fast -> Just { coldName: recordColdName, fast, extra: [] }
+              Nothing -> case (if isReserved scalarColdIdent scalarColdName then Nothing
+                else case AffineLoops.hot translate workerContext target params resultType fn.body (makeColdCall scalarColdName) of
+                  Just fast -> Just { coldName: scalarColdName, fast, extra: [] }
+                  Nothing -> map (\fast -> { coldName: scalarColdName, fast, extra: [] })
+                    (FilteredSumLoops.hot target params resultType fn.body (makeColdCall scalarColdName))) of
+                Just found -> Just found
+                Nothing -> case (if isReserved tailAddColdIdent tailAddColdName then Nothing
+                  else map (\fast -> { coldName: tailAddColdName, fast, extra: [] })
+                    (TailAddLoops.hot translate workerContext fn.ident params resultType fn.body (makeColdCall tailAddColdName))) of
+                  Just found -> Just found
+                  Nothing -> if isReserved nestedColdIdent nestedColdName || isReserved nestedI32Ident nestedI32Name then Nothing
+                    else map (\p -> { coldName: nestedColdName, fast: p.fast, extra: [ p.worker ] })
+                      (NestedRecursion.plan modNameStr fn.ident params resultType fn.body (generated modNameStr nestedI32Name) (makeColdCall nestedColdName))
             else Nothing
           original = body false
+          workerParams = if isSelfRecursive then loopParameters params else params
           declare name workerBody = GoFunctionDecl
-            { name: generated modNameStr name, params: loopParameters params, result: resultType, body: workerBody }
+            { name: generated modNameStr name, params: workerParams, result: resultType, body: workerBody }
           workers = case hot of
-            Just fast -> [ declare coldName original, declare workerName fast ]
+            Just split -> split.extra <> [ declare split.coldName original, declare workerName split.fast ]
             Nothing -> [ declare workerName original ]
         in
           unsafePerformEffect do
@@ -108,6 +142,86 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
               Nothing -> boxedWrapper context fn.ident params resultType)
   in
     GoCachedValue { identifier: generated modNameStr (modNameStr <> "_" <> fn.ident), expression: value, goType: TypeValue }
+
+-- When a 1-argument self-recursive worker over a nullable pointer ADT returns
+-- a pure scalar constant immediately on `param == nil`, guard direct self-calls
+-- on pure pointer reads (`v.Fi` or local vars) with a local nil check so empty
+-- leaf children skip function-call and stack-check overhead entirely.
+guardNullableSelfCalls :: String -> Parameters -> Array GoExpr -> Array GoExpr
+guardNullableSelfCalls workerName params stmts = case params of
+  [ Tuple paramName (TypeStructPointer _) ] ->
+    case findNullConstReturn paramName stmts of
+      Just constVal -> rewriteStmts constVal stmts
+      Nothing -> stmts
+  _ -> stmts
+  where
+  findNullConstReturn paramName xs = do
+    decl <- Array.index xs 0
+    open <- Array.index xs 1
+    firstIf <- Array.index xs 2
+    endLabel <- Array.index xs (Array.length xs - 2)
+    ret <- Array.last xs
+    tmpVar <- case ret of
+      GoReturn (GoVar v) -> Just v
+      _ -> Nothing
+    label <- case endLabel of
+      GoRaw { text } -> String.stripSuffix (Pattern ":") text
+      _ -> Nothing
+    case decl, open, firstIf of
+      GoRaw { text: declText }, GoRaw { text: "{" }, GoIfElse cond [ GoMutate lhs constVal, GoRaw { text: gotoText } ] []
+        | String.contains (Pattern ("var " <> tmpVar <> " ")) declText
+        , lhs == tmpVar
+        , gotoText == "goto " <> label
+        , isNullParamCond paramName cond
+        , isPureConstantExpr constVal ->
+            Just constVal
+      _, _, _ -> Nothing
+
+  isNullParamCond paramName = case _ of
+    GoRaw { text } -> text == "(" <> paramName <> " == nil)"
+    GoBinOp "==" (GoVar v) (GoRaw { text: "nil" }) -> v == paramName
+    _ -> false
+
+  isPureCheapPtrArg = case _ of
+    GoVar _ -> true
+    GoStructAccess (GoVar _) _ -> true
+    GoConstructorAccess (GoVar _) _ _ _ true -> true
+    _ -> false
+
+  rewriteStmts constVal = Array.concatMap (rewriteStmt constVal)
+
+  rewriteStmt constVal = case _ of
+    GoAssign lhs (GoCall (GoRef (SymbolReference sym)) [ arg ])
+      | sym.name == workerName && isPureCheapPtrArg arg ->
+          let tmp = "__nc_" <> lhs
+          in
+            [ GoAssign lhs constVal
+            , GoIfElse (rawGo (tmp <> " := " <> printGoExpr arg <> "; " <> tmp <> " != nil"))
+                [ GoMutate lhs (GoCall (GoRef (SymbolReference sym)) [ GoVar tmp ]) ] []
+            ]
+    GoIfElse cond t f -> [ GoIfElse cond (rewriteStmts constVal t) (rewriteStmts constVal f) ]
+    GoBlock inner -> [ GoBlock (rewriteStmts constVal inner) ]
+    other -> [ other ]
+
+-- Unwrap a trailing zero-argument IIFE `return func() T { stmts }()` in a
+-- non-recursive worker when its statements introduce no local bindings or loop
+-- labels. Go's inliner penalizes functions containing closure literals (+57
+-- cost), so unwrapping restores direct inlining of tiny guarded fast paths.
+flattenTailReturn :: Array GoExpr -> Array GoExpr
+flattenTailReturn stmts = case Array.unsnoc stmts of
+  Just { init, last: GoReturn (GoCall (GoFuncBlock [] innerStmts _) []) }
+    | Array.all isDeclFreeStmt innerStmts -> init <> innerStmts
+  Just { init, last: GoReturn (GoCall (GoFuncLit [] innerStmts innerRet _) []) }
+    | Array.all isDeclFreeStmt innerStmts -> init <> innerStmts <> [ GoReturn innerRet ]
+  _ -> stmts
+  where
+  isDeclFreeStmt = case _ of
+    GoReturn _ -> true
+    GoMutate _ _ -> true
+    GoRaw { text } -> not (String.contains (Pattern ":=") text || String.contains (Pattern "var ") text)
+    GoIfElse _ t f -> Array.all isDeclFreeStmt t && Array.all isDeclFreeStmt f
+    GoBlock inner -> Array.all isDeclFreeStmt inner
+    _ -> false
 
 -- A scalar indexed fold can read either representation directly. Keep the
 -- public Value wrapper on its original Value buffer instead of first copying

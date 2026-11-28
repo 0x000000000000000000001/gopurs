@@ -3,29 +3,37 @@ module Gopurs.LocalWorkers
   , signature
   , needsWrapper
   , emit
+  , emitZeroSeed
   ) where
 
 import Prelude
 import Data.Array as Array
-import Data.Foldable (any)
+import Data.Foldable (any, foldMap, foldl)
+import Data.Map as Map
 import Data.Maybe (Maybe(..))
+import Data.Set (Set)
+import Data.Set as Set
 import Data.String as String
 import Data.String.Pattern (Pattern(..))
-import Data.Tuple (Tuple(..), snd)
+import Data.Tuple (Tuple(..), fst, snd)
+import Effect.Ref as Ref
+import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.CallAnalysis (collectGoSpine, getGoSpineArgs)
 import Gopurs.ExprAnalysis (extractExprFuncType, getExprType, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, flattenStmts)
-import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, rawGo)
-import Gopurs.GoSymbol (GoReference(..))
+import Gopurs.FilteredSumLoops as FilteredSumLoops
+import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), goTypeToStr, rawGo)
+import Gopurs.GoSymbol (GoReference(..), generated)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoFunctions (Parameters, curriedFunction, iterationBindings, loopParameters, namedParameters)
 import Gopurs.Int32Loops as Int32Loops
 import Gopurs.AffineLoops as AffineLoops
 import Gopurs.GoTypes (exprTypeToGoType)
-import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
+import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
+import PureScript.Backend.Optimizer.CoreFn (Literal(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
-import PureScript.Backend.Optimizer.Syntax (BackendSyntax(App, Local))
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..))
 
 -- Local workers use annotation slots directly. Module workers have a separate
 -- ABI policy, including read-only record projections and native sum results.
@@ -79,15 +87,64 @@ onlyCurriedApplications expression = case unwrapTcoExpr expression of
 -- When a standalone worker does not reference itself (e.g. non-recursive or
 -- TCO-rewritten loop), initializing `var name func(...) R = func(...) R { ... }`
 -- lets Go statically devirtualize and inline direct calls.
-emit :: TranslateExpr -> ExprContext -> String -> Parameters -> Boolean -> Boolean -> Maybe TcoExpr -> ExprResult -> { declarations :: Array GoExpr, assignments :: Array GoExpr }
+emit :: TranslateExpr -> ExprContext -> String -> Parameters -> Boolean -> Boolean -> Maybe TcoExpr -> ExprResult -> { declarations :: Array GoExpr, assignments :: Array GoExpr, hoisted :: Maybe GoReference }
 emit translate context@{ codegenStateRef, modNameStr, bound } name params keepWrapper standalone loopBody result =
   let
     nativeName = workerName modNameStr name
     resultType = result.exprType
     body = flattenStmts result.stmts <> [ GoReturn result.expr ]
+    looped = Int32Loops.loop name params resultType body
+    closedLoop source =
+      let
+        allowed = Set.fromFoldable (map fst params)
+        free = freeLocalsIn allowed source
+        isSelfKey k = case Map.lookup k bound of
+          Just b -> b.name == name
+          Nothing -> false
+      in
+        Array.all (\k -> isSelfKey k || Set.member k allowed) (Array.fromFoldable free)
+    hoistedHot = case loopBody of
+      Just source | standalone && not keepWrapper && closedLoop source ->
+        let
+          selfTarget = AffineLoops.localTarget bound name
+          coldArgs = map (GoVar <<< fst) (loopParameters params)
+          makeSplit hotFn =
+            let
+              coldBody = AffineLoops.wrap translate context selfTarget params resultType source looped
+              coldDecl coldName = GoFunctionDecl
+                { name: generated modNameStr coldName
+                , params: loopParameters params
+                , result: resultType
+                , body: coldBody
+                }
+              hotDecl hotName fastBody = GoFunctionDecl
+                { name: generated modNameStr hotName
+                , params: loopParameters params
+                , result: resultType
+                , body: fastBody
+                }
+            in
+              unsafePerformEffect do
+                state <- Ref.read codegenStateRef
+                let
+                  coldName = "Call_" <> modNameStr <> "___gopurs_cold_local_" <> show state.globalId
+                  hotName = "Call_" <> modNameStr <> "___gopurs_hot_local_" <> show (state.globalId + 1)
+                  coldCall = GoCall (GoRef (SymbolReference (generated modNameStr coldName))) coldArgs
+                case hotFn selfTarget params resultType source coldCall of
+                  Just fastBody -> do
+                    Ref.modify_ (\current -> current
+                      { globalId = current.globalId + 2
+                      , declarations = current.declarations <> [ coldDecl coldName, hotDecl hotName fastBody ]
+                      }) codegenStateRef
+                    pure (Just (SymbolReference (generated modNameStr hotName)))
+                  Nothing -> pure Nothing
+        in
+          case makeSplit FilteredSumLoops.hot of
+            Just ref -> Just ref
+            Nothing -> makeSplit (AffineLoops.hot translate context)
+      _ -> Nothing
     functionBody = case loopBody of
-      Just source -> AffineLoops.wrap translate context (AffineLoops.localTarget bound name) params resultType source
-        (Int32Loops.loop name params resultType body)
+      Just source -> AffineLoops.wrap translate context (AffineLoops.localTarget bound name) params resultType source looped
       Nothing -> GoBlock (iterationBindings params <> body)
     funcTypeStr = "func(" <> String.joinWith ", " (map (goTypeToStr <<< snd) params) <> ") " <> goTypeToStr resultType
     funcLiteral = GoFuncBlock (loopParameters params) [ functionBody ] resultType
@@ -98,15 +155,17 @@ emit translate context@{ codegenStateRef, modNameStr, bound } name params keepWr
         , rawGo ("_ = " <> name)
         ]
       else []
-    declarations =
-      (if inlineInit then
-        [ GoMutate ("var " <> nativeName <> " " <> funcTypeStr) funcLiteral
-        , rawGo ("_ = " <> nativeName)
-        ]
-      else
-        [ rawGo ("var " <> nativeName <> " " <> funcTypeStr)
-        , rawGo ("_ = " <> nativeName)
-        ]) <> wrapperDeclarations
+    declarations = case hoistedHot of
+      Just _ -> []
+      Nothing ->
+        (if inlineInit then
+          [ GoMutate ("var " <> nativeName <> " " <> funcTypeStr) funcLiteral
+          , rawGo ("_ = " <> nativeName)
+          ]
+        else
+          [ rawGo ("var " <> nativeName <> " " <> funcTypeStr)
+          , rawGo ("_ = " <> nativeName)
+          ]) <> wrapperDeclarations
     call = GoCall (GoVar nativeName) (map (\(Tuple param ty) ->
       coerceGoExpr codegenStateRef modNameStr (GoVar (param <> "_loop_val")) TypeValue ty) params)
     boxedResult = boxGoExpr codegenStateRef modNameStr call resultType
@@ -115,11 +174,93 @@ emit translate context@{ codegenStateRef, modNameStr, bound } name params keepWr
       else Array.foldr (\(Tuple param _) inner ->
         GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
           [ GoFuncLit [ Tuple (param <> "_loop_val") TypeValue ] [] inner TypeValue ]) boxedResult params
-    assignments =
-      (if inlineInit then [] else [ GoMutate nativeName funcLiteral ])
-        <> if keepWrapper then [ GoMutate name wrapper ] else []
+    assignments = case hoistedHot of
+      Just _ -> []
+      Nothing ->
+        (if inlineInit then [] else [ GoMutate nativeName funcLiteral ])
+          <> if keepWrapper then [ GoMutate name wrapper ] else []
   in
-    { declarations, assignments }
+    { declarations, assignments, hoisted: hoistedHot }
+
+-- Specialize a standalone closed FilteredSumLoops local worker when the entire
+-- outer LetRec body is a single saturated call passing literal 0 as the seed.
+-- Emits a 1-arg cold loop helper and returns an inlineable fast block (Go
+-- inline cost <= 79 when unwrapped by ModuleWorkers.flattenTailReturn).
+emitZeroSeed
+  :: TranslateExpr
+  -> ExprContext
+  -> String
+  -> String
+  -> Parameters
+  -> TcoExpr
+  -> TcoExpr
+  -> ExprResult
+  -> Maybe { coldRef :: GoReference, counterArg :: TcoExpr }
+emitZeroSeed translate context@{ codegenStateRef, modNameStr, bound } oldName newName params loopBody outerBody result =
+  let
+    resultType = result.exprType
+    allowed = Set.fromFoldable (map fst params)
+    free = freeLocalsIn allowed loopBody
+    isSelfKey k = case Map.lookup k bound of
+      Just b -> b.name == newName
+      Nothing -> false
+    isClosed = Array.all (\k -> isSelfKey k || Set.member k allowed) (Array.fromFoldable free)
+    callArgs = case unwrapTcoExpr outerBody of
+      App _ _ ->
+        let Tuple fn spine = collectGoSpine outerBody
+        in case unwrapTcoExpr fn of
+          Local ident level | localId ident level == oldName -> Just (getGoSpineArgs spine)
+          _ -> Nothing
+      UncurriedApp fn args -> case unwrapTcoExpr fn of
+        Local ident level | localId ident level == oldName -> Just args
+        _ -> Nothing
+      _ -> Nothing
+  in
+    if not isClosed then Nothing
+    else case callArgs of
+      Just [ a0, a1 ] ->
+        let
+          selfTarget = AffineLoops.localTarget bound newName
+          body = flattenStmts result.stmts <> [ GoReturn result.expr ]
+          looped = Int32Loops.loop newName params resultType body
+          coldInner = AffineLoops.wrap translate context selfTarget params resultType loopBody looped
+        in
+          case FilteredSumLoops.hotZero selfTarget params resultType loopBody of
+            Just hz ->
+              let
+                accArg = if hz.accIdx == 0 then a0 else a1
+                counterArg = if hz.counterIdx == 0 then a0 else a1
+                accIsZero = case unwrapTcoExpr accArg of
+                  Lit (LitInt 0) -> true
+                  _ -> false
+                counterIsLocal = case unwrapTcoExpr counterArg of
+                  Local _ _ -> true
+                  _ -> false
+                counterMentionsSelf = Set.member oldName (freeLocalsIn Set.empty counterArg)
+              in
+                if accIsZero && counterIsLocal && not counterMentionsSelf then
+                  unsafePerformEffect do
+                    state <- Ref.read codegenStateRef
+                    let
+                      coldName = "Call_" <> modNameStr <> "___gopurs_cold_local_" <> show state.globalId
+                      coldDecl = GoFunctionDecl
+                        { name: generated modNameStr coldName
+                        , params: [ Tuple hz.counterParam TypeInt64 ]
+                        , result: resultType
+                        , body: GoBlock
+                            [ GoAssign hz.accParam (GoCall (GoVar "int64") [ GoInt 0 ])
+                            , rawGo ("_ = " <> hz.accParam)
+                            , coldInner
+                            ]
+                        }
+                    Ref.modify_ (\current -> current
+                      { globalId = current.globalId + 1
+                      , declarations = current.declarations <> [ coldDecl ]
+                      }) codegenStateRef
+                    pure (Just { coldRef: SymbolReference (generated modNameStr coldName), counterArg })
+                else Nothing
+            Nothing -> Nothing
+      _ -> Nothing
 
 mentionsName :: String -> GoExpr -> Boolean
 mentionsName target = go
@@ -168,3 +309,23 @@ mentionsName target = go
     GoFuncBlock _ stmts _ -> many stmts
     GoFuncLit _ stmts e _ -> many stmts || go e
     GoStructValue _ _ args -> many args
+
+freeLocalsIn :: Set String -> TcoExpr -> Set String
+freeLocalsIn bound (TcoExpr _ syntax) = case syntax of
+  Local ident level ->
+    let key = localId ident level
+    in if Set.member key bound then Set.empty else Set.singleton key
+  Let ident level val body ->
+    freeLocalsIn bound val <> freeLocalsIn (Set.insert (localId ident level) bound) body
+  EffectBind ident level val body ->
+    freeLocalsIn bound val <> freeLocalsIn (Set.insert (localId ident level) bound) body
+  Abs params body ->
+    freeLocalsIn (foldl (\acc (Tuple ident level) -> Set.insert (localId ident level) acc) bound params) body
+  UncurriedAbs params body ->
+    freeLocalsIn (foldl (\acc (Tuple ident level) -> Set.insert (localId ident level) acc) bound params) body
+  UncurriedEffectAbs params body ->
+    freeLocalsIn (foldl (\acc (Tuple ident level) -> Set.insert (localId ident level) acc) bound params) body
+  LetRec level bindings body ->
+    let bound' = foldl (\acc (Tuple ident _) -> Set.insert (localId (Just ident) level) acc) bound bindings
+    in foldMap (\(Tuple _ val) -> freeLocalsIn bound' val) bindings <> freeLocalsIn bound' body
+  _ -> foldMap (freeLocalsIn bound) syntax

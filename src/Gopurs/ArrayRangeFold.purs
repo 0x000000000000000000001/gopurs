@@ -8,14 +8,17 @@ import Data.Array.NonEmpty as NEA
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..))
+import Effect.Ref as Ref
+import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.ArrayIntrinsics.Callback as Callback
 import Gopurs.CallAnalysis (qualifiedTarget)
 import Gopurs.CallArguments as CallArguments
 import Gopurs.CongruenceSum as CongruenceSum
 import Gopurs.ExprAnalysis (getExprType, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), childContext, flattenStmts)
-import Gopurs.GoAst (GoExpr(..), GoType(..), rawGo)
+import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), rawGo)
 import Gopurs.GoConversions (coerceGoExpr)
+import Gopurs.GoSymbol (GoReference(..), generated)
 import Gopurs.ScalarArrayFold as ScalarArrayFold
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), ModuleName(..))
@@ -33,8 +36,83 @@ type Pipeline =
 -- predicate's invocation order, even for an opaque/effectful callback. Only
 -- this immediately consumed range/filter pipeline loses its arrays.
 emit :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array TcoExpr -> Maybe ExprResult
-emit translate context@{ codegenStateRef, modNameStr } nextId fn args = do
+emit translate context nextId fn args = do
   pipeline <- recognize context fn args
+  case recognizePredicate pipeline.predicate, literalInt pipeline.seed, literalInt pipeline.start of
+    Just { modulus: 2, residue: 0 }, Just 0, Just 1 ->
+      emitCompactEvenRange translate context nextId fn pipeline
+    _, _, _ ->
+      emitGeneral translate context nextId fn pipeline
+
+-- When seed == 0, start == 1 and the predicate is a closed pure evenness test,
+-- evaluate only the dynamic end bound on the fast path and outline the full
+-- loop + ScalarArrayFold fallback into a package-level noinline helper so the
+-- caller stays under Go's inline budget.
+emitCompactEvenRange :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Pipeline -> Maybe ExprResult
+emitCompactEvenRange translate context@{ codegenStateRef, modNameStr } nextId fn pipeline = do
+  let
+    endTrans = translate (childContext context Nothing) nextId pipeline.end
+    directVar = case endTrans.stmts, endTrans.expr, endTrans.exprType of
+      StmtEmpty, GoVar _, TypeInt64 -> true
+      _, _, _ -> false
+    capturedEnd =
+      if directVar then
+        { stmts: StmtEmpty, exprs: [ endTrans.expr ], exprTypes: [ TypeInt64 ], nextId: endTrans.nextId }
+      else
+        CallArguments.capture { prefix: "rangeFold_end_", markUsed: true }
+          (\_ currentId value -> translate (childContext context Nothing) currentId value)
+          nextId [ pipeline.end ]
+    endExpr = fromMaybe (rawGo "nil") (Array.index capturedEnd.exprs 0)
+    endType = fromMaybe TypeValue (Array.index capturedEnd.exprTypes 0)
+    endScalar = coerceGoExpr codegenStateRef modNameStr endExpr endType TypeInt64
+    coldEndName = "rangeFold_cold_end"
+    coldEndLevel = Level (-2)
+    TcoExpr endAnalysis _ = pipeline.end
+    coldEndLocal = TcoExpr endAnalysis (Syn.Typed Int (TcoExpr endAnalysis (Syn.Local (Just (Ident coldEndName)) coldEndLevel)))
+    coldPipeline = pipeline { end = coldEndLocal }
+    coldContext = context
+      { bound = Map.singleton (localId (Just (Ident coldEndName)) coldEndLevel) { name: coldEndName, goType: TypeInt64 }
+      , depth = 0
+      , tcoIdent = Nothing
+      , loopCtx = []
+      , recVars = []
+      }
+  coldResult <- emitGeneral translate coldContext 0 fn coldPipeline
+  let
+    coldCall = unsafePerformEffect do
+      state <- Ref.read codegenStateRef
+      let
+        coldName = "Call_" <> modNameStr <> "___gopurs_cold_range_fold_" <> show state.globalId
+        decl = GoFunctionDecl
+          { name: generated modNameStr coldName
+          , params: [ Tuple coldEndName TypeInt64 ]
+          , result: TypeInt64
+          , body: GoBlock (flattenStmts coldResult.stmts <> [ GoReturn coldResult.expr ])
+          }
+      Ref.modify_ (\current -> current
+        { globalId = current.globalId + 1
+        , declarations = current.declarations <> [ decl ]
+        }) codegenStateRef
+      pure (GoCall (GoRef (SymbolReference (generated modNameStr coldName))) [ endScalar ])
+    admitted = GoBinOp "<" (GoCall (GoVar "uint64") [ GoBinOp "-" endScalar (GoInt 1) ]) (GoInt top)
+    fastReturn = case endScalar of
+      GoVar varName ->
+        [ rawGo (varName <> " >>= 1")
+        , GoReturn (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "*" (GoVar varName) (GoBinOp "+" (GoVar varName) (GoInt 1)) ] ])
+        ]
+      _ ->
+        let half = GoBinOp ">>" endScalar (GoInt 1)
+        in [ GoReturn (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "*" half (GoBinOp "+" half (GoInt 1)) ] ]) ]
+    expr = GoCall (GoFuncBlock [] [ GoIfElse admitted fastReturn [], GoReturn coldCall ] TypeInt64) []
+  pure { stmts: capturedEnd.stmts, expr, exprType: TypeInt64, nextId: capturedEnd.nextId }
+
+literalInt :: TcoExpr -> Maybe Int
+literalInt value = case unwrapTcoExpr value of
+  Syn.Lit (LitInt n) -> Just n
+  _ -> Nothing
+
+emitGeneral :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Pipeline -> Maybe ExprResult
+emitGeneral translate context@{ codegenStateRef, modNameStr } nextId fn pipeline = do
   let
     values = [ pipeline.callback, pipeline.seed, pipeline.predicate, pipeline.start, pipeline.end ]
     captured = CallArguments.capture { prefix: "rangeFold_arg_", markUsed: true }

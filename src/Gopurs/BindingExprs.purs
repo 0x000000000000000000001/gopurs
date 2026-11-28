@@ -149,32 +149,74 @@ recursive translate context@{ metadata, depth, modNameStr, recVars, moduleFuncti
             { functions: moduleFunctions, bound: allocated.newBound }
             workers
 
-          translatedWorkers = foldl
-            ( \acc worker ->
-                let
-                  { oldName, newName, params } = worker
-                  currentLoopCtx = [ { ident: newName, loopParams: map fst (loopParameters params), goTypes: map snd params } ]
-                  -- Peer bindings keep the provisional view; only the function
-                  -- table sees results inferred for earlier bodies in the group.
-                  loopBound = bindParameters params published.bound
-                  resBodyMut = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = acc.moduleFunctions, bound = loopBound, tcoIdent = (Just newName), loopCtx = currentLoopCtx, options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = worker.expectedReturn, mbExpectedGoType = Just worker.resultType }) acc.nextId worker.body
-                  trueFRet = resBodyMut.exprType
-                  keepWrapper = LocalWorkers.needsWrapper oldName (Array.length params) body
-                    || Array.any (\peer -> LocalWorkers.needsWrapper oldName (Array.length params) peer.val) fns
-                  emitted = LocalWorkers.emit translate (context { bound = published.bound }) newName params keepWrapper standaloneGroup (Just worker.body) resBodyMut
-                  newFunctions = Map.insert newName (LocalWorkers.signature context newName params trueFRet) acc.moduleFunctions
-                  newBound2 = Map.insert oldName { name: newName, goType: TypeValue } acc.newBound
-                in
-                  { declarations: acc.declarations <> emitted.declarations, stmts: acc.stmts <> emitted.assignments, nextId: resBodyMut.nextId, moduleFunctions: newFunctions, newBound: newBound2 }
-            )
-            { declarations: [], stmts: [], nextId: allocated.nextId, moduleFunctions: published.functions, newBound: published.bound }
-            workers
-
-          resBodyOuter = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = translatedWorkers.moduleFunctions, bound = translatedWorkers.newBound, tcoIdent = Nothing, mbExpectedExprType = Nothing }) translatedWorkers.nextId body
+          zeroSeedShortcut = case workers of
+            [ worker ] ->
+              let
+                { oldName, newName, params } = worker
+                keepWrapper = LocalWorkers.needsWrapper oldName (Array.length params) body
+                  || Array.any (\peer -> LocalWorkers.needsWrapper oldName (Array.length params) peer.val) fns
+              in
+                if keepWrapper then Nothing
+                else
+                  let
+                    currentLoopCtx = [ { ident: newName, loopParams: map fst (loopParameters params), goTypes: map snd params } ]
+                    loopBound = bindParameters params published.bound
+                    resBodyMut = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = published.functions, bound = loopBound, tcoIdent = (Just newName), loopCtx = currentLoopCtx, options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = worker.expectedReturn, mbExpectedGoType = Just worker.resultType }) allocated.nextId worker.body
+                  in
+                    case LocalWorkers.emitZeroSeed translate (context { bound = published.bound }) oldName newName params worker.body body resBodyMut of
+                      Just { coldRef, counterArg } ->
+                        let
+                          argRes = translate (context { depth = (depth + 1), recVars = combinedRecVars, tcoIdent = Nothing, mbExpectedExprType = Nothing, mbExpectedGoType = Just TypeInt64 }) resBodyMut.nextId counterArg
+                          coercedArg = coerceGoExpr context.codegenStateRef modNameStr argRes.expr argRes.exprType TypeInt64
+                        in case coercedArg of
+                          GoVar varName ->
+                            let
+                              admitted = GoBinOp "<" (GoCall (GoVar "uint64") [ GoBinOp "-" (GoVar varName) (GoInt 2) ]) (GoInt (top - 1))
+                              fastBranch =
+                                [ rawGo (varName <> " >>= 1")
+                                , GoReturn (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "*" (GoVar varName) (GoBinOp "+" (GoVar varName) (GoInt 1)) ] ])
+                                ]
+                              coldCall = GoCall (GoRef coldRef) [ GoVar varName ]
+                              fastExpr = GoCall (GoFuncBlock [] [ GoIfElse admitted fastBranch [], GoReturn coldCall ] TypeInt64) []
+                            in
+                              Just { stmts: argRes.stmts, expr: fastExpr, exprType: TypeInt64, nextId: argRes.nextId }
+                          _ -> Nothing
+                      Nothing -> Nothing
+            _ -> Nothing
         in
-          -- Every function in the recursive group must be in scope
-          -- before emitting bodies that can refer to its peers.
-          { stmts: foldMap StmtLeaf (translatedWorkers.declarations <> translatedWorkers.stmts) <> resBodyOuter.stmts, expr: resBodyOuter.expr, exprType: resBodyOuter.exprType, nextId: resBodyOuter.nextId }
+          case zeroSeedShortcut of
+            Just shortcut -> shortcut
+            Nothing ->
+              let
+                translatedWorkers = foldl
+                  ( \acc worker ->
+                      let
+                        { oldName, newName, params } = worker
+                        currentLoopCtx = [ { ident: newName, loopParams: map fst (loopParameters params), goTypes: map snd params } ]
+                        -- Peer bindings keep the provisional view; only the function
+                        -- table sees results inferred for earlier bodies in the group.
+                        loopBound = bindParameters params published.bound
+                        resBodyMut = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = acc.moduleFunctions, bound = loopBound, tcoIdent = (Just newName), loopCtx = currentLoopCtx, options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = worker.expectedReturn, mbExpectedGoType = Just worker.resultType }) acc.nextId worker.body
+                        trueFRet = resBodyMut.exprType
+                        keepWrapper = LocalWorkers.needsWrapper oldName (Array.length params) body
+                          || Array.any (\peer -> LocalWorkers.needsWrapper oldName (Array.length params) peer.val) fns
+                        emitted = LocalWorkers.emit translate (context { bound = published.bound }) newName params keepWrapper standaloneGroup (Just worker.body) resBodyMut
+                        baseSig = LocalWorkers.signature context newName params trueFRet
+                        finalSig = case emitted.hoisted of
+                          Just ref -> baseSig { reference = ref }
+                          Nothing -> baseSig
+                        newFunctions = Map.insert newName finalSig acc.moduleFunctions
+                        newBound2 = Map.insert oldName { name: newName, goType: TypeValue } acc.newBound
+                      in
+                        { declarations: acc.declarations <> emitted.declarations, stmts: acc.stmts <> emitted.assignments, nextId: resBodyMut.nextId, moduleFunctions: newFunctions, newBound: newBound2 }
+                  )
+                  { declarations: [], stmts: [], nextId: allocated.nextId, moduleFunctions: published.functions, newBound: published.bound }
+                  workers
+                resBodyOuter = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = translatedWorkers.moduleFunctions, bound = translatedWorkers.newBound, tcoIdent = Nothing, mbExpectedExprType = Nothing }) translatedWorkers.nextId body
+              in
+                -- Every function in the recursive group must be in scope
+                -- before emitting bodies that can refer to its peers.
+                { stmts: foldMap StmtLeaf (translatedWorkers.declarations <> translatedWorkers.stmts) <> resBodyOuter.stmts, expr: resBodyOuter.expr, exprType: resBodyOuter.exprType, nextId: resBodyOuter.nextId }
 
       Nothing ->
         initializeRecursiveValues translate (context { recVars = combinedRecVars }) isLoop allocated (toArray bindings) body

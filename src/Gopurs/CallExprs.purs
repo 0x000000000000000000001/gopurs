@@ -148,7 +148,26 @@ directArguments translate context@{ codegenStateRef, modNameStr } nextId expecte
           Nothing -> translate ((childContext context Nothing)
             { mbExpectedGoType = Just (TypeNativeArray TypeInt64) }) argumentId arg)
       nextId args
-    else CallArguments.translate translate context Nothing { stmts: StmtEmpty, nextId } args
+    else Array.foldl
+      (\acc (Tuple index arg) ->
+        let
+          preserveBoxedString = case Array.index expected index, unwrapTcoExpr arg of
+            Just TypeValue, Local ident level | getExprType arg == String ->
+              case Map.lookup (localId ident level) context.bound of
+                Just binding -> binding.goType == TypeValue
+                Nothing -> false
+            _, _ -> false
+          argCtx = (childContext context Nothing)
+            { mbExpectedGoType = if preserveBoxedString then Just TypeValue else Nothing }
+          result = translate argCtx acc.nextId arg
+        in
+          { stmts: acc.stmts <> result.stmts
+          , exprs: Array.snoc acc.exprs result.expr
+          , exprTypes: Array.snoc acc.exprTypes result.exprType
+          , nextId: result.nextId
+          })
+      { stmts: StmtEmpty, exprs: [], exprTypes: [], nextId }
+      (Array.mapWithIndex Tuple args)
 
 -- A direct worker must be saturated; partial calls retain the boxed path.
 directFunction :: ExprContext -> Maybe CallTarget -> Int -> Maybe FunctionInfo

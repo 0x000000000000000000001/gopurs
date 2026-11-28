@@ -61,7 +61,10 @@ unitConstant _ _ _ = false
 -- Only publish signatures whose arguments and result can cross a direct call.
 ffiFunctionInfos :: String -> Array (Tuple Ident (Maybe ExprType)) -> Array FfiDecl -> Map String FunctionInfo
 ffiFunctionInfos modNameStr foreigns decls = Map.fromFoldable
-  (Array.mapMaybe signature foreigns <> Array.mapMaybe effectSignature foreigns <> Array.mapMaybe effectFactorySignature foreigns)
+  (Array.mapMaybe signature foreigns
+    <> Array.mapMaybe effectSignature foreigns
+    <> Array.mapMaybe effectFactorySignature foreigns
+    <> Array.mapMaybe statelessEffectFactorySignature foreigns)
   where
   effectSignature (Tuple (Ident name) mbTast) = do
     tast <- mbTast
@@ -74,6 +77,12 @@ ffiFunctionInfos modNameStr foreigns decls = Map.fromFoldable
     declaration <- Signatures.matchDeclaration modNameStr decls name
     info <- ImmediateEffects.factorySignature modNameStr declaration tast
     pure (Tuple (ImmediateEffects.factoryKey name) info)
+
+  statelessEffectFactorySignature (Tuple (Ident name) mbTast) = do
+    tast <- mbTast
+    declaration <- Signatures.matchDeclaration modNameStr decls name
+    info <- ImmediateEffects.statelessFactorySignature modNameStr declaration tast
+    pure (Tuple (ImmediateEffects.statelessFactoryKey name) info)
 
   signature foreignBinding@(Tuple (Ident name) _) = do
     candidate <- nativeForeign modNameStr decls foreignBinding

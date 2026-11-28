@@ -26,7 +26,7 @@ test('integer regions use full unique shape guards and retain their exact fallba
     assert.deepEqual(optimize(optimize(simple)), optimize(simple));
     assert.match(text(optimize(sum([...keys.slice(0, 5), 'a', 'a']))), /TypeRecord5/);
     const compactTwo = text(optimize(sum(['a', 'b'])));
-    assert.match(compactTwo, /RecordFields2\(recordReadGroup_input\)/);
+    assert.match(compactTwo, /RecordIntFields2\(recordReadGroup_input\)/);
     assert.match(compactTwo, /recordReadGroup_keys != nil/);
     assert.match(compactTwo, /int64\(int32\(/);
     assert.ok(compactTwo.includes(`return ${text(sum(['a', 'b']))}\n}`));

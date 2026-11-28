@@ -100,18 +100,18 @@ func ShareRecordShapes(prefix, source string) (string, error) {
 			}
 			used[name] = true
 			shapes[schema.String()] = name
-			fmt.Fprintf(&declarations, "\nvar %s = %s.RecordKeys%d{", name, receiver.Name, size)
+			fmt.Fprintf(&declarations, "\nvar %s = %s.InternRecordKeys%d(", name, receiver.Name, size)
 			for i, key := range keys {
 				if i != 0 {
 					declarations.WriteString(", ")
 				}
-				fmt.Fprintf(&declarations, "K%d: %s", i, strconv.Quote(key))
+				declarations.WriteString(strconv.Quote(key))
 			}
-			declarations.WriteString("}\n")
+			declarations.WriteString(")\n")
 		}
 		edits = append(edits,
 			edit{fset.Position(selector.Sel.Pos()).Offset, fset.Position(selector.Sel.End()).Offset, "RecordShape" + strconv.Itoa(size)},
-			edit{fset.Position(call.Args[0].Pos()).Offset, fset.Position(call.Args[size-1].End()).Offset, "&" + name},
+			edit{fset.Position(call.Args[0].Pos()).Offset, fset.Position(call.Args[size-1].End()).Offset, name},
 		)
 		return true
 	})

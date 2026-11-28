@@ -15,7 +15,9 @@ test('SWAR CodePoints.Length and adaptive CodeUnits.indexOf match exact scalar r
   mkdirSync(join(dir, 'codepoints'));
   mkdirSync(join(dir, 'codeunits'));
   writeFileSync(join(dir, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
-  copyFileSync(new URL('runtime.go', runtimeDir), join(dir, 'gopurs_runtime/runtime.go'));
+  for (const name of ['runtime.go', 'simd_asm.go', 'simd_generic.go', 'simd_arm64.s', 'simd_amd64.s']) {
+    copyFileSync(new URL(name, runtimeDir), join(dir, 'gopurs_runtime', name));
+  }
   copyFileSync(new URL('CodePoints.go', stringsDir), join(dir, 'codepoints/CodePoints.go'));
   writeFileSync(
     join(dir, 'codeunits/CodeUnits.go'),

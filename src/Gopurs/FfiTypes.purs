@@ -83,4 +83,5 @@ type FfiDecl =
   , schemaVersion :: Int
   , line :: Int
   , column :: Int
+  , statelessEffectFactory :: Maybe Boolean
   }

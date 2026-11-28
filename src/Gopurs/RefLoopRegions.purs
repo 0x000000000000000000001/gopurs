@@ -70,8 +70,14 @@ region context runST original action = do
         pureResult value = if runST then value else NeutralExpr (EffectPure value)
         initial = allocated.initial
       pure case plan.kind of
-        Increment amount -> pureResult (choose (ord OpGt seed (integer 0))
-          (num OpAdd initial (num OpMultiply seed (actual amount))) initial)
+        Increment amount ->
+          let delta = actual amount
+              stepSum = case strip delta of
+                Lit (LitInt 0) -> num OpAdd initial (integer 0)
+                Lit (LitInt 1) -> num OpAdd initial seed
+                Lit (LitInt (-1)) -> num OpSubtract initial seed
+                _ -> num OpAdd initial (num OpMultiply seed delta)
+          in pureResult (choose (ord OpGt seed (integer 0)) stepSum initial)
         LastWrite limit ->
           let bound = parameter limit
               result = pureResult (choose (ord OpGt seed bound) initial bound)

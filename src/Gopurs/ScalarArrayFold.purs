@@ -58,11 +58,9 @@ emit translate context@{ codegenStateRef, modNameStr } nextId fn args = do
                       ])
                 ] []
             ]
-            [ GoIfElse (rawGo "scalarFold_input.Type == gopurs_runtime.TypeIntArray")
-                ([ GoAssign "scalarFold_ints" (rawGo "*(*[]int64)(scalarFold_input.UnsafePtr)") ] <>
-                  integerSumBody "scalarFold_ints" (GoVar "scalarFold_value") identity)
-                ([ GoAssign "scalarFold_values" (rawGo "*(*[]gopurs_runtime.Value)(scalarFold_input.UnsafePtr)") ] <>
-                  integerSumBody "scalarFold_values" (GoSelector (GoVar "scalarFold_value") "IntVal") (\value -> GoSelector value "IntVal"))
+            [ GoMutate "scalarFold_result"
+                (GoCall (GoSelector (GoVar "gopurs_runtime") "SumIntArraySlow")
+                  [ GoVar "scalarFold_input", GoVar "scalarFold_result" ])
             ]
         ]
     expr = if scalar == TypeInt64 then

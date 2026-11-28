@@ -104,7 +104,7 @@ function generatedModule() {
 test('unused curried wrappers do not make native recursive workers escape', t => {
     const code = generatedModule();
     for (const name of ['countSteps', 'countElsewhere']) {
-        assert.match(code, new RegExp(`var Call_local_WorkerWrappers_${name}_\\w+ func\\(int64, int64\\) int64`));
+        assert.match(code, new RegExp(`(var Call_local_WorkerWrappers_${name}_\\w+ func\\(int64, int64\\) int64|func Call_WorkerWrappers___gopurs_hot_local_\\d+\\()`));
         assert.doesNotMatch(code, new RegExp(`\\n${name}_\\w+ =`), `${name} needs no boxed wrapper`);
     }
     for (const name of ['partialSteps', 'returnedSteps', 'peerSteps', 'aliasSteps']) {

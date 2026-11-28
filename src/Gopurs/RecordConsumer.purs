@@ -5,12 +5,14 @@ import Prelude
 import Control.Alternative (guard)
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
-import Data.Foldable (foldl, all)
+import Data.Foldable (all)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.String as String
 import Data.String.Pattern (Pattern(..))
 import Data.Tuple (Tuple(..), snd)
+import Effect.Ref as Ref
+import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.AffineLoops as AffineLoops
 import Gopurs.ArrayProducerFold (onlyCurried)
 import Gopurs.BindingExprs as BindingExprs
@@ -18,7 +20,8 @@ import Gopurs.CallAnalysis (extractUncurriedAbs, collectGoSpine, getGoSpineArgs)
 import Gopurs.CodePointFold (compatibleT)
 import Gopurs.ExprAnalysis (extractFuncType, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, ModuleFunctions, TranslateExpr, StmtTree(..), flattenStmts)
-import Gopurs.GoAst (GoExpr(..), GoType(..), rawGo, sanitizeName)
+import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), rawGo, sanitizeName)
+import Gopurs.GoSymbol (GoReference(..), generated)
 import Gopurs.GoFunctions (namedParameters)
 import Gopurs.Printer (printGoExpr)
 import Gopurs.RecordAffineLoops as RecordAffineLoops
@@ -91,30 +94,59 @@ emit plans translate context nextId ident level binding body = do
   guard (resultId /= inputId && Array.length reads == 2 * Array.length keys
     && Array.sort updated == keys && Array.sort original == keys)
   let
-    -- The fallback is translated through the ordinary Let path, not this hook.
-    fallback = BindingExprs.nonRecursive translate context nextId ident level binding body
+    -- Outline the cold fallback into a package-level noinline helper so its
+    -- unboxed record struct never inflates the hot caller's stack frame.
+    coldCountName = "recordConsumer_cold_count"
+    coldInputName = "recordConsumer_cold_input"
+    coldBound = Map.insert countId { name: coldCountName, goType: countBound.goType }
+      (Map.singleton inputId { name: coldInputName, goType: inputBound.goType })
+    coldContext = context { bound = coldBound, depth = 0, tcoIdent = Nothing, loopCtx = [], recVars = [] }
+    fallback = BindingExprs.nonRecursive translate coldContext nextId ident level binding body
     unwrappedFallback = case fallback.exprType, fallback.expr of
       TypeInt64, expr -> Just expr
       TypeValue, GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ expr ] -> Just expr
       _, _ -> Nothing
     resultType = if isJust unwrappedFallback then TypeInt64 else fallback.exprType
     fallbackReturn = fromMaybe fallback.expr unwrappedFallback
+    coldCall = unsafePerformEffect do
+      state <- Ref.read context.codegenStateRef
+      let
+        coldName = "Call_" <> context.modNameStr <> "___gopurs_cold_record_consumer_" <> show state.globalId
+        decl = GoFunctionDecl
+          { name: generated context.modNameStr coldName
+          , params: [ Tuple coldCountName countBound.goType, Tuple coldInputName inputBound.goType ]
+          , result: resultType
+          , body: GoBlock (flattenStmts fallback.stmts <> [ GoReturn fallbackReturn ])
+          }
+      Ref.modify_ (\current -> current
+        { globalId = current.globalId + 1
+        , declarations = current.declarations <> [ decl ]
+        }) context.codegenStateRef
+      pure (GoCall (GoRef (SymbolReference (generated context.modNameStr coldName)))
+        [ GoVar countBound.name, GoVar inputBound.name ])
     prefix = fresh ("recordConsumer_" <> show nextId) (map (\(Tuple _ value) -> value.name) (Map.toUnfoldable context.bound :: Array (Tuple String { name :: String, goType :: GoType })))
     record = prefix <> "_input"
     counter = if countBound.goType == TypeValue then GoSelector (GoVar countBound.name) "IntVal" else GoVar countBound.name
     fast values =
-      let sum = foldl (GoBinOp "+") (GoInt 0) values
+      let sum = balancedSum values
           subtotal = GoVar (prefix <> "_sum")
-          total = GoBinOp "+" (GoBinOp "+" subtotal subtotal) (RecordAffineLoops.additiveTotal counter plan.deltas)
+          deltaExpr = RecordAffineLoops.additiveTotal counter plan.deltas
+          total = case deltaExpr of
+            GoInt 0 -> GoBinOp "+" subtotal subtotal
+            _ -> GoBinOp "+" (GoBinOp "+" subtotal subtotal) deltaExpr
           result = "int64(int32(" <> printGoExpr total <> "))"
       in prefix <> "_sum := " <> printGoExpr sum <> "\nreturn " <> (if resultType == TypeValue then "gopurs_runtime.Int(" <> result <> ")" else result)
     admitted = GoBinOp "<" (GoBinOp "-" (GoCall (GoVar "uint64") [ counter ]) (GoInt 1)) (GoInt 2147483647)
-    mbShape = if Array.length keys > 5 then
-      Just (RecordShapeGuard.internShapeExpr context.codegenStateRef context.modNameStr keys)
+    mbShape =
+      if Array.length keys > 5 then
+        Just (RecordShapeGuard.internShapeExpr context.codegenStateRef context.modNameStr keys)
+      else if Array.length keys >= 1 then
+        Just (RecordShapeGuard.internKeysExpr context.codegenStateRef context.modNameStr keys)
       else Nothing
     statements = [ GoAssign record (GoVar inputBound.name)
-      , GoIfElse admitted [ rawGo (RecordShapeGuard.integerReadsWithShape mbShape prefix record keys fast) ] []
-      ] <> flattenStmts fallback.stmts <> [ GoReturn fallbackReturn ]
+      , GoIfElse admitted [ rawGo (RecordShapeGuard.integerReadsStrictShape mbShape prefix record keys fast) ] []
+      , GoReturn coldCall
+      ]
   -- The proved primitive result is Int64 or its existing Value boxing. No
   -- admission check follows fallback translation, which may allocate IDs.
   pure { stmts: StmtEmpty, expr: GoCall (GoFuncBlock [] statements resultType) [], exprType: resultType, nextId: fallback.nextId }
@@ -138,6 +170,14 @@ projections recordType value = do
 fresh :: String -> Array String -> String
 fresh prefix names = if Array.any (String.contains (Pattern prefix)) names
   then fresh (prefix <> "_") names else prefix
+
+balancedSum :: Array GoExpr -> GoExpr
+balancedSum values = case Array.length values of
+  0 -> GoInt 0
+  1 -> fromMaybe (GoInt 0) (Array.head values)
+  n ->
+    let mid = n / 2
+    in GoBinOp "+" (balancedSum (Array.take mid values)) (balancedSum (Array.drop mid values))
 
 -- Recheck every annotation inside the proved recurrence. The structural loop
 -- proof strips wrappers for matching, but wrappers cannot contradict its facts.

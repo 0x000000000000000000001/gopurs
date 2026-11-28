@@ -7,6 +7,7 @@ module Gopurs.IndexedAddLanes
   , emitContribution
   , emitAffineSimdCall
   , emitAffineStep32
+  , emitAffineStep32Fixed
   ) where
 
 import Prelude
@@ -343,20 +344,24 @@ emitAffineSimdCall target resultName aff swapped =
 
 emitAffineStep32 :: String -> GoExpr -> GoExpr -> AffineParity -> GoExpr
 emitAffineStep32 acc32Name idxExpr val32Expr aff =
+  if aff.aEven == aff.aOdd && aff.bEven == aff.bOdd then
+    emitAffineStep32Fixed acc32Name true val32Expr aff
+  else
+    GoIfElse (GoBinOp "==" (GoBinOp "&" idxExpr (GoInt 1)) (GoInt 0))
+      [ emitAffineStep32Fixed acc32Name true val32Expr aff ]
+      [ emitAffineStep32Fixed acc32Name false val32Expr aff ]
+
+emitAffineStep32Fixed :: String -> Boolean -> GoExpr -> AffineParity -> GoExpr
+emitAffineStep32Fixed acc32Name isEven val32Expr aff =
   let
     int32Lit n = GoCall (GoVar "int32") [ GoInt n ]
-    term a b = case a, b of
+    a = if isEven then aff.aEven else aff.aOdd
+    b = if isEven then aff.bEven else aff.bOdd
+    term = case a, b of
       0, _ -> int32Lit b
       1, 0 -> val32Expr
       1, _ -> GoBinOp "+" val32Expr (int32Lit b)
       (-1), 0 -> GoPrefixOp "-" val32Expr
       _, 0 -> GoBinOp "*" (int32Lit a) val32Expr
       _, _ -> GoBinOp "+" (GoBinOp "*" (int32Lit a) val32Expr) (int32Lit b)
-    addTo expr = GoMutate acc32Name (GoBinOp "+" (GoVar acc32Name) expr)
-  in
-    if aff.aEven == aff.aOdd && aff.bEven == aff.bOdd then
-      addTo (term aff.aEven aff.bEven)
-    else
-      GoIfElse (GoBinOp "==" (GoBinOp "&" idxExpr (GoInt 1)) (GoInt 0))
-        [ addTo (term aff.aEven aff.bEven) ]
-        [ addTo (term aff.aOdd aff.bOdd) ]
+  in GoMutate acc32Name (GoBinOp "+" (GoVar acc32Name) term)

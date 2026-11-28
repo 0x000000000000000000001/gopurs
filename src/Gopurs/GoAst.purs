@@ -297,6 +297,11 @@ isPureConstantExpr = case _ of
     "StrWithCodeUnits", [ a, b ] -> isPureConstantExpr a && isPureConstantExpr b
     "NegativeZero", [] -> true
     "InternRecordShape", xs -> Array.all isPureConstantExpr xs
+    "InternRecordKeys1", xs -> Array.all isPureConstantExpr xs
+    "InternRecordKeys2", xs -> Array.all isPureConstantExpr xs
+    "InternRecordKeys3", xs -> Array.all isPureConstantExpr xs
+    "InternRecordKeys4", xs -> Array.all isPureConstantExpr xs
+    "InternRecordKeys5", xs -> Array.all isPureConstantExpr xs
     _, _ -> false
   GoCall (GoSelector (GoVar "math") fn) args -> case fn, args of
     "NaN", [] -> true

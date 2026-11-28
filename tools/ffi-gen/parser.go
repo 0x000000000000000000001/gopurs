@@ -262,6 +262,7 @@ func parseFFI(content string, prefixes ...string) (string, error) {
 				Ret: singleResult(results), Results: results, ResultNames: resultNames,
 				Receiver: receiver, Signature: sourceText(funcDecl.Type),
 				Line: position.Line, Column: position.Column,
+				StatelessEffectFactory: isStatelessEffectFactory(funcDecl),
 			})
 
 		} else if genDecl, ok := decl.(*ast.GenDecl); ok && genDecl.Tok == token.VAR {
@@ -367,4 +368,112 @@ func parseFFI(content string, prefixes ...string) (string, error) {
 
 func isFFIName(name string) bool {
 	return len(name) > 0 && (name[0] == '_' || name[0] >= 'A' && name[0] <= 'Z')
+}
+
+// isStatelessEffectFactory proves syntactically that a top-level Go FFI function
+// performs zero work and allocates zero mutable per-action state at factory time:
+// its entire body is `return func() R { ... }` and no parameter is reassigned or
+// address-taken inside the returned thunk. Calling F(args...)() at each execution
+// site (with args evaluated once at the factory site) is therefore observationally
+// identical to capturing th := F(args...) and calling th().
+func isStatelessEffectFactory(funcDecl *ast.FuncDecl) bool {
+	if funcDecl.Recv != nil || funcDecl.Body == nil || len(funcDecl.Body.List) != 1 {
+		return false
+	}
+	if funcDecl.Type.Results != nil {
+		for _, field := range funcDecl.Type.Results.List {
+			if len(field.Names) > 0 {
+				return false
+			}
+		}
+	}
+	retStmt, ok := funcDecl.Body.List[0].(*ast.ReturnStmt)
+	if !ok || len(retStmt.Results) != 1 {
+		return false
+	}
+	expr := retStmt.Results[0]
+	for {
+		paren, isParen := expr.(*ast.ParenExpr)
+		if !isParen {
+			break
+		}
+		expr = paren.X
+	}
+	fnLit, ok := expr.(*ast.FuncLit)
+	if !ok || fnLit.Body == nil {
+		return false
+	}
+	if fnLit.Type.Params != nil && len(fnLit.Type.Params.List) > 0 {
+		return false
+	}
+	paramObjs := make(map[*ast.Object]bool)
+	paramNames := make(map[string]bool)
+	if funcDecl.Type.Params != nil {
+		for _, field := range funcDecl.Type.Params.List {
+			for _, ident := range field.Names {
+				if ident.Name != "_" {
+					paramNames[ident.Name] = true
+					if ident.Obj != nil {
+						paramObjs[ident.Obj] = true
+					}
+				}
+			}
+		}
+	}
+	if len(paramNames) == 0 {
+		return true
+	}
+	isParam := func(e ast.Expr) bool {
+		for {
+			p, isParen := e.(*ast.ParenExpr)
+			if !isParen {
+				break
+			}
+			e = p.X
+		}
+		ident, ok := e.(*ast.Ident)
+		if !ok {
+			return false
+		}
+		if ident.Obj != nil {
+			return paramObjs[ident.Obj]
+		}
+		return paramNames[ident.Name]
+	}
+	mutated := false
+	ast.Inspect(fnLit.Body, func(node ast.Node) bool {
+		if mutated || node == nil {
+			return false
+		}
+		switch n := node.(type) {
+		case *ast.AssignStmt:
+			if n.Tok != token.DEFINE {
+				for _, lhs := range n.Lhs {
+					if isParam(lhs) {
+						mutated = true
+						return false
+					}
+				}
+			}
+		case *ast.IncDecStmt:
+			if isParam(n.X) {
+				mutated = true
+				return false
+			}
+		case *ast.RangeStmt:
+			if n.Tok == token.ASSIGN {
+				if isParam(n.Key) || isParam(n.Value) {
+					mutated = true
+					return false
+				}
+			}
+		case *ast.UnaryExpr:
+			if n.Op == token.AND && isParam(n.X) {
+				mutated = true
+				return false
+			}
+		}
+		return true
+	})
+	return !mutated
 }

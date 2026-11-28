@@ -719,3 +719,217 @@ test('constructor-shaped leaf workers inline into callers with affinity reuse an
     checkCellTree(res2, "7(22(E)(E))(11(E)(E))", orig2)
 `);
 });
+
+test('balanced 2-color tree builders starting from Empty lower to iterative slab workers matching persistent trees exactly', t => {
+    const mod = 'BalancedFixture';
+    const shadeTy = new C.ADT(`${mod}.Shade`, [mod, 'Shade'], []);
+    const treeTy = new C.ADT(`${mod}.BTree`, [mod, 'BTree'], []);
+    // Deliberately non-standard field order: [key, left, shade, right] (tagIdx=2, leftIdx=1, rightIdx=3)
+    const bFields = [C.Int.value, treeTy, shadeTy, treeTy];
+    const bMeta = withReboxFields({
+        elidedCtors: emptySet,
+        ctorTypes: map([
+            [`${mod}.Hot`, { vars: [], fields: [] }],
+            [`${mod}.Cool`, { vars: [], fields: [] }],
+            [`${mod}.Node`, { vars: [], fields: bFields }],
+            [`${mod}.Void`, { vars: [], fields: [] }],
+        ]),
+        pointerAdtPaths: map([[`${mod}.BTree`, { ctorName: 'Node', arity: 0 }]]),
+        pointerAdtNodes: singleton(`Data_${mod}_Node`),
+        pointerAdtLeaves: map([[`Data_${mod}_Void`, { nodeBaseStruct: `Data_${mod}_Node`, nodeCtor: 'Node' }]]),
+        enumAdts: singleton(`${mod}.Shade`),
+        enumCtors: map([[`Data_${mod}_Hot`, true], [`Data_${mod}_Cool`, true]]).value0 ? new Set() : singleton(`Data_${mod}_Hot`),
+        globalTypes: emptyMap, globalFunctions: emptyMap, classDeclsFields: emptyMap,
+    });
+    // Build enumCtors PureScript Set properly via insert
+    const enumSet = insert(ordString)(`Data_${mod}_Hot`)()(insert(ordString)(`Data_${mod}_Cool`)()(emptyMap));
+    bMeta.enumCtors = enumSet;
+
+    const q = name => new C.Qualified(new Just(mod), name);
+    const eHot = () => typed(shadeTy, expr(new S.CtorSaturated(q('Hot'), C.SumType.value, 'Shade', 'Hot', [])));
+    const eCool = () => typed(shadeTy, expr(new S.CtorSaturated(q('Cool'), C.SumType.value, 'Shade', 'Cool', [])));
+    const eVoid = () => typed(treeTy, expr(new S.CtorSaturated(q('Void'), C.SumType.value, 'BTree', 'Void', [])));
+    const eNode = (k, l, c, r) => typed(treeTy, expr(new S.CtorSaturated(
+        q('Node'), C.SumType.value, 'BTree', 'Node',
+        [k, l, c, r].map((v, i) => new Tuple(`value${i}`, v)),
+    )));
+    const bf = (base, i) => typed(bFields[i], expr(new S.Accessor(base,
+        new S.GetCtorField(q('Node'), C.SumType.value, 'BTree', 'Node', `value${i}`, i))));
+    const isTag = (name, v) => typed(C.Boolean.value, expr(new S.PrimOp(new S.Op1(new S.OpIsTag(q(name)), v))));
+    const ord2 = (op, a, b) => typed(C.Boolean.value, expr(new S.PrimOp(new S.Op2(new S.OpIntOrd(op), a, b))));
+    const sub1 = a => typed(C.Int.value, expr(new S.PrimOp(new S.Op2(new S.OpIntNum(S.OpSubtract.value), a, literal(1)))));
+    const loc = (ty, name, lvl) => typed(ty, expr(new S.Local(new Just(name), lvl)));
+    const bCall = (name, ty, args) => typed(treeTy, expr(new S.App(typed(ty, expr(new S.Var(q(name)))), args)));
+    const bAbs = (ty, params, body) => typed(ty, expr(new S.Abs(params.map(([n, l]) => new Tuple(new Just(n), l)), body)));
+
+    const balTy = new C.Func(bFields, treeTy);
+    const insTy = new C.Func([C.Int.value, treeTy], treeTy);
+    const bk = loc(C.Int.value, 'k', 0), bl = loc(treeTy, 'l', 1), bc = loc(shadeTy, 'c', 2), br = loc(treeTy, 'r', 3);
+    const idNode = eNode(bk, bl, bc, br);
+    const rotLL = eNode(bf(bl, 0), eNode(bf(bf(bl, 1), 0), bf(bf(bl, 1), 1), eCool(), bf(bf(bl, 1), 3)), eHot(), eNode(bk, bf(bl, 3), eCool(), br));
+    const rotLR = eNode(bf(bf(bl, 3), 0), eNode(bf(bl, 0), bf(bl, 1), eCool(), bf(bf(bl, 3), 1)), eHot(), eNode(bk, bf(bf(bl, 3), 3), eCool(), br));
+    const rotRL = eNode(bf(bf(br, 1), 0), eNode(bk, bl, eCool(), bf(bf(br, 1), 1)), eHot(), eNode(bf(br, 0), bf(bf(br, 1), 3), eCool(), bf(br, 3)));
+    const rotRR = eNode(bf(br, 0), eNode(bk, bl, eCool(), bf(br, 1)), eHot(), eNode(bf(bf(br, 3), 0), bf(bf(br, 3), 1), eCool(), bf(bf(br, 3), 3)));
+
+    const checkRight = chooseTree(isTag('Node', br),
+        chooseTree(isTag('Hot', bf(br, 2)),
+            chooseTree(isTag('Node', bf(br, 1)),
+                chooseTree(isTag('Hot', bf(bf(br, 1), 2)), rotRL,
+                    chooseTree(isTag('Node', bf(br, 3)), chooseTree(isTag('Hot', bf(bf(br, 3), 2)), rotRR, idNode), idNode)),
+                chooseTree(isTag('Node', bf(br, 3)), chooseTree(isTag('Hot', bf(bf(br, 3), 2)), rotRR, idNode), idNode)),
+            idNode), idNode);
+    const balBody = chooseTree(isTag('Cool', bc),
+        chooseTree(isTag('Node', bl),
+            chooseTree(isTag('Hot', bf(bl, 2)),
+                chooseTree(isTag('Node', bf(bl, 1)),
+                    chooseTree(isTag('Hot', bf(bf(bl, 1), 2)), rotLL,
+                        chooseTree(isTag('Node', bf(bl, 3)), chooseTree(isTag('Hot', bf(bf(bl, 3), 2)), rotLR, checkRight), checkRight)),
+                    chooseTree(isTag('Node', bf(bl, 3)), chooseTree(isTag('Hot', bf(bf(bl, 3), 2)), rotLR, checkRight), checkRight)),
+                checkRight),
+            checkRight),
+        idNode);
+
+    const ix = loc(C.Int.value, 'x', 0), it = loc(treeTy, 't', 1);
+    // Use identity Construct on duplicate key (matching PureScript `otherwise = T c a y b`).
+    const insBody = chooseTree(isTag('Void', it), eNode(ix, eVoid(), eHot(), eVoid()),
+        chooseTree(ord2(S.OpLt.value, ix, bf(it, 0)),
+            bCall('fixup', balTy, [bf(it, 0), bCall('putRec', insTy, [ix, bf(it, 1)]), bf(it, 2), bf(it, 3)]),
+            chooseTree(ord2(S.OpGt.value, ix, bf(it, 0)),
+                bCall('fixup', balTy, [bf(it, 0), bf(it, 1), bf(it, 2), bCall('putRec', insTy, [ix, bf(it, 3)])]),
+                eNode(bf(it, 0), bf(it, 1), bf(it, 2), bf(it, 3)))));
+
+    const putBody = typed(treeTy, expr(new S.Let(new Just('res'), 2, bCall('putRec', insTy, [ix, it]),
+        chooseTree(isTag('Node', loc(treeTy, 'res', 2)),
+            eNode(bf(loc(treeTy, 'res', 2), 0), bf(loc(treeTy, 'res', 2), 1), eCool(), bf(loc(treeTy, 'res', 2), 3)),
+            eVoid()))));
+
+    const bn = loc(C.Int.value, 'n', 0), bt = loc(treeTy, 'acc', 1);
+    const buildBody = chooseTree(ord2(S.OpEq.value, bn, literal(0)), bt,
+        bCall('grow', insTy, [sub1(bn), bCall('put', insTy, [bn, bt])]));
+
+    const entryEmpty = bAbs(new C.Func([C.Int.value], treeTy), [['n', 0]], bCall('grow', insTy, [loc(C.Int.value, 'n', 0), eVoid()]));
+    const entryNonEmpty = bAbs(new C.Func([C.Int.value], treeTy), [['n', 0]],
+        bCall('grow', insTy, [loc(C.Int.value, 'n', 0), eNode(literal(999), eVoid(), eHot(), eVoid())]));
+
+    const htTy = new C.Func([treeTy], C.Int.value);
+    const htT = loc(treeTy, 't', 0);
+    const htL = loc(C.Int.value, 'hl', 1), htR = loc(C.Int.value, 'hr', 2);
+    const htCall = arg => typed(C.Int.value, expr(new S.App(typed(htTy, expr(new S.Var(new C.Qualified(new Just(mod), 'height')))), [arg])));
+    const htMax = typed(C.Int.value, expr(new S.Branch([new S.Pair(ord2(S.OpGt.value, htL, htR), htL)], htR)));
+    const htAdd = typed(C.Int.value, expr(new S.PrimOp(new S.Op2(new S.OpIntNum(S.OpAdd.value), literal(1), htMax))));
+    const htLetR = typed(C.Int.value, expr(new S.Let(new Just('hr'), 2, htCall(bf(htT, 3)), htAdd)));
+    const htLetL = typed(C.Int.value, expr(new S.Let(new Just('hl'), 1, htCall(bf(htT, 1)), htLetR)));
+    const htBody = typed(C.Int.value, expr(new S.Branch([
+        new S.Pair(isTag('Void', htT), literal(0)),
+        new S.Pair(isTag('Node', htT), htLetL),
+    ], expr(new S.Fail('exhausted')))));
+
+    const srcMod = {
+        name: mod,
+        bindings: [
+            { recursive: false, bindings: [new Tuple('fixup', bAbs(balTy, [['k', 0], ['l', 1], ['c', 2], ['r', 3]], balBody))] },
+            { recursive: true, bindings: [new Tuple('putRec', bAbs(insTy, [['x', 0], ['t', 1]], insBody))] },
+            { recursive: false, bindings: [new Tuple('put', bAbs(insTy, [['x', 0], ['t', 1]], putBody))] },
+            { recursive: true, bindings: [new Tuple('grow', bAbs(insTy, [['n', 0], ['acc', 1]], buildBody))] },
+            { recursive: true, bindings: [new Tuple('height', bAbs(htTy, [['t', 0]], htBody))] },
+            { recursive: false, bindings: [new Tuple('runEmpty', entryEmpty), new Tuple('runSeeded', entryNonEmpty)] },
+        ],
+        comments: [], imports: emptySet, exports: emptySet, reExports: emptySet, dataTypes: emptyMap,
+        dataDecls: [
+            { name: 'Shade', vars: [], constructors: [{ name: 'Hot', fields: [] }, { name: 'Cool', fields: [] }] },
+            { name: 'BTree', vars: [], constructors: [{ name: 'Void', fields: [] }, { name: 'Node', fields: bFields }] },
+        ],
+        classDecls: [], foreign: emptyMap, implementations: emptyMap, directives: emptyMap,
+    };
+    const generated = CodeGen.translate(bMeta)(srcMod);
+    assert.match(generated, /___gopurs_owned_grow_0_fast/);
+    assert.match(generated, /___gopurs_owned_putRec_0_fast/);
+    assert.match(generated, /___gopurs_owned_putRec_0_fast_overflow/);
+    assert.match(generated, /__dirMask/);
+    const heightFn = generated.slice(generated.indexOf('func Call_BalancedFixture_height('), generated.indexOf('func Call_BalancedFixture_height(') + 900);
+    assert.match(heightFn, /__nc_/, 'nullable pointer ADT self-recursion should nil-guard pure child calls');
+    // Empty caller selects _fast; non-Empty fresh caller stays on general owned worker!
+    const runEmptyFn = generated.slice(generated.indexOf('func Call_BalancedFixture_runEmpty('), generated.indexOf('func Call_BalancedFixture_runSeeded('));
+    const runSeededFn = generated.slice(generated.indexOf('func Call_BalancedFixture_runSeeded('));
+    assert.match(runEmptyFn, /___gopurs_owned_grow_0_fast/);
+    assert.doesNotMatch(runSeededFn.slice(0, 300), /___gopurs_owned_grow_0_fast/);
+
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-balanced-loop-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'purescript'));
+    mkdirSync(join(directory, 'gopurs_runtime'));
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), runtimeGoCode);
+    writeFileSync(join(directory, 'purescript/BalancedFixture.go'), generated);
+    writeFileSync(join(directory, 'main.go'), `package main
+import (
+    "fmt"
+    p "gopurs/output/purescript"
+)
+type node = p.Constructor_BalancedFixture_Node
+func eqTree(a, b *node) bool {
+    if a == nil || b == nil { return a == b }
+    return a.V0 == b.V0 && a.V2 == b.V2 && eqTree(a.V1, b.V1) && eqTree(a.V3, b.V3)
+}
+func refHeight(t *node) int64 {
+    if t == nil { return 0 }
+    l, r := refHeight(t.V1), refHeight(t.V3)
+    if l > r { return l + 1 }
+    return r + 1
+}
+func main() {
+    hot := p.Call_BalancedFixture_putRec(1, nil).V2
+    cool := p.Call_BalancedFixture_put(1, nil).V2
+    for _, n := range []int64{0, 1, 2, 3, 4, 5, 7, 15, 31, 64, 200, 1025} {
+        fast := p.Call_BalancedFixture_runEmpty(n)
+        slow := p.Call_BalancedFixture_grow(n, nil)
+        if !eqTree(fast, slow) { panic(fmt.Sprintf("mismatch at n=%d", n)) }
+        if got, want := p.Call_BalancedFixture_height(fast), refHeight(fast); got != want {
+            panic(fmt.Sprintf("height mismatch at n=%d: got %d want %d", n, got, want))
+        }
+        seededFast := p.Call_BalancedFixture_runSeeded(n)
+        seededSlow := p.Call_BalancedFixture_grow(n, &node{Rc: 1, V0: 999, V2: hot})
+        if !eqTree(seededFast, seededSlow) { panic(fmt.Sprintf("seeded mismatch at n=%d", n)) }
+    }
+    // Also exercise ascending, random and duplicate keys directly through putRec_fast vs persistent put
+    var slab []node
+    var pos int
+    var fast, slow *node
+    keys := []int64{1,2,3,4,5,6,7,8,9,10,5,3,100,-5,42,42,17,-99,0,88,77,66,55,44,33,22,11}
+    for i := int64(0); i < 600; i++ { keys = append(keys, (i*37 + 13) % 251) }
+    for _, k := range keys {
+        fast = p.Call_BalancedFixture___gopurs_owned_putRec_0_fast(k, fast, &slab, &pos)
+        if fast != nil { fast.V2 = cool }
+        slow = p.Call_BalancedFixture_put(k, slow)
+        if !eqTree(fast, slow) { panic(fmt.Sprintf("key=%d mismatch", k)) }
+    }
+    fmt.Println("balanced loop verified")
+}
+`);
+    const res = spawnSync('go', ['run', '.'], { cwd: directory, encoding: 'utf8', timeout: 30_000, env: { ...process.env, GOWORK: 'off' } });
+    assert.ifError(res.error);
+    assert.equal(res.status, 0, res.stdout + res.stderr);
+    assert.equal(res.stdout, 'balanced loop verified\n');
+
+    // Negative check: a shadowed balancer where a Hot left sibling returns idNode
+    // instead of falling through to checkRight must be rejected by verifySideIndependent.
+    const shadowedBalBody = chooseTree(isTag('Cool', bc),
+        chooseTree(isTag('Node', bl),
+            chooseTree(isTag('Hot', bf(bl, 2)),
+                chooseTree(isTag('Node', bf(bl, 1)),
+                    chooseTree(isTag('Hot', bf(bf(bl, 1), 2)), rotLL,
+                        chooseTree(isTag('Node', bf(bl, 3)), chooseTree(isTag('Hot', bf(bf(bl, 3), 2)), rotLR, idNode), idNode)),
+                    chooseTree(isTag('Node', bf(bl, 3)), chooseTree(isTag('Hot', bf(bf(bl, 3), 2)), rotLR, idNode), idNode)),
+                checkRight),
+            checkRight),
+        idNode);
+    const shadowedMod = {
+        ...srcMod,
+        bindings: [
+            { recursive: false, bindings: [new Tuple('fixup', bAbs(balTy, [['k', 0], ['l', 1], ['c', 2], ['r', 3]], shadowedBalBody))] },
+            ...srcMod.bindings.slice(1),
+        ],
+    };
+    const shadowedGenerated = CodeGen.translate(bMeta)(shadowedMod);
+    assert.doesNotMatch(shadowedGenerated, /___gopurs_owned_grow_0_fast/);
+});

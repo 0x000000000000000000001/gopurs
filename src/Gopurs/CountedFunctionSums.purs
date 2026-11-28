@@ -247,25 +247,71 @@ emitScalar = case _ of
   Input ref -> pure (reference ref)
   Parameter _ -> pure (NeutralExpr (Fail "unbound counted-function parameter"))
   Sum left right -> binary Int (Syn.OpIntNum Syn.OpAdd) <$> emitScalar left <*> emitScalar right
-  Product left right -> do
-    a <- emitScalar left
-    b <- emitScalar right
-    next <- get
-    put (next + 2)
+  product@(Product _ _) ->
     let
-      first = Tuple (Just (Ident "countedFactor")) (Level next)
-      second = Tuple (Just (Ident "countedIncrement")) (Level (next + 1))
-      x = reference first
-      -- Inputs have signed Int32 guards, constants are checked during the
-      -- proof, and sums/products narrow. Expose that fact to scalar emission
-      -- without changing the arithmetic or relying on local binding names.
-      y = binary Int Syn.OpIntBitOr (reference second) (integer 0)
-      low = binary Int (Syn.OpIntNum Syn.OpMultiply) (binary Int Syn.OpIntBitAnd x (integer 65535)) y
-      high = binary Int Syn.OpIntBitShiftLeft
-        (binary Int (Syn.OpIntNum Syn.OpMultiply) (binary Int Syn.OpIntBitShiftRight x (integer 16)) y) (integer 16)
-      result = binary Int (Syn.OpIntNum Syn.OpAdd) low high
-    pure (typed Int (NeutralExpr (Let (Just (Ident "countedFactor")) (Level next) a
-      (typed Int (NeutralExpr (Let (Just (Ident "countedIncrement")) (Level (next + 1)) b result))))))
+      factors = flattenProduct product
+    in case Array.uncons factors of
+      Just { head, tail } | Array.length tail >= 2 && Array.all (_ == head) tail ->
+        emitPower head (Array.length factors)
+      _ -> case product of
+        Product left right -> do
+          a <- emitScalar left
+          b <- emitScalar right
+          emitModularProduct a b
+        _ -> pure (integer 1)
+
+flattenProduct :: Scalar -> Array Scalar
+flattenProduct = case _ of
+  Product left right -> flattenProduct left <> flattenProduct right
+  other -> [ other ]
+
+emitPower :: Scalar -> Int -> State Int NeutralExpr
+emitPower base exponent
+  | exponent <= 1 = emitScalar base
+  | otherwise = do
+      xExpr <- emitScalar base
+      case base of
+        Input _ -> buildPow xExpr exponent
+        Constant _ -> buildPow xExpr exponent
+        _ -> do
+          lvl <- get
+          put (lvl + 1)
+          let ref = Tuple (Just (Ident "countedBase")) (Level lvl)
+          body <- buildPow (reference ref) exponent
+          pure (typed Int (NeutralExpr (Let (Just (Ident "countedBase")) (Level lvl) xExpr body)))
+  where
+  buildPow x n
+    | n == 1 = pure x
+    | n == 2 = emitModularProduct x x
+    | mod n 2 == 0 = do
+        half <- buildPow x (div n 2)
+        lvl <- get
+        put (lvl + 1)
+        let ref = Tuple (Just (Ident "countedPow")) (Level lvl)
+        sq <- emitModularProduct (reference ref) (reference ref)
+        pure (typed Int (NeutralExpr (Let (Just (Ident "countedPow")) (Level lvl) half sq)))
+    | otherwise = do
+        evenPart <- buildPow x (n - 1)
+        emitModularProduct evenPart x
+
+emitModularProduct :: NeutralExpr -> NeutralExpr -> State Int NeutralExpr
+emitModularProduct a b = do
+  next <- get
+  put (next + 2)
+  let
+    first = Tuple (Just (Ident "countedFactor")) (Level next)
+    second = Tuple (Just (Ident "countedIncrement")) (Level (next + 1))
+    x = reference first
+    -- Inputs have signed Int32 guards, constants are checked during the
+    -- proof, and sums/products narrow. Expose that fact to scalar emission
+    -- without changing the arithmetic or relying on local binding names.
+    y = binary Int Syn.OpIntBitOr (reference second) (integer 0)
+    low = binary Int (Syn.OpIntNum Syn.OpMultiply) (binary Int Syn.OpIntBitAnd x (integer 65535)) y
+    high = binary Int Syn.OpIntBitShiftLeft
+      (binary Int (Syn.OpIntNum Syn.OpMultiply) (binary Int Syn.OpIntBitShiftRight x (integer 16)) y) (integer 16)
+    result = binary Int (Syn.OpIntNum Syn.OpAdd) low high
+  pure (typed Int (NeutralExpr (Let (Just (Ident "countedFactor")) (Level next) a
+    (typed Int (NeutralExpr (Let (Just (Ident "countedIncrement")) (Level (next + 1)) b result))))))
 
 -- Representation annotations must not turn a Number or another primitive
 -- into a proof about Int32 arithmetic. Function/newtype-polymorphic wrappers

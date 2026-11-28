@@ -18,11 +18,12 @@ import Gopurs.GoSymbol (GoReference(..), generated)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Gopurs.Ownership.Analysis (freshTree, qualify, spine, strip)
+import Gopurs.Ownership.BalancedLoop as BalancedLoop
 import Gopurs.Ownership.Candidates as Candidates
-import Gopurs.Ownership.Types (Candidate, Candidates)
+import Gopurs.Ownership.Types (Candidate, Candidates, TreeSpec)
 import Gopurs.Ownership.Workers as Workers
 import PureScript.Backend.Optimizer.Convert (BackendModule)
-import PureScript.Backend.Optimizer.CoreFn (ExprType(..), ModuleName, Qualified(..))
+import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident, ModuleName, Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..))
 
@@ -35,10 +36,11 @@ prepare metadata mod =
   let initial = Candidates.collect metadata mod
       accepted = validateCandidates metadata mod.name initial
       workers = Array.fromFoldable (Map.values accepted)
-      declarations = foldMap (fromMaybe [] <<< Workers.declarations metadata mod.name accepted) workers
-      functions = functionSignatures (String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)) workers
+      balanced = BalancedLoop.prepare metadata mod.name accepted
+      declarations = foldMap (fromMaybe [] <<< Workers.declarations metadata mod.name accepted) workers <> balanced.declarations
+      functions = Map.union (functionSignatures (String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)) workers) balanced.functions
       bindings = map (\group -> group { bindings = map (\(Tuple name expr) ->
-        Tuple name (rewrite metadata mod.name accepted expr)) group.bindings }) mod.bindings
+        Tuple name (rewrite metadata mod.name accepted balanced.fastEntries expr)) group.bindings }) mod.bindings
   in { module: mod { bindings = bindings }, declarations, functions }
 
 -- Removing a rejected function invalidates every caller which depended on its
@@ -70,12 +72,26 @@ freshCall metadata moduleName candidates expr = do
     (Array.zip fn.argTypes call.args))
   pure { fn, args: call.args }
 
-rewrite :: CodegenMetadata -> ModuleName -> Candidates -> NeutralExpr -> NeutralExpr
-rewrite metadata moduleName candidates original@(NeutralExpr syn) =
+isEmptyLeaf :: ModuleName -> TreeSpec -> NeutralExpr -> Boolean
+isEmptyLeaf moduleName spec expr = case spec.leaf of
+  Nothing -> false
+  Just leafCtor -> case strip expr of
+    CtorSaturated ctor _ _ _ fields -> qualify moduleName ctor == leafCtor && Array.null fields
+    Var ctor -> qualify moduleName ctor == leafCtor
+    _ -> false
+
+rewrite :: CodegenMetadata -> ModuleName -> Candidates -> Map.Map Ident BalancedLoop.FastEntry -> NeutralExpr -> NeutralExpr
+rewrite metadata moduleName candidates fastEntries original@(NeutralExpr syn) =
   let choose = do
         { fn, args: supplied } <- freshCall metadata moduleName candidates original
-        args <- NEA.fromArray (map (rewrite metadata moduleName candidates) supplied)
+        let targetWorker = case Map.lookup fn.original fastEntries of
+              Just entry ->
+                case Array.index supplied entry.treeArgIdx of
+                  Just treeArg | isEmptyLeaf moduleName entry.spec treeArg -> entry.fastWorker
+                  _ -> fn.worker
+              Nothing -> fn.worker
+        args <- NEA.fromArray (map (rewrite metadata moduleName candidates fastEntries) supplied)
         let signature = Func (map (\ty -> if ty == fn.spec.goType then fn.spec.ty else Any) fn.argTypes) fn.spec.ty
         pure $ NeutralExpr $ Typed fn.spec.ty $ NeutralExpr $ App
-          (NeutralExpr $ Typed signature $ NeutralExpr $ Var $ Qualified (Just moduleName) fn.worker) args
-  in fromMaybe (NeutralExpr $ map (rewrite metadata moduleName candidates) syn) choose
+          (NeutralExpr $ Typed signature $ NeutralExpr $ Var $ Qualified (Just moduleName) targetWorker) args
+  in fromMaybe (NeutralExpr $ map (rewrite metadata moduleName candidates fastEntries) syn) choose

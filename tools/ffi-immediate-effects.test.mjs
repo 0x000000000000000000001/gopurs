@@ -12,7 +12,7 @@ import { empty as emptySet } from '../output/Data.Set/index.js';
 import { Tuple } from '../output/Data.Tuple/index.js';
 import { workerInputs, translateWithFunctions } from '../output/Gopurs.CodeGen/index.js';
 import { ffiFunctionInfos, ffiValueWorkers, generateFfiBridge } from '../output/Gopurs.FfiBridge/index.js';
-import { key, factoryKey } from '../output/Gopurs.FfiBridge.ImmediateEffects/index.js';
+import { key, factoryKey, statelessFactoryKey } from '../output/Gopurs.FfiBridge.ImmediateEffects/index.js';
 import { prepareFfi } from '../output/Gopurs.FfiSupport/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { StmtEmpty, StmtLeaf, flattenStmts } from '../output/Gopurs.ExprContext/index.js';
@@ -32,6 +32,7 @@ const effect = result => new C.ADT('Effect.Effect', ['Effect', 'Effect'], [resul
 const fn = (args, result) => new C.Func(args, result);
 const foreigns = [
   ['identity', new C.ForAll(['a'], fn([variable], effect(variable)))],
+  ['stateless', new C.ForAll(['a'], fn([variable], effect(variable)))],
   ['choose', new C.ForAll(['a'], fn([int, variable, variable], effect(variable)))],
   ['native', fn([int], effect(int))],
   ['foreign', fn([foreign], effect(foreign))],
@@ -47,6 +48,7 @@ var Trace []string
 var Marker = &struct{}{}
 var Last any
 func Identity(x any) func() any { Last = x; Trace = append(Trace, "factory"); return func() any { Trace = append(Trace, "effect"); return x } }
+func Stateless(x any) func() any { return func() any { Trace = append(Trace, "stateless"); return x } }
 func Choose(count int64, x any, y interface{}) func() interface{} { Trace = append(Trace, "factory"); return func() interface{} { Trace = append(Trace, "effect"); if count == 0 { return x }; return y } }
 func Native(x int64) func() any { return func() any { return x + 1 } }
 func Foreign(x any) func() any { return func() any { return x } }
@@ -301,6 +303,20 @@ test('module emission selects the effect worker without exposing its reserved ke
       e(new S.EffectPure(e(new S.Local(new Just('pending'), 0))))))));
   const escapedCode = translateWithFunctions(metadata)(module(escapedAction)).code;
   assert.match(escapedCode, /gopurs_runtime\.Apply\(Get_RenamedBoundary_identity\(\)/);
+
+  // Stateless Effect factory sinks into EffectBind without hoisting a thunk closure.
+  assert.ok(lookup(statelessFactoryKey('stateless')) instanceof Just);
+  assert.equal(lookup(statelessFactoryKey('identity')), Nothing.value);
+  const hoistedStateless = e(new S.Let(new Just('pending'), 0, application('stateless'),
+    e(new S.EffectPure(
+      e(new S.EffectBind(new Just('first'), 1, e(new S.Local(new Just('pending'), 0)),
+        e(new S.EffectBind(new Just('second'), 2, e(new S.Local(new Just('pending'), 0)),
+          e(new S.EffectPure(e(new S.Local(new Just('second'), 2))))))))))));
+  const hoistedStatelessCode = translateWithFunctions(metadata)(module(hoistedStateless)).code;
+  assert.doesNotMatch(hoistedStatelessCode, /pending_0_0 := RenamedBoundary_Stateless\(/);
+  assert.match(hoistedStatelessCode, /_ = RenamedBoundary_Stateless\(__ffi_effect_arg_\d+\)\(\)/);
+  assert.match(hoistedStatelessCode, /second_2_\d+ := gopurs_runtime\.Box\(RenamedBoundary_Stateless\(__ffi_effect_arg_\d+\)\(\)\)/);
+  assert.doesNotMatch(hoistedStatelessCode, /gopurs_runtime\.Apply/);
 });
 
 test('hoisted Let-bound native thunks execute factory once and replay thunk without runtime Apply', t => {
@@ -320,11 +336,16 @@ test('hoisted Let-bound native thunks execute factory once and replay thunk with
       e(new S.EffectBind(new Just('unused'), 1, e(new S.Local(new Just('pending'), 0)),
         e(new S.EffectBind(new Just('answer'), 2, e(new S.Local(new Just('pending'), 0)),
           e(new S.EffectPure(e(new S.Local(new Just('answer'), 2))))))))))));
+  const hoistedStateless = e(new S.Let(new Just('pending'), 0, e(new S.App(target('stateless'), [literal(99)])),
+    e(new S.EffectPure(
+      e(new S.EffectBind(new Just('unused'), 1, e(new S.Local(new Just('pending'), 0)),
+        e(new S.EffectBind(new Just('answer'), 2, e(new S.Local(new Just('pending'), 0)),
+          e(new S.EffectPure(e(new S.Local(new Just('answer'), 2))))))))))));
   const panicUnused = e(new S.EffectBind(new Just('unused'), 1, e(new S.App(target('panic'), [literal(0)])),
     e(new S.EffectPure(literal(7)))));
   const mod = {
     name: owner,
-    bindings: [{ recursive: false, bindings: [new Tuple('hoisted', hoisted), new Tuple('panicUnused', panicUnused)] }],
+    bindings: [{ recursive: false, bindings: [new Tuple('hoisted', hoisted), new Tuple('hoistedStateless', hoistedStateless), new Tuple('panicUnused', panicUnused)] }],
     comments: [], imports: emptySet, exports: emptySet, reExports: emptySet,
     dataTypes: Map.empty, dataDecls: [], classDecls: [], foreign: foreignMap,
     implementations: Map.empty, directives: Map.empty,
@@ -349,6 +370,13 @@ func TestHoistedThunkReplay(t *testing.T) {
     if got := gopurs_runtime.Apply(inner, gopurs_runtime.Value{}).IntVal; got != 41 { t.Fatal("replay value", got) }
   }
   if !reflect.DeepEqual(p.${owner}_Trace, []string{"factory", "effect", "effect", "effect", "effect"}) { t.Fatal("replay trace", p.${owner}_Trace) }
+  p.${owner}_Trace = nil
+  innerStateless := gopurs_runtime.Apply(p.Get_${owner}_hoistedStateless(), gopurs_runtime.Value{})
+  if len(p.${owner}_Trace) != 0 { t.Fatal("stateless outer timing", p.${owner}_Trace) }
+  for i := 0; i < 2; i++ {
+    if got := gopurs_runtime.Apply(innerStateless, gopurs_runtime.Value{}).IntVal; got != 99 { t.Fatal("stateless replay value", got) }
+  }
+  if !reflect.DeepEqual(p.${owner}_Trace, []string{"stateless", "stateless", "stateless", "stateless"}) { t.Fatal("stateless replay trace", p.${owner}_Trace) }
   p.${owner}_Trace = nil
   func() {
     defer func() { if recover() != p.${owner}_Marker { t.Fatal("discarded panic identity") } }()

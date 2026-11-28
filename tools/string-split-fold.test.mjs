@@ -17,6 +17,7 @@ import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import * as S from '../output/PureScript.Backend.Optimizer.Syntax/index.js';
 import { NeutralExpr } from '../output/PureScript.Backend.Optimizer.Semantics/index.js';
 import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
+import { runtimeSimdFiles } from '../output/Gopurs.Runtime.Simd/index.js';
 import { withReboxFields } from './codegen-metadata.mjs';
 
 const n = syntax => new NeutralExpr(syntax);
@@ -89,6 +90,7 @@ test('String.split + foldl fuses without allocating intermediate slices and matc
   mkdirSync(join(directory, 'gopurs_runtime'));
   writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
   writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), runtimeGoCode);
+  for (const f of runtimeSimdFiles) writeFileSync(join(directory, 'gopurs_runtime', f.name), f.content);
   writeFileSync(join(directory, 'fixture.go'), source.replace('package purescript', 'package main'));
   writeFileSync(join(directory, 'main.go'), `package main
 import (

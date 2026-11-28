@@ -402,7 +402,8 @@ writeGoDecl out = case _ of
       emit out2 "\n}\n"
   GoFunctionDecl { name, params, result, body } ->
     let
-      out1 = emitMany out [ "func ", name.name, "(" ]
+      noinline = if String.contains (String.Pattern "___gopurs_cold_") name.name then "//go:noinline\n" else ""
+      out1 = emitMany out [ noinline, "func ", name.name, "(" ]
       out2 = writeParams out1 params
       out3 = emitMany out2 [ ") ", goTypeToStr result, " {\n" ]
     in

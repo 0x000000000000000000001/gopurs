@@ -17,7 +17,7 @@ const quote = value => printGoExpr(new Go.GoString(value));
 test('record projection guards are limited to unique integer fields', () => {
     const integers = Array.from({ length: 8 }, (_, index) => [`field${index}`]);
     assert.match(projection(integers), /recordProjection_data/);
-    assert.match(projection([['alpha'], ['omega']]), /RecordFields2\(orig\)/);
+    assert.match(projection([['alpha'], ['omega']]), /RecordIntFields2\(orig\)/);
     for (let size = 1; size <= 5; size++) {
         assert.match(projection(integers.slice(0, size)), new RegExp(`orig.Type == gopurs_runtime.TypeRecord${size}`));
     }

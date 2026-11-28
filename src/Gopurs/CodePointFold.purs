@@ -66,20 +66,33 @@ expand original = do
 -- order and each Int operation remain unchanged. Unknown callbacks keep the
 -- ordinary array path, even when their annotations claim a pure function.
 emit :: TranslateExpr -> ExprContext -> Int -> Tco.TcoExpr -> Array Tco.TcoExpr -> Maybe ExprResult
-emit translate context nextId fn args = do
-  guard (named "Data.Foldable" "foldlArray" fn && Array.null context.recVars)
-  Tuple callback (Tuple seed converted) <- case args of
-    [ callback, seed, converted ] -> Just (Tuple callback (Tuple seed converted))
-    _ -> Nothing
-  let Tuple conversion spine = collectGoSpine converted
-  guard (named "Data.String.CodePoints" "toCodePointArray" conversion)
-  guard (compatibleT (Func [ String ] (Array Int)) conversion)
-  input <- case getGoSpineArgs spine of
-    [ input ] -> Just input
-    _ -> Nothing
-  grouped <- primitiveCallback callback
-  guard (compatibleT Int seed && compatibleT String input && compatibleT (Array Int) converted)
-  pure (emitLoop translate context nextId callback seed input Nothing grouped)
+emit translate context nextId fn args =
+  if named "Data.String.CodePoints" "length" fn && Array.length args == 1 && Array.null context.recVars && compatibleT (Func [ String ] Int) fn then do
+    input <- Array.head args
+    guard (compatibleT String input)
+    let
+      translated = translate ((childContext context (Just String)) { mbExpectedGoType = Just TypeString }) nextId input
+      strExpr = coerceGoExpr context.codegenStateRef context.modNameStr translated.expr translated.exprType TypeString
+    pure
+      { stmts: translated.stmts
+      , expr: GoCall (GoSelector (GoVar "gopurs_runtime") "CountUTF8CodePoints") [ strExpr ]
+      , exprType: TypeInt64
+      , nextId: translated.nextId
+      }
+  else do
+    guard (named "Data.Foldable" "foldlArray" fn && Array.null context.recVars)
+    Tuple callback (Tuple seed converted) <- case args of
+      [ callback, seed, converted ] -> Just (Tuple callback (Tuple seed converted))
+      _ -> Nothing
+    let Tuple conversion spine = collectGoSpine converted
+    guard (named "Data.String.CodePoints" "toCodePointArray" conversion)
+    guard (compatibleT (Func [ String ] (Array Int)) conversion)
+    input <- case getGoSpineArgs spine of
+      [ input ] -> Just input
+      _ -> Nothing
+    grouped <- primitiveCallback callback
+    guard (compatibleT Int seed && compatibleT String input && compatibleT (Array Int) converted)
+    pure (emitLoop translate context nextId callback seed input Nothing grouped)
 
 -- The take consumer preserves the callback and seed proof and supplies a count
 -- captured before the string. The ordinary unbounded path remains unchanged.
@@ -193,10 +206,22 @@ emitLoop translate context nextId callback seed input limit grouped =
       [ GoIfElse (rawGo "len(codePointFold_rem) < len(codePointFold_input)")
           [ GoMutate "codePointFold_result" (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "+" (GoVar "codePointFold_result") (GoVar "codePointFold_acc") ] ]) ] []
       ] else []
-    body =
+    body = if directAdd then
       [ GoAssign "codePointFold_input" str
       , GoAssign "codePointFold_result" (integer (arg 1) (argType 1))
-      ] <> preparation <> [ mainLoop, tailLoop ] <> finalize
+      ] <> (if bounded then
+              [ GoAssign "codePointTake_limit" (integer (arg 2) (argType 2))
+              , rawGo "codePointFold_acc, codePointFold_taken := gopurs_runtime.SumCodePointsLimit(codePointFold_input, codePointTake_limit)"
+              ]
+            else
+              [ rawGo "codePointFold_acc, codePointFold_taken := gopurs_runtime.SumCodePoints(codePointFold_input)" ])
+        <> [ GoIfElse (GoVar "codePointFold_taken")
+               [ GoMutate "codePointFold_result" (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "+" (GoVar "codePointFold_result") (GoVar "codePointFold_acc") ] ]) ] []
+           ]
+      else
+        [ GoAssign "codePointFold_input" str
+        , GoAssign "codePointFold_result" (integer (arg 1) (argType 1))
+        ] <> preparation <> [ mainLoop, tailLoop ] <> finalize
   in { stmts: captured.stmts, expr: GoCall (GoFuncLit [] body (GoVar "codePointFold_result") TypeInt64) []
        , exprType: TypeInt64, nextId: captured.nextId }
   where

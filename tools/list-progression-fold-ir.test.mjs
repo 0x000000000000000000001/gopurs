@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { empty as emptyMap } from '../output/Data.Map/index.js';
@@ -118,7 +118,7 @@ test('recognizes complete renamed recurrences under local scopes and EffectPure'
   for (const options of [{}, { owner: 'Renamed', nil: 'End', cons: 'Link', filterName: 'select', recurseName: 'peel', effectEnvelope: true }]) {
     const source = fixture(options), before = JSON.stringify(source), result = prepare(source);
     assert.equal(JSON.stringify(source), before, 'source module is immutable');
-    assert.equal(result.declarations.length, 1);
+    assert.equal(result.declarations.length, 2);
     assert.deepEqual(result.module.bindings.slice(0, 2), source.bindings.slice(0, 2), 'ordinary functions remain available');
     const fastBranches = [];
     inspect(result.module.bindings[2], value => {
@@ -165,22 +165,27 @@ for (const [name, options] of [
 test('reserves helper names against existing bindings and emits the guarded bitmap algorithm', () => {
   const result = prepare(fixture({ nameCollision: true }));
   const code = printGoFile({ packageName: 'probe', imports: [], declarationGroups: [result.declarations] });
-  assert.match(code, /__gopurs_list_progression_fold_1/);
+  assert.match(code, /__gopurs_list_progression_fold_1_general/);
+  assert.match(code, /__gopurs_list_progression_fold_1\(/);
   assert.match(code, /make\(\[\]bool, upper-lower\+1\)/);
   assert.match(code, /for value := lower; value <= upper; value\+\+/);
   assert.match(code, /multiple := value \+ value/);
   assert.match(code, /int64\(int32\(/);
   assert.match(code, /lower\) == \(int64\(2\)\)/);
-  assert.match(code, /prime\*prime/);
-  assert.match(code, /var local \[512\]bool/);
+  assert.match(code, /gopurs_runtime\.SumOddProgression\(upper, seed\)/);
   assert.doesNotMatch(code, /pool|Constructor|IntMod/);
 });
 
 test('generated prefix and general kernels agree with ordered elimination and retain bounded scratch allocations', () => {
-  const code = printGoFile({ packageName: 'probe', imports: [], declarationGroups: [prepare(fixture()).declarations] });
+  const code = printGoFile({ packageName: 'probe', imports: [], declarationGroups: [prepare(fixture()).declarations] })
+    .replace('import (\n\n)', 'import (\n\tgopurs_runtime "probe/gopurs_runtime"\n)');
   const folder = mkdtempSync(join(tmpdir(), 'gopurs-progression-kernel-'));
   try {
-    writeFileSync(join(folder, 'go.mod'), 'module probe\n\ngo 1.27\n');
+    mkdirSync(join(folder, 'gopurs_runtime'));
+    for (const file of ['runtime.go', 'simd_asm.go', 'simd_generic.go', 'simd_arm64.s', 'simd_amd64.s']) {
+      writeFileSync(join(folder, 'gopurs_runtime', file), readFileSync(new URL(`../runtime/${file}`, import.meta.url)));
+    }
+    writeFileSync(join(folder, 'go.mod'), 'module probe\n\ngo 1.24\n');
     writeFileSync(join(folder, 'kernel.go'), code);
     writeFileSync(join(folder, 'kernel_test.go'), `package probe
 import("testing";"math/rand")

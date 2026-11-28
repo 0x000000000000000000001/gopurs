@@ -11,6 +11,7 @@ import {Tuple} from '../output/Data.Tuple/index.js';
 import * as CodeGen from '../output/Gopurs.CodeGen/index.js';
 import {optimize,describe,validDescriptor} from '../output/Gopurs.CodePointFold/index.js';
 import {runtimeGoCode} from '../output/Gopurs.Runtime.Source/index.js';
+import {runtimeSimdFiles} from '../output/Gopurs.Runtime.Simd/index.js';
 import {TcoExpr} from '../output/PureScript.Backend.Optimizer.Codegen.Tco/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import {NeutralExpr} from '../output/PureScript.Backend.Optimizer.Semantics/index.js';
@@ -66,7 +67,7 @@ function generated(){
  const wideProduct=typed(cbtype,abs([0,1],add(operation(S.OpMultiply.value,local(0),int(2147483647)),local(1))));
  return CodeGen.translate(metadata)(moduleOf([consumer('sum',sum,0),consumer('weighted',weighted,17),consumer('wide',sum,4294967295),consumer('subtract',subtract,-2147483648),consumer('wideProduct',wideProduct,2147483647),...['sum','weighted','wide','subtract','wideProduct'].map(caller)]));
 }
-function runGo(t,code,main){const dir=mkdtempSync(join(tmpdir(),'gopurs-concat-fold-'));t.after(()=>rmSync(dir,{recursive:true,force:true}));mkdirSync(join(dir,'gopurs_runtime'));writeFileSync(join(dir,'go.mod'),'module gopurs/output\n\ngo 1.22\n');writeFileSync(join(dir,'gopurs_runtime/runtime.go'),runtimeGoCode);writeFileSync(join(dir,'fixture.go'),code.replace('package purescript','package main'));writeFileSync(join(dir,'main.go'),main);const result=spawnSync('go',['run','.'],{cwd:dir,encoding:'utf8',timeout:60000,env:{...process.env,GOWORK:'off'}});assert.ifError(result.error);assert.equal(result.status,0,result.stdout+result.stderr);return result.stdout;}
+function runGo(t,code,main){const dir=mkdtempSync(join(tmpdir(),'gopurs-concat-fold-'));t.after(()=>rmSync(dir,{recursive:true,force:true}));mkdirSync(join(dir,'gopurs_runtime'));writeFileSync(join(dir,'go.mod'),'module gopurs/output\n\ngo 1.22\n');writeFileSync(join(dir,'gopurs_runtime/runtime.go'),runtimeGoCode);for(const f of runtimeSimdFiles)writeFileSync(join(dir,'gopurs_runtime',f.name),f.content);writeFileSync(join(dir,'fixture.go'),code.replace('package purescript','package main'));writeFileSync(join(dir,'main.go'),main);const result=spawnSync('go',['run','.'],{cwd:dir,encoding:'utf8',timeout:60000,env:{...process.env,GOWORK:'off'}});assert.ifError(result.error);assert.equal(result.status,0,result.stdout+result.stderr);return result.stdout;}
 
 test('generated suffix continuation agrees with complete concatenation and the original consumers',t=>{
  const code=generated();assert.match(code,/concatFold_finish/);assert.doesNotMatch(code,/Get_Data_Foldable_foldlArray|Get_Data_String_CodePoints_toCodePointArray/);

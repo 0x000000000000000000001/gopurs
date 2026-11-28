@@ -11,6 +11,7 @@ import {Tuple} from '../output/Data.Tuple/index.js';
 import * as CodeGen from '../output/Gopurs.CodeGen/index.js';
 import {optimize,emit} from '../output/Gopurs.CodePointFold/index.js';
 import {runtimeGoCode} from '../output/Gopurs.Runtime.Source/index.js';
+import {runtimeSimdFiles} from '../output/Gopurs.Runtime.Simd/index.js';
 import {TcoExpr} from '../output/PureScript.Backend.Optimizer.Codegen.Tco/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import {NeutralExpr} from '../output/PureScript.Backend.Optimizer.Semantics/index.js';
@@ -76,7 +77,7 @@ function generated(){
 }
 test('generated native and public workers fold directly with Unicode decoding and unchanged Int arithmetic',t=>{
  const code=generated();assert.match(code,/func Call_CodePointFixture_fold\([^\n]*string/);assert.match(code,/DecodeStringCodePoint/);assert.doesNotMatch(code,/Get_Data_String_CodePoints_toCodePointArray|Get_Data_Foldable_foldlArray|Get_Control_Semigroupoid_compose|make\(\[\]/);
- const dir=mkdtempSync(join(tmpdir(),'gopurs-codepoint-fold-'));t.after(()=>rmSync(dir,{recursive:true,force:true}));mkdirSync(join(dir,'gopurs_runtime'));writeFileSync(join(dir,'go.mod'),'module gopurs/output\n\ngo 1.22\n');writeFileSync(join(dir,'gopurs_runtime/runtime.go'),runtimeGoCode);writeFileSync(join(dir,'fixture.go'),code.replace('package purescript','package main'));
+ const dir=mkdtempSync(join(tmpdir(),'gopurs-codepoint-fold-'));t.after(()=>rmSync(dir,{recursive:true,force:true}));mkdirSync(join(dir,'gopurs_runtime'));writeFileSync(join(dir,'go.mod'),'module gopurs/output\n\ngo 1.22\n');writeFileSync(join(dir,'gopurs_runtime/runtime.go'),runtimeGoCode);for(const f of runtimeSimdFiles)writeFileSync(join(dir,'gopurs_runtime',f.name),f.content);writeFileSync(join(dir,'fixture.go'),code.replace('package purescript','package main'));
  writeFileSync(join(dir,'main.go'),`package main
 import("fmt";"strings";"testing";r "gopurs/output/gopurs_runtime")
 var sink int64

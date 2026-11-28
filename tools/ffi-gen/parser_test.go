@@ -458,3 +458,42 @@ func Read(value Container) remote.Record { return value.Remote }`)[0]
 		t.Fatal(empty)
 	}
 }
+
+func TestStatelessEffectFactoryDetection(t *testing.T) {
+	decls := parseDeclarations(t, `package ffi
+var log []int64
+func Stateless(a any) func() any { return func() any { return a } }
+func StatelessZero() func() int64 { return func() int64 { return 7 } }
+func StatefulInit(a int64) func() int64 { log = append(log, a); return func() int64 { return a } }
+func MutatesParam(n int64) func() int64 { return func() int64 { n++; return n } }
+func AssignsParam(n int64) func() int64 { return func() int64 { n = n + 1; return n } }
+func AddrParam(n int64) func() int64 { return func() int64 { p := &n; return *p } }
+func ShadowsParam(n int64) func() int64 { return func() int64 { n := n + 1; n++; return n } }
+func NamedReturn(n int64) (out func() int64) { return func() int64 { return n } }
+func ReturnsNonThunk(n int64) func(int64) int64 { return func(y int64) int64 { return n + y } }
+`)
+	want := map[string]bool{
+		"Stateless":       true,
+		"StatelessZero":   true,
+		"StatefulInit":    false,
+		"MutatesParam":    false,
+		"AssignsParam":    false,
+		"AddrParam":       false,
+		"ShadowsParam":    true,
+		"NamedReturn":     false,
+		"ReturnsNonThunk": false,
+	}
+	for _, decl := range decls {
+		expected, ok := want[decl.Name]
+		if !ok {
+			continue
+		}
+		if decl.StatelessEffectFactory != expected {
+			t.Fatalf("%s: StatelessEffectFactory = %v, want %v", decl.Name, decl.StatelessEffectFactory, expected)
+		}
+		delete(want, decl.Name)
+	}
+	if len(want) != 0 {
+		t.Fatalf("missing declarations: %v", want)
+	}
+}

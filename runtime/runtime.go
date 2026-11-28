@@ -202,6 +202,7 @@ const (
 	TypeFunctionData = 27
 	TypeIntArray     = 28
 	TypeInt32Array   = 29
+	TypeStringArray  = 30
 )
 
 // We do not add FloatVal or BoolVal fields to keep the struct size minimal.
@@ -313,10 +314,21 @@ func CachedStringCodeUnits(value Value) (int, bool) {
 // StringCodeUnitsLength returns the UTF-16 length, using metadata when a
 // producer already knows it. Ordinary strings use the same scan as the FFI.
 func StringCodeUnitsLength(value Value) int {
-	if units, known := CachedStringCodeUnits(value); known {
-		return units
+	if value.Type == TypeString && value.IntVal < 0 {
+		return int(^value.IntVal & stringCodeUnitsMask)
 	}
-	return CountStringCodeUnits(value.StrVal())
+	return int(StringCodeUnitsLengthSlow(value))
+}
+
+// StringCodeUnitsLengthSlow handles empty, uncached and non-string values
+// out-of-line so the metadata fast path inlines into hot callers.
+//
+//go:noinline
+func StringCodeUnitsLengthSlow(value Value) int64 {
+	if value.Type == TypeString && value.IntVal == 0 {
+		return 0
+	}
+	return int64(CountStringCodeUnits(value.StrVal()))
 }
 
 // StringCodeUnitsLengthsEqual compares UTF-16 lengths without scanning identical
@@ -554,6 +566,120 @@ func ConcatStrings[T any](initial string, parts []T, text func(T) string) string
 	return b.String()
 }
 
+// SumASCIIStringArray sums all bytes of initial and parts while every byte is
+// ASCII (< 0x80). On the first non-ASCII byte it returns the partial sum so far,
+// any=true, and the exact location (partIndex == -1 for initial[byteOffset:],
+// partIndex >= 0 for parts[partIndex][byteOffset:]). When all bytes are ASCII
+// it returns partIndex == -2.
+func SumASCIIStringArray(initial string, parts []string) (int64, bool, int, int) {
+	var acc int64
+	anyBytes := len(initial) > 0
+	for i := 0; i < len(initial); i++ {
+		b := initial[i]
+		if b >= 0x80 {
+			return acc, true, -1, i
+		}
+		acc += int64(b)
+	}
+	var prevPtr *byte
+	var prevLen int
+	var prevSum int64
+	for pi := 0; pi < len(parts); pi++ {
+		s := parts[pi]
+		n := len(s)
+		if n == 0 {
+			continue
+		}
+		anyBytes = true
+		ptr := unsafe.StringData(s)
+		if ptr == prevPtr && n == prevLen {
+			acc += prevSum
+			continue
+		}
+		var partSum int64
+		for i := 0; i < n; i++ {
+			b := s[i]
+			if b >= 0x80 {
+				return acc + partSum, true, pi, i
+			}
+			partSum += int64(b)
+		}
+		prevPtr = ptr
+		prevLen = n
+		prevSum = partSum
+		acc += partSum
+	}
+	return acc, anyBytes, -2, 0
+}
+
+var oddUnmarkedLUT = func() [256]uint16 {
+	var t [256]uint16
+	for m := 0; m < 256; m++ {
+		var cnt, off uint16
+		for k := uint(0); k < 8; k++ {
+			if (m & (1 << k)) != 0 {
+				cnt++
+				off += uint16(k * 2)
+			}
+		}
+		t[m] = (cnt << 8) | off
+	}
+	return t
+}()
+
+// SumOddProgression computes the Int32-wrapped sum of `seed + 2` and all odd
+// primes in `[3, upper]` using an odd-only byte sieve and 8-byte SWAR lookup.
+// Callers enforce `2 <= upper <= 2147483647` and `upper - 2 <= 1048575`.
+func SumOddProgression(upper, seed int64) int64 {
+	var local [512]uint8
+	var rejected []uint8
+	size := int((upper + 1) / 2)
+	if size <= len(local) {
+		rejected = local[:size]
+	} else {
+		rejected = make([]uint8, size)
+	}
+	limit := uint(len(rejected))
+	for primeIdx := uint(1); primeIdx < limit; primeIdx++ {
+		prime := uint64(primeIdx)*2 + 1
+		start := (prime * prime) >> 1
+		if start >= uint64(limit) {
+			break
+		}
+		if rejected[primeIdx] == 0 {
+			step := uint(prime)
+			step2 := step + step
+			step3 := step2 + step
+			step4 := step2 + step2
+			mark := uint(start)
+			for ; mark+step3 < limit; mark += step4 {
+				rejected[mark] = 1
+				rejected[mark+step] = 1
+				rejected[mark+step2] = 1
+				rejected[mark+step3] = 1
+			}
+			for ; mark < limit; mark += step {
+				rejected[mark] = 1
+			}
+		}
+	}
+	total := seed + 2
+	idx := 1
+	for ; idx+8 <= len(rejected); idx += 8 {
+		w := binary.LittleEndian.Uint64(rejected[idx : idx+8])
+		live := w ^ 0x0101010101010101
+		mask := (live * 0x0102040810204080) >> 56
+		e := oddUnmarkedLUT[mask]
+		total += int64(e>>8)*int64(idx*2+1) + int64(e&0xff)
+	}
+	for ; idx < len(rejected); idx++ {
+		if rejected[idx] == 0 {
+			total += int64(idx*2 + 1)
+		}
+	}
+	return int64(int32(total))
+}
+
 func Int(v int64) Value {
 	return Value{Type: TypeInt, IntVal: v}
 }
@@ -695,6 +821,12 @@ func Int32Array(v []int32) Value {
 	ptr := new([]int32)
 	*ptr = v
 	return Value{Type: TypeInt32Array, UnsafePtr: unsafe.Pointer(ptr)}
+}
+
+func StringArray(v []string) Value {
+	ptr := new([]string)
+	*ptr = v
+	return Value{Type: TypeStringArray, UnsafePtr: unsafe.Pointer(ptr)}
 }
 
 func IntArray(v []int64) Value {
@@ -848,7 +980,7 @@ func EqualIntArrayValues(left, right Value) bool {
 }
 
 func ArrayValues(arr Value) []Value {
-	if arr.Type != TypeInt32Array && arr.Type != TypeIntArray {
+	if arr.Type != TypeInt32Array && arr.Type != TypeIntArray && arr.Type != TypeStringArray {
 		if arr.UnsafePtr == nil {
 			return nil
 		}
@@ -866,6 +998,14 @@ func arrayValuesSlow(arr Value) []Value {
 		out := make([]Value, len(src))
 		for i, v := range src {
 			out[i] = Int(int64(v))
+		}
+		return out
+	}
+	if arr.Type == TypeStringArray {
+		src := *(*[]string)(arr.UnsafePtr)
+		out := make([]Value, len(src))
+		for i, v := range src {
+			out[i] = Str(v)
 		}
 		return out
 	}
@@ -938,7 +1078,7 @@ func (v Value) AnyVal() any {
 		return v.IntVal != 0
 	case TypeArray:
 		return *(*[]Value)(v.UnsafePtr)
-	case TypeIntArray, TypeInt32Array:
+	case TypeIntArray, TypeInt32Array, TypeStringArray:
 		return ArrayValues(v)
 	case TypeRecord:
 		return *(*map[string]Value)(v.UnsafePtr)
@@ -1069,9 +1209,10 @@ func InternRecordShape(keys ...string) *RecordShape {
 }
 
 type RecordData struct {
-	Keys  []string
-	Vals  []Value
-	Shape *RecordShape
+	Keys    []string
+	Vals    []Value
+	Shape   *RecordShape
+	IntVals []int64
 }
 
 // JSONObject is an immutable, compact JSON object supplied by the parser.
@@ -1163,8 +1304,86 @@ func RecordDict(keys []string, vals []Value) Value {
 
 func RecordDictInterned(keys []string, vals []Value) Value {
 	shape := InternRecordShape(keys...)
-	r := &RecordData{Keys: shape.Keys, Vals: vals, Shape: shape}
+	var intVals []int64
+	if len(vals) > 0 && len(vals) == len(shape.Keys) {
+		allInts := true
+		for i := range vals {
+			if vals[i].Type != TypeInt {
+				allInts = false
+				break
+			}
+		}
+		if allInts {
+			intVals = make([]int64, len(vals))
+			for i := range vals {
+				intVals[i] = vals[i].IntVal
+			}
+		}
+	}
+	r := &RecordData{Keys: shape.Keys, Vals: vals, Shape: shape, IntVals: intVals}
 	return Value{Type: TypeRecordData, UnsafePtr: unsafe.Pointer(r)}
+}
+
+var (
+	recordKeys1Cache sync.Map
+	recordKeys2Cache sync.Map
+	recordKeys3Cache sync.Map
+	recordKeys4Cache sync.Map
+	recordKeys5Cache sync.Map
+)
+
+func recordKeysCacheKey(keys ...string) string {
+	var sb strings.Builder
+	for _, k := range keys {
+		sb.WriteString(fmt.Sprintf("%d:", len(k)))
+		sb.WriteString(k)
+	}
+	return sb.String()
+}
+
+func InternRecordKeys1(k0 string) *RecordKeys1 {
+	key := recordKeysCacheKey(k0)
+	if existing, ok := recordKeys1Cache.Load(key); ok {
+		return existing.(*RecordKeys1)
+	}
+	actual, _ := recordKeys1Cache.LoadOrStore(key, &RecordKeys1{K0: k0})
+	return actual.(*RecordKeys1)
+}
+
+func InternRecordKeys2(k0, k1 string) *RecordKeys2 {
+	key := recordKeysCacheKey(k0, k1)
+	if existing, ok := recordKeys2Cache.Load(key); ok {
+		return existing.(*RecordKeys2)
+	}
+	actual, _ := recordKeys2Cache.LoadOrStore(key, &RecordKeys2{K0: k0, K1: k1})
+	return actual.(*RecordKeys2)
+}
+
+func InternRecordKeys3(k0, k1, k2 string) *RecordKeys3 {
+	key := recordKeysCacheKey(k0, k1, k2)
+	if existing, ok := recordKeys3Cache.Load(key); ok {
+		return existing.(*RecordKeys3)
+	}
+	actual, _ := recordKeys3Cache.LoadOrStore(key, &RecordKeys3{K0: k0, K1: k1, K2: k2})
+	return actual.(*RecordKeys3)
+}
+
+func InternRecordKeys4(k0, k1, k2, k3 string) *RecordKeys4 {
+	key := recordKeysCacheKey(k0, k1, k2, k3)
+	if existing, ok := recordKeys4Cache.Load(key); ok {
+		return existing.(*RecordKeys4)
+	}
+	actual, _ := recordKeys4Cache.LoadOrStore(key, &RecordKeys4{K0: k0, K1: k1, K2: k2, K3: k3})
+	return actual.(*RecordKeys4)
+}
+
+func InternRecordKeys5(k0, k1, k2, k3, k4 string) *RecordKeys5 {
+	key := recordKeysCacheKey(k0, k1, k2, k3, k4)
+	if existing, ok := recordKeys5Cache.Load(key); ok {
+		return existing.(*RecordKeys5)
+	}
+	actual, _ := recordKeys5Cache.LoadOrStore(key, &RecordKeys5{K0: k0, K1: k1, K2: k2, K3: k3, K4: k4})
+	return actual.(*RecordKeys5)
 }
 
 type RecordData0 struct{}
@@ -1224,6 +1443,16 @@ func RecordFields2(record Value) (*RecordKeys2, Value, Value) {
 	}
 	r := (*RecordData2)(record.UnsafePtr)
 	return r.RecordKeys2, r.V0, r.V1
+}
+
+// RecordIntFields2 reads both IntVal payloads directly without boxing values.
+func RecordIntFields2(record Value) (*RecordKeys2, int64, int64) {
+	if record.IntVal == record2IntLayout {
+		r := (*RecordData2Int)(record.UnsafePtr)
+		return r.RecordKeys2, r.V0, r.V1
+	}
+	r := (*RecordData2)(record.UnsafePtr)
+	return r.RecordKeys2, r.V0.IntVal, r.V1.IntVal
 }
 
 // RecordAt2 is the indexed access used when the compiler proves field order.
@@ -2065,6 +2294,9 @@ func ArrayAccess(arr Value, index int) Value {
 	if arr.Type == TypeIntArray {
 		return Int((*(*[]int64)(arr.UnsafePtr))[index])
 	}
+	if arr.Type == TypeStringArray {
+		return Str((*(*[]string)(arr.UnsafePtr))[index])
+	}
 	return (*(*[]Value)(arr.UnsafePtr))[index]
 }
 
@@ -2075,7 +2307,64 @@ func ArrayLength(arr Value) int {
 	if arr.Type == TypeIntArray {
 		return len(*(*[]int64)(arr.UnsafePtr))
 	}
+	if arr.Type == TypeStringArray {
+		return len(*(*[]string)(arr.UnsafePtr))
+	}
 	return len(*(*[]Value)(arr.UnsafePtr))
+}
+
+//go:noinline
+func SumIntArraySlow(input Value, result int64) int64 {
+	if input.Type == TypeIntArray {
+		items := *(*[]int64)(input.UnsafePtr)
+		if len(items) < 8 {
+			for _, v := range items {
+				result = IntAdd(result, v)
+			}
+			return result
+		}
+		var a0, a1, a2, a3, a4, a5, a6, a7 int64
+		i := 0
+		for ; i <= len(items)-8; i += 8 {
+			c := items[i : i+8]
+			a0 += c[0]
+			a1 += c[1]
+			a2 += c[2]
+			a3 += c[3]
+			a4 += c[4]
+			a5 += c[5]
+			a6 += c[6]
+			a7 += c[7]
+		}
+		for ; i < len(items); i++ {
+			a0 += items[i]
+		}
+		return int64(int32((((result + a0) + (a1 + a2)) + ((a3 + a4) + (a5 + a6))) + a7))
+	}
+	items := *(*[]Value)(input.UnsafePtr)
+	if len(items) < 8 {
+		for _, v := range items {
+			result = IntAdd(result, v.IntVal)
+		}
+		return result
+	}
+	var a0, a1, a2, a3, a4, a5, a6, a7 int64
+	i := 0
+	for ; i <= len(items)-8; i += 8 {
+		c := items[i : i+8]
+		a0 += c[0].IntVal
+		a1 += c[1].IntVal
+		a2 += c[2].IntVal
+		a3 += c[3].IntVal
+		a4 += c[4].IntVal
+		a5 += c[5].IntVal
+		a6 += c[6].IntVal
+		a7 += c[7].IntVal
+	}
+	for ; i < len(items); i++ {
+		a0 += items[i].IntVal
+	}
+	return int64(int32((((result + a0) + (a1 + a2)) + ((a3 + a4) + (a5 + a6))) + a7))
 }
 
 func Any(v any) Value {
@@ -2264,6 +2553,22 @@ func Unbox[T any](v any) T {
 		return any(ArrayValues(val)).(T)
 	case []int64:
 		return any(UnboxIntArray(val)).(T)
+	case []string:
+		if val.Type == TypeStringArray {
+			if val.UnsafePtr == nil {
+				return any(make([]string, 0)).(T)
+			}
+			src := *(*[]string)(val.UnsafePtr)
+			out := make([]string, len(src))
+			copy(out, src)
+			return any(out).(T)
+		}
+		src := ArrayValues(val)
+		out := make([]string, len(src))
+		for i, v2 := range src {
+			out[i] = StrValue(v2)
+		}
+		return any(out).(T)
 	case []any:
 		if val.Type == TypeInt32Array {
 			var src []int32
@@ -2284,6 +2589,17 @@ func Unbox[T any](v any) T {
 			res := make([]any, len(src))
 			for i, v2 := range src {
 				res[i] = Int(v2)
+			}
+			return any(res).(T)
+		}
+		if val.Type == TypeStringArray {
+			var src []string
+			if val.UnsafePtr != nil {
+				src = *(*[]string)(val.UnsafePtr)
+			}
+			res := make([]any, len(src))
+			for i, v2 := range src {
+				res[i] = Str(v2)
 			}
 			return any(res).(T)
 		}
@@ -2365,6 +2681,8 @@ func boxSlow(val any) Value {
 		return Array(arr)
 	case []Value:
 		return Array(v)
+	case []string:
+		return StringArray(v)
 
 	case Value:
 		return v
@@ -2759,6 +3077,12 @@ func foreignDataContainerKey(input any) (foreignDataKey, bool) {
 				ints = *(*[]int32)(value.UnsafePtr)
 			}
 			return foreignDataKey{kind: 6, pointer: unsafe.Pointer(unsafe.SliceData(ints)), length: len(ints)}, true
+		case TypeStringArray:
+			var strs []string
+			if value.UnsafePtr != nil {
+				strs = *(*[]string)(value.UnsafePtr)
+			}
+			return foreignDataKey{kind: 7, pointer: unsafe.Pointer(unsafe.SliceData(strs)), length: len(strs)}, true
 		case TypeRecord, TypeRecord1, TypeRecord2, TypeRecord3, TypeRecord4, TypeRecord5, TypeRecordData:
 			return foreignDataKey{kind: value.Type + 100, pointer: value.UnsafePtr}, true
 		}
@@ -2809,7 +3133,7 @@ func (graph *foreignDataGraph) scan(input any, parent *foreignDataNode) {
 				values = *(*[]Value)(value.UnsafePtr)
 			}
 			node.source = values
-		} else if value.Type == TypeIntArray || value.Type == TypeInt32Array {
+		} else if value.Type == TypeIntArray || value.Type == TypeInt32Array || value.Type == TypeStringArray {
 			node.source = ArrayValues(value)
 		} else {
 			node.source = RecordToMap(value)
@@ -2857,7 +3181,7 @@ func (graph *foreignDataGraph) convert(input any) any {
 			return graph.convert(*(*any)(value.UnsafePtr))
 		case TypeRecord0:
 			return map[string]any{}
-		case TypeArray, TypeIntArray, TypeInt32Array, TypeRecord, TypeRecord1, TypeRecord2, TypeRecord3, TypeRecord4, TypeRecord5, TypeRecordData:
+		case TypeArray, TypeIntArray, TypeInt32Array, TypeStringArray, TypeRecord, TypeRecord1, TypeRecord2, TypeRecord3, TypeRecord4, TypeRecord5, TypeRecordData:
 			// Containers use the graph below, including their cycles.
 		default:
 			panic("FFI Foreign: functions and algebraic constructors require an explicit PureScript conversion to native data")

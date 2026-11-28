@@ -31,9 +31,9 @@ import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoSymbol (GoReference(..), generated)
 import Gopurs.ImmediateEffectBranches as ImmediateEffectBranches
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
-import PureScript.Backend.Optimizer.CoreFn (Ident, Literal(..), ModuleName)
+import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName)
 import PureScript.Backend.Optimizer.FreeVars (localId)
-import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Abs, App, EffectBind, Let, LetRec, Lit, Local, UncurriedAbs, UncurriedEffectAbs, Var), Level)
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Abs, App, EffectBind, Let, LetRec, Lit, Local, UncurriedAbs, UncurriedEffectAbs, Var), Level(..))
 
 -- A directly adjacent bind is the only permitted consumer. In particular, a
 -- captured, replayed or saved action keeps the existing boxed representation
@@ -87,10 +87,12 @@ direct translateExpr context nextId resultIdent resultLevel factory continuation
 
 -- A Let-bound FFI Effect factory whose local is consumed strictly as an
 -- EffectBind action (never escaped, returned, aliased or stored) can keep its
--- native Go thunk `func() R`. The factory still runs once at the Let site, and
--- every EffectBind replays the native thunk without runtime Apply/Func wrappers.
+-- native Go thunk `func() R`. When the Go AST proves the factory is stateless
+-- (`return func() R { ... }` with read-only parameters), evaluate its arguments
+-- once at the Let site and sink the direct `F(args...)()` call into each
+-- EffectBind so Go inlines the factory and eliminates the indirect closure call.
 bindThunk :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> TcoExpr -> TcoExpr -> Maybe ExprResult
-bindThunk translateExpr context nextId actionIdent actionLevel factory body = do
+bindThunk translateExpr context nextId actionIdent actionLevel factory@(TcoExpr factoryAnalysis _) body = do
   guard (onlyCurriedApplications factory)
   let Tuple target spine = collectGoSpine factory
   foreignTarget <- qualifiedTarget target
@@ -99,16 +101,42 @@ bindThunk translateExpr context nextId actionIdent actionLevel factory body = do
   guard (usedOnlyAsEffectBindAction actionIdent actionLevel body)
   let
     captured = captureArguments translateExpr context info (nextId + 1) args
-    originalName = localId actionIdent actionLevel
-    actionName = originalName <> "_" <> show nextId
-    bound = Map.insert originalName { name: actionName, goType: TypeFunc [] retTy } context.bound
-    resBody = translateExpr (context { depth = context.depth + 1, bound = bound, tcoIdent = Nothing }) captured.nextId body
-  pure
-    { stmts: captured.stmts <> StmtLeaf (GoAssign actionName (GoCall (GoRef info.reference) captured.exprs)) <> resBody.stmts
-    , expr: resBody.expr
-    , exprType: resBody.exprType
-    , nextId: resBody.nextId
-    }
+  case statelessFactoryInfo context foreignTarget (Array.length args) of
+    Just _ | Just sinkArgs <- NEA.fromArray (Array.mapWithIndex (\index (TcoExpr argAnalysis _) ->
+      let sinkIdent = Just (Ident ("__gopurs_sink_" <> show nextId <> "_" <> show index))
+      in TcoExpr argAnalysis (Local sinkIdent (Level (-1)))) args) ->
+      let
+        sinkBound = foldl (\env (Tuple index (Tuple expr exprType)) ->
+          case expr of
+            GoVar varName ->
+              let sinkKey = localId (Just (Ident ("__gopurs_sink_" <> show nextId <> "_" <> show index))) (Level (-1))
+              in Map.insert sinkKey { name: varName, goType: exprType } env
+            _ -> env)
+          context.bound
+          (Array.mapWithIndex Tuple (Array.zip captured.exprs captured.exprTypes))
+        sunkFactory = TcoExpr factoryAnalysis (App target sinkArgs)
+        rewrittenBody = sinkStatelessAction actionIdent actionLevel sunkFactory body
+        resBody = translateExpr (context { depth = context.depth + 1, bound = sinkBound, tcoIdent = Nothing }) captured.nextId rewrittenBody
+      in
+        pure
+          { stmts: captured.stmts <> resBody.stmts
+          , expr: resBody.expr
+          , exprType: resBody.exprType
+          , nextId: resBody.nextId
+          }
+    _ ->
+      let
+        originalName = localId actionIdent actionLevel
+        actionName = originalName <> "_" <> show nextId
+        bound = Map.insert originalName { name: actionName, goType: TypeFunc [] retTy } context.bound
+        resBody = translateExpr (context { depth = context.depth + 1, bound = bound, tcoIdent = Nothing }) captured.nextId body
+      in
+        pure
+          { stmts: captured.stmts <> StmtLeaf (GoAssign actionName (GoCall (GoRef info.reference) captured.exprs)) <> resBody.stmts
+          , expr: resBody.expr
+          , exprType: resBody.exprType
+          , nextId: resBody.nextId
+          }
 
 invokeBoundThunk :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> TcoExpr -> TcoExpr -> Maybe ExprResult
 invokeBoundThunk translateExpr context nextId resultIdent resultLevel action continuation = do
@@ -179,6 +207,14 @@ directFactoryInfo context foreignTarget argCount = do
     TypeFunc [] retTy -> Just { info, retTy }
     _ -> Nothing
 
+statelessFactoryInfo :: ExprContext -> { mbMod :: Maybe ModuleName, name :: String } -> Int -> Maybe { info :: FunctionInfo, retTy :: GoType }
+statelessFactoryInfo context foreignTarget argCount = do
+  info <- lookupEffectInfo context Workers.statelessFactoryKey foreignTarget
+  guard (argCount == info.arity)
+  case info.fRet of
+    TypeFunc [] retTy -> Just { info, retTy }
+    _ -> Nothing
+
 lookupEffectInfo :: ExprContext -> (String -> String) -> { mbMod :: Maybe ModuleName, name :: String } -> Maybe FunctionInfo
 lookupEffectInfo context keyFn foreignTarget =
   let
@@ -200,14 +236,16 @@ captureArguments translateExpr context info startId args =
 prepareArgument :: ExprContext -> GoType -> TcoExpr -> ExprResult -> ExprResult
 prepareArgument context expected argument result =
   let
-    prepared = case expected of
-      TypeInterface name ->
-        let boxed = boxGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType
-        in case result.stmts of
-          StmtEmpty | scalarLiteral argument result.exprType -> cacheArgument context expected boxed
-          _ -> GoCall (GoVar name) [ boxed ]
-      TypeValue -> boxGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType
-      _ -> coerceGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType expected
+    prepared =
+      if result.exprType == expected then result.expr
+      else case expected of
+        TypeInterface name ->
+          let boxed = boxGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType
+          in case result.stmts of
+            StmtEmpty | scalarLiteral argument result.exprType -> cacheArgument context expected boxed
+            _ -> GoCall (GoVar name) [ boxed ]
+        TypeValue -> boxGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType
+        _ -> coerceGoExpr context.codegenStateRef context.modNameStr result.expr result.exprType expected
   in result { expr = prepared, exprType = expected }
 
 -- Cache the immutable Value-to-interface conversion, never an expression,
@@ -279,3 +317,34 @@ onlyCurriedApplications expression = case unwrapTcoExpr expression of
   App target _ -> onlyCurriedApplications target
   Var _ -> true
   _ -> false
+
+sinkStatelessAction :: Maybe Ident -> Level -> TcoExpr -> TcoExpr -> TcoExpr
+sinkStatelessAction actionIdent actionLevel replacement = go
+  where
+  same ident level = ident == actionIdent && level == actionLevel
+  go expr@(TcoExpr analysis syntax) = case syntax of
+    EffectBind resIdent resLevel action continuation ->
+      let
+        newAction = case unwrapTcoExpr action of
+          Local ident level | same ident level -> replacement
+          _ -> go action
+        newCont = if same resIdent resLevel then continuation else go continuation
+      in TcoExpr analysis (EffectBind resIdent resLevel newAction newCont)
+    Let ident level value inner ->
+      let
+        newValue = go value
+        newInner = if same ident level then inner else go inner
+      in TcoExpr analysis (Let ident level newValue newInner)
+    Abs args inner ->
+      if Array.any (\(Tuple ident level) -> same ident level) (NEA.toArray args) then expr
+      else TcoExpr analysis (Abs args (go inner))
+    UncurriedAbs args inner ->
+      if Array.any (\(Tuple ident level) -> same ident level) args then expr
+      else TcoExpr analysis (UncurriedAbs args (go inner))
+    UncurriedEffectAbs args inner ->
+      if Array.any (\(Tuple ident level) -> same ident level) args then expr
+      else TcoExpr analysis (UncurriedEffectAbs args (go inner))
+    LetRec level bindings inner ->
+      if Array.any (\(Tuple ident _) -> same (Just ident) level) (NEA.toArray bindings) then expr
+      else TcoExpr analysis (LetRec level (map (\(Tuple ident val) -> Tuple ident (go val)) bindings) (go inner))
+    _ -> TcoExpr analysis (map go syntax)

@@ -62,6 +62,21 @@ function fixture(options = {}) {
   if (options.effectInProducer) continuation = typed(tree, expr(new S.EffectPure(continuation)));
   if (options.scalarLet) continuation = typed(tree, expr(new S.Let(new Just('depth'), 0,
     number(S.OpAdd.value, n, integer(1)), continuation)));
+  if (options.duplicateCall) {
+    const leftBranch = ctor(fork, ctor(leaf, n), recursive);
+    const rightBranch = ctor(fork, recursive, ctor(leaf, integer(1)));
+    continuation = ctor(fork, leftBranch, rightBranch);
+  }
+  if (options.shadowedCall) {
+    const shadowed = typed(tree, expr(new S.Let(new Just('depth'), 0,
+      number(S.OpAdd.value, n, integer(1)), recursive)));
+    continuation = ctor(fork, recursive, shadowed);
+  }
+  if (options.siblingBranches) {
+    const pick = binary(bool, new S.OpIntOrd(S.OpEq.value), seed, integer(0));
+    const branched = branch(tree, pick, recursive, ctor(leaf, integer(1)));
+    continuation = ctor(fork, branched, recursive);
+  }
   const condition = binary(bool, new S.OpIntOrd(S.OpLte.value), n, integer(0));
   const producer = lambda(buildType, [['depth', 0], ['seed', 1]], branch(tree, condition, ctor(leaf, seed), continuation));
   let input = app(tree, variable(owner, build, buildType), options.opaqueInput ? opaque(integer(3)) : integer(3), integer(7));
@@ -154,4 +169,17 @@ for (const option of ['missingCase', 'duplicateCase', 'wrongLayout', 'wrongIndex
 
 test('rejects division and modulo instead of moving potentially failing arithmetic', () => {
   for (const operation of [S.OpDivide.value, S.OpMod.value]) unchanged({operation});
+});
+
+test('deduplicates identical pure recursive worker calls within the same branch', () => {
+  const {module} = fixture({duplicateCall: true});
+  const worker = helpers(optimize(module))[0].value1;
+  assert.equal(nodesOf(worker, S.App).length, 1, 'identical sibling self-calls should share one binding');
+});
+
+test('does not share cached self-calls across shadowed lets or sibling branch arms', () => {
+  const shadowedWorker = helpers(optimize(fixture({shadowedCall: true}).module))[0].value1;
+  assert.equal(nodesOf(shadowedWorker, S.App).length, 2, 'shadowed let must invalidate cached self-call');
+  const branchedWorker = helpers(optimize(fixture({siblingBranches: true}).module))[0].value1;
+  assert.equal(nodesOf(branchedWorker, S.App).length, 2, 'call inside branch arm must not be reused outside it');
 });

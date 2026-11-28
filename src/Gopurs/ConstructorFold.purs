@@ -39,7 +39,13 @@ data Algebra
 type Consumer = { name :: Ident, shape :: Shape, cases :: Map.Map (Qualified Ident) Algebra }
 type Plan = { consumer :: Ident, producer :: Ident, worker :: Ident, args :: Array ExprType, binding :: NeutralExpr }
 type Scalar = { ty :: ExprType, expr :: NeutralExpr }
-type Build = StateT { next :: Int, calls :: Int } Maybe
+type BuildState =
+  { next :: Int
+  , calls :: Int
+  , seen :: Array (Tuple (Array NeutralExpr) Ref)
+  , lets :: Array (Tuple Ref NeutralExpr)
+  }
+type Build = StateT BuildState Maybe
 type Producer = { moduleName :: ModuleName, name :: Ident, worker :: Ident, args :: Array ExprType, consumer :: Consumer }
 
 -- Fuse only an immediate composition of a fresh constructor producer and a
@@ -270,10 +276,10 @@ recognizeProducer moduleName consumer name worker value = do
   args <- NEA.fromArray lambda.args
   guard (Array.length lambda.args == Array.length signature.args && Map.size env == Array.length lambda.args)
   body <- evalStateT (do
-    result <- produce context env lambda.body
+    result <- withScope identity (produce context env lambda.body)
     state <- get
     lift (guard (state.calls > 0))
-    pure result) { next: maximumLevel value + 1, calls: 0 }
+    pure result) { next: maximumLevel value + 1, calls: 0, seen: [], lets: [] }
   pure { consumer: consumer.name, producer: name, worker, args: signature.args
        , binding: typed (Func signature.args Int) (NeutralExpr (Abs args body)) }
 
@@ -283,6 +289,41 @@ fresh = do
   put (state { next = state.next + 1 })
   pure (Tuple Nothing (Level state.next))
 
+wrapLets :: Array (Tuple Ref NeutralExpr) -> NeutralExpr -> NeutralExpr
+wrapLets bindings body =
+  foldr (\(Tuple (Tuple name level) child) rest -> typed Int (NeutralExpr (Let name level child rest))) body bindings
+
+withScope
+  :: (Array (Tuple (Array NeutralExpr) Ref) -> Array (Tuple (Array NeutralExpr) Ref))
+  -> Build NeutralExpr
+  -> Build NeutralExpr
+withScope adjustSeen action = do
+  outer <- get
+  put (outer { seen = adjustSeen outer.seen, lets = [] })
+  expr <- action
+  inner <- get
+  put (inner { seen = outer.seen, lets = outer.lets })
+  pure (wrapLets inner.lets expr)
+
+sameExpr :: NeutralExpr -> NeutralExpr -> Boolean
+sameExpr a b = case strip a, strip b of
+  Lit (LitInt x), Lit (LitInt y) -> x == y
+  Lit (LitBoolean x), Lit (LitBoolean y) -> x == y
+  Local nameA levelA, Local nameB levelB -> nameA == nameB && levelA == levelB
+  PrimOp (Op1 opA childA), PrimOp (Op1 opB childB) -> opA == opB && sameExpr childA childB
+  PrimOp (Op2 opA lA rA), PrimOp (Op2 opB lB rB) -> opA == opB && sameExpr lA lB && sameExpr rA rB
+  _, _ -> false
+
+sameExprs :: Array NeutralExpr -> Array NeutralExpr -> Boolean
+sameExprs xs ys = Array.length xs == Array.length ys && all (\(Tuple a b) -> sameExpr a b) (Array.zip xs ys)
+
+mentionsLevel :: Level -> NeutralExpr -> Boolean
+mentionsLevel target value = case strip value of
+  Local _ level -> level == target
+  PrimOp (Op1 _ child) -> mentionsLevel target child
+  PrimOp (Op2 _ left right) -> mentionsLevel target left || mentionsLevel target right
+  _ -> false
+
 produce :: Producer -> Map.Map Ref ExprType -> NeutralExpr -> Build NeutralExpr
 produce context env value = do
   lift (guard (compatible context.consumer.shape.ty value))
@@ -291,12 +332,13 @@ produce context env value = do
       cases' <- traverse (\(Pair condition body) -> do
         test <- lift (scalar env condition)
         lift (guard (test.ty == Boolean))
-        Pair test.expr <$> produce context env body) cases
-      fallback' <- produce context env fallback
+        Pair test.expr <$> withScope identity (produce context env body)) cases
+      fallback' <- withScope identity (produce context env fallback)
       pure (typed Int (NeutralExpr (Branch cases' fallback')))
     Let name level initial body -> do
       initial' <- lift (scalar env initial)
-      body' <- produce context (Map.insert (Tuple name level) initial'.ty env) body
+      let keep = Array.filter (\(Tuple args _) -> not (any (mentionsLevel level) args))
+      body' <- withScope keep (produce context (Map.insert (Tuple name level) initial'.ty env) body)
       pure (typed Int (NeutralExpr (Let name level initial'.expr body')))
     CtorSaturated ctor kind typeName ctorName fields -> do
       let shape = context.consumer.shape
@@ -305,24 +347,36 @@ produce context env value = do
       lift (guard (kind == shape.constructorType && typeName == ProperName shape.name
         && Qualified (Just context.moduleName) ctorName == ctor && Array.length fields == Array.length fieldTypes))
       lift (guard (map fst fields == Array.mapWithIndex (\index _ -> "value" <> show index) fieldTypes))
-      values <- traverse (\(Tuple ty (Tuple _ field)) ->
-        if ty == Int then do
+      refs <- traverse (\(Tuple ty (Tuple _ field)) -> do
+        child <- if ty == Int then do
           result <- lift (scalar env field)
           lift (guard (result.ty == Int))
           pure result.expr
-        else produce context env field) (Array.zip fieldTypes fields)
-      refs <- traverse (const fresh) fields
-      result <- lift (instantiate refs algebra)
-      -- Explicit lets keep every field evaluation once and in source order.
-      pure (foldr (\(Tuple (Tuple name level) child) rest -> typed Int (NeutralExpr (Let name level child rest)))
-        result (Array.zip refs values))
+        else produce context env field
+        r <- fresh
+        modify_ (\state -> state { lets = Array.snoc state.lets (Tuple r child) })
+        pure r) (Array.zip fieldTypes fields)
+      lift (instantiate refs algebra)
     App _ _ -> do
       let call = application value
       lift (guard (global context.moduleName call.head == Just context.name && Array.length call.args == Array.length context.args))
       args <- lift (traverse (scalar env) call.args)
       lift (guard (all (\arg -> arg.ty == Int) args))
-      modify_ (\state -> state { calls = state.calls + 1 })
-      lift (workerCall context.moduleName context.worker context.args (map _.expr args))
+      let argExprs = map _.expr args
+      state <- get
+      case Array.find (\(Tuple prev _) -> sameExprs prev argExprs) state.seen of
+        Just (Tuple _ existing) -> do
+          modify_ (\s -> s { calls = s.calls + 1 })
+          pure (local existing)
+        Nothing -> do
+          callExpr <- lift (workerCall context.moduleName context.worker context.args argExprs)
+          r <- fresh
+          modify_ (\s -> s
+            { calls = s.calls + 1
+            , lets = Array.snoc s.lets (Tuple r callExpr)
+            , seen = Array.snoc s.seen (Tuple argExprs r)
+            })
+          pure (local r)
     _ -> lift Nothing
 
 instantiate :: Array Ref -> Algebra -> Maybe NeutralExpr

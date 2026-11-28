@@ -197,5 +197,11 @@ flatAdditive self params result body = do
     _ -> false }
 
 additiveTotal :: GoExpr -> Array Int -> GoExpr
-additiveTotal counter deltas = foldl (GoBinOp "+") (GoInt 0)
-  (map (total counter <<< Constant) deltas)
+additiveTotal counter deltas =
+  let
+    summed = foldl (+) 0 deltas
+  in
+    if summed == 0 then GoInt 0
+    else if summed == 1 then counter
+    else if summed == (-1) then GoPrefixOp "-" counter
+    else GoBinOp "*" counter (integer summed)

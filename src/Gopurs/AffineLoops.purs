@@ -1,4 +1,4 @@
-module Gopurs.AffineLoops (wrap, globalTarget, localTarget) where
+module Gopurs.AffineLoops (wrap, hot, globalTarget, localTarget) where
 
 import Prelude
 
@@ -17,7 +17,7 @@ import Gopurs.GoAst (GoExpr(..), GoType(..), sanitizeName)
 import Gopurs.GoFunctions (Parameters)
 import Gopurs.RecordAffineLoops as RecordAffineLoops
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
-import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), Qualified(..))
+import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax, Pair(..))
 import PureScript.Backend.Optimizer.Syntax as Syn
@@ -51,6 +51,33 @@ wrap translate context self params result body original = case recognize self pa
     in GoBlock [ GoIfElse admitted (emitReads translate context recurrence.reads <> [ GoReturn value ]) [], original ]
   _ -> RecordAffineLoops.wrap self params result body
     (FilteredSumLoops.wrap self params result body original)
+
+-- A small constant-increment wrapper stays under Go's inline budget (cost <= 80)
+-- while the complete original loop stays out-of-line as a cold helper. Because
+-- n >= 1 executes at least one IntAdd narrowing, modulo-2^32 two's-complement
+-- arithmetic is exact for every int64 seed. Pure `Data.Unit.unit` reads are
+-- omitted since reading the singleton unit value has no observable effect.
+hot :: TranslateExpr -> ExprContext -> (TcoExpr -> Boolean) -> Parameters -> GoType -> TcoExpr -> GoExpr -> Maybe GoExpr
+hot translate context self params result body fallback = case recognize self params body of
+  Just { counter: counterName, accumulator: accName, increment: Constant delta, reads }
+    | result == TypeInt64 ->
+      let
+        observableReads = Array.filter (not <<< isPureUnitRead) reads
+      in if Array.length observableReads <= 2 then
+        let
+          counter = GoVar (counterName <> "_loop")
+          accumulator = GoVar (accName <> "_loop")
+          admitted = GoBinOp "<" (cast "uint64" (GoBinOp "-" counter (GoInt 1))) (GoInt top)
+          total = GoBinOp "+" accumulator (GoBinOp "*" counter (integer delta))
+          value = cast "int64" (cast "int32" total)
+        in Just (GoBlock [ GoIfElse admitted (emitReads translate context observableReads <> [ GoReturn value ]) [], GoReturn fallback ])
+      else Nothing
+  _ -> Nothing
+
+isPureUnitRead :: TcoExpr -> Boolean
+isPureUnitRead expr = case syntax expr of
+  Syn.Var (Qualified (Just (ModuleName "Data.Unit")) (Ident "unit")) -> true
+  _ -> false
 
 recognize :: (TcoExpr -> Boolean) -> Parameters -> TcoExpr -> Maybe Recurrence
 recognize self params body = do
@@ -137,7 +164,7 @@ usesLocal ident level (TcoExpr _ value) = case value of
 -- conversion remain intact. Never inherit the recurrence's Int result type.
 emitReads :: TranslateExpr -> ExprContext -> Array TcoExpr -> Array GoExpr
 emitReads translate context values =
-  (foldl emit { next: 0, statements: [] } values).statements
+  (foldl emit { next: 0, statements: [] } (Array.filter (not <<< isPureUnitRead) values)).statements
   where
   emit acc value =
     let result = translate (childContext context Nothing) acc.next value

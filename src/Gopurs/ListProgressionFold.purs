@@ -57,8 +57,9 @@ prepareRecognized mod sieves =
         pure (group { bindings = rewritten })) mod.bindings) false
       owner = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
       symbol = generated owner ("Call_" <> owner <> "_" <> sanitizeName (unwrap helper))
+      coldSymbol = generated owner ("Call_" <> owner <> "_" <> sanitizeName (unwrap helper) <> "_general")
   in { module: mod { bindings = groups }
-     , declarations: if changed then [ declaration symbol ] else []
+     , declarations: if changed then [ generalDeclaration coldSymbol, declaration symbol coldSymbol ] else []
      , functions: if changed then Map.singleton (sanitizeName (unwrap helper))
          { arrayFold: Nothing, codePointFold: Nothing, reference: SymbolReference symbol, fArgs: [ TypeInt64, TypeInt64, TypeInt64 ], fRet: TypeInt64, arity: 3 }
        else Map.empty
@@ -71,20 +72,33 @@ reserveName mod = choose 0
     (map fst (Array.concatMap _.bindings mod.bindings) <> Array.fromFoldable (Map.keys mod.foreign))
   choose index =
     let name = "__gopurs_list_progression_fold_" <> show index
-    in if Set.member (sanitizeName name) reserved then choose (index + 1) else Ident name
+    in if Set.member (sanitizeName name) reserved || Set.member (sanitizeName (name <> "_general")) reserved
+       then choose (index + 1) else Ident name
 
 -- Bounds are guarded in the source IR. Wider Go intermediates make 2*p and
 -- the final increment safe even near MaxInt32. The sum retains Int32 wrapping.
 -- A prefix starting at 2 is a prime sieve, so its odd bitmap can start marking
 -- at p*p. Other lower bounds may select composite heads and retain 2*p below.
-declaration :: GoSymbol -> GoDecl
-declaration symbol = GoFunctionDecl
+declaration :: GoSymbol -> GoSymbol -> GoDecl
+declaration symbol coldSymbol = GoFunctionDecl
   { name: symbol
   , params: [ Tuple "lower" TypeInt64, Tuple "upper" TypeInt64, Tuple "seed" TypeInt64 ]
   , result: TypeInt64
   , body: GoBlock
-      [ GoIfElse (GoBinOp "==" (GoVar "lower") (rawGo "int64(2)")) primePrefix []
-      , GoAssign "rejected" (rawGo "make([]bool, upper-lower+1)")
+      [ GoIfElse (GoBinOp "==" (GoVar "lower") (rawGo "int64(2)"))
+          [ GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "SumOddProgression") [ GoVar "upper", GoVar "seed" ]) ]
+          []
+      , GoReturn (GoCall (GoRef (SymbolReference coldSymbol)) [ GoVar "lower", GoVar "upper", GoVar "seed" ])
+      ]
+  }
+
+generalDeclaration :: GoSymbol -> GoDecl
+generalDeclaration symbol = GoFunctionDecl
+  { name: symbol
+  , params: [ Tuple "lower" TypeInt64, Tuple "upper" TypeInt64, Tuple "seed" TypeInt64 ]
+  , result: TypeInt64
+  , body: GoBlock
+      [ GoAssign "rejected" (rawGo "make([]bool, upper-lower+1)")
       , GoAssign "total" (GoVar "seed")
       , GoForRange "value := lower; value <= upper; value++"
           [ GoIfElse (GoIndex (GoVar "rejected") (GoBinOp "-" (GoVar "value") (GoVar "lower")))
@@ -96,52 +110,6 @@ declaration symbol = GoFunctionDecl
       , GoReturn (GoVar "total")
       ]
   }
-
--- The existing admission guard bounds this prefix to at most 1,048,577.
--- Its positive sum and Int32 seed therefore fit Int64 before the final wrap.
--- Even values are excluded by 2; entry i represents the odd value 2*i+1.
--- The local scratch buffer is per invocation and never escapes or aliases.
-primePrefix :: Array GoExpr
-primePrefix =
-  [ rawGo "var local [512]bool"
-  , rawGo "var rejected []bool"
-  , GoAssign "size" (rawGo "int((upper+1)/2)")
-  , GoIfElse (rawGo "size <= len(local)")
-      [ GoMutate "rejected" (rawGo "local[:size]") ]
-      [ GoMutate "rejected" (rawGo "make([]bool, size)") ]
-  , GoAssign "limit" (rawGo "uint(len(rejected))")
-  , GoForRange "primeIdx := uint(1); primeIdx < limit; primeIdx++"
-      [ GoAssign "prime" (rawGo "uint64(primeIdx)*2 + 1")
-      , GoAssign "start" (rawGo "(prime*prime) >> 1")
-      , GoIfElse (rawGo "start >= uint64(limit)") [ rawGo "break" ] []
-      , GoIfElse (rawGo "!rejected[primeIdx]")
-          [ GoAssign "step" (rawGo "uint(prime)")
-          , GoForRange "mark := uint(start); mark < limit; mark += step"
-              [ GoMutate "rejected[mark]" (GoVar "true") ]
-          ] []
-      ]
-  , GoAssign "total" (rawGo "seed+2")
-  , GoAssign "idx" (GoInt 1)
-  , GoForRange "; idx+8 <= len(rejected); idx += 8"
-      [ GoAssign "chunk" (rawGo "rejected[idx : idx+8]")
-      , GoAssign "value" (rawGo "int64(idx*2 + 1)")
-      , rawGo "var t0, t1, t2, t3, t4, t5, t6, t7 int64"
-      , GoIfElse (rawGo "!chunk[0]") [ GoMutate "t0" (GoVar "value") ] []
-      , GoIfElse (rawGo "!chunk[1]") [ GoMutate "t1" (rawGo "value + 2") ] []
-      , GoIfElse (rawGo "!chunk[2]") [ GoMutate "t2" (rawGo "value + 4") ] []
-      , GoIfElse (rawGo "!chunk[3]") [ GoMutate "t3" (rawGo "value + 6") ] []
-      , GoIfElse (rawGo "!chunk[4]") [ GoMutate "t4" (rawGo "value + 8") ] []
-      , GoIfElse (rawGo "!chunk[5]") [ GoMutate "t5" (rawGo "value + 10") ] []
-      , GoIfElse (rawGo "!chunk[6]") [ GoMutate "t6" (rawGo "value + 12") ] []
-      , GoIfElse (rawGo "!chunk[7]") [ GoMutate "t7" (rawGo "value + 14") ] []
-      , GoMutate "total" (rawGo "total + (((t0 + t1) + (t2 + t3)) + ((t4 + t5) + (t6 + t7)))")
-      ]
-  , GoForRange "; idx < len(rejected); idx++"
-      [ GoIfElse (rawGo "!rejected[idx]")
-          [ GoMutate "total" (rawGo "total + int64(idx*2 + 1)") ] []
-      ]
-  , GoReturn (rawGo "int64(int32(total))")
-  ]
 
 strip :: NeutralExpr -> BackendSyntax NeutralExpr
 strip (NeutralExpr syntax) = case syntax of

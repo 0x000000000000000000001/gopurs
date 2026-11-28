@@ -1,8 +1,10 @@
 module Gopurs.FfiBridge.ImmediateEffects
   ( key
   , factoryKey
+  , statelessFactoryKey
   , signature
   , factorySignature
+  , statelessFactorySignature
   , worker
   ) where
 
@@ -30,6 +32,9 @@ key name = "$gopursRunEffect$" <> name
 
 factoryKey :: String -> String
 factoryKey name = "$gopursEffectFactory$" <> name
+
+statelessFactoryKey :: String -> String
+statelessFactoryKey name = "$gopursStatelessEffectFactory$" <> name
 
 type Candidate = { result :: ExprType, nativeResult :: Maybe TypeNode }
 
@@ -109,6 +114,11 @@ factorySignature owner declaration tast = do
     , fRet: TypeFunc [] ret
     , arity: Array.length declaration.args
     }
+
+statelessFactorySignature :: String -> FfiDecl -> ExprType -> Maybe FunctionInfo
+statelessFactorySignature owner declaration tast = do
+  guard (declaration.statelessEffectFactory == Just true)
+  factorySignature owner declaration tast
 
 -- Only an immediately executed action uses this worker. Its original boxed
 -- entry remains authoritative for saved actions and first-class functions.

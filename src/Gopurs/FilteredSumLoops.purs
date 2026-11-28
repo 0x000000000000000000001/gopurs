@@ -1,4 +1,4 @@
-module Gopurs.FilteredSumLoops (wrap) where
+module Gopurs.FilteredSumLoops (wrap, hot, hotZero) where
 
 import Prelude
 
@@ -37,6 +37,35 @@ wrap self params result body original = case recognize self params body of
       value = GoCall (formula recurrence) [ counter, accumulator ]
     in GoBlock [ GoIfElse admitted [ GoReturn value ] [], original ]
   _ -> original
+
+-- Compact hot wrapper for the common even-number sum from 1..n. Starting at
+-- n >= 2 guarantees at least one IntAdd executes, so int64(int32(acc + k*(k+1)))
+-- is exact even for noncanonical int64 seeds without an extra seed-width guard.
+hot :: (TcoExpr -> Boolean) -> Parameters -> GoType -> TcoExpr -> GoExpr -> Maybe GoExpr
+hot self params result body fallback = case recognize self params body of
+  Just { counter: counterName, accumulator: accName, lower: 1, modulus: 2, residue: 0 }
+    | result == TypeInt64 ->
+      let
+        counter = GoVar (counterName <> "_loop")
+        accumulator = GoVar (accName <> "_loop")
+        admitted = GoBinOp "<" (cast "uint64" (GoBinOp "-" counter (GoInt 2))) (GoInt (top - 1))
+        half = GoBinOp ">>" counter (GoInt 1)
+        evenSum = GoBinOp "*" half (GoBinOp "+" half (GoInt 1))
+        value = cast "int64" (cast "int32" (GoBinOp "+" accumulator evenSum))
+      in Just (GoBlock [ GoIfElse admitted [ GoReturn value ] [], GoReturn fallback ])
+  _ -> Nothing
+
+-- Specialized 1-arg hot path when every call passes literal 0 as the seed.
+-- Keeps Go inliner cost at <= 79 so callers inline the entire arithmetic check.
+hotZero :: (TcoExpr -> Boolean) -> Parameters -> GoType -> TcoExpr -> Maybe { counterParam :: String, accParam :: String, counterIdx :: Int, accIdx :: Int }
+hotZero self params result body = case recognize self params body, params of
+  Just { counter: counterName, accumulator: accName, lower: 1, modulus: 2, residue: 0 }, [ Tuple first _, Tuple _ _ ]
+    | result == TypeInt64 ->
+      let
+        counterIdx = if first == counterName then 0 else 1
+        accIdx = 1 - counterIdx
+      in Just { counterParam: counterName <> "_loop", accParam: accName <> "_loop", counterIdx, accIdx }
+  _, _ -> Nothing
 
 formula :: Recurrence -> GoExpr
 formula { lower, modulus, residue } =

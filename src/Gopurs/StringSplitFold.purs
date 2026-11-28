@@ -197,14 +197,42 @@ emitFused translate context nextId sepExpr textExpr seedMode cpDesc lastLevel =
       , GoMutate countName (GoBinOp "+" (GoVar countName) (rawGo "int64(1)"))
       ]
     stringsIndex = GoRaw { text: "strings.Index", imports: [ "strings" ] }
+    stringsCount = GoRaw { text: "strings.Count", imports: [ "strings" ] }
     emptySepLoop =
       [ GoForRange ("len(" <> remName <> ") > 0")
           ([ GoRaw { text: "_, w := utf8.DecodeRuneInString(" <> remName <> ")", imports: [ "unicode/utf8" ] } ]
             <> addPart (rawGo (remName <> "[:w]"))
             <> [ GoMutate remName (rawGo (remName <> "[w:]")) ])
       ]
+    isDirectAdd = case unwrapTcoExpr freshenedCb of
+      Abs params cbBody ->
+        let grouped = collectCurriedAbs params cbBody
+        in case NEA.toArray grouped.args, unwrapTcoExpr grouped.body of
+          [ Tuple _ a, Tuple _ b ], PrimOp (Op2 (OpIntNum OpAdd) l r) ->
+            (isLocalLevel a l && isLocalLevel b r) || (isLocalLevel b l && isLocalLevel a r)
+          _, _ -> false
+      _ -> false
+    -- When the per-part code-point fold is direct Int32 addition, splitting by
+    -- any 1-byte ASCII separator (which cannot appear inside a multi-byte UTF-8
+    -- or WTF-8 sequence) produces `1 + strings.Count(rem, sep)` fragments whose
+    -- combined modular code-point sum equals
+    -- `SumCodePoints(rem) - nSep * sepByte + count * seed` (mod 2^32).
     singleByteAsciiScan =
-      [ GoAssign sepByteName (rawGo (sepName <> "[0]"))
+      if isDirectAdd then
+        let
+          nSepName = v "nSep"
+          cpSumName = v "cpSum"
+          seedTerm =
+            if cpDesc.seed == 0 then ""
+            else " + int64(int32(" <> countName <> "))*int64(" <> show cpDesc.seed <> ")"
+        in
+          [ GoAssign nSepName (GoCall (GoVar "int64") [ GoCall stringsCount [ GoVar remName, GoVar sepName ] ])
+          , GoMutate countName (GoBinOp "+" (GoVar nSepName) (rawGo "int64(1)"))
+          , rawGo (cpSumName <> ", _ := gopurs_runtime.SumCodePoints(" <> remName <> ")")
+          , GoMutate accName (rawGo (accName <> " + " <> cpSumName <> " - int64(int32(" <> nSepName <> "))*int64(" <> sepName <> "[0])" <> seedTerm))
+          ]
+      else
+        [ GoAssign sepByteName (rawGo (sepName <> "[0]"))
       , GoAssign "partRes" (GoCall (GoVar "int64") [ GoInt cpDesc.seed ])
       , GoMutate countName (rawGo "int64(1)")
       , GoForRange ("off := 0; off < len(" <> remName <> ");")

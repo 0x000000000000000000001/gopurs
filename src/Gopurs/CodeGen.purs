@@ -114,7 +114,7 @@ workerInputs :: ModuleFunctions -> BackendModule -> Map.Map String (Maybe Functi
 workerInputs available = foldWorkerReferences
   (\owner name acc -> foldl
     (\entries ident -> let key = unwrap owner <> "." <> ident in Map.insert key (Map.lookup key available) entries)
-    acc [ name, ImmediateEffects.key name, ImmediateEffects.factoryKey name ])
+    acc [ name, ImmediateEffects.key name, ImmediateEffects.factoryKey name, ImmediateEffects.statelessFactoryKey name ])
   Map.empty
 
 -- The emitter can resolve immutable owner contributions without decoding every
