@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {Just} from '../output/Data.Maybe/index.js';
 import {Tuple} from '../output/Data.Tuple/index.js';
-import {eligible,emit} from '../output/Gopurs.IndexedAddLanes/index.js';
+import {eligible,emit,emitContributionReverse} from '../output/Gopurs.IndexedAddLanes/index.js';
 import {printGoExpr} from '../output/Gopurs.Printer/index.js';
 import * as G from '../output/Gopurs.GoAst/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
@@ -58,4 +58,32 @@ func main(){rng:=rand.New(rand.NewSource(1337));checks:=0;lengths:=[]int{};for i
  fmt.Printf("%d generated lane comparisons: ok\\n",checks)}
 `);
  const result=spawnSync('go',['run','.'],{cwd:dir,encoding:'utf8',timeout:60000,env:{...process.env,GOWORK:'off'}});assert.ifError(result.error);assert.equal(result.status,0,result.stdout+result.stderr);assert.match(result.stdout,/2760 generated lane comparisons: ok/);
+});
+
+test('emitContributionReverse preserves reverse order, logical indices, tails and wide seeds',t=>{
+ const dir=mkdtempSync(join(tmpdir(),'gopurs-indexed-lanes-rev-'));t.after(()=>rmSync(dir,{recursive:true,force:true}));mkdirSync(join(dir,'gopurs_runtime'));
+ writeFileSync(join(dir,'go.mod'),'module gopurs/output\n\ngo 1.22\n');writeFileSync(join(dir,'gopurs_runtime/runtime.go'),readFileSync(new URL('../runtime/runtime.go',import.meta.url)));
+ const functions=[];
+ for(const boxed of [false,true]){
+  const name=boxed?'revBoxed':'revNative', value=x=>boxed?new G.GoSelector(x,'IntVal'):x;
+  const contrib=(i,v)=>new G.GoCall(G.rawGo('contrib'),[new G.GoCall(G.rawGo('int64'),[i]),value(v)]);
+  const fallback=new G.GoForRange('i := 0; i < len(xs); i++',[new G.GoMutate('result',new G.GoCall(G.rawGo('r.IntAdd'),[G.rawGo('result'),contrib(G.rawGo('i'),new G.GoIndex(G.rawGo('xs'),G.rawGo('len(xs)-1-i')))]))]);
+  const code=printGoExpr(emitContributionReverse({source:'xs',prefix:'rev',result:'result'})(i=>v=>contrib(i,v))(fallback)).replaceAll('gopurs_runtime.','r.');
+  assert.match(code,/len\(xs\) < 8/);assert.match(code,/>= 8/);
+  functions.push(`func ${name}(seed int64,xs []${boxed?'r.Value':'int64'})int64{result:=seed;${code};return result}`);
+ }
+ writeFileSync(join(dir,'main.go'),`package main
+import("fmt";"reflect";"math/rand";r "gopurs/output/gopurs_runtime")
+var mode int
+var trace []int64
+func contrib(i,value int64)int64{trace=append(trace,i,value);mapped:=r.IntAdd(value,1);if mode==1{mapped=r.IntAdd(value,i)};factor:=r.IntAdd(1,i&1);if mode==2{factor=2147483647};return r.IntMul(factor,mapped)}
+func reference(seed int64,xs []int64)int64{acc:=seed;for i:=0;i<len(xs);i++{acc=r.IntAdd(acc,contrib(int64(i),xs[len(xs)-1-i]))};return acc}
+${functions.join('\n')}
+func main(){rng:=rand.New(rand.NewSource(4242));checks:=0;lengths:=[]int{};for i:=0;i<=17;i++{lengths=append(lengths,i)};lengths=append(lengths,31,32,33,1000,10000)
+ for _,length:=range lengths{for kind:=0;kind<4;kind++{xs:=make([]int64,length);for i:=range xs{switch kind{case 0:xs[i]=int64(i);case 1:xs[i]=int64(rng.Uint64());case 2:xs[i]=-1<<63;case 3:xs[i]=1<<63-1}};values:=make([]r.Value,length);for i,x:=range xs{values[i]=r.Int(x);if i%3==0{values[i].Type=r.TypeAny}};saved:=append([]int64{},xs...)
+ for mode=0;mode<3;mode++{for _,seed:=range []int64{0,17,4294967295,-1<<63,1<<63-1}{trace=nil;want:=reference(seed,xs);order:=append([]int64{},trace...);trace=nil;got:=revNative(seed,xs);if got!=want||!reflect.DeepEqual(append([]int64{},trace...),order){panic(fmt.Sprint("revNative mismatch",length,kind,mode,seed,got,want))};trace=nil;got=revBoxed(seed,values);if got!=want||!reflect.DeepEqual(append([]int64{},trace...),order){panic(fmt.Sprint("revBoxed mismatch",length,kind,mode,seed,got,want))};checks+=2}}
+ for i,x:=range xs{if x!=saved[i]||values[i].IntVal!=x{panic("input mutated")}}}}
+ fmt.Printf("%d reverse lane comparisons: ok\\n",checks)}
+`);
+ const result=spawnSync('go',['run','.'],{cwd:dir,encoding:'utf8',timeout:60000,env:{...process.env,GOWORK:'off'}});assert.ifError(result.error);assert.equal(result.status,0,result.stdout+result.stderr);assert.match(result.stdout,/2760 reverse lane comparisons: ok/);
 });

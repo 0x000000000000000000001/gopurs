@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
 const runtimeDirectory = new URL("../../runtime/", import.meta.url);
-const runtimeSimdNames = ["simd_generic.go"];
+const runtimeSimdNames = ["simd_asm.go", "simd_generic.go", "simd_arm64.s", "simd_amd64.s"];
 
 /** Create a temporary directory owned by a node:test context. */
 export function temporaryDirectory(t, prefix) {

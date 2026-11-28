@@ -412,6 +412,8 @@ translateExprWith proofs context@{ metadata, codegenStateRef, modNameStr, bound,
         PrimOp (Op2 op2 e1 e2)
           | Just result <- PrimitiveExprs.stringLengthComparison recur context nextId op2 e1 e2 ->
               result
+          | Just result <- PrimitiveExprs.moduloZeroComparison recur context nextId op2 e1 e2 ->
+              result
 
         PrimOp (Op2 op2 e1 e2)
           | Just result <- PrimitiveExprs.modularIntProduct recur context nextId op2 e1 e2 ->
@@ -420,7 +422,7 @@ translateExprWith proofs context@{ metadata, codegenStateRef, modNameStr, bound,
               result
           | Just result <- PrimitiveExprs.guardedIntProduct recur context nextId op2 e1 e2 ->
               result
-          | Just result <- PrimitiveExprs.powerOfTwoModulo recur context nextId op2 e1 e2 ->
+          | Just result <- PrimitiveExprs.constantPositiveDivMod recur context nextId op2 e1 e2 ->
               result
 
         PrimOp (Op2 op2 e1 e2)

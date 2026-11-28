@@ -7,6 +7,8 @@ module Gopurs.PrimitiveExprs
   , boundedIntProduct
   , guardedIntProduct
   , powerOfTwoModulo
+  , constantPositiveDivMod
+  , moduloZeroComparison
   , stringLengthComparison
   ) where
 
@@ -169,6 +171,92 @@ powerOfTwoModulo translate context nextId operator lhs rhs = do
       (unboxGoExpr context.codegenStateRef context.modNameStr value.expr value.exprType TypeInt64)
   pure { stmts: StmtEmpty, expr: GoBinOp "&" operand (GoInt (modulus - 1))
     , exprType: TypeInt64, nextId: value.nextId }
+
+-- Constant positive Euclidean div/mod (0 < d <= 2^31 - 1):
+--   * Power of two: exact low-bit mask (& (d - 1)) for mod, exact arithmetic
+--     right shift (>> log2(d)) for div, valid for all signed and wide int64.
+--   * Other positive constants: IntModPos64 / IntDivPos64 (no zero-divisor
+--     check, and 32-bit unsigned magic-multiply fast path for 0 <= a <= MaxInt32).
+constantPositiveDivMod :: TranslateExpr -> ExprContext -> Int -> BackendOperator2 -> TcoExpr -> TcoExpr -> Maybe ExprResult
+constantPositiveDivMod translate context nextId operator lhs rhs = do
+  guard (integerAnnotation lhs)
+  divisor <- integerLiteral rhs
+  guard (divisor > 0 && divisor <= 2147483647)
+  case operator of
+    OpIntNum OpMod -> do
+      let
+        value = translate (childContext context (Just Int)) nextId lhs
+        operand = wrapInStmts context.recVars value.stmts TypeInt64
+          (unboxGoExpr context.codegenStateRef context.modNameStr value.expr value.exprType TypeInt64)
+        expr =
+          if Bits.and divisor (divisor - 1) == 0 then
+            GoBinOp "&" operand (GoInt (divisor - 1))
+          else
+            GoCall (GoSelector (GoVar "gopurs_runtime") "IntModPos64")
+              [ operand, GoCall (GoVar "int64") [ GoInt divisor ] ]
+      pure { stmts: StmtEmpty, expr, exprType: TypeInt64, nextId: value.nextId }
+    OpIntNum OpDivide -> do
+      let
+        value = translate (childContext context (Just Int)) nextId lhs
+        operand = wrapInStmts context.recVars value.stmts TypeInt64
+          (unboxGoExpr context.codegenStateRef context.modNameStr value.expr value.exprType TypeInt64)
+        expr =
+          if divisor == 1 then
+            operand
+          else if Bits.and divisor (divisor - 1) == 0 then
+            GoBinOp ">>" operand (GoInt (powerOfTwoShift divisor 0))
+          else
+            GoCall (GoSelector (GoVar "gopurs_runtime") "IntDivPos64")
+              [ operand, GoCall (GoVar "int64") [ GoInt divisor ] ]
+      pure { stmts: StmtEmpty, expr, exprType: TypeInt64, nextId: value.nextId }
+    _ -> Nothing
+  where
+  powerOfTwoShift value shift
+    | value <= 1 = shift
+    | otherwise = powerOfTwoShift (Bits.zshr value 1) (shift + 1)
+
+-- Euclidean IntMod(a, b) == 0 holds iff b == 0 || a % b == 0 (the Euclidean
+-- sign fixup never turns a non-zero truncated remainder into 0).
+moduloZeroComparison :: TranslateExpr -> ExprContext -> Int -> BackendOperator2 -> TcoExpr -> TcoExpr -> Maybe ExprResult
+moduloZeroComparison translate context nextId operator lhs rhs = do
+  negate <- case operator of
+    OpIntOrd OpEq -> Just false
+    OpIntOrd OpNotEq -> Just true
+    _ -> Nothing
+  Tuple dividend divisor <- case matchMod lhs, integerLiteral rhs of
+    Just pair, Just 0 -> Just pair
+    _, _ -> case integerLiteral lhs, matchMod rhs of
+      Just 0, Just pair -> Just pair
+      _, _ -> Nothing
+  guard (integerAnnotation dividend && integerAnnotation divisor)
+  let child = childContext context (Just Int)
+  case integerLiteral divisor of
+    Just d | d > 0 && d <= 2147483647 -> do
+      resA <- Just (translate child nextId dividend)
+      let
+        opA = unboxGoExpr context.codegenStateRef context.modNameStr resA.expr resA.exprType TypeInt64
+        remExpr =
+          if Bits.and d (d - 1) == 0 then GoBinOp "&" opA (GoInt (d - 1))
+          else GoBinOp "%" opA (GoCall (GoVar "int64") [ GoInt d ])
+        cmpOp = if negate then "!=" else "=="
+      pure { stmts: resA.stmts, expr: GoBinOp cmpOp remExpr (GoInt 0), exprType: TypeBool, nextId: resA.nextId }
+    _ -> do
+      let
+        resA = translate child nextId dividend
+        resB = translate child resA.nextId divisor
+        opA = unboxGoExpr context.codegenStateRef context.modNameStr resA.expr resA.exprType TypeInt64
+        opB = unboxGoExpr context.codegenStateRef context.modNameStr resB.expr resB.exprType TypeInt64
+        zeroCheck = GoCall (GoSelector (GoVar "gopurs_runtime") "IntModZero") [ opA, opB ]
+      pure
+        { stmts: resA.stmts <> resB.stmts
+        , expr: if negate then GoPrefixOp "!" zeroCheck else zeroCheck
+        , exprType: TypeBool
+        , nextId: resB.nextId
+        }
+  where
+  matchMod expr = case unwrapTcoExpr expr of
+    PrimOp (Syn.Op2 (OpIntNum OpMod) a b) -> Just (Tuple a b)
+    _ -> Nothing
 
 integerAnnotation :: TcoExpr -> Boolean
 integerAnnotation expression = case getExprType expression of

@@ -3,6 +3,7 @@ module Gopurs.IndexedAddLanes
   , extractContribution
   , emit
   , emitContribution
+  , emitContributionReverse
   ) where
 
 import Prelude
@@ -157,5 +158,39 @@ emitContribution names contribute fallback =
       , reduce
       , GoForRange ("; " <> index <> " < len(" <> names.source <> "); " <> index <> "++")
           [ GoMutate names.result (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "+" (GoVar names.result) (contribute tailIdx tailElem) ] ]) ]
+      ]
+  in GoIfElse (rawGo ("len(" <> names.source <> ") < 8")) [ fallback ] body
+
+-- Reverse-order counterpart of emitContribution: visits source from len-1 down
+-- to 0 with logical indices 0..len-1 across 8 unrolled BCE lanes, reducing
+-- modulo 2^32 once after the loop.
+emitContributionReverse :: { source :: String, prefix :: String, result :: String } -> (GoExpr -> GoExpr -> GoExpr) -> GoExpr -> GoExpr
+emitContributionReverse names contribute fallback =
+  let
+    index = names.prefix <> "_index"
+    pos = names.prefix <> "_pos"
+    chunk = names.prefix <> "_chunk"
+    base = names.prefix <> "_base"
+    lane 0 = names.result
+    lane n = names.prefix <> "_" <> show n
+    chunkElem n = GoIndex (GoVar chunk) (GoInt (7 - n))
+    tailElem = GoIndex (rawGo ("(" <> names.source <> ")")) (GoBinOp "-" (GoBinOp "-" (GoCall (GoVar "len") [ rawGo names.source ]) (GoInt 1)) (GoVar index))
+    laneStep n = GoMutate (lane n) (GoBinOp "+" (GoVar (lane n)) (contribute (GoBinOp "|" (GoVar base) (GoInt n)) (chunkElem n)))
+    mainLoop = GoForRange ("; " <> pos <> " >= 8; " <> pos <> " -= 8")
+      ([ GoAssign chunk (rawGo ("(" <> names.source <> ")[" <> pos <> "-8 : " <> pos <> "]"))
+       , GoAssign base (rawGo (index <> " &^ 7"))
+       ] <> map laneStep (Array.range 0 7) <> [ GoMutate index (GoBinOp "+" (GoVar index) (GoInt 8)) ])
+    sumPair a b = GoBinOp "+" a b
+    combined = sumPair
+      (sumPair (sumPair (GoVar (lane 0)) (GoVar (lane 1))) (sumPair (GoVar (lane 2)) (GoVar (lane 3))))
+      (sumPair (sumPair (GoVar (lane 4)) (GoVar (lane 5))) (sumPair (GoVar (lane 6)) (GoVar (lane 7))))
+    reduce = GoMutate names.result (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ combined ] ])
+    body = map (\n -> GoAssign (lane n) (rawGo "int64(0)")) (Array.range 1 7) <>
+      [ GoAssign index (GoInt 0)
+      , GoAssign pos (GoCall (GoVar "len") [ rawGo names.source ])
+      , mainLoop
+      , reduce
+      , GoForRange ("; " <> index <> " < len(" <> names.source <> "); " <> index <> "++")
+          [ GoMutate names.result (GoCall (GoVar "int64") [ GoCall (GoVar "int32") [ GoBinOp "+" (GoVar names.result) (contribute (GoVar index) tailElem) ] ]) ]
       ]
   in GoIfElse (rawGo ("len(" <> names.source <> ") < 8")) [ fallback ] body

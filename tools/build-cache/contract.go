@@ -212,7 +212,7 @@ func outputPath(kind, module, path string) bool {
 			return false
 		}
 		switch path {
-		case "gopurs_runtime/runtime.go", "gopurs_runtime/simd_generic.go":
+		case "gopurs_runtime/runtime.go", "gopurs_runtime/simd_asm.go", "gopurs_runtime/simd_generic.go", "gopurs_runtime/simd_arm64.s", "gopurs_runtime/simd_amd64.s":
 			return true
 		}
 		return false

@@ -34,7 +34,7 @@ grouped original = do
   guard (case original of
     GoCall (GoVar "int64") [ _ ] -> true
     GoCall (GoSelector (GoVar "gopurs_runtime") operation) [ _, _ ] ->
-      Array.elem operation [ "IntAdd", "IntSub", "IntMul", "IntDiv", "IntMod" ]
+      Array.elem operation [ "IntAdd", "IntSub", "IntMul", "IntDiv", "IntMod", "IntDivPos64", "IntModPos64" ]
     _ -> false)
   reads <- scalar original
   source <- reads.source
@@ -67,7 +67,7 @@ scalar = case _ of
   field@(GoRecordFieldAccess _ _) -> nativeField field
   GoCall (GoVar cast) [ value ] | cast == "int64" || cast == "int32" -> scalar value
   GoCall (GoSelector (GoVar "gopurs_runtime") operation) [ left, right ]
-    | Array.elem operation [ "IntAdd", "IntSub", "IntMul", "IntDiv", "IntMod" ] -> do
+    | Array.elem operation [ "IntAdd", "IntSub", "IntMul", "IntDiv", "IntMod", "IntDivPos64", "IntModPos64" ] -> do
         leftReads <- scalar left
         rightReads <- scalar right
         combine leftReads rightReads

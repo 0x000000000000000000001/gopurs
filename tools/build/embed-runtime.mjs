@@ -45,7 +45,10 @@ for (const [name, source] of sources) {
 }
 
 const simdSpecs = [
+  ["simdAsmGoCode", "SimdAsmGoCode", "simd_asm.go"],
   ["simdGenericGoCode", "SimdGenericGoCode", "simd_generic.go"],
+  ["simdArm64AsmCode", "SimdArm64AsmCode", "simd_arm64.s"],
+  ["simdAmd64AsmCode", "SimdAmd64AsmCode", "simd_amd64.s"],
 ];
 const simdEntries = simdSpecs.map(([jsName, goName, file]) => ({
   jsName,

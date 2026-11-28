@@ -55,15 +55,40 @@ arithmetic = case _ of
     | name == "IntSub" -> Just { operator: "-", left, right }
   _ -> Nothing
 
--- Deliberately exclude division, unsigned shifts and arbitrary Int-returning
--- calls. Types alone do not prove a signed 32-bit result.
+constPosMod :: GoExpr -> Maybe { left :: GoExpr, divisor :: Int }
+constPosMod = case _ of
+  GoCall (GoSelector (GoVar "gopurs_runtime") "IntModPos64") [ left, GoCall (GoVar "int64") [ GoInt d ] ]
+    | d > 0 && signedLiteral d -> Just { left, divisor: d }
+  GoCall (GoSelector (GoVar "gopurs_runtime") "IntModPos64") [ left, GoInt d ]
+    | d > 0 && signedLiteral d -> Just { left, divisor: d }
+  _ -> Nothing
+
+constPosDiv :: GoExpr -> Maybe { left :: GoExpr, divisor :: Int }
+constPosDiv = case _ of
+  GoCall (GoSelector (GoVar "gopurs_runtime") "IntDivPos64") [ left, GoCall (GoVar "int64") [ GoInt d ] ]
+    | d > 0 && signedLiteral d -> Just { left, divisor: d }
+  GoCall (GoSelector (GoVar "gopurs_runtime") "IntDivPos64") [ left, GoInt d ]
+    | d > 0 && signedLiteral d -> Just { left, divisor: d }
+  _ -> Nothing
+
+powerOfTwoMask :: GoExpr -> Maybe { left :: GoExpr, mask :: Int }
+powerOfTwoMask = case _ of
+  GoBinOp "&" left (GoInt mask) | mask >= 0 && signedLiteral mask -> Just { left, mask }
+  _ -> Nothing
+
+-- Deliberately exclude general division, unsigned shifts and arbitrary
+-- Int-returning calls. Types alone do not prove a signed 32-bit result.
 normalized :: GoExpr -> Boolean
 normalized expr = case expr of
   GoInt value -> signedLiteral value
   GoCall (GoVar "int64") [ GoInt value ] -> signedLiteral value
   _ -> case arithmetic expr of
     Just _ -> true
-    Nothing -> false
+    Nothing -> case constPosMod expr of
+      Just _ -> true
+      Nothing -> case powerOfTwoMask expr of
+        Just _ -> true
+        Nothing -> false
 
 -- PBO can fold zshr or bottom / -1 to an Int literal outside this range.
 signedLiteral :: Int -> Boolean
@@ -137,19 +162,34 @@ rewrite names = wide
       -- type checking time. Constant-only additions retain the runtime helper.
       Just { operator, left, right } | readsNative names expr ->
         GoBinOp operator (narrow left) (narrow right)
-      -- The operand may itself be an unsigned constant expression. A helper
-      -- permits its reduction without a Go compile-time conversion overflow.
-      _ -> cast "int32" (GoCall (GoSelector (GoVar "gopurs_runtime") "IntAdd")
-        [ wide expr, cast "int64" (GoInt 0) ])
+      _ -> case constPosMod expr of
+        Just { left, divisor } | known32 names left ->
+          GoCall (GoSelector (GoVar "gopurs_runtime") "IntModPos32") [ narrow left, cast "int32" (GoInt divisor) ]
+        _ -> case constPosDiv expr of
+          Just { left, divisor } | known32 names left ->
+            GoCall (GoSelector (GoVar "gopurs_runtime") "IntDivPos32") [ narrow left, cast "int32" (GoInt divisor) ]
+          _ -> case powerOfTwoMask expr of
+            Just { left, mask } | known32 names left ->
+              GoBinOp "&" (narrow left) (cast "int32" (GoInt mask))
+            -- The operand may itself be an unsigned constant expression. A helper
+            -- permits its reduction without a Go compile-time conversion overflow.
+            _ -> cast "int32" (GoCall (GoSelector (GoVar "gopurs_runtime") "IntAdd")
+              [ wide expr, cast "int64" (GoInt 0) ])
 
   wide expr = case expr of
     GoVar name | Array.elem name names -> cast "int64" expr
     GoCall fn args -> case arithmetic expr of
       Just _ | readsNative names expr -> cast "int64" (narrow expr)
-      _ -> GoCall (wide fn) (map wide args)
+      _ -> case constPosMod expr of
+        Just { left } | known32 names left -> cast "int64" (narrow expr)
+        _ -> case constPosDiv expr of
+          Just { left } | known32 names left -> cast "int64" (narrow expr)
+          _ -> GoCall (wide fn) (map wide args)
     GoBinOp op left right
       | comparison op && known32 names left && known32 names right -> GoBinOp op (narrow left) (narrow right)
-      | otherwise -> GoBinOp op (wide left) (wide right)
+      | otherwise -> case powerOfTwoMask expr of
+          Just { left: inner } | known32 names inner -> cast "int64" (narrow expr)
+          _ -> GoBinOp op (wide left) (wide right)
     GoSelector obj field -> GoSelector (wide obj) field
     GoPrefixOp op value -> GoPrefixOp op (wide value)
     GoTypeAssertion value ty -> GoTypeAssertion (wide value) ty

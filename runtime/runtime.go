@@ -624,6 +624,59 @@ func IntMod(a, b int64) int64 {
 	return r
 }
 
+// Constant positive divisor fast paths (0 < b <= 0x7fffffff). Using uint32 for
+// non-negative int32 inputs lets Go emit 32-bit UMULL/LSR magic-constant
+// division without a zero-divisor check or signed Euclidean adjustment.
+func IntModPos32(a, b int32) int32 {
+	if a >= 0 {
+		return int32(uint32(a) % uint32(b))
+	}
+	r := a % b
+	if r < 0 {
+		r += b
+	}
+	return r
+}
+
+func IntModPos64(a, b int64) int64 {
+	if uint64(a) <= 0x7fffffff {
+		return int64(uint32(a) % uint32(b))
+	}
+	r := a % b
+	if r < 0 {
+		r += b
+	}
+	return r
+}
+
+func IntDivPos32(a, b int32) int32 {
+	if a >= 0 {
+		return int32(uint32(a) / uint32(b))
+	}
+	q := a / b
+	if a%b < 0 {
+		q--
+	}
+	return q
+}
+
+func IntDivPos64(a, b int64) int64 {
+	if uint64(a) <= 0x7fffffff {
+		return int64(uint32(a) / uint32(b))
+	}
+	q := a / b
+	if a%b < 0 {
+		q--
+	}
+	return q
+}
+
+// IntModZero reports whether IntMod(a, b) == 0. For any b != 0, Euclidean
+// remainder adjustment can never turn a non-zero truncated remainder into 0.
+func IntModZero(a, b int64) bool {
+	return b == 0 || a%b == 0
+}
+
 func Float(v float64) Value {
 	return Value{Type: TypeFloat, IntVal: int64(math.Float64bits(v))}
 }

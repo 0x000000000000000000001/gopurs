@@ -216,15 +216,23 @@ emit translate context nextId descriptor producer = do
             <> copyToOut
             <> [ GoCall slicesSort [ GoVar outName ] ]
             <> foldSortedSlice outName outKind
-        foldReversedSlice =
-          [ GoAssign lastName (GoBinOp "-" (GoVar nName) (GoInt 1))
-          , GoForRange (iName <> " := 0; " <> iName <> " < " <> nName <> "; " <> iName <> "++")
-              [ GoMutate resultName (GoCall (GoVar callbackName)
-                  [ GoCall (GoVar "int64") [ GoVar iName ]
-                  , GoVar resultName
-                  , elemInt64 (GoIndex (rawGo sourceInfo.target) (GoBinOp "-" (GoVar lastName) (GoVar iName))) sourceInfo.kind
-                  ]) ]
-          ]
+        foldReversedScalar =
+          GoBlock
+            [ GoAssign lastName (GoBinOp "-" (GoVar nName) (GoInt 1))
+            , GoForRange (iName <> " := 0; " <> iName <> " < " <> nName <> "; " <> iName <> "++")
+                [ GoMutate resultName (GoCall (GoVar callbackName)
+                    [ GoCall (GoVar "int64") [ GoVar iName ]
+                    , GoVar resultName
+                    , elemInt64 (GoIndex (rawGo sourceInfo.target) (GoBinOp "-" (GoVar lastName) (GoVar iName))) sourceInfo.kind
+                    ]) ]
+            ]
+        foldReversedSlice = case contribLambda of
+          Just _ ->
+            [ IndexedAddLanes.emitContributionReverse { source: sourceInfo.target, prefix: variable "sortRevLane", result: resultName }
+                (\i value -> GoCall (GoVar contribName)
+                  [ GoCall (GoVar "int64") [ i ], elemInt64 value sourceInfo.kind ])
+                foldReversedScalar ]
+          Nothing -> [ foldReversedScalar ]
         readAt idx = case sourceInfo.kind of
           SrcValue -> GoSelector (GoIndex (rawGo sourceInfo.target) idx) "IntVal"
           _ -> GoIndex (rawGo sourceInfo.target) idx
